@@ -1,0 +1,20 @@
+---
+Language: Cpp
+AccessModifierOffset: -1
+AlignAfterOpenBracket: Align
+AlwaysBreakAfterReturnType: None
+AlwaysBreakTemplateDeclarations: Yes
+BreakStringLiterals: true
+ColumnLimit: 80
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ContinuationIndentWidth: 4
+DerivePointerAlignment: false
+IndentCaseLabels: true
+PenaltyBreakBeforeFirstCallParameter: 1
+PenaltyReturnTypeOnItsOwnLine: 200
+PointerAlignment: Left
+ReflowComments: true
+SortIncludes: true
+SortUsingDeclarations: true
+SpacesBeforeTrailingComments: 2
+UseTab: Never
