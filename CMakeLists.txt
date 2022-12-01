@@ -10,19 +10,26 @@ set(AOC_INPUTS_DIR "${CMAKE_SOURCE_DIR}/inputs"
 
 enable_testing()
 
-function(copy_input_files target_basename)
+function(copy_input_files target_basename year)
   add_custom_command(
-    TARGET 2022_${target_basename} PRE_BUILD
+    TARGET ${year}_${target_basename} PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
       ${CMAKE_CURRENT_SOURCE_DIR}/${target_basename}.example
       ${CMAKE_CURRENT_BINARY_DIR}/${target_basename}.example
   )
   add_custom_command(
-    TARGET 2022_${target_basename} PRE_BUILD
+    TARGET ${year}_${target_basename} PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-      ${AOC_INPUTS_DIR}/2022/${target_basename}.input
+      ${AOC_INPUTS_DIR}/${year}/${target_basename}.input
       ${CMAKE_CURRENT_BINARY_DIR}/${target_basename}.input
   )
 endfunction()
 
+function(add_sample sample_name year)
+  add_executable(${year}_${sample_name} "${sample_name}.cpp")
+  copy_input_files(${sample_name} ${year})
+  add_test(NAME ${year}_${sample_name} COMMAND ${year}_${sample_name})
+endfunction()
+
+add_subdirectory(2021)
 add_subdirectory(2022)
