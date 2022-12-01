@@ -12,18 +12,30 @@
 
 #include "../common.h"
 
-void solve_case(const std::string& filename, int num_lines) {
+void solve_case(const std::string& filename, int window_width) {
+  auto measurements = readfile_numbers(filename);
+  const auto displacement = window_width - 1;
+
+  const auto it = std::begin(measurements);
+  for (int i = displacement; i < measurements.size(); ++i) {
+    auto window_start = it + i - displacement;
+    auto window_end = window_start + window_width;
+    auto sum = std::accumulate(window_start, window_end, 0);
+    // Inline modification
+    *window_start = sum;
+  }
+
+  namespace views = std::ranges::views;
+
   std::vector<int> diffs;
   int previousMeasure = 0;
-
-  auto solver = [&](std::string_view line, int linenum) {
-    int currentMeasure = std::stoi(std::string{line});
+  const auto diffFunc = [&](int currentMeasure) {
     diffs.push_back(currentMeasure - previousMeasure);
     previousMeasure = currentMeasure;
   };
-  readfile_op(filename, solver);
+  std::ranges::for_each(
+      measurements | views::take(measurements.size() - displacement), diffFunc);
 
-  namespace views = std::ranges::views;
   auto relevantDiffs = diffs | views::drop(1);
   auto count =
       std::ranges::count_if(relevantDiffs, [](int diff) { return diff > 0; });

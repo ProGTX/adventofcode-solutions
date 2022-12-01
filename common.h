@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <string_view>
+#include <vector>
 
 // https://stackoverflow.com/a/63050738/793006
 constexpr std::string_view ltrim(std::string_view str) {
@@ -33,4 +34,16 @@ void readfile_op(const std::string& filename, OpT operation) {
     operation(trim(line), linenum);
   }
   file.close();
+}
+
+std::vector<int> readfile_numbers(const std::string& filename) {
+  std::vector<int> numbers;
+  readfile_op(filename, [&](std::string_view line, int linenum) {
+    if (line.empty()) {
+      return;
+    }
+    int currentVal = std::stoi(std::string{line});
+    numbers.push_back(currentVal);
+  });
+  return numbers;
 }
