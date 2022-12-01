@@ -16,7 +16,7 @@ void solve_case(const std::string& filename, int numElvesAverage) {
   std::vector<int> caloriesPerElf;
   int singleElfCalories = 0;
 
-  auto elfSolver = [&](std::string_view line, int linenum) {
+  auto elfSolver = [&](std::string_view line) {
     if (line.empty()) {
       // New elf, add previous one
       caloriesPerElf.push_back(singleElfCalories);
@@ -44,7 +44,7 @@ void solve_case(const std::string& filename, int numElvesAverage) {
   std::cout << filename << " -> " << caloriesSum << std::endl;
 }
 
-int main(int argc, char** argv) {
+int main() {
   std::cout << "Part 1" << std::endl;
   solve_case("day01.example", 1);
   solve_case("day01.input", 1);

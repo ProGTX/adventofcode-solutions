@@ -17,7 +17,7 @@ void solve_part1(const std::string& filename) {
   int horizontal = 0;
   int depth = 0;
 
-  readfile_op(filename, [&](std::string_view line, int linenum) {
+  readfile_op(filename, [&](std::string_view line) {
     auto values = split<std::array<std::string, 2>>(std::string{line}, ' ');
     auto command = values[0];
     auto number = std::stoi(values[1]);
@@ -39,7 +39,7 @@ void solve_part2(const std::string& filename) {
   int depth = 0;
   int aim = 0;
 
-  readfile_op(filename, [&](std::string_view line, int linenum) {
+  readfile_op(filename, [&](std::string_view line) {
     auto values = split<std::array<std::string, 2>>(std::string{line}, ' ');
     auto command = values[0];
     auto number = std::stoi(values[1]);
@@ -57,7 +57,7 @@ void solve_part2(const std::string& filename) {
   std::cout << filename << " -> " << (horizontal * depth) << std::endl;
 }
 
-int main(int argc, char** argv) {
+int main() {
   std::cout << "Part 1" << std::endl;
   solve_part1("day02.example");
   solve_part1("day02.input");

@@ -27,6 +27,11 @@ endfunction()
 
 function(add_sample sample_name year)
   add_executable(${year}_${sample_name} "${sample_name}.cpp")
+  if(NOT MSVC)
+    target_compile_options(${year}_${sample_name} PRIVATE
+      -Wall -Wextra -Wno-sign-compare
+    )
+  endif()
   copy_input_files(${sample_name} ${year})
   add_test(NAME ${year}_${sample_name} COMMAND ${year}_${sample_name})
 endfunction()

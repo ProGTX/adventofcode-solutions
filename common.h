@@ -30,7 +30,9 @@ constexpr std::string_view trim(std::string_view str) {
   return str;
 }
 
-template <std::invocable<std::string_view, int> OpT>
+template <class OpT>
+requires std::invocable<OpT, std::string_view, int> ||
+    std::invocable<OpT, std::string_view>
 void readfile_op(const std::string& filename, OpT operation) {
   std::ifstream file{filename};
   if (!file.is_open()) {
@@ -38,14 +40,18 @@ void readfile_op(const std::string& filename, OpT operation) {
   }
   std::string line;
   for (int linenum = 0; std::getline(file, line); ++linenum) {
-    operation(trim(line), linenum);
+    if constexpr (std::invocable<OpT, std::string_view, int>) {
+      operation(trim(line), linenum);
+    } else {
+      operation(trim(line));
+    }
   }
   file.close();
 }
 
 std::vector<int> readfile_numbers(const std::string& filename) {
   std::vector<int> numbers;
-  readfile_op(filename, [&](std::string_view line, int linenum) {
+  readfile_op(filename, [&](std::string_view line) {
     if (line.empty()) {
       return;
     }

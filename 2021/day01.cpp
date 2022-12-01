@@ -43,7 +43,7 @@ void solve_case(const std::string& filename, int window_width) {
   std::cout << filename << " -> " << count << std::endl;
 }
 
-int main(int argc, char** argv) {
+int main() {
   std::cout << "Part 1" << std::endl;
   solve_case("day01.example", 1);
   solve_case("day01.input", 1);

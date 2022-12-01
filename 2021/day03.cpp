@@ -49,12 +49,9 @@ int to_decimal(const bits_array<bit_width>& bits) {
 
 template <size_t bit_width>
 void solve_part1(const std::string& filename) {
-  int horizontal = 0;
-  int depth = 0;
-
   bits_lines_t<bit_width> bits_lines;
 
-  readfile_op(filename, [&](std::string_view line, int linenum) {
+  readfile_op(filename, [&](std::string_view line) {
     bits_array<bit_width> bits;
     std::ranges::transform(line, std::begin(bits), [](unsigned char bit_char) {
       return static_cast<int>(bit_char - '0');
@@ -81,11 +78,11 @@ void solve_part1(const std::string& filename) {
             << std::endl;
 }
 
-int main(int argc, char** argv) {
+int main() {
   std::cout << "Part 1" << std::endl;
   solve_part1<5>("day03.example");
   solve_part1<12>("day03.input");
-  //  std::cout << "Part 2" << std::endl;
-  //  solve_part2("day03.example");
-  //  solve_part2("day03.input");
+  // std::cout << "Part 2" << std::endl;
+  // solve_part2<5>("day03.example");
+  // solve_part2<12>("day03.input");
 }
