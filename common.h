@@ -2,9 +2,16 @@
 
 #include <concepts>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
+
+// https://stackoverflow.com/a/51032862
+template <class, template <class...> class>
+inline constexpr bool is_specialization = false;
+template <template <class...> class T, class... Args>
+inline constexpr bool is_specialization<T<Args...>, T> = true;
 
 // https://stackoverflow.com/a/63050738/793006
 constexpr std::string_view ltrim(std::string_view str) {
@@ -46,4 +53,25 @@ std::vector<int> readfile_numbers(const std::string& filename) {
     numbers.push_back(currentVal);
   });
   return numbers;
+}
+
+// https://stackoverflow.com/a/236803
+template <typename OutItT>
+void split_line_to_iterator(const std::string& input, char delimiter,
+                            OutItT outputIt) {
+  std::stringstream stream{input};
+  for (std::string item; std::getline(stream, item, delimiter); ++outputIt) {
+    *outputIt = std::move(item);
+  }
+}
+
+template <class OutputT>
+OutputT split(const std::string& input, char delimiter) {
+  OutputT elems;
+  auto outputIt = std::begin(elems);
+  if constexpr (is_specialization<OutputT, std::vector>) {
+    outputIt = std::back_insert_iterator(elems);
+  }
+  split_line_to_iterator(input, delimiter, outputIt);
+  return elems;
 }
