@@ -2,9 +2,11 @@
 
 #include <concepts>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <vector>
 
 // https://stackoverflow.com/a/51032862
@@ -39,7 +41,7 @@ void readfile_op(const std::string& filename, OpT operation) {
     throw std::runtime_error("Cannot open file " + filename);
   }
   std::string line;
-  for (int linenum = 0; std::getline(file, line); ++linenum) {
+  for (int linenum = 1; std::getline(file, line); ++linenum) {
     if constexpr (std::invocable<OpT, std::string_view, int>) {
       operation(trim(line), linenum);
     } else {
@@ -47,6 +49,20 @@ void readfile_op(const std::string& filename, OpT operation) {
     }
   }
   file.close();
+}
+
+template <class FirstLineOpT, class OpT>
+requires std::invocable<FirstLineOpT, std::string_view> &&
+    std::invocable<OpT, std::string_view>
+void readfile_op_header(const std::string& filename,
+                        FirstLineOpT first_line_operation, OpT operation) {
+  readfile_op(filename, [&](std::string_view line, int linenum) {
+    if (linenum == 1) {
+      first_line_operation(line);
+    } else {
+      operation(line);
+    }
+  });
 }
 
 std::vector<int> readfile_numbers(const std::string& filename) {
@@ -66,18 +82,34 @@ template <typename OutItT>
 void split_line_to_iterator(const std::string& input, char delimiter,
                             OutItT outputIt) {
   std::stringstream stream{input};
-  for (std::string item; std::getline(stream, item, delimiter); ++outputIt) {
-    *outputIt = std::move(item);
+  for (std::string item; std::getline(stream, item, delimiter);) {
+    if (item.empty()) {
+      continue;
+    }
+    if constexpr (is_specialization<OutItT, std::back_insert_iterator>) {
+      if constexpr (std::is_same_v<typename OutItT::container_type::value_type,
+                                   int>) {
+        *outputIt = std::stoi(std::move(item));
+      } else {
+        *outputIt = std::move(item);
+      }
+    } else if constexpr (std::is_same_v<OutItT, int*>) {
+      *outputIt = std::stoi(std::move(item));
+    } else {
+      *outputIt = std::move(item);
+    }
+    // Must increase as last step, in case a line was skipped
+    ++outputIt;
   }
 }
 
 template <class OutputT>
 OutputT split(const std::string& input, char delimiter) {
   OutputT elems;
-  auto outputIt = std::begin(elems);
   if constexpr (is_specialization<OutputT, std::vector>) {
-    outputIt = std::back_insert_iterator(elems);
+    split_line_to_iterator(input, delimiter, std::back_insert_iterator(elems));
+  } else {
+    split_line_to_iterator(input, delimiter, std::begin(elems));
   }
-  split_line_to_iterator(input, delimiter, outputIt);
   return elems;
 }
