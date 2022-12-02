@@ -1,7 +1,9 @@
 #pragma once
 
+#include <array>
 #include <concepts>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -14,6 +16,13 @@ template <class, template <class...> class>
 inline constexpr bool is_specialization = false;
 template <template <class...> class T, class... Args>
 inline constexpr bool is_specialization<T<Args...>, T> = true;
+
+template <class T>
+struct is_array_class : std::false_type {};
+template <class T, std::size_t N>
+struct is_array_class<std::array<T, N>> : std::true_type {};
+template <class T>
+inline constexpr bool is_array_class_v = is_array_class<T>::value;
 
 // https://stackoverflow.com/a/63050738/793006
 constexpr std::string_view ltrim(std::string_view str) {
@@ -78,38 +87,53 @@ std::vector<int> readfile_numbers(const std::string& filename) {
 }
 
 // https://stackoverflow.com/a/236803
-template <typename OutItT>
+template <class out_it_t, class item_op_t = std::identity>
 void split_line_to_iterator(const std::string& input, char delimiter,
-                            OutItT outputIt) {
+                            out_it_t outputIt, item_op_t item_op = {}) {
   std::stringstream stream{input};
   for (std::string item; std::getline(stream, item, delimiter);) {
     if (item.empty()) {
       continue;
     }
-    if constexpr (is_specialization<OutItT, std::back_insert_iterator>) {
-      if constexpr (std::is_same_v<typename OutItT::container_type::value_type,
-                                   int>) {
-        *outputIt = std::stoi(std::move(item));
-      } else {
-        *outputIt = std::move(item);
-      }
-    } else if constexpr (std::is_same_v<OutItT, int*>) {
-      *outputIt = std::stoi(std::move(item));
-    } else {
-      *outputIt = std::move(item);
-    }
+    *outputIt = item_op(std::move(item));
     // Must increase as last step, in case an item was skipped
     ++outputIt;
   }
 }
 
-template <class OutputT>
-OutputT split(const std::string& input, char delimiter) {
-  OutputT elems;
-  if constexpr (is_specialization<OutputT, std::vector>) {
-    split_line_to_iterator(input, delimiter, std::back_insert_iterator(elems));
+template <class output_t>
+constexpr auto split_container_it(output_t& elems) {
+  if constexpr (is_array_class_v<output_t>) {
+    return std::begin(elems);
   } else {
-    split_line_to_iterator(input, delimiter, std::begin(elems));
+    return std::back_insert_iterator(elems);
   }
+}
+
+template <class output_t>
+constexpr auto split_item_op() {
+  if constexpr (is_array_class_v<output_t> ||
+                is_specialization<output_t, std::vector>) {
+    if constexpr (std::is_same_v<typename output_t::value_type, int>) {
+      return [](auto&& item) { return std::stoi(item); };
+    } else {
+      return std::identity{};
+    }
+  } else {
+    return std::identity{};
+  }
+}
+
+template <class output_t>
+output_t split(const std::string& input, char delimiter) {
+  output_t elems;
+  split_line_to_iterator(input, delimiter, split_container_it(elems),
+                         split_item_op<output_t>());
   return elems;
+}
+
+// https://en.cppreference.com/w/cpp/utility/to_underlying
+template <class Enum>
+constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept {
+  return static_cast<std::underlying_type_t<Enum>>(e);
 }
