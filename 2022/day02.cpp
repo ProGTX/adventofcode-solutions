@@ -1,6 +1,7 @@
 // https://adventofcode.com/2022/day/2
 
 #include <algorithm>
+#include <array>
 #include <exception>
 #include <functional>
 #include <iostream>

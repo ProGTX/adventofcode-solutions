@@ -98,7 +98,7 @@ void split_line_to_iterator(const std::string& input, char delimiter,
     } else {
       *outputIt = std::move(item);
     }
-    // Must increase as last step, in case a line was skipped
+    // Must increase as last step, in case an item was skipped
     ++outputIt;
   }
 }

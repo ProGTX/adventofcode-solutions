@@ -16,5 +16,4 @@ PointerAlignment: Left
 ReflowComments: true
 SortIncludes: true
 SortUsingDeclarations: true
-SpacesBeforeTrailingComments: 2
 UseTab: Never
