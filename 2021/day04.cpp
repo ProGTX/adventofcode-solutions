@@ -66,8 +66,11 @@ class board {
       // No bingo
       return false;
     }
-    return check_bingo(pos);
+    has_bingo_hit = check_bingo(pos);
+    return has_bingo_hit;
   }
+
+  constexpr bool has_bingo() const { return has_bingo_hit; }
 
   constexpr bool is_complete() const { return (num_rows == 5); }
 
@@ -115,9 +118,10 @@ class board {
   std::array<int, size> values;
   std::array<bool, size> markers;
   int num_rows = 0;
+  bool has_bingo_hit = false;
 };
 
-void solve_part1(const std::string& filename) {
+void solve_case(const std::string& filename, int game_rounds) {
   std::vector<int> bingo_numbers;
   std::vector<board> boards;
   board* current_board_ptr = nullptr;
@@ -139,31 +143,57 @@ void solve_part1(const std::string& filename) {
         current_board_ptr->add(row);
       });
 
+  if (game_rounds < 0) {
+    game_rounds = boards.size();
+  }
+
   int winning_number = 0;
-  for (auto number : bingo_numbers) {
-    for (auto& current_board : boards) {
-      bool bingo = current_board.mark(number);
+  int starting_number_pos = 0;
+  int boards_remaining = boards.size();
+  board winning_board;
+  for (int round = 0; round < game_rounds; ++round) {
+    // Play as many rounds as needed until boards are exhausted
+    for (int number_pos = starting_number_pos;
+         number_pos < bingo_numbers.size(); ++number_pos) {
+      auto number = bingo_numbers[number_pos];
+      bool bingo = false;
+      for (auto& current_board : boards) {
+        if (current_board.has_bingo()) {
+          continue;
+        }
+        bool current_bingo = current_board.mark(number);
+        if (current_bingo) {
+          bingo = true;
+          --boards_remaining;
+          winning_number = number;
+          winning_board = current_board;
+          if (boards_remaining <= 0) {
+            // Exhausted all boards
+            goto end_rounds;
+          }
+        } else {
+          // We must continue marking the other boards
+        }
+      }
+      ++starting_number_pos;
       if (bingo) {
-        winning_number = number;
-        current_board_ptr = &current_board;
-        goto end_loop;
+        break;
       }
     }
   }
-end_loop:
+end_rounds:
 
-  std::cout << winning_number << ", " << current_board_ptr->sum_unmarked()
+  std::cout << winning_number << ", " << winning_board.sum_unmarked()
             << std::endl;
   std::cout << filename << " -> "
-            << (winning_number * current_board_ptr->sum_unmarked())
-            << std::endl;
+            << (winning_number * winning_board.sum_unmarked()) << std::endl;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_part1("day04.example");
-  solve_part1("day04.input");
-  //  std::cout << "Part 2" << std::endl;
-  //  solve_part2("day04.example");
-  //  solve_part2("day04.input");
+  solve_case("day04.example", 1);
+  solve_case("day04.input", 1);
+  std::cout << "Part 2" << std::endl;
+  solve_case("day04.example", -1);
+  solve_case("day04.input", -1);
 }
