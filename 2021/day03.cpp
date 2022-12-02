@@ -17,6 +17,9 @@ template <size_t bit_width>
 using bits_array = std::array<int, bit_width>;
 
 template <size_t bit_width>
+using bits_lines_t = std::vector<bits_array<bit_width>>;
+
+template <size_t bit_width>
 int to_decimal(const bits_array<bit_width>& bits) {
   int decimal = 0;
   for (int multiplier = 1; auto bit : bits | std::ranges::views::reverse) {
@@ -53,11 +56,67 @@ void solve_part1(const std::string& filename) {
             << std::endl;
 }
 
+template <size_t bit_width>
+void solve_part2(const std::string& filename) {
+  bits_lines_t<bit_width> bits_lines;
+  readfile_op(filename, [&](std::string_view line) {
+    bits_array<bit_width> bits;
+    std::ranges::transform(line, std::begin(bits), [&](unsigned char bit_char) {
+      return static_cast<int>(bit_char - '0');
+    });
+    bits_lines.push_back(bits);
+  });
+
+  bits_lines_t<bit_width> bits_lines_oxy{bits_lines};
+  bits_lines_t<bit_width> bits_lines_co2{std::move(bits_lines)};
+
+  std::array<bits_lines_t<bit_width>, 2> bits_lines_new_oxy;
+  std::array<bits_lines_t<bit_width>, 2> bits_lines_new_co2;
+
+  const auto reset_new_bits = [&] {
+    for (int i = 0; i < 2; ++i) {
+      bits_lines_new_oxy[i].clear();
+      bits_lines_new_co2[i].clear();
+    }
+  };
+
+  for (int bitPos = 0; bitPos < bit_width; ++bitPos) {
+    reset_new_bits();
+    for (int i = 0; i < 2; ++i) {
+      bits_lines_new_oxy[i].reserve(bits_lines_oxy.size());
+      bits_lines_new_co2[i].reserve(bits_lines_co2.size());
+    }
+    for (const auto& bits : bits_lines_oxy) {
+      bits_lines_new_oxy[bits[bitPos]].push_back(bits);
+    }
+    for (const auto& bits : bits_lines_co2) {
+      bits_lines_new_co2[bits[bitPos]].push_back(bits);
+    }
+    if (bits_lines_new_oxy[0].size() > bits_lines_new_oxy[1].size()) {
+      std::swap(bits_lines_oxy, bits_lines_new_oxy[0]);
+    } else {
+      std::swap(bits_lines_oxy, bits_lines_new_oxy[1]);
+    }
+    if (bits_lines_new_co2[0].size() <= bits_lines_new_co2[1].size()) {
+      std::swap(bits_lines_co2, bits_lines_new_co2[0]);
+    } else {
+      std::swap(bits_lines_co2, bits_lines_new_co2[1]);
+    }
+  }
+
+  bits_array<bit_width> oxy_generator{bits_lines_oxy[0]};
+  bits_array<bit_width> co2_scrubber{bits_lines_co2[0]};
+
+  std::cout << filename << " -> "
+            << (to_decimal(oxy_generator) * to_decimal(co2_scrubber))
+            << std::endl;
+}
+
 int main() {
   std::cout << "Part 1" << std::endl;
   solve_part1<5>("day03.example");
   solve_part1<12>("day03.input");
-  // std::cout << "Part 2" << std::endl;
-  // solve_part2<5>("day03.example");
-  // solve_part2<12>("day03.input");
+  std::cout << "Part 2" << std::endl;
+  solve_part2<5>("day03.example");
+  solve_part2<12>("day03.input");
 }
