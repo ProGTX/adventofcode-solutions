@@ -16,10 +16,40 @@
 
 #include "../common.h"
 
+template <class T>
+using ascii_array = std::array<T, 256>;
+
+constexpr int calc_priority(char value) {
+  if (value < 'a') {
+    return static_cast<int>(value - 'A') + 27;
+  } else {
+    return static_cast<int>(value - 'a') + 1;
+  }
+}
+
 void solve_part1(const std::string& filename) {
   int score = 0;
 
-  readfile_op(filename, [&](std::string_view line) {});
+  readfile_op(filename, [&](std::string_view line) {
+    ascii_array<bool> occurs_in_half1{false};
+    ascii_array<bool> occurs_in_half2{false};
+
+    auto midsize = line.size() / 2;
+    auto half1 = line.substr(0, midsize);
+    auto half2 = line.substr(midsize);
+    for (int pos = 0; pos < midsize; ++pos) {
+      occurs_in_half1[half1.at(pos)] = true;
+      occurs_in_half2[half2.at(pos)] = true;
+    }
+    // Iterate through ASCII table
+    for (int pos = static_cast<int>('A'); pos <= static_cast<int>('z'); ++pos) {
+      if (occurs_in_half1[pos] && occurs_in_half2[pos]) {
+        auto value = static_cast<char>(pos);
+        auto priority = calc_priority(value);
+        score += priority;
+      }
+    }
+  });
 
   std::cout << filename << " -> " << score << std::endl;
 }
@@ -35,7 +65,7 @@ void solve_part2(const std::string& filename) {
 int main() {
   std::cout << "Part 1" << std::endl;
   solve_part1("day03.example");
-  // solve_part1("day03.input");
+  solve_part1("day03.input");
   // std::cout << "Part 2" << std::endl;
   // solve_part2("day03.example");
   // solve_part2("day03.input");
