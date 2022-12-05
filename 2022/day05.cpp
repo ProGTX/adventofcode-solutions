@@ -17,15 +17,14 @@
 
 #include "../common.h"
 
-using stack = std::stack<char, std::vector<char>>;
-
-void solve_part1(const std::string& filename) {
+template <bool grab_multiple>
+void solve_case(const std::string& filename) {
   // There can't be more than 9 crates because that would break the parsing
   // Initially we don't know how many stacks we have,
   // and the parsing gets the crates in reverse order
-  std::array<std::vector<char>, 9> reverse_crates;
-  std::vector<stack> crates;
+  std::array<std::string, 9> crates;
 
+  // Actual number of stacks
   int num_stacks = 0;
 
   const auto trimmer = [](std::string_view str) {
@@ -46,19 +45,15 @@ void solve_part1(const std::string& filename) {
           if (crate == ' ') {
             continue;
           }
-          reverse_crates[i].push_back(crate);
+          crates[i].push_back(crate);
         }
       } else {
         // Done parsing crate stacks, put them in correct order
         auto stack_numbers =
             split<std::vector<std::string>>(std::string{line}, ' ');
         num_stacks = static_cast<int>(stack_numbers.back().at(0) - '0');
-        crates.reserve(num_stacks);
         for (int i = 0; i < num_stacks; ++i) {
-          crates.emplace_back();
-          for (auto crate : reverse_crates[i] | std::views::reverse) {
-            crates[i].push(crate);
-          }
+          std::ranges::reverse(crates[i]);
         }
       }
       return;
@@ -73,13 +68,22 @@ void solve_part1(const std::string& filename) {
     auto move_num_crates = std::stoi(n_str);
 
     // Adjust the indexing by 1
-    auto move_from_pos = std::stoi(from_pos_str) - 1;
-    auto move_to_pos = std::stoi(to_pos_str) - 1;
+    auto& from_crate = crates[std::stoi(from_pos_str) - 1];
+    auto& to_crate = crates[std::stoi(to_pos_str) - 1];
 
-    for (int i = 0; i < move_num_crates; ++i) {
-      auto crate = crates[move_from_pos].top();
-      crates[move_to_pos].push(crate);
-      crates[move_from_pos].pop();
+    if constexpr (!grab_multiple) {
+      // Part 1
+      for (int i = 0; i < move_num_crates; ++i) {
+        auto crate = from_crate.back();
+        to_crate.push_back(crate);
+        from_crate.resize(from_crate.size() - 1);
+      }
+    } else {
+      // Part 2
+      auto from_crate_new_size = from_crate.size() - move_num_crates;
+      std::string_view crate_bunch{from_crate.data() + from_crate_new_size};
+      to_crate += crate_bunch;
+      from_crate.resize(from_crate_new_size);
     }
   });
 
@@ -87,26 +91,18 @@ void solve_part1(const std::string& filename) {
   std::string top_stacks(static_cast<size_t>(num_stacks), ' ');
 
   for (int pos = 0; const auto& stack : crates) {
-    top_stacks[pos] = stack.top();
+    top_stacks[pos] = stack.back();
     ++pos;
   }
 
   std::cout << filename << " -> " << top_stacks << std::endl;
 }
 
-void solve_part2(const std::string& filename) {
-  int score = 0;
-
-  readfile_op(filename, [&](std::string_view line) {});
-
-  std::cout << filename << " -> " << score << std::endl;
-}
-
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_part1("day05.example");
-  solve_part1("day05.input");
-  // std::cout << "Part 2" << std::endl;
-  // solve_part2("day05.example");
-  // solve_part2("day05.input");
+  solve_case<false>("day05.example");
+  solve_case<false>("day05.input");
+  std::cout << "Part 2" << std::endl;
+  solve_case<true>("day05.example");
+  solve_case<true>("day05.input");
 }
