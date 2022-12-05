@@ -57,7 +57,46 @@ void solve_part1(const std::string& filename) {
 void solve_part2(const std::string& filename) {
   int score = 0;
 
-  readfile_op(filename, [&](std::string_view line) {});
+  int index = 0;
+  std::array<ascii_array<bool>, 3> occurrences;
+
+  const auto reset_count = [&]() {
+    // Reset count
+    index = 0;
+    for (auto& occurrence : occurrences) {
+      for (auto& occurs : occurrence) {
+        occurs = false;
+      }
+    }
+  };
+
+  reset_count();
+
+  readfile_op(filename, [&](std::string_view line) {
+    for (char value : line) {
+      occurrences[index][value] = true;
+    }
+    ++index;
+    if (index < 3) {
+      // At this point we're just collecting data
+      return;
+    }
+
+    // Iterate through ASCII table
+    for (int pos = static_cast<int>('A'); pos <= static_cast<int>('z'); ++pos) {
+      bool occurs_all = true;
+      for (const auto& occurrence : occurrences) {
+        occurs_all = occurs_all && occurrence[pos];
+      }
+      if (occurs_all) {
+        auto value = static_cast<char>(pos);
+        auto priority = calc_priority(value);
+        score += priority;
+      }
+    }
+
+    reset_count();
+  });
 
   std::cout << filename << " -> " << score << std::endl;
 }
@@ -66,7 +105,7 @@ int main() {
   std::cout << "Part 1" << std::endl;
   solve_part1("day03.example");
   solve_part1("day03.input");
-  // std::cout << "Part 2" << std::endl;
-  // solve_part2("day03.example");
-  // solve_part2("day03.input");
+  std::cout << "Part 2" << std::endl;
+  solve_part2("day03.example");
+  solve_part2("day03.input");
 }
