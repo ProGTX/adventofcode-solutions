@@ -25,23 +25,31 @@ template <class T>
 inline constexpr bool is_array_class_v = is_array_class<T>::value;
 
 // https://stackoverflow.com/a/63050738/793006
-constexpr std::string_view ltrim(std::string_view str) {
-  const auto pos(str.find_first_not_of(" \t\n\r\f\v"));
+constexpr std::string_view ltrim(std::string_view str,
+                                 std::string_view whitespace) {
+  const auto pos(str.find_first_not_of(whitespace));
   str.remove_prefix(std::min(pos, str.length()));
   return str;
 }
-constexpr std::string_view rtrim(std::string_view str) {
-  const auto pos(str.find_last_not_of(" \t\n\r\f\v"));
+constexpr std::string_view rtrim(std::string_view str,
+                                 std::string_view whitespace) {
+  const auto pos(str.find_last_not_of(whitespace));
   str.remove_suffix(std::min(str.length() - pos - 1, str.length()));
   return str;
 }
-constexpr std::string_view trim(std::string_view str) {
-  str = ltrim(str);
-  str = rtrim(str);
+constexpr std::string_view trim(std::string_view str,
+                                std::string_view whitespace = " \t\n\r\f\v") {
+  str = ltrim(str, whitespace);
+  str = rtrim(str, whitespace);
   return str;
 }
+constexpr std::string_view trim_leave_spaces(std::string_view str) {
+  return trim(str, "\t\n\r\f\v");
+}
 
-template <class OpT>
+template <class trim_op_t =
+              decltype([](std::string_view str) { return trim(str); }),
+          class OpT>
 requires std::invocable<OpT, std::string_view, int> ||
     std::invocable<OpT, std::string_view>
 void readfile_op(const std::string& filename, OpT operation) {
@@ -52,9 +60,9 @@ void readfile_op(const std::string& filename, OpT operation) {
   std::string line;
   for (int linenum = 1; std::getline(file, line); ++linenum) {
     if constexpr (std::invocable<OpT, std::string_view, int>) {
-      operation(trim(line), linenum);
+      operation(trim_op_t{}(line), linenum);
     } else {
-      operation(trim(line));
+      operation(trim_op_t{}(line));
     }
   }
   file.close();
