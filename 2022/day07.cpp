@@ -106,7 +106,25 @@ int sum_folder_sizes(const btree* node) {
   return sum;
 }
 
-void solve_part1(const std::string& filename) {
+using folder_sizes_t = std::vector<std::pair<std::string_view, int>>;
+
+template <int max_used_space>
+void get_folder_sizes(btree* node, const int used_space,
+                      folder_sizes_t& folder_sizes) {
+  for (const auto& child : *node) {
+    if (child->get_type() != btree::folder) {
+      continue;
+    }
+    int current_size = child->get_size();
+    if ((max_used_space - used_space + current_size) > 0) {
+      folder_sizes.emplace_back(child->get_name(), current_size);
+    }
+    get_folder_sizes<max_used_space>(child.get(), used_space, folder_sizes);
+  }
+}
+
+template <bool delete_space>
+void solve_case(const std::string& filename) {
   btree filesystem;
   btree* current_node = &filesystem;
 
@@ -153,23 +171,30 @@ void solve_part1(const std::string& filename) {
 
   set_sizes(filesystem);
 
-  int sum = sum_folder_sizes<100000>(&filesystem);
+  int space = 0;
+  if constexpr (!delete_space) {
+    space = sum_folder_sizes<100000>(&filesystem);
+  } else {
+    static constexpr int max_space = 70'000'000;
+    static constexpr int required_free_space = 30'000'000;
+    folder_sizes_t folder_sizes;
+    get_folder_sizes<max_space - required_free_space>(
+        &filesystem, filesystem.get_size(), folder_sizes);
+    std::ranges::sort(folder_sizes,
+                      [](auto&& name_size_lhs, auto&& name_size_rhs) {
+                        return (name_size_lhs.second < name_size_rhs.second);
+                      });
+    space = folder_sizes[0].second;
+  }
 
-  std::cout << filename << " -> " << sum << std::endl;
-}
-
-void solve_part2(const std::string& filename) {
-  int score = 0;
-  readfile_op(filename, [&](std::string_view line) {});
-
-  std::cout << filename << " -> " << score << std::endl;
+  std::cout << filename << " -> " << space << std::endl;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_part1("day07.example");
-  solve_part1("day07.input");
+  solve_case<false>("day07.example");
+  solve_case<false>("day07.input");
   // std::cout << "Part 2" << std::endl;
-  // solve_part2("day07.example");
-  // solve_part2("day07.input");
+  solve_case<true>("day07.example");
+  solve_case<true>("day07.input");
 }
