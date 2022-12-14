@@ -47,12 +47,13 @@ constexpr std::string_view trim_leave_spaces(std::string_view str) {
   return trim(str, "\t\n\r\f\v");
 }
 
-template <class trim_op_t =
-              decltype([](std::string_view str) { return trim(str); }),
+template <class trim_op_t = decltype([](std::string_view str) {
+            return trim(str);
+          }),
           class OpT>
-requires std::invocable<OpT, std::string_view, int> ||
-    std::invocable<OpT, std::string_view>
-void readfile_op(const std::string& filename, OpT operation) {
+    requires std::invocable<OpT, std::string_view, int> ||
+    std::invocable<OpT, std::string_view> void readfile_op(
+        const std::string& filename, OpT operation) {
   std::ifstream file{filename};
   if (!file.is_open()) {
     throw std::runtime_error("Cannot open file " + filename);
@@ -69,10 +70,10 @@ void readfile_op(const std::string& filename, OpT operation) {
 }
 
 template <class FirstLineOpT, class OpT>
-requires std::invocable<FirstLineOpT, std::string_view> &&
-    std::invocable<OpT, std::string_view>
-void readfile_op_header(const std::string& filename,
-                        FirstLineOpT first_line_operation, OpT operation) {
+requires std::invocable<FirstLineOpT, std::string_view>&&
+    std::invocable<OpT, std::string_view> void
+    readfile_op_header(const std::string& filename,
+                       FirstLineOpT first_line_operation, OpT operation) {
   readfile_op(filename, [&](std::string_view line, int linenum) {
     if (linenum == 1) {
       first_line_operation(line);
@@ -145,3 +146,44 @@ template <class Enum>
 constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept {
   return static_cast<std::underlying_type_t<Enum>>(e);
 }
+
+// https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp
+template <class T>
+struct ranged_iterator {
+  using iterator_category = std::random_access_iterator_tag;
+  using difference_type = std::ptrdiff_t;
+  using value_type = T;
+  using pointer = T*;
+  using reference = T&;
+
+  ranged_iterator(pointer ptr, difference_type diff)
+      : m_ptr{ptr}, m_diff{diff} {}
+
+  reference operator*() const { return *m_ptr; }
+
+  pointer operator->() { return m_ptr; }
+
+  ranged_iterator& operator++() {
+    m_ptr += m_diff;
+    return *this;
+  }
+  ranged_iterator operator++(T) {
+    ranged_iterator tmp = *this;
+    ++(*this);
+    return tmp;
+  }
+
+  friend bool operator==(const ranged_iterator& a, const ranged_iterator& b) {
+    return a.m_ptr == b.m_ptr;
+  };
+  friend bool operator!=(const ranged_iterator& a, const ranged_iterator& b) {
+    return !(a == b);
+  };
+
+ private:
+  pointer m_ptr;
+  difference_type m_diff;
+};
+
+template <class T>
+ranged_iterator(T*, std::ptrdiff_t)->ranged_iterator<T>;

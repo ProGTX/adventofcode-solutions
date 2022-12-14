@@ -28,6 +28,7 @@ class grid {
     for (auto value : row) {
       data.push_back(value);
       visible.push_back(0);
+      scenic_score.push_back(0);
     }
     ++num_rows;
     return std::begin(data) + old_size;
@@ -74,20 +75,60 @@ class grid {
     }
   }
 
+  void check_scenic_score() {
+    const auto get_score = [](ranged_iterator<int> it, int num_iterations) {
+      int num_trees = 0;
+      int origin_height = *it;
+      for (int iteration = 0; iteration < num_iterations; ++iteration) {
+        ++it;
+        ++num_trees;
+        int current_height = *it;
+        if (current_height >= origin_height) {
+          break;
+        }
+      }
+      return num_trees;
+    };
+
+    // First and last row will all score 0 anyway
+    // The same for first and last column, but not worth checking for that
+    for (int i = row_length; i < (data.size() - row_length); ++i) {
+      int score = 1;
+      int row = i / row_length;
+      int column = i % row_length;
+
+      auto ltr_it = ranged_iterator(&data[i], 1);
+      score *= get_score(ltr_it, row_length - 1 - column);
+
+      auto rtl_it = ranged_iterator(&data[i], -1);
+      score *= get_score(rtl_it, column);
+
+      auto ttb_it = ranged_iterator(&data[i], row_length);
+      score *= get_score(ttb_it, num_rows - 1 - row);
+
+      auto btt_it = ranged_iterator(&data[i], -row_length);
+      score *= get_score(btt_it, row);
+
+      scenic_score[i] = score;
+    }
+  }
+
   int num_visible() const {
     return std::ranges::count_if(visible,
                                  [](int value) { return (value > 0); });
   }
 
+  int highest_scenic_score() const { return std::ranges::max(scenic_score); }
+
  private:
   data_t data;
   std::vector<int> visible;
+  std::vector<int> scenic_score;
   int row_length = 0;
   int num_rows = 0;
 };
 
-template <bool>
-void solve_case(const std::string& filename) {
+void solve_part1(const std::string& filename) {
   grid forrest;
   grid::row_t row;
 
@@ -104,11 +145,29 @@ void solve_case(const std::string& filename) {
   std::cout << filename << " -> " << forrest.num_visible() << std::endl;
 }
 
+void solve_part2(const std::string& filename) {
+  grid forrest;
+  grid::row_t row;
+
+  readfile_op(filename, [&](std::string_view line) {
+    row.clear();
+    for (auto number_str : line) {
+      row.push_back(static_cast<int>(number_str - '0'));
+    }
+    forrest.add_row(row);
+  });
+
+  forrest.check_scenic_score();
+
+  std::cout << filename << " -> " << forrest.highest_scenic_score()
+            << std::endl;
+}
+
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case<false>("day08.example");
-  solve_case<false>("day08.input");
+  solve_part1("day08.example");
+  solve_part1("day08.input");
   // std::cout << "Part 2" << std::endl;
-  // solve_case<true>("day08.example");
-  // solve_case<true>("day08.input");
+  solve_part2("day08.example");
+  solve_part2("day08.input");
 }
