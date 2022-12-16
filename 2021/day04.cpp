@@ -16,11 +16,12 @@
 
 #include "../common.h"
 
-class board {
- public:
-  using row_t = std::array<int, 5>;
-  static constexpr const size_t size = 5 * 5;
+class board : public grid<std::array<int, 5 * 5>, std::array<int, 5>> {
+ private:
+  using base_t = grid<std::array<int, 5 * 5>, std::array<int, 5>>;
+  constexpr static auto m_size = 5 * 5;
 
+ public:
   constexpr board() {
     for (auto& marker : markers) {
       marker = false;
@@ -32,7 +33,7 @@ class board {
       std::cout << "  ";
       for (int j = 0; j < 5; ++j) {
         int index = (i * 5 + j);
-        std::cout << std::setw(2) << values[index] << std::setw(1) << "|"
+        std::cout << std::setw(2) << m_data[index] << std::setw(1) << "|"
                   << markers[index] << " ";
       }
       std::cout << std::endl;
@@ -46,23 +47,20 @@ class board {
         throw std::runtime_error("Cannot add any more rows");
       }
     }
-    auto row_begin = std::begin(values) + (5 * num_rows);
-    std::ranges::copy(row, row_begin);
-    ++num_rows;
-    return row_begin;
+    base_t::add_row(row);
   }
 
   constexpr bool mark(int number) {
     int pos = 0;
-    for (; pos < size; ++pos) {
-      if (values[pos] != number) {
+    for (; pos < size(); ++pos) {
+      if (m_data[pos] != number) {
         continue;
       }
       // Hit a single number
       markers[pos] = true;
       break;
     }
-    if (pos >= size) {
+    if (pos >= size()) {
       // No bingo
       return false;
     }
@@ -72,13 +70,13 @@ class board {
 
   constexpr bool has_bingo() const { return has_bingo_hit; }
 
-  constexpr bool is_complete() const { return (num_rows == 5); }
+  constexpr bool is_complete() const { return (this->num_rows() == 5); }
 
   constexpr int sum_unmarked() const {
     int sum = 0;
-    for (int pos = 0; pos < size; ++pos) {
+    for (int pos = 0; pos < size(); ++pos) {
       if (!markers[pos]) {
-        sum += values[pos];
+        sum += m_data[pos];
       }
     }
     return sum;
@@ -100,7 +98,7 @@ class board {
     {
       int column_num = position % 5;
       bool bingo = true;
-      for (int pos = column_num; pos < size; pos += 5) {
+      for (int pos = column_num; pos < size(); pos += 5) {
         if (!markers[pos]) {
           bingo = false;
           break;
@@ -115,9 +113,7 @@ class board {
   }
 
  private:
-  std::array<int, size> values;
-  std::array<bool, size> markers;
-  int num_rows = 0;
+  std::array<bool, m_size> markers;
   bool has_bingo_hit = false;
 };
 
