@@ -188,11 +188,12 @@ struct ranged_iterator {
 template <class T>
 ranged_iterator(T*, std::ptrdiff_t)->ranged_iterator<T>;
 
-template <class data_t_, class row_t_>
+template <class data_t_, class row_t_ = data_t_>
 class grid {
  public:
   using row_t = row_t_;
   using data_t = data_t_;
+  using value_type = typename data_t::value_type;
   using iterator = typename data_t::iterator;
   using const_iterator = typename data_t::const_iterator;
 
@@ -218,13 +219,13 @@ class grid {
 
   constexpr int num_rows() const { return m_num_rows; }
 
-  template <class print_single_ft>
-  constexpr auto get_print_single_f(print_single_ft print_single_f) const {
-    if constexpr (std::is_same_v<print_single_ft, std::identity>) {
-      return [this](std::ostream& out, int index) { out << m_data[index]; };
-    } else {
-      return print_single_f;
-    }
+  constexpr void modify(value_type value, int linear_index) {
+    m_data[linear_index] = std::move(value);
+  }
+
+  constexpr void modify(value_type value, int row, int column) {
+    auto linear_index = row * m_row_length + column;
+    this->modify(std::move(value), linear_index);
   }
 
   template <class print_single_ft = std::identity>
@@ -238,6 +239,16 @@ class grid {
       std::cout << std::endl;
     }
     std::cout << std::endl;
+  }
+
+ private:
+  template <class print_single_ft>
+  constexpr auto get_print_single_f(print_single_ft print_single_f) const {
+    if constexpr (std::is_same_v<print_single_ft, std::identity>) {
+      return [this](std::ostream& out, int index) { out << m_data[index]; };
+    } else {
+      return print_single_f;
+    }
   }
 
  protected:
