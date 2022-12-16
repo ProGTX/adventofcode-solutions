@@ -218,6 +218,28 @@ class grid {
 
   constexpr int num_rows() const { return m_num_rows; }
 
+  template <class print_single_ft>
+  constexpr auto get_print_single_f(print_single_ft print_single_f) const {
+    if constexpr (std::is_same_v<print_single_ft, std::identity>) {
+      return [this](std::ostream& out, int index) { out << m_data[index]; };
+    } else {
+      return print_single_f;
+    }
+  }
+
+  template <class print_single_ft = std::identity>
+  void print_all(print_single_ft print_single_f = {}) const {
+    for (int i = 0; i < m_num_rows; ++i) {
+      std::cout << "  ";
+      for (int j = 0; j < row_length(); ++j) {
+        int index = (i * row_length() + j);
+        get_print_single_f(print_single_f)(std::cout, index);
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl;
+  }
+
  protected:
   data_t m_data;
 

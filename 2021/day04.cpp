@@ -29,16 +29,10 @@ class board : public grid<std::array<int, 5 * 5>, std::array<int, 5>> {
   }
 
   void print() const {
-    for (int i = 0; i < 5; ++i) {
-      std::cout << "  ";
-      for (int j = 0; j < 5; ++j) {
-        int index = (i * 5 + j);
-        std::cout << std::setw(2) << m_data[index] << std::setw(1) << "|"
-                  << markers[index] << " ";
-      }
-      std::cout << std::endl;
-    }
-    std::cout << std::endl;
+    this->print_all([this](std::ostream& out, int index) {
+      out << std::setw(2) << m_data[index] << std::setw(1) << "|"
+          << markers[index] << " ";
+    });
   }
 
   constexpr auto add(const row_t& row) {
