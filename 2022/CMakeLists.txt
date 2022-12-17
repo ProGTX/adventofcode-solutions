@@ -14,3 +14,4 @@ add_custom_command(
     ${CMAKE_CURRENT_BINARY_DIR}/day09.example2
 )
 add_sample(day10 2022)
+add_sample(day11 2022)

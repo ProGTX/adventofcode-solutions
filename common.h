@@ -258,3 +258,13 @@ class grid {
   int m_row_length = 0;
   int m_num_rows = 0;
 };
+
+std::ostream& print_range(const std::ranges::range auto range,
+                          std::string_view separator = ",",
+                          std::string_view indent = "",
+                          std::ostream& out = std::cout) {
+  for (const auto& item : range) {
+    out << indent << item << separator;
+  }
+  return out;
+}
