@@ -79,6 +79,19 @@ struct instruction {
 
 template <bool insert_noop>
 void solve_case(const std::string& filename) {
+  static constexpr size_t width = 40;
+  static constexpr size_t height = 6;
+
+  using crt = grid<std::array<char, width * height>, std::array<char, width>>;
+  crt monitor;
+  typename crt::row_t row;
+  for (int i = 0; i < width; ++i) {
+    row[i] = '.';
+  }
+  for (int i = 0; i < height; ++i) {
+    monitor.add_row(row);
+  }
+
   int signal_strength = 0;
 
   int register_X = 1;
@@ -86,12 +99,26 @@ void solve_case(const std::string& filename) {
 
   constexpr int pipeline_length = 2;
   std::array<instruction, pipeline_length> pipeline;
+  int row_index = -1;
+
+  const auto draw = [&] {
+    int column_index = (pc - 1) % width;
+    row_index = (column_index == 0) ? ((row_index + 1) % height) : row_index;
+    auto pixel = std::invoke([&] {
+      if (std::abs(column_index - register_X) <= 1) {
+        return '#';
+      }
+      return '.';
+    });
+    monitor.modify(pixel, row_index, column_index);
+  };
 
   const auto shift_pipeline = [&]() {
     // During cycle
     if ((pc == 20) || (((pc - 20) % 40) == 0)) {
       signal_strength += (pc * register_X);
     }
+    draw();
     for (auto& op : pipeline) {
       register_X = op.tick(register_X);
     }
@@ -127,15 +154,12 @@ void solve_case(const std::string& filename) {
     shift_pipeline();
   });
 
+  monitor.print_all();
 
   std::cout << filename << " -> " << signal_strength << std::endl;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
   solve_case<true>("day10.example");
   solve_case<true>("day10.input");
-  // std::cout << "Part 2" << std::endl;
-  // solve_case<true>("day10.example");
-  // solve_case<true>("day10.input");
 }
