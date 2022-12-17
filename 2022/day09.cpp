@@ -59,7 +59,7 @@ struct point {
 
   constexpr point operator-() const { return {-x, -y}; }
 
-  friend std::ostream& operator<<(std::ostream& out, const point p) {
+  friend std::ostream& operator<<(std::ostream& out, const point& p) {
     out << "{" << p.x << "," << p.y << "}";
     return out;
   }

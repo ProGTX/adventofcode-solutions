@@ -14,23 +14,128 @@
 
 #include "../common.h"
 
-template <bool>
+struct instruction {
+  enum type {
+    noop,
+    addx,
+  };
+
+  constexpr instruction() : instruction{noop, 1, 0} {}
+
+  static constexpr instruction make_addx(int value) { return {addx, 2, value}; }
+
+  constexpr void clear() { *this = instruction{}; }
+
+  constexpr bool done() const { return m_cycles_left <= 0; }
+
+  constexpr int tick(int register_value) {
+    if (this->done()) {
+      return register_value;
+    }
+    --m_cycles_left;
+    if (m_cycles_left > 0) {
+      return register_value;
+    }
+    switch (m_type) {
+      case addx:
+        return register_value + m_value;
+      default:
+        return register_value;
+    }
+  }
+
+  constexpr std::string_view get_type_str() const {
+    switch (m_type) {
+      case noop:
+        return "noop";
+      case addx:
+        return "addx";
+      default:
+        return "";
+    }
+  }
+
+  constexpr int get_duration() const { return m_duration; }
+
+  friend std::ostream& operator<<(std::ostream& out, const instruction& op) {
+    out << "{" << op.get_type_str() << "," << op.m_cycles_left << "("
+        << op.m_duration << ")," << op.m_value << "}";
+    return out;
+  }
+
+ protected:
+  constexpr instruction(type op_type, int duration, int value)
+      : m_type{op_type},
+        m_duration{duration},
+        m_cycles_left{duration},
+        m_value{value} {}
+
+ private:
+  type m_type;
+  int m_duration;
+  int m_cycles_left;
+  int m_value;
+};
+
+template <bool insert_noop>
 void solve_case(const std::string& filename) {
-  int score = 0;
+  int signal_strength = 0;
+
+  int register_X = 1;
+  int pc = 1;
+
+  constexpr int pipeline_length = 2;
+  std::array<instruction, pipeline_length> pipeline;
+
+  const auto shift_pipeline = [&]() {
+    // During cycle
+    if ((pc == 20) || (((pc - 20) % 40) == 0)) {
+      signal_strength += (pc * register_X);
+    }
+    for (auto& op : pipeline) {
+      register_X = op.tick(register_X);
+    }
+    // After cycle
+    ++pc;
+    std::shift_right(std::begin(pipeline), std::end(pipeline), 1);
+    // Always insert a noop at the beginning, should be overriden later
+    pipeline.front().clear();
+  };
 
   readfile_op(filename, [&](std::string_view line) {
-    auto [instruction, name, cd_to] =
-        split<std::array<std::string, 3>>(std::string{line}, ' ');
+    auto [op, value] =
+        split<std::array<std::string, 2>>(std::string{line}, ' ');
+
+    // Place new instruction into the pipeline
+    if (op == "noop") {
+      pipeline.front().clear();
+    } else if (op == "addx") {
+      pipeline.front() = instruction::make_addx(std::stoi(value));
+    } else {
+      throw std::runtime_error("Invalid instruction " + op);
+    }
+
+    if constexpr (insert_noop) {
+      // Instruction needs to block until it's finished
+      auto number_noops = pipeline.front().get_duration() - 1;
+      for (int i = 0; i < number_noops; ++i) {
+        shift_pipeline();
+        pipeline.front().clear();
+      }
+    }
+
+    shift_pipeline();
   });
 
-  std::cout << filename << " -> " << score << std::endl;
+
+  std::cout << filename << " -> " << signal_strength << std::endl;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case<false>("day10.example");
-  solve_case<false>("day10.input");
-  // std::cout << "Part 2" << std::endl;
   solve_case<true>("day10.example");
   solve_case<true>("day10.input");
+  // std::cout << "Part 2" << std::endl;
+  // solve_case<true>("day10.example");
+  // solve_case<true>("day10.input");
 }
