@@ -261,10 +261,15 @@ class grid {
 
 std::ostream& print_range(const std::ranges::range auto range,
                           std::string_view separator = ",",
-                          std::string_view indent = "",
                           std::ostream& out = std::cout) {
   for (const auto& item : range) {
-    out << indent << item << separator;
+    out << item << separator;
   }
   return out;
 }
+
+template <class T>
+struct inspect_t;
+
+template <auto V>
+struct inspect_v;

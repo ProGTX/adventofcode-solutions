@@ -14,25 +14,40 @@
 
 #include "../common.h"
 
+using item_t = long;
+
 struct monkey_t {
-  using operation_t = std::function<int(int)>;
+  using operation_t = std::function<item_t(item_t)>;
 
   struct test_t {
-    int divisible_by;
+    item_t divisible_by;
     int on_false;
     int on_true;
   };
-  std::vector<int> items;
+  std::vector<item_t> items;
   operation_t operation;
   test_t test;
+
+  std::ostream& print(std::string_view indent = "",
+                      std::ostream& out = std::cout) const {
+    out << indent;
+    print_range(items, ",", out) << std::endl;
+    out << indent << "operation(7) = " << operation(7) << std::endl;
+    out << indent << "test{" << test.divisible_by << ",true(" << test.on_true
+        << "),"
+        << "false(" << test.on_false << ")}" << std::endl;
+    return out;
+  }
 };
 
-template <int num_rounds, int num_average>
+template <int num_rounds, int num_average, item_t relief_factor>
 void solve_case(const std::string& filename) {
   std::vector<monkey_t> monkeys;
   monkey_t* current = nullptr;
+  item_t divisible_max = 1;
 
-  const auto get_binary_op = [](char op) -> std::function<int(int, int)> {
+  const auto get_binary_op =
+      [](char op) -> std::function<item_t(item_t, item_t)> {
     switch (op) {
       case '+':
         return std::plus<>{};
@@ -60,8 +75,8 @@ void solve_case(const std::string& filename) {
     } else if (instructions[0] == "Operation:") {
       auto binary_op = get_binary_op(instructions[4][0]);
       bool use_old = (instructions[5] == "old");
-      int value = use_old ? 0 : std::stoi(instructions[5]);
-      current->operation = [=](int old) {
+      item_t value = use_old ? 0 : std::stoi(instructions[5]);
+      current->operation = [=](item_t old) {
         if (use_old) {
           return binary_op(old, old);
         } else {
@@ -69,7 +84,9 @@ void solve_case(const std::string& filename) {
         }
       };
     } else if (instructions[0] == "Test:") {
-      current->test.divisible_by = std::stoi(instructions[3]);
+      auto divisible_by = std::stoi(instructions[3]);
+      divisible_max *= divisible_by;
+      current->test.divisible_by = divisible_by;
     } else if (instructions[0] == "If") {
       if (instructions[1] == "true:") {
         current->test.on_true = std::stoi(instructions[5]);
@@ -83,27 +100,33 @@ void solve_case(const std::string& filename) {
     }
   });
 
-  std::vector<int> num_inspected(monkeys.size(), 0);
+  std::vector<item_t> num_inspected(monkeys.size(), 0);
   for (int round = 0; round < num_rounds; ++round) {
-    for (int count = 0; auto& monkey : monkeys) {
-      for (auto item : monkey.items) {
+    for (int monkey_id = 0; auto& monkey : monkeys) {
+      for (const auto item : monkey.items) {
         auto worry_level = monkey.operation(item);
-        worry_level /= 3;
+        if (relief_factor == 1) {
+          worry_level = worry_level % divisible_max;
+        } else {
+          worry_level /= relief_factor;
+        }
         auto next_monkey = ((worry_level % monkey.test.divisible_by) == 0)
                                ? monkey.test.on_true
                                : monkey.test.on_false;
         monkeys[next_monkey].items.push_back(worry_level);
       }
-      num_inspected[count] += monkey.items.size();
+      // std::cout << std::endl;
+      num_inspected[monkey_id] += monkey.items.size();
       monkey.items.clear();
-      ++count;
+      ++monkey_id;
     }
   }
 
   std::ranges::sort(num_inspected, std::greater<>{});
 
+  // Store score as an unsigned long to prevent overflow
   auto score = std::accumulate(std::begin(num_inspected),
-                               std::begin(num_inspected) + num_average, 1,
+                               std::begin(num_inspected) + num_average, 1ul,
                                std::multiplies<>{});
 
   std::cout << filename << " -> " << score << std::endl;
@@ -111,9 +134,9 @@ void solve_case(const std::string& filename) {
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case<20, 2>("day11.example");
-  solve_case<20, 2>("day11.input");
-  // std::cout << "Part 2" << std::endl;
-  // solve_case<true>("day11.example");
-  // solve_case<true>("day11.input");
+  solve_case<20, 2, 3>("day11.example");
+  solve_case<20, 2, 3>("day11.input");
+  std::cout << "Part 2" << std::endl;
+  solve_case<10000, 2, 1>("day11.example");
+  solve_case<10000, 2, 1>("day11.input");
 }
