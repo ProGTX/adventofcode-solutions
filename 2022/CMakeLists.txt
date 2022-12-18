@@ -15,3 +15,4 @@ add_custom_command(
 )
 add_sample(day10 2022)
 add_sample(day11 2022)
+add_sample(day12 2022)

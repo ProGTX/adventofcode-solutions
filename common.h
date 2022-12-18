@@ -11,6 +11,12 @@
 #include <type_traits>
 #include <vector>
 
+template <class T>
+struct inspect_t;
+
+template <auto V>
+struct inspect_v;
+
 // https://stackoverflow.com/a/51032862
 template <class, template <class...> class>
 inline constexpr bool is_specialization = false;
@@ -268,8 +274,59 @@ std::ostream& print_range(const std::ranges::range auto range,
   return out;
 }
 
-template <class T>
-struct inspect_t;
+struct point {
+  int x = 0;
+  int y = 0;
+  bool operator==(const point&) const = default;
 
-template <auto V>
-struct inspect_v;
+#define AOC_POINTWISE_OP(op, op_eq)                                            \
+  constexpr point& operator op_eq(const point& other) {                        \
+    x op_eq other.x;                                                           \
+    y op_eq other.y;                                                           \
+    return *this;                                                              \
+  }                                                                            \
+  constexpr friend point operator op(point lhs, const point& rhs) {            \
+    lhs op_eq rhs;                                                             \
+    return lhs;                                                                \
+  }
+
+  AOC_POINTWISE_OP(+, +=)
+  AOC_POINTWISE_OP(-, -=)
+  AOC_POINTWISE_OP(*, *=)
+
+#undef AOC_POINTWISE_OP
+
+  // Note that this operator allows division by zero
+  // by setting the element to zero
+  constexpr point& operator/=(const point& other) {
+    if (other.x == 0) {
+      x = 0;
+    } else {
+      x /= other.x;
+    }
+    if (other.y == 0) {
+      y = 0;
+    } else {
+      y /= other.y;
+    }
+    return *this;
+  }
+  constexpr friend point operator/(point lhs, const point& rhs) {
+    lhs /= rhs;
+    return lhs;
+  }
+
+  constexpr point operator-() const { return {-x, -y}; }
+
+  friend std::ostream& operator<<(std::ostream& out, const point& p) {
+    out << "{" << p.x << "," << p.y << "}";
+    return out;
+  }
+
+  constexpr point abs() const { return {std::abs(x), std::abs(y)}; }
+
+  constexpr static long distance_squared(const point& lhs, const point& rhs) {
+    auto diff = rhs - lhs;
+    return (diff.x * diff.x) + (diff.y * diff.y);
+  }
+};

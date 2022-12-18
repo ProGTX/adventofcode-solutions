@@ -15,58 +15,6 @@
 
 #include "../common.h"
 
-struct point {
-  int x = 0;
-  int y = 0;
-  bool operator==(const point&) const = default;
-
-#define AOC_POINTWISE_OP(op, op_eq)                                            \
-  constexpr point& operator op_eq(const point& other) {                        \
-    x op_eq other.x;                                                           \
-    y op_eq other.y;                                                           \
-    return *this;                                                              \
-  }                                                                            \
-  constexpr friend point operator op(point lhs, const point& rhs) {            \
-    lhs op_eq rhs;                                                             \
-    return lhs;                                                                \
-  }
-
-  AOC_POINTWISE_OP(+, +=)
-  AOC_POINTWISE_OP(-, -=)
-  AOC_POINTWISE_OP(*, *=)
-
-#undef AOC_POINTWISE_OP
-
-  // Note that this operator allows division by zero
-  // by setting the element to zero
-  constexpr point& operator/=(const point& other) {
-    if (other.x == 0) {
-      x = 0;
-    } else {
-      x /= other.x;
-    }
-    if (other.y == 0) {
-      y = 0;
-    } else {
-      y /= other.y;
-    }
-    return *this;
-  }
-  constexpr friend point operator/(point lhs, const point& rhs) {
-    lhs /= rhs;
-    return lhs;
-  }
-
-  constexpr point operator-() const { return {-x, -y}; }
-
-  friend std::ostream& operator<<(std::ostream& out, const point& p) {
-    out << "{" << p.x << "," << p.y << "}";
-    return out;
-  }
-
-  constexpr point abs() const { return {std::abs(x), std::abs(y)}; }
-};
-
 template <class T>
 class unique_vector {
  public:
