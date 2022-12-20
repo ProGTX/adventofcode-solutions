@@ -25,6 +25,7 @@ struct heightmap_t : public grid<std::vector<int>> {
 using neighbors_t = std::vector<point>;
 using path_t = std::vector<point>;
 
+template <bool reverse>
 neighbors_t find_neighbors(const heightmap_t& heightmap, const point current,
                            const auto& unvisited) {
   neighbors_t neighbors;
@@ -42,9 +43,15 @@ neighbors_t find_neighbors(const heightmap_t& heightmap, const point current,
         continue;
       }
       auto height_diff = heightmap.at(neighbor.y, neighbor.x) - current_height;
-      if (height_diff > 1) {
-        // Cannot climb very high, but can drop a lot
-        continue;
+      // Cannot climb very high, but can drop a lot
+      if constexpr (reverse) {
+        if (height_diff < -1) {
+          continue;
+        }
+      } else {
+        if (height_diff > 1) {
+          continue;
+        }
       }
       if (unvisited.contains(neighbor)) {
         neighbors.push_back(neighbor);
@@ -55,7 +62,10 @@ neighbors_t find_neighbors(const heightmap_t& heightmap, const point current,
 }
 
 // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Algorithm
-int shortest_path_length_dijkstra(const heightmap_t& heightmap) {
+template <bool reverse>
+int shortest_path_length_dijkstra(const heightmap_t& heightmap,
+                                  const point& start, const point& end,
+                                  const int search_value = 0) {
   // 2. Assign to every node a tentative distance value:
   // set it to zero for our initial node and to infinity for all other nodes.
   // During the run of the algorithm,
@@ -92,7 +102,7 @@ int shortest_path_length_dijkstra(const heightmap_t& heightmap) {
   };
 
   // 2. Set the initial node as current.
-  auto current = heightmap.begin_pos;
+  auto current = start;
   modify_distance(current, 0);
 
   while (true) {
@@ -104,13 +114,19 @@ int shortest_path_length_dijkstra(const heightmap_t& heightmap) {
     // occurs when there is no connection between the initial node
     // and remaining unvisited nodes),
     // then stop. The algorithm has finished.
-    if (current == heightmap.end_pos) {
-      break;
+    if constexpr (reverse) {
+      if (heightmap.at(current.y, current.x) == search_value) {
+        break;
+      }
+    } else {
+      if (current == end) {
+        break;
+      }
     }
 
     // 3. For the current node, consider all of its unvisited neighbors
     // and calculate their tentative distances through the current node.
-    auto neighbors = find_neighbors(heightmap, current, unvisited);
+    auto neighbors = find_neighbors<reverse>(heightmap, current, unvisited);
     auto current_distance = distances.at(current.y, current.x);
     for (const auto& neighbor : neighbors) {
       auto neighbor_distance = distances.at(neighbor.y, neighbor.x);
@@ -143,7 +159,7 @@ int shortest_path_length_dijkstra(const heightmap_t& heightmap) {
   return distances.at(current.y, current.x);
 }
 
-template <bool>
+template <bool reverse>
 void solve_case(const std::string& filename) {
   using row_t = typename heightmap_t::row_t;
   heightmap_t heightmap;
@@ -174,7 +190,15 @@ void solve_case(const std::string& filename) {
     heightmap.add_row(row);
   });
 
-  auto fewest_steps = shortest_path_length_dijkstra(heightmap);
+  auto start = heightmap.begin_pos;
+  auto end = heightmap.end_pos;
+  int search_value = static_cast<int>('z' - 'a');
+  if constexpr (reverse) {
+    std::swap(start, end);
+    search_value = static_cast<int>('a' - 'a');
+  }
+  auto fewest_steps = shortest_path_length_dijkstra<reverse>(heightmap, start,
+                                                             end, search_value);
 
   std::cout << filename << " -> " << fewest_steps << std::endl;
 }
@@ -183,7 +207,7 @@ int main() {
   std::cout << "Part 1" << std::endl;
   solve_case<false>("day12.example");
   solve_case<false>("day12.input");
-  // std::cout << "Part 2" << std::endl;
-  // solve_case<true>("day12.example");
-  // solve_case<true>("day12.input");
+  std::cout << "Part 2" << std::endl;
+  solve_case<true>("day12.example");
+  solve_case<true>("day12.input");
 }

@@ -20,10 +20,17 @@ template <auto V>
 struct inspect_v;
 
 // https://stackoverflow.com/a/51032862
-template <class, template <class...> class>
-inline constexpr bool is_specialization = false;
-template <template <class...> class T, class... Args>
-inline constexpr bool is_specialization<T<Args...>, T> = true;
+// https://open-std.org/JTC1/SC22/WG21/docs/papers/2020/p2098r1.pdf
+template <class T, template <class...> class Primary>
+struct is_specialization_of : std::false_type {};
+template <template <class...> class Primary, class... Args>
+struct is_specialization_of<Primary<Args...>, Primary> : std::true_type {};
+template <class T, template <class...> class Primary>
+inline constexpr bool is_specialization_of_v =
+    is_specialization_of<T, Primary>::value;
+
+template <class T, template <class...> class Primary>
+concept specialization_of = is_specialization_of_v<T, Primary>;
 
 template <class T>
 struct is_array_class : std::false_type {};
@@ -130,7 +137,7 @@ constexpr auto inserter_it(output_t& elems) {
 template <class output_t>
 constexpr auto split_item_op() {
   if constexpr (is_array_class_v<output_t> ||
-                is_specialization<output_t, std::vector>) {
+                is_specialization_of_v<output_t, std::vector>) {
     if constexpr (std::is_same_v<typename output_t::value_type, int>) {
       return [](auto&& item) { return std::stoi(item); };
     } else {
@@ -209,7 +216,7 @@ class grid {
     m_row_length = row.size();
     auto old_size = (m_row_length * m_num_rows);
     auto it = inserter_it(m_data);
-    if constexpr (is_specialization<data_t, std::vector>) {
+    if constexpr (is_specialization_of_v<data_t, std::vector>) {
       m_data.reserve(old_size + m_row_length);
     } else if (is_array_class_v<data_t>) {
       it += old_size;
