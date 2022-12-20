@@ -8,7 +8,9 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 template <class T>
@@ -225,13 +227,24 @@ class grid {
 
   constexpr int num_rows() const { return m_num_rows; }
 
+  constexpr int linear_index(int row, int column) const {
+    return row * m_row_length + column;
+  }
+
+  constexpr value_type& at(int row, int column) {
+    return m_data[this->linear_index(row, column)];
+  }
+
+  constexpr const value_type& at(int row, int column) const {
+    return m_data[this->linear_index(row, column)];
+  }
+
   constexpr void modify(value_type value, int linear_index) {
     m_data[linear_index] = std::move(value);
   }
 
   constexpr void modify(value_type value, int row, int column) {
-    auto linear_index = row * m_row_length + column;
-    this->modify(std::move(value), linear_index);
+    this->modify(std::move(value), this->linear_index(row, column));
   }
 
   template <class print_single_ft = std::identity>
@@ -329,4 +342,104 @@ struct point {
     auto diff = rhs - lhs;
     return (diff.x * diff.x) + (diff.y * diff.y);
   }
+};
+
+// https://stackoverflow.com/a/67687348/793006
+template <std::size_t I, class... Ts>
+void print_tuple(std::ostream& out, const std::tuple<Ts...>& tuple) {
+  if constexpr (I == sizeof...(Ts)) {
+    out << ')';
+  } else {
+    out << std::get<I>(tuple);
+    if constexpr (I + 1 != sizeof...(Ts)) {
+      out << ",";
+    }
+    print_tuple<I + 1>(out, tuple);
+  }
+}
+
+template <class... Types>
+struct printable_tuple : public std::tuple<Types...> {
+ private:
+  using base_t = std::tuple<Types...>;
+
+ public:
+  using base_t::base_t;
+
+  friend std::ostream& operator<<(std::ostream& out,
+                                  const printable_tuple& tuple) {
+    out << '(';
+    print_tuple<0>(out, tuple);
+    return out;
+  }
+};
+template <class... Types>
+printable_tuple(Types...)->printable_tuple<Types...>;
+
+template <class T, class Compare = std::less<T>>
+class sorted_flat_set {
+ private:
+  using data_t = std::vector<T>;
+
+ public:
+  using value_type = data_t::value_type;
+  using iterator = data_t::iterator;
+  using const_iterator = data_t::const_iterator;
+
+  constexpr sorted_flat_set() : sorted_flat_set{Compare{}} {}
+
+  constexpr explicit sorted_flat_set(const Compare& comp)
+      : m_comparator{comp} {}
+
+  constexpr iterator begin() noexcept { return m_data.begin(); }
+  constexpr const_iterator begin() const noexcept { return m_data.begin(); }
+
+  constexpr iterator end() noexcept { return m_data.end(); }
+  constexpr const_iterator end() const noexcept { return m_data.end(); }
+
+  constexpr iterator find(const value_type& value) {
+    return std::ranges::find(m_data, value);
+  }
+
+  constexpr const_iterator find(const value_type& value) const {
+    return std::ranges::find(m_data, value);
+  }
+
+  constexpr bool contains(const T& value) const {
+    return this->find(value) != this->end();
+  }
+
+  constexpr size_t size() const noexcept { return m_data.size(); }
+
+  [[nodiscard]] constexpr bool empty() const noexcept { return m_data.empty(); }
+
+  constexpr size_t erase(const T& value) {
+    auto it = this->find(value);
+    if (it == this->end()) {
+      return 0;
+    }
+    m_data.erase(it);
+    return 1;
+  }
+
+  template <class value_t = value_type>
+  constexpr std::pair<iterator, bool> insert(value_t&& value) {
+    auto it = this->find(value);
+    if (it != this->end()) {
+      return {it, false};
+    }
+    m_data.push_back(value);
+    std::ranges::sort(m_data, m_comparator);
+    return {this->find(value), true};
+  }
+
+  template <class... Args>
+  constexpr std::pair<iterator, bool> emplace(Args&&... args) {
+    auto value = T{std::forward<Args>(args)...};
+    return this->insert(std::move(value));
+  }
+
+ private:
+  data_t m_data;
+  Compare m_comparator;
 };
