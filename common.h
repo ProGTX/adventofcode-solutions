@@ -5,6 +5,7 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -12,6 +13,23 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#if defined(NDEBUG)
+#if defined(__assume) || defined(_MSC_VER)
+#define AOC_ASSERT_HELPER(condition, message) __assume(condition)
+#elif defined(__has_builtin)
+#if __has_builtin(__builtin_assume)
+#define AOC_ASSERT_HELPER(condition, message) __builtin_assume(condition)
+#endif // __has_builtin(__builtin_assume)
+#else  // __assume not available
+#define AOC_ASSERT_HELPER(condition, message) ((void)0)
+#endif // __assume  || _MSC_VER
+#else
+#include <cassert>
+#define AOC_ASSERT_HELPER(condition, message) assert((condition) && (message))
+#endif // NDEBUG
+
+#define AOC_ASSERT(condition, message) AOC_ASSERT_HELPER((condition), (message))
 
 template <class T>
 struct inspect_t;
@@ -66,9 +84,11 @@ template <class trim_op_t = decltype([](std::string_view str) {
             return trim(str);
           }),
           class OpT>
-    requires std::invocable<OpT, std::string_view, int> ||
-    std::invocable<OpT, std::string_view> void readfile_op(
-        const std::string& filename, OpT operation) {
+requires(
+    std::invocable<OpT, std::string_view, int> ||
+    std::invocable<OpT, std::string_view>) void readfile_op(const std::string&
+                                                                filename,
+                                                            OpT operation) {
   std::ifstream file{filename};
   if (!file.is_open()) {
     throw std::runtime_error("Cannot open file " + filename);
@@ -85,10 +105,12 @@ template <class trim_op_t = decltype([](std::string_view str) {
 }
 
 template <class FirstLineOpT, class OpT>
-requires std::invocable<FirstLineOpT, std::string_view>&&
-    std::invocable<OpT, std::string_view> void
-    readfile_op_header(const std::string& filename,
-                       FirstLineOpT first_line_operation, OpT operation) {
+requires(std::invocable<FirstLineOpT, std::string_view>&& std::invocable<
+         OpT,
+         std::string_view>) void readfile_op_header(const std::string& filename,
+                                                    FirstLineOpT
+                                                        first_line_operation,
+                                                    OpT operation) {
   readfile_op(filename, [&](std::string_view line, int linenum) {
     if (linenum == 1) {
       first_line_operation(line);
@@ -449,4 +471,71 @@ class sorted_flat_set {
  private:
   data_t m_data;
   Compare m_comparator;
+};
+
+template <class T, class CRTP>
+class btree {
+ public:
+  using child_ptr_t = std::unique_ptr<CRTP>;
+  using children_t = std::vector<child_ptr_t>;
+
+  using value_type = T;
+  using iterator = typename children_t::iterator;
+  using const_iterator = typename children_t::const_iterator;
+
+ protected:
+  constexpr btree(CRTP* parent, T value, bool is_leaf)
+      : m_parent{parent}, m_value{std::move(value)}, m_is_leaf{is_leaf} {}
+
+ public:
+  constexpr CRTP* get_parent() const { return m_parent; }
+
+  constexpr CRTP* get_child(
+      const std::equality_comparable_with<value_type> auto& value) const {
+    auto it = std::ranges::find_if(m_children, [&](auto& child_ptr) {
+      return (child_ptr->m_value == value);
+    });
+    if (it == std::end(m_children)) {
+      return nullptr;
+    }
+    return it->get();
+  }
+
+  constexpr CRTP* add_child(child_ptr_t child) {
+    if (m_is_leaf) {
+      throw std::runtime_error("Cannot add nodes to leaf");
+    }
+    m_children.push_back(std::move(child));
+    return m_children.back().get();
+  }
+
+  constexpr iterator begin() { return std::begin(m_children); }
+  constexpr const_iterator begin() const { return std::begin(m_children); }
+
+  constexpr iterator end() { return std::end(m_children); }
+  constexpr const_iterator end() const { return std::end(m_children); }
+
+  constexpr bool is_leaf() const { return m_is_leaf; }
+
+  constexpr T& get_value() { return m_value; }
+  constexpr const T& get_value() const { return m_value; }
+
+  std::ostream& print(std::ostream& out = std::cout) const {
+    if (this->is_leaf()) {
+      out << m_value;
+      return out;
+    }
+    out << '[';
+    for (const auto& child : m_children) {
+      child->print(out) << ',';
+    }
+    out << ']';
+    return out;
+  }
+
+ private:
+  children_t m_children;
+  CRTP* m_parent{nullptr};
+  T m_value{};
+  bool m_is_leaf{false};
 };

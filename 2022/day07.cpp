@@ -14,92 +14,67 @@
 
 #include "../common.h"
 
-class btree {
+class filesystem_t : public btree<std::string, filesystem_t> {
  private:
-  using children_t = std::vector<std::unique_ptr<btree>>;
+  using base_t = btree<std::string, filesystem_t>;
 
  public:
-  using const_iterator = typename children_t::const_iterator;
-
   enum type_t {
     folder,
     file,
   };
 
-  btree() : name{"/"} {}
+  filesystem_t() : btree{nullptr, "/", false} {}
 
-  btree* add_file(std::string name_, int size_) {
-    if (type == file) {
-      throw std::runtime_error("Files cannot add files");
-    }
-    children.push_back(
-        std::unique_ptr<btree>{new btree{this, name_, size_, file}});
-    return children.back().get();
+  filesystem_t* add_file(std::string name, int size_) {
+    return this->add_child(std::unique_ptr<filesystem_t>{
+        new filesystem_t{this, std::move(name), size_, file}});
   }
 
-  btree* add_folder(std::string name_) {
-    if (type == file) {
-      throw std::runtime_error("Files cannot add folders");
-    }
-    children.push_back(
-        std::unique_ptr<btree>{new btree{this, name_, 0, folder}});
-    return children.back().get();
+  filesystem_t* add_folder(std::string name) {
+    return this->add_child(std::unique_ptr<filesystem_t>{
+        new filesystem_t{this, std::move(name), 0, folder}});
   }
 
-  friend void set_sizes(btree& node) {
-    if (node.type == file) {
+  filesystem_t* get_child(std::string_view child_name) const {
+    if (child_name == "..") {
+      return this->get_parent();
+    }
+    return base_t::get_child(child_name);
+  }
+
+  friend void set_sizes(filesystem_t& node) {
+    if (node.get_type() == file) {
       return;
     }
     int sum = 0;
-    for (const auto& child : node.children) {
+    for (const auto& child : node) {
       set_sizes(*child);
       sum += child->size;
     }
     node.size = sum;
   }
 
-  btree* get_child(std::string_view child_name) const {
-    if (child_name == "..") {
-      return parent;
-    }
-    auto it = std::ranges::find_if(children, [&](auto& child_ptr) {
-      return (child_ptr->name == child_name);
-    });
-    if (it == std::end(children)) {
-      return nullptr;
-    }
-    return it->get();
-  }
-
-  btree* get_parent() const { return parent; }
-
-  std::string_view get_name() const { return name; }
-
   int get_size() const { return size; }
 
-  type_t get_type() const { return type; }
+  type_t get_type() const { return this->is_leaf() ? file : folder; }
 
-  const_iterator begin() const { return std::begin(children); }
-
-  const_iterator end() const { return std::end(children); }
+  std::string_view get_name() const { return this->get_value(); }
 
  private:
-  btree(btree* parent_, std::string name_, int size_, type_t type_)
-      : parent{parent_}, name{name_}, size{size_}, type{type_} {}
+  filesystem_t(filesystem_t* parent_, std::string name_, int size_, type_t type)
+      : btree{parent_, name_, (type == file)}, size{size_} {}
 
-  children_t children;
-  btree* parent = nullptr;
-  std::string name{"/"};
   int size = 0;
-  type_t type = folder;
 };
 
 template <int max_size>
-int sum_folder_sizes(const btree* node) {
+int sum_folder_sizes(const filesystem_t* node) {
   int current_size = node->get_size();
-  int sum = ((node->get_type() == btree::folder) && (current_size <= max_size))
-                ? current_size
-                : 0;
+  int sum =
+      ((node->get_type() == filesystem_t::folder) && (current_size <= max_size))
+          ? current_size
+          : 0;
   for (const auto& child : *node) {
     sum += sum_folder_sizes<max_size>(child.get());
   }
@@ -109,10 +84,10 @@ int sum_folder_sizes(const btree* node) {
 using folder_sizes_t = std::vector<std::pair<std::string_view, int>>;
 
 template <int max_used_space>
-void get_folder_sizes(btree* node, const int used_space,
+void get_folder_sizes(filesystem_t* node, const int used_space,
                       folder_sizes_t& folder_sizes) {
   for (const auto& child : *node) {
-    if (child->get_type() != btree::folder) {
+    if (child->get_type() != filesystem_t::folder) {
       continue;
     }
     int current_size = child->get_size();
@@ -125,8 +100,8 @@ void get_folder_sizes(btree* node, const int used_space,
 
 template <bool delete_space>
 void solve_case(const std::string& filename) {
-  btree filesystem;
-  btree* current_node = &filesystem;
+  filesystem_t filesystem;
+  filesystem_t* current_node = &filesystem;
 
   readfile_op(filename, [&](std::string_view line) {
     auto [instruction, name, cd_to] =
