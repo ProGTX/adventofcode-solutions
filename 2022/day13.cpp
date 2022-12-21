@@ -8,6 +8,7 @@
 #include <numeric>
 #include <ostream>
 #include <ranges>
+#include <set>
 #include <stack>
 #include <string>
 #include <string_view>
@@ -106,12 +107,19 @@ ordering in_right_order(packet_tree* first, packet_tree* second) {
   return inconclusive;
 }
 
-template <bool>
+template <bool sort_all>
 void solve_case(const std::string& filename) {
   using packet_pair_t = std::array<packet_node_t, 2>;
 
+  using packets_t = std::conditional_t<
+      !sort_all, std::vector<packet_pair_t>,
+      std::set<packet_node_t,
+               decltype([](const packet_node_t& lhs, const packet_node_t& rhs) {
+                 return (in_right_order(lhs.get(), rhs.get()) == correct);
+               })>>;
+
   packet_pair_t packet_pair;
-  std::vector<packet_pair_t> packets;
+  packets_t packets;
   std::stack<packet_tree*, std::vector<packet_tree*>> packet_stack;
 
   std::string current_number_str;
@@ -149,28 +157,45 @@ void solve_case(const std::string& filename) {
     packet_pair[index] = parse_list(line);
     index = (index + 1) % 2;
     if (index == 0) {
-      packets.push_back(std::move(packet_pair));
+      if constexpr (!sort_all) {
+        packets.push_back(std::move(packet_pair));
+      } else {
+        packets.insert(std::move(packet_pair[0]));
+        packets.insert(std::move(packet_pair[1]));
+      }
     }
   });
 
-  int sum = 0;
+  int score = 0;
 
-  for (int index = 1; const auto& packet_pair : packets) {
-    auto result = in_right_order(packet_pair[0].get(), packet_pair[1].get());
-    if (result == correct) {
-      sum += index;
+  if constexpr (!sort_all) {
+    for (int index = 1; const auto& packet_pair : packets) {
+      auto result = in_right_order(packet_pair[0].get(), packet_pair[1].get());
+      if (result == correct) {
+        score += index;
+      }
+      ++index;
     }
-    ++index;
+  } else {
+    auto divider1_str = "[[2]]";
+    auto divider2_str = "[[6]]";
+    packets.insert(parse_list(divider1_str));
+    packets.insert(parse_list(divider2_str));
+    auto divider1 = packets.find(parse_list(divider1_str));
+    auto divider2 = packets.find(parse_list(divider2_str));
+    auto begin = std::begin(packets);
+    score = (std::distance(begin, divider1) + 1) *
+            (std::distance(begin, divider2) + 1);
   }
 
-  std::cout << filename << " -> " << sum << std::endl;
+  std::cout << filename << " -> " << score << std::endl;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
   solve_case<false>("day13.example");
   solve_case<false>("day13.input");
-  // std::cout << "Part 2" << std::endl;
-  // solve_case<true>("day13.example");
-  // solve_case<true>("day13.input");
+  std::cout << "Part 2" << std::endl;
+  solve_case<true>("day13.example");
+  solve_case<true>("day13.input");
 }
