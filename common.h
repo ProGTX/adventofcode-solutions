@@ -20,6 +20,8 @@
 #elif defined(__has_builtin)
 #if __has_builtin(__builtin_assume)
 #define AOC_ASSERT_HELPER(condition, message) __builtin_assume(condition)
+#else // __builtin_assume not available
+#define AOC_ASSERT_HELPER(condition, message) ((void)0)
 #endif // __has_builtin(__builtin_assume)
 #else  // __assume not available
 #define AOC_ASSERT_HELPER(condition, message) ((void)0)
@@ -49,6 +51,27 @@ inline constexpr bool is_specialization_of_v =
 
 template <class T, template <class...> class Primary>
 concept specialization_of = is_specialization_of_v<T, Primary>;
+
+template <class Container>
+concept insertable = requires(Container c,
+                              typename Container::value_type value) {
+  c.begin();
+  c.end();
+  c.insert(value);
+};
+
+template <class Container>
+concept back_insertable = requires(Container c,
+                                   typename Container::value_type value) {
+  c.begin();
+  c.end();
+  c.push_back(value);
+};
+
+template <class Container>
+concept has_value_type = requires(Container c) {
+  typename Container::value_type;
+};
 
 template <class T>
 struct is_array_class : std::false_type {};
@@ -149,17 +172,18 @@ void split_line_to_iterator(const std::string& input, char delimiter,
 
 template <class output_t>
 constexpr auto inserter_it(output_t& elems) {
-  if constexpr (is_array_class_v<output_t>) {
-    return std::begin(elems);
-  } else {
+  if constexpr (insertable<output_t>) {
+    return std::insert_iterator(elems, std::end(elems));
+  } else if constexpr (back_insertable<output_t>) {
     return std::back_insert_iterator(elems);
+  } else {
+    return std::begin(elems);
   }
 }
 
 template <class output_t>
 constexpr auto split_item_op() {
-  if constexpr (is_array_class_v<output_t> ||
-                is_specialization_of_v<output_t, std::vector>) {
+  if constexpr (has_value_type<output_t>) {
     if constexpr (std::is_same_v<typename output_t::value_type, int>) {
       return [](auto&& item) { return std::stoi(item); };
     } else {
@@ -233,6 +257,18 @@ class grid {
   using value_type = typename data_t::value_type;
   using iterator = typename data_t::iterator;
   using const_iterator = typename data_t::const_iterator;
+
+  constexpr grid() {}
+
+  template <class Container = data_t>
+  requires requires(Container c, size_t count,
+                    const typename Container::value_type& value) {
+    Container(count, value);
+  }
+  constexpr grid(value_type value, int num_rows, int num_columns)
+      : m_data(num_rows * num_columns, value),
+        m_row_length{num_columns},
+        m_num_rows(num_rows) {}
 
   constexpr iterator add_row(const row_t& row) {
     m_row_length = row.size();
@@ -317,8 +353,12 @@ std::ostream& print_range(const std::ranges::range auto range,
 }
 
 struct point {
-  int x = 0;
-  int y = 0;
+  using value_type = int;
+  using iterator = value_type*;
+  using const_iterator = const value_type*;
+
+  value_type x = 0;
+  value_type y = 0;
   bool operator==(const point&) const = default;
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
@@ -371,6 +411,12 @@ struct point {
     auto diff = rhs - lhs;
     return (diff.x * diff.x) + (diff.y * diff.y);
   }
+
+  constexpr iterator begin() noexcept { return &x; }
+  constexpr const_iterator begin() const noexcept { return &x; }
+
+  constexpr iterator end() noexcept { return (&y) + 1; }
+  constexpr const_iterator end() const noexcept { return (&y) + 1; }
 };
 
 // https://stackoverflow.com/a/67687348/793006
