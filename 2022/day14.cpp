@@ -21,7 +21,7 @@ enum special_chars : char {
   sand = 'o',
 };
 
-template <bool>
+template <bool with_ground>
 void solve_case(const std::string& filename) {
   using rock_line_t = std::array<point, 2>;
   std::vector<rock_line_t> rock_lines;
@@ -68,6 +68,15 @@ void solve_case(const std::string& filename) {
 
   point sand_starter{500, 0};
   update_min_max(sand_starter);
+
+  if constexpr (with_ground) {
+    auto height = max_value.y - min_value.y + 2;
+    rock_line_t rock_line{sand_starter + point{-height, height},
+                          sand_starter + point{height, height}};
+    update_min_max(rock_line[0]);
+    update_min_max(rock_line[1]);
+    rock_lines.push_back(rock_line);
+  }
 
   auto cave_dimensions = max_value - min_value + point{1, 1};
   std::cout << "Creating cave map " << cave_dimensions.y << ","
@@ -191,6 +200,11 @@ void solve_case(const std::string& filename) {
     ++num_grains;
   }
 
+  if constexpr (with_ground) {
+    // Our simulation doesn't override the starting point, add 1
+    ++num_grains;
+  }
+
   cave_map.print_all();
 
   std::cout << filename << " -> " << num_grains << std::endl;
@@ -200,7 +214,7 @@ int main() {
   std::cout << "Part 1" << std::endl;
   solve_case<false>("day14.example");
   solve_case<false>("day14.input");
-  // std::cout << "Part 2" << std::endl;
-  // solve_case<true>("day14.example");
-  // solve_case<true>("day14.input");
+  std::cout << "Part 2" << std::endl;
+  solve_case<true>("day14.example");
+  solve_case<true>("day14.input");
 }
