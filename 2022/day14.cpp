@@ -26,23 +26,7 @@ void solve_case(const std::string& filename) {
   using rock_line_t = std::array<point, 2>;
   std::vector<rock_line_t> rock_lines;
 
-  point min_value{1'000'000'000, 1'000'000'000};
-  point max_value{0, 0};
-
-  const auto update_min_max = [&](const point& p) {
-    if (p.x < min_value.x) {
-      min_value.x = p.x;
-    }
-    if (p.y < min_value.y) {
-      min_value.y = p.y;
-    }
-    if (p.x > max_value.x) {
-      max_value.x = p.x;
-    }
-    if (p.y > max_value.y) {
-      max_value.y = p.y;
-    }
-  };
+  min_max_helper min_max;
 
   readfile_op(filename, [&](std::string_view line) {
     // Simplify "->" delimiter to a single char
@@ -55,10 +39,10 @@ void solve_case(const std::string& filename) {
     });
     auto rock_pairs = split<std::vector<std::string>>(transformed_line, '-');
     auto previous = split<point>(rock_pairs[0], ',');
-    update_min_max(previous);
+    min_max.update(previous);
     for (const auto& rock_pair_str : rock_pairs | std::views::drop(1)) {
       auto current = split<point>(rock_pair_str, ',');
-      update_min_max(current);
+      min_max.update(current);
       rock_lines.push_back(rock_line_t{previous, current});
       previous = current;
     }
@@ -67,23 +51,25 @@ void solve_case(const std::string& filename) {
   using cave_map_t = grid<std::vector<char>>;
 
   point sand_starter{500, 0};
-  update_min_max(sand_starter);
+  min_max.update(sand_starter);
 
   if constexpr (with_ground) {
-    auto height = max_value.y - min_value.y + 2;
+    auto height = min_max.max_value.y - min_max.min_value.y + 2;
     rock_line_t rock_line{sand_starter + point{-height, height},
                           sand_starter + point{height, height}};
-    update_min_max(rock_line[0]);
-    update_min_max(rock_line[1]);
+    min_max.update(rock_line[0]);
+    min_max.update(rock_line[1]);
     rock_lines.push_back(rock_line);
   }
 
-  auto cave_dimensions = max_value - min_value + point{1, 1};
+  auto cave_dimensions = min_max.max_value - min_max.min_value + point{1, 1};
   std::cout << "Creating cave map " << cave_dimensions.y << ","
             << cave_dimensions.x << std::endl;
   cave_map_t cave_map{empty, cave_dimensions.y, cave_dimensions.x};
 
-  const auto adjust_coordinates = [&](const point& p) { return p - min_value; };
+  const auto adjust_coordinates = [&](const point& p) {
+    return p - min_max.min_value;
+  };
   const auto modify_cave_map = [&](char value, const point& p) {
     auto coords = adjust_coordinates(p);
     cave_map.modify(value, coords.y, coords.x);

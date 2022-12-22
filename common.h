@@ -173,9 +173,9 @@ void split_line_to_iterator(const std::string& input, char delimiter,
 template <class output_t>
 constexpr auto inserter_it(output_t& elems) {
   if constexpr (insertable<output_t>) {
-    return std::insert_iterator(elems, std::end(elems));
+    return std::inserter(elems, std::end(elems));
   } else if constexpr (back_insertable<output_t>) {
-    return std::back_insert_iterator(elems);
+    return std::back_inserter(elems);
   } else {
     return std::begin(elems);
   }
@@ -409,7 +409,13 @@ struct point {
 
   constexpr static long distance_squared(const point& lhs, const point& rhs) {
     auto diff = rhs - lhs;
-    return (diff.x * diff.x) + (diff.y * diff.y);
+    return (static_cast<long>(diff.x) * diff.x) +
+           (static_cast<long>(diff.y) * diff.y);
+  }
+
+  constexpr static int distance_manhattan(const point& lhs, const point& rhs) {
+    auto diff = (rhs - lhs).abs();
+    return diff.x + diff.y;
   }
 
   constexpr iterator begin() noexcept { return &x; }
@@ -584,4 +590,24 @@ class btree {
   CRTP* m_parent{nullptr};
   T m_value{};
   bool m_is_leaf{false};
+};
+
+struct min_max_helper {
+  point min_value{2'000'000'000, 2'000'000'000};
+  point max_value{0, 0};
+
+  constexpr void update(const point& p) {
+    if (p.x < min_value.x) {
+      min_value.x = p.x;
+    }
+    if (p.y < min_value.y) {
+      min_value.y = p.y;
+    }
+    if (p.x > max_value.x) {
+      max_value.x = p.x;
+    }
+    if (p.y > max_value.y) {
+      max_value.y = p.y;
+    }
+  };
 };
