@@ -424,7 +424,13 @@ struct point {
     return out;
   }
 
-  constexpr point abs() const { return {std::abs(x), std::abs(y)}; }
+  constexpr point abs() const {
+    if (std::is_constant_evaluated()) {
+      return {(x < 0) ? -x : x, (y < 0) ? -y : y};
+    } else {
+      return {std::abs(x), std::abs(y)};
+    }
+  }
 
   constexpr static long distance_squared(const point& lhs, const point& rhs) {
     auto diff = rhs - lhs;
