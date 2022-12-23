@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <charconv>
 #include <concepts>
 #include <fstream>
 #include <functional>
@@ -99,14 +100,20 @@ constexpr std::string_view trim(std::string_view str,
   str = rtrim(str, whitespace);
   return str;
 }
-constexpr std::string_view trim_leave_spaces(std::string_view str) {
-  return trim(str, "\t\n\r\f\v");
+constexpr std::string_view trim_simple(std::string_view str) {
+  return trim(str);
 }
 
-template <class trim_op_t = decltype([](std::string_view str) {
-            return trim(str);
-          }),
-          class OpT>
+template <class return_t = std::string_view>
+constexpr auto get_trimmer() {
+  return [](std::string_view str) { return return_t{trim(str)}; };
+};
+template <class return_t = std::string_view>
+constexpr auto get_trimmer_no_spaces() {
+  return [](std::string_view str) { return return_t{trim(str, "\t\n\r\f\v")}; };
+};
+
+template <class trim_op_t = decltype(get_trimmer()), class OpT>
 requires(
     std::invocable<OpT, std::string_view, int> ||
     std::invocable<OpT, std::string_view>) void readfile_op(const std::string&
@@ -181,24 +188,36 @@ constexpr auto inserter_it(output_t& elems) {
   }
 }
 
-template <class output_t>
+template <class output_t, class string_item_op_t = std::identity>
 constexpr auto split_item_op() {
   if constexpr (has_value_type<output_t>) {
-    if constexpr (std::is_same_v<typename output_t::value_type, int>) {
-      return [](auto&& item) { return std::stoi(item); };
+    using value_type = typename output_t::value_type;
+    if constexpr (std::integral<value_type>) {
+      return [](auto&& item) {
+        auto item_transformed = string_item_op_t{}(item);
+        auto first = item_transformed.data();
+        auto last = first + item_transformed.size();
+        value_type value;
+        auto result = std::from_chars(first, last, value);
+        if (result.ec != std::errc{}) {
+          throw std::runtime_error("Failed to parse " +
+                                   std::string(result.ptr));
+        }
+        return value;
+      };
     } else {
-      return std::identity{};
+      return string_item_op_t{};
     }
   } else {
-    return std::identity{};
+    return string_item_op_t{};
   }
 }
 
-template <class output_t>
+template <class output_t, class string_item_op_t = std::identity>
 output_t split(const std::string& input, char delimiter) {
   output_t elems;
   split_line_to_iterator(input, delimiter, inserter_it(elems),
-                         split_item_op<output_t>());
+                         split_item_op<output_t, string_item_op_t>());
   return elems;
 }
 
@@ -431,7 +450,14 @@ void print_tuple(std::ostream& out, const std::tuple<Ts...>& tuple) {
   if constexpr (I == sizeof...(Ts)) {
     out << ')';
   } else {
-    out << std::get<I>(tuple);
+    using current_t = decltype(std::get<I>(tuple));
+    if constexpr (std::ranges::range<current_t> &&
+                  !std::convertible_to<current_t, std::string>) {
+      out << '{';
+      print_range(std::get<I>(tuple), ",", out) << '}';
+    } else {
+      out << std::get<I>(tuple);
+    }
     if constexpr (I + 1 != sizeof...(Ts)) {
       out << ",";
     }
@@ -458,7 +484,7 @@ template <class... Types>
 printable_tuple(Types...)->printable_tuple<Types...>;
 
 template <class T, class Compare = std::less<T>>
-class sorted_flat_set {
+requires std::equality_comparable<T> class sorted_flat_set {
  private:
   using data_t = std::vector<T>;
 
@@ -467,10 +493,15 @@ class sorted_flat_set {
   using iterator = data_t::iterator;
   using const_iterator = data_t::const_iterator;
 
-  constexpr sorted_flat_set() : sorted_flat_set{Compare{}} {}
+  constexpr sorted_flat_set() : sorted_flat_set{{}, Compare{}} {}
 
   constexpr explicit sorted_flat_set(const Compare& comp)
-      : m_comparator{comp} {}
+      : sorted_flat_set{{}, comp} {}
+
+  constexpr sorted_flat_set(data_t init, const Compare& comp = Compare{})
+      : m_data{init}, m_comparator{comp} {
+    this->sort();
+  }
 
   constexpr iterator begin() noexcept { return m_data.begin(); }
   constexpr const_iterator begin() const noexcept { return m_data.begin(); }
@@ -478,15 +509,19 @@ class sorted_flat_set {
   constexpr iterator end() noexcept { return m_data.end(); }
   constexpr const_iterator end() const noexcept { return m_data.end(); }
 
-  constexpr iterator find(const value_type& value) {
-    return std::ranges::find(m_data, value);
+  constexpr iterator find(
+      const std::equality_comparable_with<value_type> auto& value) {
+    return std::ranges::find_if(
+        m_data, [&](const value_type& v) { return v == value; });
+  }
+  constexpr const_iterator find(
+      const std::equality_comparable_with<value_type> auto& value) const {
+    return std::ranges::find_if(
+        m_data, [&](const value_type& v) { return v == value; });
   }
 
-  constexpr const_iterator find(const value_type& value) const {
-    return std::ranges::find(m_data, value);
-  }
-
-  constexpr bool contains(const T& value) const {
+  constexpr bool contains(
+      const std::equality_comparable_with<value_type> auto& value) const {
     return this->find(value) != this->end();
   }
 
@@ -494,24 +529,21 @@ class sorted_flat_set {
 
   [[nodiscard]] constexpr bool empty() const noexcept { return m_data.empty(); }
 
-  constexpr size_t erase(const T& value) {
-    auto it = this->find(value);
-    if (it == this->end()) {
-      return 0;
-    }
-    m_data.erase(it);
-    return 1;
-  }
-
-  template <class value_t = value_type>
-  constexpr std::pair<iterator, bool> insert(value_t&& value) {
+  constexpr std::pair<iterator, bool> insert(
+      std::equality_comparable_with<value_type> auto&& value) {
     auto it = this->find(value);
     if (it != this->end()) {
       return {it, false};
     }
-    m_data.push_back(value);
-    std::ranges::sort(m_data, m_comparator);
+    m_data.push_back(value_type{value});
+    this->sort();
     return {this->find(value), true};
+  }
+
+  template <std::equality_comparable_with<value_type> value_t = value_type>
+  constexpr iterator insert(const_iterator, value_t&& value) {
+    auto [it, success] = this->insert(std::forward<value_t>(value));
+    return it;
   }
 
   template <class... Args>
@@ -520,24 +552,57 @@ class sorted_flat_set {
     return this->insert(std::move(value));
   }
 
+  constexpr std::pair<iterator, bool> update(
+      std::equality_comparable_with<value_type> auto&& value) {
+    auto it = this->find(value);
+    if (it == this->end()) {
+      m_data.push_back(value_type{value});
+    } else {
+      *it = value;
+    }
+    this->sort();
+    return {this->find(value), true};
+  }
+
+  constexpr size_t erase(
+      const std::equality_comparable_with<value_type> auto& value) {
+    auto it = this->find(value);
+    if (it == this->end()) {
+      return 0;
+    }
+    m_data.erase(it);
+    this->sort();
+    return 1;
+  }
+
+  constexpr void sort() { std::ranges::sort(m_data, m_comparator); }
+
  private:
   data_t m_data;
   Compare m_comparator;
 };
 
-template <class T, class CRTP>
-class btree {
+template <class T, class CRTP, class String = std::string>
+class graph {
  public:
   using child_ptr_t = std::unique_ptr<CRTP>;
   using children_t = std::vector<child_ptr_t>;
+  using name_t = String;
 
   using value_type = T;
   using iterator = typename children_t::iterator;
   using const_iterator = typename children_t::const_iterator;
 
+  static_assert(
+      !std::same_as<T, name_t>,
+      "This class assumes strings are only used for names, not for values");
+
  protected:
-  constexpr btree(CRTP* parent, T value, bool is_leaf)
-      : m_parent{parent}, m_value{std::move(value)}, m_is_leaf{is_leaf} {}
+  constexpr graph(CRTP* parent, name_t name, T value, bool is_leaf)
+      : m_parent{parent},
+        m_name{std::move(name)},
+        m_value{std::move(value)},
+        m_is_leaf{is_leaf} {}
 
  public:
   constexpr CRTP* get_parent() const { return m_parent; }
@@ -546,6 +611,17 @@ class btree {
       const std::equality_comparable_with<value_type> auto& value) const {
     auto it = std::ranges::find_if(m_children, [&](auto& child_ptr) {
       return (child_ptr->m_value == value);
+    });
+    if (it == std::end(m_children)) {
+      return nullptr;
+    }
+    return it->get();
+  }
+
+  constexpr CRTP* get_child(
+      const std::equality_comparable_with<name_t> auto& name) const {
+    auto it = std::ranges::find_if(m_children, [&](auto& child_ptr) {
+      return (child_ptr->m_name == name);
     });
     if (it == std::end(m_children)) {
       return nullptr;
@@ -569,8 +645,10 @@ class btree {
 
   constexpr bool is_leaf() const { return m_is_leaf; }
 
-  constexpr T& get_value() { return m_value; }
-  constexpr const T& get_value() const { return m_value; }
+  std::string_view name() const { return m_name; }
+
+  constexpr T& value() { return m_value; }
+  constexpr const T& value() const { return m_value; }
 
   std::ostream& print(std::ostream& out = std::cout) const {
     if (this->is_leaf()) {
@@ -588,6 +666,7 @@ class btree {
  private:
   children_t m_children;
   CRTP* m_parent{nullptr};
+  name_t m_name;
   T m_value{};
   bool m_is_leaf{false};
 };

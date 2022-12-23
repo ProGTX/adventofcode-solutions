@@ -27,12 +27,7 @@ void solve_case(const std::string& filename) {
   // Actual number of stacks
   int num_stacks = 0;
 
-  const auto trimmer = [](std::string_view str) {
-    // Don't trim spaces, we need them in this example
-    return trim_leave_spaces(str);
-  };
-
-  readfile_op<decltype(trimmer)>(filename, [&](std::string_view line) {
+  const auto parser = [&](std::string_view line) {
     if (line.empty()) {
       return;
     }
@@ -85,7 +80,10 @@ void solve_case(const std::string& filename) {
       to_crate += crate_bunch;
       from_crate.resize(from_crate_new_size);
     }
-  });
+  };
+
+  // Don't trim spaces, we need them in this example
+  readfile_op<decltype(get_trimmer_no_spaces())>(filename, parser);
 
   std::cout << "Done parsing " << std::endl;
   std::string top_stacks(static_cast<size_t>(num_stacks), ' ');

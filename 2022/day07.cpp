@@ -14,9 +14,9 @@
 
 #include "../common.h"
 
-class filesystem_t : public btree<std::string, filesystem_t> {
+class filesystem_t : public graph<int, filesystem_t> {
  private:
-  using base_t = btree<std::string, filesystem_t>;
+  using base_t = graph<int, filesystem_t>;
 
  public:
   enum type_t {
@@ -24,7 +24,7 @@ class filesystem_t : public btree<std::string, filesystem_t> {
     file,
   };
 
-  filesystem_t() : btree{nullptr, "/", false} {}
+  filesystem_t() : graph{nullptr, "/", 0, false} {}
 
   filesystem_t* add_file(std::string name, int size_) {
     return this->add_child(std::unique_ptr<filesystem_t>{
@@ -50,22 +50,18 @@ class filesystem_t : public btree<std::string, filesystem_t> {
     int sum = 0;
     for (const auto& child : node) {
       set_sizes(*child);
-      sum += child->size;
+      sum += child->get_size();
     }
-    node.size = sum;
+    node.value() = sum;
   }
 
-  int get_size() const { return size; }
+  int get_size() const { return this->value(); }
 
   type_t get_type() const { return this->is_leaf() ? file : folder; }
 
-  std::string_view get_name() const { return this->get_value(); }
-
  private:
-  filesystem_t(filesystem_t* parent_, std::string name_, int size_, type_t type)
-      : btree{parent_, name_, (type == file)}, size{size_} {}
-
-  int size = 0;
+  filesystem_t(filesystem_t* parent, std::string name, int size, type_t type)
+      : graph{parent, name, size, (type == file)} {}
 };
 
 template <int max_size>
@@ -92,7 +88,7 @@ void get_folder_sizes(filesystem_t* node, const int used_space,
     }
     int current_size = child->get_size();
     if ((max_used_space - used_space + current_size) > 0) {
-      folder_sizes.emplace_back(child->get_name(), current_size);
+      folder_sizes.emplace_back(child->name(), current_size);
     }
     get_folder_sizes<max_used_space>(child.get(), used_space, folder_sizes);
   }

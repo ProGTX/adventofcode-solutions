@@ -96,9 +96,8 @@ int shortest_path_length_dijkstra(const heightmap_t& heightmap,
   }
 
   const auto modify_distance = [&](const point& p, int new_distance) {
-    unvisited.erase(p);
     distances.modify(new_distance, p.y, p.x);
-    unvisited.insert(p);
+    unvisited.update(p);
   };
 
   // 2. Set the initial node as current.
@@ -130,7 +129,7 @@ int shortest_path_length_dijkstra(const heightmap_t& heightmap,
     auto current_distance = distances.at(current.y, current.x);
     for (const auto& neighbor : neighbors) {
       auto neighbor_distance = distances.at(neighbor.y, neighbor.x);
-      // Compare the newly calculated tentative distance to the one
+      // 3. Compare the newly calculated tentative distance to the one
       // currently assigned to the neighbor and assign it the smaller one.
       modify_distance(neighbor,
                       std::min(neighbor_distance, (current_distance + 1)));

@@ -16,16 +16,16 @@
 
 #include "../common.h"
 
-struct packet_tree : public btree<int, packet_tree> {
+struct packet_tree : public graph<int, packet_tree, std::string_view> {
  private:
-  using base_t = btree<int, packet_tree>;
+  using base_t = graph<int, packet_tree, std::string_view>;
 
  protected:
   constexpr packet_tree(packet_tree* parent, int value, bool is_leaf)
-      : base_t{parent, value, is_leaf} {}
+      : base_t{parent, "", value, is_leaf} {}
 
  public:
-  constexpr packet_tree() : base_t{nullptr, 0, false} {}
+  constexpr packet_tree() : base_t{nullptr, "", 0, false} {}
 
   packet_tree* add_value(int value) {
     return this->add_child(child_ptr_t{new packet_tree{this, value, true}});
@@ -78,9 +78,9 @@ ordering in_right_order(packet_tree* first, packet_tree* second) {
 
     // Check integers
     if (lhs.is_leaf() && rhs.is_leaf()) {
-      if (lhs.get_value() < rhs.get_value()) {
+      if (lhs.value() < rhs.value()) {
         return correct;
-      } else if (lhs.get_value() > rhs.get_value()) {
+      } else if (lhs.value() > rhs.value()) {
         return incorrect;
       } else {
         // Continue checking
@@ -91,10 +91,10 @@ ordering in_right_order(packet_tree* first, packet_tree* second) {
     // If exactly one value is an integer, convert the integer to a list
     // which contains that integer as its only value, then retry the comparison.
     if (lhs.is_leaf() && !rhs.is_leaf()) {
-      tmp_list = packet_tree::list_from_value(lhs.get_value());
+      tmp_list = packet_tree::list_from_value(lhs.value());
       first_child_list = &tmp_list;
     } else if (!lhs.is_leaf() && rhs.is_leaf()) {
-      tmp_list = packet_tree::list_from_value(rhs.get_value());
+      tmp_list = packet_tree::list_from_value(rhs.value());
       second_child_list = &tmp_list;
     }
 
