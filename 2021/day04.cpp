@@ -16,9 +16,9 @@
 
 #include "../common.h"
 
-class board : public grid<std::array<int, 5 * 5>, std::array<int, 5>> {
+class board : public array_grid<int, 5> {
  private:
-  using base_t = grid<std::array<int, 5 * 5>, std::array<int, 5>>;
+  using base_t = array_grid<int, 5>;
   constexpr static auto m_size = 5 * 5;
 
  public:
@@ -29,7 +29,8 @@ class board : public grid<std::array<int, 5 * 5>, std::array<int, 5>> {
   }
 
   void print() const {
-    this->print_all([this](std::ostream& out, int index) {
+    this->print_all([this](std::ostream& out, int row, int column) {
+      const auto index = this->linear_index(row, column);
       out << std::setw(2) << m_data[index] << std::setw(1) << "|"
           << markers[index] << " ";
     });

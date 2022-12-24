@@ -82,7 +82,7 @@ void solve_case(const std::string& filename) {
   static constexpr size_t width = 40;
   static constexpr size_t height = 6;
 
-  using crt = grid<std::array<char, width * height>, std::array<char, width>>;
+  using crt = array_grid<char, width, height>;
   crt monitor;
   typename crt::row_t row;
   for (int i = 0; i < width; ++i) {

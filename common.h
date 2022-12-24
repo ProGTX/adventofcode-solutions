@@ -268,16 +268,31 @@ struct ranged_iterator {
 template <class T>
 ranged_iterator(T*, std::ptrdiff_t)->ranged_iterator<T>;
 
-template <class data_t_, class row_t_ = data_t_>
+template <class T, class row_storage_t = std::vector<T>,
+          class data_storage_t = row_storage_t>
 class grid {
  public:
-  using row_t = row_t_;
-  using data_t = data_t_;
-  using value_type = typename data_t::value_type;
+  using row_t = row_storage_t;
+  using data_t = data_storage_t;
+  using value_type = T;
   using iterator = typename data_t::iterator;
   using const_iterator = typename data_t::const_iterator;
 
+  static constexpr auto static_row_length =
+      is_array_class_v<row_t> ? row_t{}.size() : 0;
+
+  static constexpr auto static_data_size =
+      is_array_class_v<data_t> ? data_t{}.size() : 0;
+
   constexpr grid() {}
+
+  template <class Container = data_t>
+  requires((static_row_length > 0) &&
+           (static_data_size >
+            0)) explicit constexpr grid(const value_type& value)
+      : m_row_length{this->row_length()}, m_num_rows(this->num_rows()) {
+    std::ranges::fill(m_data, value);
+  }
 
   template <class Container = data_t>
   requires requires(Container c, size_t count,
@@ -291,28 +306,48 @@ class grid {
 
   constexpr iterator add_row(const row_t& row) {
     m_row_length = row.size();
-    auto old_size = (m_row_length * m_num_rows);
+    // Use m_num_rows instead of num_rows()
+    // because we allow setting rows in a fixed size container
+    auto old_size = (this->row_length() * m_num_rows);
     auto it = inserter_it(m_data);
     if constexpr (is_specialization_of_v<data_t, std::vector>) {
-      m_data.reserve(old_size + m_row_length);
-    } else if (is_array_class_v<data_t>) {
+      m_data.reserve(old_size + this->row_length());
+    } else if constexpr (is_array_class_v<data_t>) {
       it += old_size;
     }
-    std::ranges::copy_n(std::begin(row), m_row_length, it);
+    std::ranges::copy_n(std::begin(row), this->row_length(), it);
     ++m_num_rows;
     return std::begin(m_data) + old_size;
   }
 
-  constexpr auto size() const { return m_data.size(); }
+  constexpr auto size() const {
+    if constexpr (static_data_size > 0) {
+      return static_data_size;
+    } else {
+      return m_data.size();
+    }
+  }
 
   constexpr const data_t& data() const { return m_data; }
 
-  constexpr int row_length() const { return m_row_length; }
+  constexpr int row_length() const {
+    if constexpr (static_row_length > 0) {
+      return static_row_length;
+    } else {
+      return m_row_length;
+    }
+  }
 
-  constexpr int num_rows() const { return m_num_rows; }
+  constexpr int num_rows() const {
+    if constexpr ((static_data_size > 0) && (static_row_length > 0)) {
+      return static_data_size / static_row_length;
+    } else {
+      return m_num_rows;
+    }
+  }
 
   constexpr int linear_index(int row, int column) const {
-    return row * m_row_length + column;
+    return row * this->row_length() + column;
   }
 
   constexpr value_type& at(int row, int column) {
@@ -332,23 +367,25 @@ class grid {
   }
 
   template <class print_single_ft = std::identity>
-  void print_all(print_single_ft print_single_f = {}) const {
-    for (int i = 0; i < m_num_rows; ++i) {
-      std::cout << "  ";
-      for (int j = 0; j < row_length(); ++j) {
-        int index = (i * row_length() + j);
-        get_print_single_f(print_single_f)(std::cout, index);
+  void print_all(print_single_ft print_single_f = {},
+                 std::ostream& out = std::cout) const {
+    for (int row = 0; row < this->num_rows(); ++row) {
+      out << "  ";
+      for (int column = 0; column < row_length(); ++column) {
+        get_print_single_f(print_single_f)(out, row, column);
       }
-      std::cout << std::endl;
+      out << std::endl;
     }
-    std::cout << std::endl;
+    out << std::endl;
   }
 
  private:
   template <class print_single_ft>
   constexpr auto get_print_single_f(print_single_ft print_single_f) const {
     if constexpr (std::is_same_v<print_single_ft, std::identity>) {
-      return [this](std::ostream& out, int index) { out << m_data[index]; };
+      return [this](std::ostream& out, int row, int column) {
+        out << this->at(row, column);
+      };
     } else {
       return print_single_f;
     }
@@ -361,6 +398,10 @@ class grid {
   int m_row_length = 0;
   int m_num_rows = 0;
 };
+
+template <class T, size_t row_length, size_t num_rows = row_length>
+using array_grid =
+    grid<T, std::array<T, row_length>, std::array<T, row_length * num_rows>>;
 
 std::ostream& print_range(const std::ranges::range auto range,
                           std::string_view separator = ",",

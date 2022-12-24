@@ -43,7 +43,7 @@ class unique_vector {
   data_t m_data;
 };
 
-using rope_bridge_t = grid<std::vector<char>>;
+using rope_bridge_t = grid<char>;
 
 std::tuple<rope_bridge_t, point, point> get_rope_bridge(
     const std::ranges::range auto& rope) {

@@ -14,7 +14,7 @@
 
 #include "../common.h"
 
-using forrest_t = grid<std::vector<int>, std::vector<int>>;
+using forrest_t = grid<int>;
 using row_t = forrest_t::row_t;
 
 std::vector<int> check_visibility(forrest_t& forrest) {

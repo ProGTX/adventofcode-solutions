@@ -48,7 +48,7 @@ void solve_case(const std::string& filename) {
     }
   });
 
-  using cave_map_t = grid<std::vector<char>>;
+  using cave_map_t = grid<char>;
 
   point sand_starter{500, 0};
   min_max.update(sand_starter);

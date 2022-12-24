@@ -17,7 +17,7 @@
 
 #include "../common.h"
 
-struct heightmap_t : public grid<std::vector<int>> {
+struct heightmap_t : public grid<int> {
   point begin_pos;
   point end_pos;
 };
@@ -71,7 +71,7 @@ int shortest_path_length_dijkstra(const heightmap_t& heightmap,
   // During the run of the algorithm,
   // the tentative distance of a node v is the length of the shortest path
   // discovered so far between the node v and the starting node.
-  using distances_t = grid<std::vector<int>>;
+  using distances_t = grid<int>;
   distances_t distances;
 
   // 1. Mark all nodes unvisited. Create a set of all the unvisited nodes called
