@@ -1,5 +1,8 @@
 // https://adventofcode.com/2022/day/13
 
+#include "../common/common.h"
+#include "../common/graph.h"
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -13,8 +16,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 struct packet_tree : public graph<int, packet_tree, std::string_view> {
  private:

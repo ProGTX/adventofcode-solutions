@@ -1,5 +1,7 @@
 // https://adventofcode.com/2021/day/2
 
+#include "../common/common.h"
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -10,8 +12,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 void solve_part1(const std::string& filename) {
   int horizontal = 0;

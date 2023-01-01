@@ -1,5 +1,7 @@
 // https://adventofcode.com/2022/day/2
 
+#include "../common/common.h"
+
 #include <algorithm>
 #include <array>
 #include <exception>
@@ -13,8 +15,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 enum hand {
   // Starts at 0 instead of 1 so we can do modulo 3

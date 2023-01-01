@@ -1,5 +1,7 @@
 // https://adventofcode.com/2021/day/3
 
+#include "../common/common.h"
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -10,8 +12,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 template <size_t bit_width>
 using bits_array = std::array<int, bit_width>;

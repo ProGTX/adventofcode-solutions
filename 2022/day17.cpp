@@ -1,5 +1,8 @@
 // https://adventofcode.com/2022/day/17
 
+#include "../common/common.h"
+#include "../common/grid.h"
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -11,8 +14,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 using rock_t = std::array<point, 5>;
 

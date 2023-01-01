@@ -1,5 +1,8 @@
 // https://adventofcode.com/2021/day/4
 
+#include "../common/common.h"
+#include "../common/grid.h"
+
 #include <algorithm>
 #include <array>
 #include <exception>
@@ -13,8 +16,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 class board : public array_grid<int, 5> {
  private:

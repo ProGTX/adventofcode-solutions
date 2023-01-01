@@ -1,5 +1,7 @@
 // https://adventofcode.com/2022/day/5
 
+#include "../common/common.h"
+
 #include <algorithm>
 #include <array>
 #include <exception>
@@ -14,8 +16,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 template <bool grab_multiple>
 void solve_case(const std::string& filename) {

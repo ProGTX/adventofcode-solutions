@@ -1,5 +1,8 @@
 // https://adventofcode.com/2022/day/7
 
+#include "../common/common.h"
+#include "../common/graph.h"
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -11,8 +14,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 class filesystem_t : public graph<int, filesystem_t> {
  private:

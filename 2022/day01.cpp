@@ -1,5 +1,7 @@
 // https://adventofcode.com/2022/day/1
 
+#include "../common/common.h"
+
 #include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -9,8 +11,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 void solve_case(const std::string& filename, int numElvesAverage) {
   std::vector<int> caloriesPerElf;

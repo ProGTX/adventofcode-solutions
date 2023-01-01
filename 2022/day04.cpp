@@ -1,5 +1,7 @@
 // https://adventofcode.com/2022/day/4
 
+#include "../common/common.h"
+
 #include <algorithm>
 #include <array>
 #include <exception>
@@ -14,8 +16,6 @@
 #include <string_view>
 #include <utility>
 #include <vector>
-
-#include "../common.h"
 
 struct range {
   constexpr range(int begin_ = 1, int end_ = 1) : begin{begin_}, end{end_} {}

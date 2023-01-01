@@ -1,5 +1,8 @@
 // https://adventofcode.com/2022/day/8
 
+#include "../common/common.h"
+#include "../common/grid.h"
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -11,8 +14,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 using forrest_t = grid<int>;
 using row_t = forrest_t::row_t;

@@ -1,5 +1,9 @@
 // https://adventofcode.com/2022/day/16
 
+#include "../common/common.h"
+#include "../common/grid.h"
+#include "../common/print.h"
+
 #include <algorithm>
 #include <array>
 #include <cstdlib>
@@ -13,8 +17,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 template <class Name>
 struct valve_t {

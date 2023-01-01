@@ -10,7 +10,7 @@
 #include <string_view>
 #include <vector>
 
-#include "../common.h"
+#include "../common/common.h"
 
 void solve_case(const std::string& filename, int window_width) {
   auto measurements = readfile_numbers(filename);

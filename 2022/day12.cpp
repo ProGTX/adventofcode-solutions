@@ -1,5 +1,9 @@
 // https://adventofcode.com/2022/day/12
 
+#include "../common/common.h"
+#include "../common/flat.h"
+#include "../common/grid.h"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -14,8 +18,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 struct heightmap_t : public grid<int> {
   point begin_pos;

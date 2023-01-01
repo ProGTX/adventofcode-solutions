@@ -1,5 +1,7 @@
 // https://adventofcode.com/2022/day/6
 
+#include "../common/common.h"
+
 #include <algorithm>
 #include <array>
 #include <exception>
@@ -13,8 +15,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common.h"
 
 template <int window_size>
 bool all_different(std::string_view window) {
