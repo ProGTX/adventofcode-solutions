@@ -10,27 +10,53 @@
 #include <numeric>
 #include <ostream>
 #include <ranges>
+#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
 
+using droplet_t = cube_t<int>;
+using droplets_t = std::set<droplet_t>;
+
+int calc_surface_area(const droplets_t& droplets) {
+  int area = 0;
+  const auto add_side_area = [&](const droplet_t& droplet,
+                                 const droplet_t& move) {
+    if (droplets.find(droplet + move) != std::end(droplets)) {
+      return;
+    }
+    ++area;
+  };
+  for (const auto& droplet : droplets) {
+    add_side_area(droplet, {0, 0, 1});
+    add_side_area(droplet, {0, 1, 0});
+    add_side_area(droplet, {1, 0, 0});
+    add_side_area(droplet, {0, 0, -1});
+    add_side_area(droplet, {0, -1, 0});
+    add_side_area(droplet, {-1, 0, 0});
+  }
+  return area;
+}
+
 template <bool>
 int solve_case(const std::string& filename) {
-  int score = 0;
+  droplets_t droplets;
 
   readfile_op(filename, [&](std::string_view line) {
-    auto [op, value] =
-        split<std::array<std::string, 2>>(line, ' ');
+    auto [x, y, z] = split<std::array<int, 3>>(line, ',');
+    droplets.emplace(x, y, z);
   });
 
-  std::cout << filename << " -> " << score << std::endl;
-  return score;
+  auto area = calc_surface_area(droplets);
+  std::cout << filename << " -> " << area << std::endl;
+  return area;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case<false>("day18.example");
-  // solve_case<false>("day18.input");
+  AOC_EXPECT_RESULT(10, solve_case<false>("day18.example"));
+  AOC_EXPECT_RESULT(64, solve_case<false>("day18.example2"));
+  AOC_EXPECT_RESULT(4310, solve_case<false>("day18.input"));
   // std::cout << "Part 2" << std::endl;
   // solve_case<true>("day18.example");
   // solve_case<true>("day18.input");

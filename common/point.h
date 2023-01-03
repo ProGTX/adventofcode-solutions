@@ -97,3 +97,42 @@ constexpr auto get_lex_point_sorter() {
 }
 
 using point = point_t<int>;
+
+template <class T>
+struct cube_t {
+  using value_type = T;
+
+  T x{0};
+  T y{0};
+  T z{0};
+
+#define AOC_POINTWISE_OP(op, op_eq)                                            \
+  constexpr cube_t& operator op_eq(const cube_t& other) {                      \
+    x op_eq other.x;                                                           \
+    y op_eq other.y;                                                           \
+    z op_eq other.z;                                                           \
+    return *this;                                                              \
+  }                                                                            \
+  constexpr friend cube_t operator op(cube_t lhs, const cube_t& rhs) {         \
+    lhs op_eq rhs;                                                             \
+    return lhs;                                                                \
+  }
+
+  AOC_POINTWISE_OP(+, +=)
+  AOC_POINTWISE_OP(-, -=)
+  AOC_POINTWISE_OP(*, *=)
+
+#undef AOC_POINTWISE_OP
+
+  friend bool operator==(const cube_t& lhs, const cube_t& rhs) = default;
+
+  friend bool operator<(const cube_t& lhs, const cube_t& rhs) {
+    if (lhs.z == rhs.z) {
+      if (lhs.y == rhs.y) {
+        return lhs.x < rhs.x;
+      }
+      return lhs.y < rhs.y;
+    }
+    return lhs.z < rhs.z;
+  }
+};
