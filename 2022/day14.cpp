@@ -42,7 +42,7 @@ int solve_case(const std::string& filename) {
     auto previous = split<point>(rock_pairs[0], ',');
     min_max.update(previous);
     for (const auto& rock_pair_str : rock_pairs | std::views::drop(1)) {
-      auto current = split<point>(rock_pair_str, ',');
+      auto current = split<point>(trim(rock_pair_str), ',');
       min_max.update(current);
       rock_lines.push_back(rock_line_t{previous, current});
       previous = current;
