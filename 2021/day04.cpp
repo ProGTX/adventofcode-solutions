@@ -66,7 +66,7 @@ class board : public array_grid<int, 5> {
 
   constexpr bool has_bingo() const { return has_bingo_hit; }
 
-  constexpr bool is_complete() const { return (this->num_rows() == 5); }
+  constexpr bool is_complete() const { return (this->num_rows_dynamic() == 5); }
 
   constexpr int sum_unmarked() const {
     int sum = 0;

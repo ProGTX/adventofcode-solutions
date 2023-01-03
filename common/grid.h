@@ -77,27 +77,30 @@ class grid {
 
   constexpr const container_type& data() const { return m_data; }
 
+  constexpr auto size_dynamic() const { return m_data.size(); }
   constexpr auto size() const {
     if constexpr (static_data_size > 0) {
       return static_data_size;
     } else {
-      return m_data.size();
+      return this->size_dynamic();
     }
   }
 
+  constexpr int row_length_dynamic() const { return m_row_length; }
   constexpr int row_length() const {
     if constexpr (static_row_length > 0) {
       return static_row_length;
     } else {
-      return m_row_length;
+      return this->row_length_dynamic();
     }
   }
 
+  constexpr int num_rows_dynamic() const { return m_num_rows; }
   constexpr int num_rows() const {
     if constexpr ((static_data_size > 0) && (static_row_length > 0)) {
       return static_data_size / static_row_length;
     } else {
-      return m_num_rows;
+      return this->num_rows_dynamic();
     }
   }
 
