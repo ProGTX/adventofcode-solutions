@@ -181,13 +181,15 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
                std::lcm(rock_structures.size(), pattern.size()));
   int rock_index = 0;
 
-  rock_index_t initial_height = 0;
-  for (int r = 0; r < cycle_size; ++r) {
-    rock_solver(rock_index);
-    ++rock_index;
-  }
-  initial_height = current_height - 1;
-  const chamber_row_t initial_top_row = chamber.get_row(current_height - 1);
+  const auto [initial_num_rocks, initial_height,
+              initial_top_row] = std::invoke([&]() {
+    for (int r = 0; r < cycle_size; ++r) {
+      rock_solver(rock_index);
+      ++rock_index;
+    }
+    return std::tuple{static_cast<rock_index_t>(rock_index), current_height - 1,
+                      chamber.get_row(current_height - 1)};
+  });
   print_range(initial_top_row) << std::endl;
 
   const auto is_same_as_initial = [&](const chamber_row_t& current_top_row) {
@@ -204,47 +206,60 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
     return true;
   };
 
-  rock_index_t height_per_extended_cycle = 0;
-  int num_cycle_repetitions = 0;
-  while (rock_index < num_rocks) {
-    for (int r = 0; r < cycle_size; ++r) {
+  const auto [num_cycle_reps, rocks_extended_cycle,
+              height_extended_cycle] = std::invoke([&]() {
+    int num_cycle_reps = 0;
+    while (rock_index < num_rocks) {
+      ++num_cycle_reps;
+      for (int r = 0; r < cycle_size; ++r) {
+        rock_solver(rock_index);
+        ++rock_index;
+      }
+      auto current_top_row = chamber.get_row(current_height - 1);
+      print_range(current_top_row) << std::endl;
+      if (is_same_as_initial(current_top_row)) {
+        break;
+      }
+    }
+    return std::tuple{num_cycle_reps,
+                      static_cast<rock_index_t>(rock_index - initial_num_rocks),
+                      current_height - 1 - initial_height};
+  });
+
+  const auto [middle_height, leftover_rocks] = std::invoke([&]() {
+    if (num_cycle_reps == 0) {
+      return std::tuple{rock_index_t{0}, rock_index_t{0}};
+    }
+    const auto rocks_after_initial = num_rocks - initial_num_rocks;
+    AOC_ASSERT(rocks_after_initial > 0,
+               "Cannot have empty rocks after running cycles");
+    AOC_ASSERT(rocks_extended_cycle > 0,
+               "Cannot have empty rocks after running cycles");
+    AOC_ASSERT(height_extended_cycle > 0,
+               "Cannot have empty height after running cycles");
+
+    const auto num_extended_cycles = rocks_after_initial / rocks_extended_cycle;
+    const auto middle_height = num_extended_cycles * height_extended_cycle;
+    const auto leftover_rocks = std::max(
+        rock_index_t{0},
+        rocks_after_initial - (rocks_extended_cycle * num_extended_cycles));
+    return std::tuple{middle_height, leftover_rocks};
+  });
+
+  const rock_index_t leftover_height = std::invoke([&]() {
+    const auto height_before = current_height - 1;
+    for (int r = 0; r < leftover_rocks; ++r) {
       rock_solver(rock_index);
       ++rock_index;
     }
-    auto current_top_row = chamber.get_row(current_height - 1);
-    print_range(current_top_row) << std::endl;
-    if (is_same_as_initial(current_top_row)) {
-      break;
-    }
-    ++num_cycle_repetitions;
-  }
-  height_per_extended_cycle = current_height - 1 - initial_height;
+    return current_height - 1 - height_before;
+  });
 
-  rock_index_t leftover_height = 0;
-  int leftover_height_index =
-      (num_rocks % (cycle_size * num_cycle_repetitions));
-  for (int r = 0; r < leftover_height_index; ++r) {
-    rock_solver(rock_index);
-    ++rock_index;
-  }
-  leftover_height =
-      current_height - 1 - height_per_extended_cycle - initial_height;
-
-  const auto num_repetitions =
-      num_rocks / std::max(1, (cycle_size * num_cycle_repetitions));
-
-  std::cout << "  cycle_size " << cycle_size << std::endl;
   std::cout << "  initial_height " << initial_height << std::endl;
-  std::cout << "  num_repetitions " << num_repetitions << std::endl;
-  std::cout << "  num_cycle_repetitions " << num_cycle_repetitions << std::endl;
-  std::cout << "  height_per_extended_cycle " << height_per_extended_cycle
-            << std::endl;
+  std::cout << "  middle_height " << middle_height << std::endl;
   std::cout << "  leftover_height " << leftover_height << std::endl;
 
-  return initial_height +
-         height_per_extended_cycle *
-             std::max(rock_index_t{0}, num_repetitions - 1) +
-         leftover_height;
+  return initial_height + middle_height + leftover_height;
 }
 
 template <rock_index_t num_rocks>
@@ -271,10 +286,11 @@ rock_index_t solve_case(const std::string& filename) {
 
 int main() {
   std::cout << "Part 1" << std::endl;
+  AOC_EXPECT_RESULT(17, solve_case<10>("day17.example"));
   AOC_EXPECT_RESULT(3068, solve_case<2022>("day17.example"));
   AOC_EXPECT_RESULT(3085, solve_case<2022>("day17.input"));
   std::cout << "Part 2" << std::endl;
-  solve_case<1000000000000>("day17.example");
-  // solve_case<1000000000000>("day17.input");
+  AOC_EXPECT_RESULT(1514285714288, solve_case<1000000000000>("day17.example"));
+  solve_case<1000000000000>("day17.input");
   AOC_RETURN_CHECK_RESULT();
 }
