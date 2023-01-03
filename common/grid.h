@@ -166,9 +166,7 @@ class sparse_grid {
   using key_type = point_class;
 
  public:
-  using container_type =
-      std::map<key_type, T,
-               decltype(get_lex_point_sorter<typename key_type::value_type>())>;
+  using container_type = std::map<key_type, T>;
   using row_t = row_storage_t;
   using value_type = T;
   using iterator = map_value_iterator<typename container_type::iterator>;

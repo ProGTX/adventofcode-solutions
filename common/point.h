@@ -12,7 +12,15 @@ struct point_t {
 
   value_type x = 0;
   value_type y = 0;
-  bool operator==(const point_t&) const = default;
+
+  constexpr friend bool operator==(const point_t&, const point_t&) = default;
+
+  constexpr friend bool operator<(const point_t& lhs, const point_t& rhs) {
+    if (lhs.y == rhs.y) {
+      return lhs.x < rhs.x;
+    }
+    return lhs.y < rhs.y;
+  };
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
   constexpr point_t& operator op_eq(const point_t& other) {                    \
@@ -86,16 +94,6 @@ struct point_t {
   constexpr const_iterator end() const noexcept { return (&y) + 1; }
 };
 
-template <class T>
-constexpr auto get_lex_point_sorter() {
-  return [](const point_t<T>& lhs, const point_t<T>& rhs) {
-    if (lhs.y == rhs.y) {
-      return lhs.x < rhs.x;
-    }
-    return lhs.y < rhs.y;
-  };
-}
-
 using point = point_t<int>;
 
 template <class T>
@@ -124,9 +122,9 @@ struct cube_t {
 
 #undef AOC_POINTWISE_OP
 
-  friend bool operator==(const cube_t& lhs, const cube_t& rhs) = default;
+  constexpr friend bool operator==(const cube_t&, const cube_t&) = default;
 
-  friend bool operator<(const cube_t& lhs, const cube_t& rhs) {
+  constexpr friend bool operator<(const cube_t& lhs, const cube_t& rhs) {
     if (lhs.z == rhs.z) {
       if (lhs.y == rhs.y) {
         return lhs.x < rhs.x;
