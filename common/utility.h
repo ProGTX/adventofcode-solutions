@@ -4,6 +4,7 @@
 
 #include <iterator>
 #include <type_traits>
+#include <utility>
 
 // https://en.cppreference.com/w/cpp/utility/to_underlying
 template <class Enum>
@@ -31,24 +32,25 @@ struct ranged_iterator {
     m_ptr += m_diff;
     return *this;
   }
-  ranged_iterator operator++(T) {
+  ranged_iterator operator++(int) {
     ranged_iterator tmp = *this;
     ++(*this);
     return tmp;
   }
 
-  friend bool operator==(const ranged_iterator& a, const ranged_iterator& b) {
-    return a.m_ptr == b.m_ptr;
+  friend bool operator==(const ranged_iterator& lhs,
+                         const ranged_iterator& rhs) {
+    return (lhs.m_diff == rhs.m_diff) && (lhs.m_ptr == rhs.m_ptr);
   };
-  friend bool operator!=(const ranged_iterator& a, const ranged_iterator& b) {
-    return !(a == b);
+  friend bool operator!=(const ranged_iterator& lhs,
+                         const ranged_iterator& rhs) {
+    return !(lhs == rhs);
   };
 
  private:
   pointer m_ptr;
   difference_type m_diff;
 };
-
 template <class T>
 ranged_iterator(T*, std::ptrdiff_t)->ranged_iterator<T>;
 

@@ -9,20 +9,20 @@
 
 template <class T, class Compare = std::less<T>>
 requires std::equality_comparable<T> class sorted_flat_set {
- private:
-  using data_t = std::vector<T>;
 
  public:
-  using value_type = data_t::value_type;
-  using iterator = data_t::iterator;
-  using const_iterator = data_t::const_iterator;
+  using container_type = std::vector<T>;
+  using value_type = container_type::value_type;
+  using iterator = container_type::iterator;
+  using const_iterator = container_type::const_iterator;
 
   constexpr sorted_flat_set() : sorted_flat_set{{}, Compare{}} {}
 
   constexpr explicit sorted_flat_set(const Compare& comp)
       : sorted_flat_set{{}, comp} {}
 
-  constexpr sorted_flat_set(data_t init, const Compare& comp = Compare{})
+  constexpr sorted_flat_set(container_type init,
+                            const Compare& comp = Compare{})
       : m_data{init}, m_comparator{comp} {
     this->sort();
   }
@@ -102,6 +102,6 @@ requires std::equality_comparable<T> class sorted_flat_set {
   constexpr void sort() { std::ranges::sort(m_data, m_comparator); }
 
  private:
-  data_t m_data;
+  container_type m_data;
   Compare m_comparator;
 };
