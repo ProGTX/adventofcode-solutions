@@ -10,13 +10,17 @@ set(AOC_INPUTS_DIR "${CMAKE_SOURCE_DIR}/inputs"
 
 enable_testing()
 
-function(copy_input_files target_basename year)
+function(copy_single_input_file target filename)
   add_custom_command(
-    TARGET ${year}_${target_basename} PRE_BUILD
+    TARGET ${target} PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-      ${CMAKE_CURRENT_SOURCE_DIR}/${target_basename}.example
-      ${CMAKE_CURRENT_BINARY_DIR}/${target_basename}.example
+      ${CMAKE_CURRENT_SOURCE_DIR}/${filename}
+      ${CMAKE_CURRENT_BINARY_DIR}/${filename}
   )
+endfunction()
+
+function(copy_input_files target_basename year)
+  copy_single_input_file(${year}_${target_basename} ${target_basename}.example)
   add_custom_command(
     TARGET ${year}_${target_basename} PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
