@@ -93,17 +93,23 @@ std::vector<int> readfile_numbers(const std::string& filename) {
 }
 
 // https://stackoverflow.com/a/236803
-template <class out_it_t, class item_op_t = std::identity>
+template <size_t max_elements = std::string::npos, class out_it_t,
+          class item_op_t = std::identity>
 void split_line_to_iterator(std::string_view input, char delimiter,
                             out_it_t outputIt, item_op_t item_op = {}) {
   std::stringstream stream{std::string{input}};
+  int index = 0;
   for (std::string item; std::getline(stream, item, delimiter);) {
     if (item.empty()) {
       continue;
     }
     *outputIt = item_op(std::move(item));
     // Must increase as last step, in case an item was skipped
+    ++index;
     ++outputIt;
+    if (index >= max_elements) {
+      break;
+    }
   }
 }
 
@@ -132,10 +138,20 @@ constexpr auto split_item_op() {
   }
 }
 
+template <class output_t>
+constexpr size_t max_container_elems() {
+  if constexpr (is_array_class_v<output_t>) {
+    return std::tuple_size<output_t>::value;
+  } else {
+    return std::string::npos;
+  }
+}
+
 template <class output_t, class string_item_op_t = std::identity>
 output_t split(std::string_view input, char delimiter) {
   output_t elems;
-  split_line_to_iterator(input, delimiter, inserter_it(elems),
-                         split_item_op<output_t, string_item_op_t>());
+  split_line_to_iterator<max_container_elems<output_t>()>(
+      input, delimiter, inserter_it(elems),
+      split_item_op<output_t, string_item_op_t>());
   return elems;
 }
