@@ -127,7 +127,7 @@ beacon_t find_distress_beacon(const std::vector<sensor_t>& sensors,
 }
 
 template <int inspect_row, bool find_distress>
-void solve_case(const std::string& filename) {
+std::int64_t solve_case(const std::string& filename) {
   std::vector<sensor_t> sensors;
   std::vector<beacon_t> beacons;
 
@@ -163,8 +163,8 @@ void solve_case(const std::string& filename) {
     }
   });
 
-  // Result for part 2 is huge, store it into a long
-  long score = 0;
+  // Result for part 2 is huge, store it into a std::int64_t
+  std::int64_t score = 0;
 
   if constexpr (!find_distress) {
     auto max_range =
@@ -179,20 +179,22 @@ void solve_case(const std::string& filename) {
                                       inspect_row);
     score = positions.size();
   } else {
-    constexpr long multiplier = 4000000;
+    constexpr std::int64_t multiplier = 4000000;
     const int max_pos = (inspect_row == 10) ? 20 : multiplier;
     auto beacon = find_distress_beacon(sensors, {0, max_pos});
     score = beacon.x * multiplier + beacon.y;
   }
 
   std::cout << filename << " -> " << score << std::endl;
+  return score;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case<10, false>("day15.example");
-  solve_case<2000000, false>("day15.input");
+  AOC_EXPECT_RESULT(26, (solve_case<10, false>("day15.example")));
+  AOC_EXPECT_RESULT(5870800, (solve_case<2000000, false>("day15.input")));
   std::cout << "Part 2" << std::endl;
-  solve_case<10, true>("day15.example");
-  solve_case<2000000, true>("day15.input");
+  AOC_EXPECT_RESULT(56000011, (solve_case<10, true>("day15.example")));
+  AOC_EXPECT_RESULT(10908230916597, (solve_case<2000000, true>("day15.input")));
+  AOC_RETURN_CHECK_RESULT();
 }

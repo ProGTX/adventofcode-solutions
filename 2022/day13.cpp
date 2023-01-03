@@ -109,7 +109,7 @@ ordering in_right_order(packet_tree* first, packet_tree* second) {
 }
 
 template <bool sort_all>
-void solve_case(const std::string& filename) {
+int solve_case(const std::string& filename) {
   using packet_pair_t = std::array<packet_node_t, 2>;
 
   using packets_t = std::conditional_t<
@@ -190,13 +190,15 @@ void solve_case(const std::string& filename) {
   }
 
   std::cout << filename << " -> " << score << std::endl;
+  return score;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case<false>("day13.example");
-  solve_case<false>("day13.input");
+  AOC_EXPECT_RESULT(13, solve_case<false>("day13.example"));
+  AOC_EXPECT_RESULT(5198, solve_case<false>("day13.input"));
   std::cout << "Part 2" << std::endl;
-  solve_case<true>("day13.example");
-  solve_case<true>("day13.input");
+  AOC_EXPECT_RESULT(140, solve_case<true>("day13.example"));
+  AOC_EXPECT_RESULT(22344, solve_case<true>("day13.input"));
+  AOC_RETURN_CHECK_RESULT();
 }

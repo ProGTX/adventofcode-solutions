@@ -49,6 +49,28 @@ void solve_case(const std::string& filename) {
     std::cout << "  " << pos << std::endl;
   }
   std::cout << std::endl;
+
+  if constexpr (window_size == 4) {
+    if (filename.find(".example") != std::string::npos) {
+      AOC_EXPECT_RESULT(7, positions[0]);
+      AOC_EXPECT_RESULT(5, positions[1]);
+      AOC_EXPECT_RESULT(6, positions[2]);
+      AOC_EXPECT_RESULT(10, positions[3]);
+      AOC_EXPECT_RESULT(11, positions[4]);
+    } else {
+      AOC_EXPECT_RESULT(1361, positions[0]);
+    }
+  } else if constexpr (window_size == 14) {
+    if (filename.find(".example") != std::string::npos) {
+      AOC_EXPECT_RESULT(19, positions[0]);
+      AOC_EXPECT_RESULT(23, positions[1]);
+      AOC_EXPECT_RESULT(23, positions[2]);
+      AOC_EXPECT_RESULT(29, positions[3]);
+      AOC_EXPECT_RESULT(26, positions[4]);
+    } else {
+      AOC_EXPECT_RESULT(3263, positions[0]);
+    }
+  }
 }
 
 int main() {
@@ -58,4 +80,5 @@ int main() {
   std::cout << "Part 2" << std::endl;
   solve_case<14>("day06.example");
   solve_case<14>("day06.input");
+  AOC_RETURN_CHECK_RESULT();
 }

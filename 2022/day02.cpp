@@ -30,7 +30,7 @@ enum outcome {
   win = 6,
 };
 
-void solve_part1(const std::string& filename) {
+int solve_part1(const std::string& filename) {
   int score = 0;
 
   std::map<char, int> hand_map = {
@@ -58,9 +58,10 @@ void solve_part1(const std::string& filename) {
   });
 
   std::cout << filename << " -> " << score << std::endl;
+  return score;
 }
 
-void solve_part2(const std::string& filename) {
+int solve_part2(const std::string& filename) {
   int score = 0;
 
   std::map<char, int> hand_map = {
@@ -90,13 +91,15 @@ void solve_part2(const std::string& filename) {
   });
 
   std::cout << filename << " -> " << score << std::endl;
+  return score;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_part1("day02.example");
-  solve_part1("day02.input");
+  AOC_EXPECT_RESULT(15, solve_part1("day02.example"));
+  AOC_EXPECT_RESULT(14375, solve_part1("day02.input"));
   std::cout << "Part 2" << std::endl;
-  solve_part2("day02.example");
-  solve_part2("day02.input");
+  AOC_EXPECT_RESULT(12, solve_part2("day02.example"));
+  AOC_EXPECT_RESULT(10274, solve_part2("day02.input"));
+  AOC_RETURN_CHECK_RESULT();
 }

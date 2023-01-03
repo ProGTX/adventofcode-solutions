@@ -15,7 +15,7 @@
 #include <string_view>
 #include <vector>
 
-using item_t = long;
+using item_t = std::int64_t;
 
 struct monkey_t {
   using operation_t = std::function<item_t(item_t)>;
@@ -42,7 +42,7 @@ struct monkey_t {
 };
 
 template <int num_rounds, int num_average, item_t relief_factor>
-void solve_case(const std::string& filename) {
+item_t solve_case(const std::string& filename) {
   std::vector<monkey_t> monkeys;
   monkey_t* current = nullptr;
   item_t divisible_max = 1;
@@ -131,13 +131,15 @@ void solve_case(const std::string& filename) {
                                std::multiplies<>{});
 
   std::cout << filename << " -> " << score << std::endl;
+  return score;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case<20, 2, 3>("day11.example");
-  solve_case<20, 2, 3>("day11.input");
+  AOC_EXPECT_RESULT(10605, (solve_case<20, 2, 3>("day11.example")));
+  AOC_EXPECT_RESULT(98280, (solve_case<20, 2, 3>("day11.input")));
   std::cout << "Part 2" << std::endl;
-  solve_case<10000, 2, 1>("day11.example");
-  solve_case<10000, 2, 1>("day11.input");
+  AOC_EXPECT_RESULT(2713310158, (solve_case<10000, 2, 1>("day11.example")));
+  AOC_EXPECT_RESULT(17673687232, (solve_case<10000, 2, 1>("day11.input")));
+  AOC_RETURN_CHECK_RESULT();
 }

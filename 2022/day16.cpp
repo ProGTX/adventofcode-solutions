@@ -81,7 +81,7 @@ int release_pressure(const valves_t& valves, path_t path,
 }
 
 template <int num_minutes, bool>
-void solve_case(const std::string& filename) {
+int solve_case(const std::string& filename) {
   named_valves_t named_valves;
 
   readfile_op(filename, [&](std::string_view line) {
@@ -131,6 +131,7 @@ void solve_case(const std::string& filename) {
       release_pressure(valves, {}, name_to_index("AA"), 0, 0, num_minutes);
 
   std::cout << filename << " -> " << score << std::endl;
+  return score;
 }
 
 int main() {
@@ -140,4 +141,5 @@ int main() {
   // std::cout << "Part 2" << std::endl;
   // solve_case<30, true>("day16.example");
   // solve_case<30, true>("day16.input");
+  AOC_RETURN_CHECK_RESULT();
 }

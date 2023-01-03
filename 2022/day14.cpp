@@ -23,7 +23,7 @@ enum special_chars : char {
 };
 
 template <bool with_ground>
-void solve_case(const std::string& filename) {
+int solve_case(const std::string& filename) {
   using rock_line_t = std::array<point, 2>;
   std::vector<rock_line_t> rock_lines;
 
@@ -195,13 +195,15 @@ void solve_case(const std::string& filename) {
   cave_map.print_all();
 
   std::cout << filename << " -> " << num_grains << std::endl;
+  return num_grains;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case<false>("day14.example");
-  solve_case<false>("day14.input");
+  AOC_EXPECT_RESULT(24, solve_case<false>("day14.example"));
+  AOC_EXPECT_RESULT(655, solve_case<false>("day14.input"));
   std::cout << "Part 2" << std::endl;
-  solve_case<true>("day14.example");
-  solve_case<true>("day14.input");
+  AOC_EXPECT_RESULT(93, solve_case<true>("day14.example"));
+  AOC_EXPECT_RESULT(26484, solve_case<true>("day14.input"));
+  AOC_RETURN_CHECK_RESULT();
 }

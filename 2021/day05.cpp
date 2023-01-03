@@ -13,18 +13,20 @@
 #include <string_view>
 #include <vector>
 
-void solve_part1(const std::string& filename) {
+int solve_part1(const std::string& filename) {
   int score = 0;
-  readfile_op(filename, [&](std::string_view line) {});
+  readfile_op(filename, [&](std::string_view) {});
 
   std::cout << filename << " -> " << score << std::endl;
+  return score;
 }
 
-void solve_part2(const std::string& filename) {
+int solve_part2(const std::string& filename) {
   int score = 0;
-  readfile_op(filename, [&](std::string_view line) {});
+  readfile_op(filename, [&](std::string_view) {});
 
   std::cout << filename << " -> " << score << std::endl;
+  return score;
 }
 
 int main() {
@@ -34,4 +36,5 @@ int main() {
   std::cout << "Part 2" << std::endl;
   solve_part2("day05.example");
   solve_part2("day05.input");
+  AOC_RETURN_CHECK_RESULT();
 }

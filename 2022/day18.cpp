@@ -15,7 +15,7 @@
 #include <vector>
 
 template <bool>
-void solve_case(const std::string& filename) {
+int solve_case(const std::string& filename) {
   int score = 0;
 
   readfile_op(filename, [&](std::string_view line) {
@@ -24,6 +24,7 @@ void solve_case(const std::string& filename) {
   });
 
   std::cout << filename << " -> " << score << std::endl;
+  return score;
 }
 
 int main() {
@@ -33,4 +34,5 @@ int main() {
   // std::cout << "Part 2" << std::endl;
   // solve_case<true>("day18.example");
   // solve_case<true>("day18.input");
+  AOC_RETURN_CHECK_RESULT();
 }

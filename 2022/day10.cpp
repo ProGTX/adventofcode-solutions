@@ -79,7 +79,7 @@ struct instruction {
 };
 
 template <bool insert_noop>
-void solve_case(const std::string& filename) {
+int solve_case(const std::string& filename) {
   static constexpr size_t width = 40;
   static constexpr size_t height = 6;
 
@@ -158,9 +158,11 @@ void solve_case(const std::string& filename) {
   monitor.print_all();
 
   std::cout << filename << " -> " << signal_strength << std::endl;
+  return signal_strength;
 }
 
 int main() {
-  solve_case<true>("day10.example");
-  solve_case<true>("day10.input");
+  AOC_EXPECT_RESULT(13140, solve_case<true>("day10.example"));
+  AOC_EXPECT_RESULT(11820, solve_case<true>("day10.input"));
+  AOC_RETURN_CHECK_RESULT();
 }

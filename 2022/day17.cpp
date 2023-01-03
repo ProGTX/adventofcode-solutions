@@ -271,10 +271,10 @@ rock_index_t solve_case(const std::string& filename) {
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  EXPECT_RESULT(3068, solve_case<2022>("day17.example"));
-  EXPECT_RESULT(3085, solve_case<2022>("day17.input"));
+  AOC_EXPECT_RESULT(3068, solve_case<2022>("day17.example"));
+  AOC_EXPECT_RESULT(3085, solve_case<2022>("day17.input"));
   std::cout << "Part 2" << std::endl;
   solve_case<1000000000000>("day17.example");
   // solve_case<1000000000000>("day17.input");
-  RETURN_CHECK_RESULT();
+  AOC_RETURN_CHECK_RESULT();
 }

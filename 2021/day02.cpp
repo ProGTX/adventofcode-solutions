@@ -13,7 +13,7 @@
 #include <string_view>
 #include <vector>
 
-void solve_part1(const std::string& filename) {
+int solve_part1(const std::string& filename) {
   int horizontal = 0;
   int depth = 0;
 
@@ -32,9 +32,10 @@ void solve_part1(const std::string& filename) {
   });
 
   std::cout << filename << " -> " << (horizontal * depth) << std::endl;
+  return (horizontal * depth);
 }
 
-void solve_part2(const std::string& filename) {
+int solve_part2(const std::string& filename) {
   int horizontal = 0;
   int depth = 0;
   int aim = 0;
@@ -55,13 +56,15 @@ void solve_part2(const std::string& filename) {
   });
 
   std::cout << filename << " -> " << (horizontal * depth) << std::endl;
+  return (horizontal * depth);
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_part1("day02.example");
-  solve_part1("day02.input");
+  AOC_EXPECT_RESULT(150, solve_part1("day02.example"));
+  AOC_EXPECT_RESULT(2120749, solve_part1("day02.input"));
   // std::cout << "Part 2" << std::endl;
-  solve_part2("day02.example");
-  solve_part2("day02.input");
+  AOC_EXPECT_RESULT(900, solve_part2("day02.example"));
+  AOC_EXPECT_RESULT(2138382217, solve_part2("day02.input"));
+  AOC_RETURN_CHECK_RESULT();
 }

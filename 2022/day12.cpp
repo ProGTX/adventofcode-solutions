@@ -161,7 +161,7 @@ int shortest_path_length_dijkstra(const heightmap_t& heightmap,
 }
 
 template <bool reverse>
-void solve_case(const std::string& filename) {
+int solve_case(const std::string& filename) {
   using row_t = typename heightmap_t::row_t;
   heightmap_t heightmap;
   row_t row;
@@ -202,13 +202,15 @@ void solve_case(const std::string& filename) {
                                                              end, search_value);
 
   std::cout << filename << " -> " << fewest_steps << std::endl;
+  return fewest_steps;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case<false>("day12.example");
-  solve_case<false>("day12.input");
+  AOC_EXPECT_RESULT(31, solve_case<false>("day12.example"));
+  AOC_EXPECT_RESULT(504, solve_case<false>("day12.input"));
   std::cout << "Part 2" << std::endl;
-  solve_case<true>("day12.example");
-  solve_case<true>("day12.input");
+  AOC_EXPECT_RESULT(29, solve_case<true>("day12.example"));
+  AOC_EXPECT_RESULT(500, solve_case<true>("day12.input"));
+  AOC_RETURN_CHECK_RESULT();
 }

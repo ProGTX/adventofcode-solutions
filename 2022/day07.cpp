@@ -96,7 +96,7 @@ void get_folder_sizes(filesystem_t* node, const int used_space,
 }
 
 template <bool delete_space>
-void solve_case(const std::string& filename) {
+int solve_case(const std::string& filename) {
   filesystem_t filesystem;
   filesystem_t* current_node = &filesystem;
 
@@ -160,13 +160,15 @@ void solve_case(const std::string& filename) {
   }
 
   std::cout << filename << " -> " << space << std::endl;
+  return space;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case<false>("day07.example");
-  solve_case<false>("day07.input");
+  AOC_EXPECT_RESULT(95437, solve_case<false>("day07.example"));
+  AOC_EXPECT_RESULT(1453349, solve_case<false>("day07.input"));
   // std::cout << "Part 2" << std::endl;
-  solve_case<true>("day07.example");
-  solve_case<true>("day07.input");
+  AOC_EXPECT_RESULT(24933642, solve_case<true>("day07.example"));
+  AOC_EXPECT_RESULT(2948823, solve_case<true>("day07.input"));
+  AOC_RETURN_CHECK_RESULT();
 }

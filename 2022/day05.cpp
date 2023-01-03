@@ -18,7 +18,7 @@
 #include <vector>
 
 template <bool grab_multiple>
-void solve_case(const std::string& filename) {
+std::string solve_case(const std::string& filename) {
   // There can't be more than 9 crates because that would break the parsing
   // Initially we don't know how many stacks we have,
   // and the parsing gets the crates in reverse order
@@ -94,13 +94,15 @@ void solve_case(const std::string& filename) {
   }
 
   std::cout << filename << " -> " << top_stacks << std::endl;
+  return top_stacks;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case<false>("day05.example");
-  solve_case<false>("day05.input");
+  AOC_EXPECT_RESULT("CMZ", solve_case<false>("day05.example"));
+  AOC_EXPECT_RESULT("QGTHFZBHV", solve_case<false>("day05.input"));
   std::cout << "Part 2" << std::endl;
-  solve_case<true>("day05.example");
-  solve_case<true>("day05.input");
+  AOC_EXPECT_RESULT("MCD", solve_case<true>("day05.example"));
+  AOC_EXPECT_RESULT("MGDMPSZTM", solve_case<true>("day05.input"));
+  AOC_RETURN_CHECK_RESULT();
 }

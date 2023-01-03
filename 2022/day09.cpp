@@ -123,7 +123,7 @@ void print_rope(const std::array<point, num_knots>& rope) {
 }
 
 template <int num_knots>
-void solve_case(const std::string& filename) {
+int solve_case(const std::string& filename) {
   std::array<point, num_knots> rope;
   auto& head = rope.front();
   auto& tail = rope.back();
@@ -197,14 +197,16 @@ void solve_case(const std::string& filename) {
   });
 
   std::cout << filename << " -> " << visited.size() << std::endl;
+  return visited.size();
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case<2>("day09.example");
-  solve_case<2>("day09.input");
+  AOC_EXPECT_RESULT(13, solve_case<2>("day09.example"));
+  AOC_EXPECT_RESULT(5695, solve_case<2>("day09.input"));
   std::cout << "Part 2" << std::endl;
-  solve_case<10>("day09.example");
-  solve_case<10>("day09.example2");
-  solve_case<10>("day09.input");
+  AOC_EXPECT_RESULT(1, solve_case<10>("day09.example"));
+  AOC_EXPECT_RESULT(36, solve_case<10>("day09.example2"));
+  AOC_EXPECT_RESULT(2434, solve_case<10>("day09.input"));
+  AOC_RETURN_CHECK_RESULT();
 }

@@ -113,7 +113,7 @@ class board : public array_grid<int, 5> {
   bool has_bingo_hit = false;
 };
 
-void solve_case(const std::string& filename, int game_rounds) {
+int solve_case(const std::string& filename, int game_rounds) {
   std::vector<int> bingo_numbers;
   std::vector<board> boards;
   board* current_board_ptr = nullptr;
@@ -175,17 +175,19 @@ void solve_case(const std::string& filename, int game_rounds) {
   }
 end_rounds:
 
+  auto score = winning_number * winning_board.sum_unmarked();
   std::cout << winning_number << ", " << winning_board.sum_unmarked()
             << std::endl;
-  std::cout << filename << " -> "
-            << (winning_number * winning_board.sum_unmarked()) << std::endl;
+  std::cout << filename << " -> " << score << std::endl;
+  return score;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case("day04.example", 1);
-  solve_case("day04.input", 1);
+  AOC_EXPECT_RESULT(4512, solve_case("day04.example", 1));
+  AOC_EXPECT_RESULT(64084, solve_case("day04.input", 1));
   std::cout << "Part 2" << std::endl;
-  solve_case("day04.example", -1);
-  solve_case("day04.input", -1);
+  AOC_EXPECT_RESULT(1924, solve_case("day04.example", -1));
+  AOC_EXPECT_RESULT(12833, solve_case("day04.input", -1));
+  AOC_RETURN_CHECK_RESULT();
 }

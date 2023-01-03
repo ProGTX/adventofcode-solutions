@@ -26,7 +26,7 @@
 
 static bool g_success = true;
 
-#define EXPECT_RESULT(expected, actual)                                        \
+#define AOC_EXPECT_RESULT(expected, actual)                                    \
   {                                                                            \
     constexpr auto expected_v = (expected);                                    \
     const auto actual_v = (actual);                                            \
@@ -37,7 +37,7 @@ static bool g_success = true;
     }                                                                          \
   }
 
-#define RETURN_CHECK_RESULT()                                                  \
+#define AOC_RETURN_CHECK_RESULT()                                              \
   if (g_success) {                                                             \
     return 0;                                                                  \
   } else {                                                                     \

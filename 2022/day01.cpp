@@ -12,7 +12,7 @@
 #include <string_view>
 #include <vector>
 
-void solve_case(const std::string& filename, int numElvesAverage) {
+int solve_case(const std::string& filename, int numElvesAverage) {
   std::vector<int> caloriesPerElf;
   int singleElfCalories = 0;
 
@@ -42,13 +42,15 @@ void solve_case(const std::string& filename, int numElvesAverage) {
                                      std::end(calsPerTopElves), 0);
 
   std::cout << filename << " -> " << caloriesSum << std::endl;
+  return caloriesSum;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case("day01.example", 1);
-  solve_case("day01.input", 1);
+  AOC_EXPECT_RESULT(24000, solve_case("day01.example", 1));
+  AOC_EXPECT_RESULT(75622, solve_case("day01.input", 1));
   std::cout << "Part 2" << std::endl;
-  solve_case("day01.example", 3);
-  solve_case("day01.input", 3);
+  AOC_EXPECT_RESULT(45000, solve_case("day01.example", 3));
+  AOC_EXPECT_RESULT(213159, solve_case("day01.input", 3));
+  AOC_RETURN_CHECK_RESULT();
 }

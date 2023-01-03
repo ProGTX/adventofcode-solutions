@@ -12,7 +12,7 @@
 
 #include "../common/common.h"
 
-void solve_case(const std::string& filename, int window_width) {
+int solve_case(const std::string& filename, int window_width) {
   auto measurements = readfile_numbers(filename);
   const auto displacement = window_width - 1;
 
@@ -41,13 +41,15 @@ void solve_case(const std::string& filename, int window_width) {
       std::ranges::count_if(relevantDiffs, [](int diff) { return diff > 0; });
 
   std::cout << filename << " -> " << count << std::endl;
+  return count;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_case("day01.example", 1);
-  solve_case("day01.input", 1);
+  AOC_EXPECT_RESULT(7, solve_case("day01.example", 1));
+  AOC_EXPECT_RESULT(1228, solve_case("day01.input", 1));
   std::cout << "Part 2" << std::endl;
-  solve_case("day01.example", 3);
-  solve_case("day01.input", 3);
+  AOC_EXPECT_RESULT(5, solve_case("day01.example", 3));
+  AOC_EXPECT_RESULT(1257, solve_case("day01.input", 3));
+  AOC_RETURN_CHECK_RESULT();
 }

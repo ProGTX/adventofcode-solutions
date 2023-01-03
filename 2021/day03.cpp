@@ -30,7 +30,7 @@ int to_decimal(const bits_array<bit_width>& bits) {
 }
 
 template <size_t bit_width>
-void solve_part1(const std::string& filename) {
+int solve_part1(const std::string& filename) {
   std::array<std::array<int, 2>, bit_width> occurrences;
   for (int i = 0; i < bit_width; ++i) {
     occurrences[i] = {0, 0};
@@ -52,12 +52,13 @@ void solve_part1(const std::string& filename) {
     epsilon[i] = more_ones ? 0 : 1;
   }
 
-  std::cout << filename << " -> " << (to_decimal(gamma) * to_decimal(epsilon))
-            << std::endl;
+  auto consumption = to_decimal(gamma) * to_decimal(epsilon);
+  std::cout << filename << " -> " << consumption << std::endl;
+  return consumption;
 }
 
 template <size_t bit_width>
-void solve_part2(const std::string& filename) {
+int solve_part2(const std::string& filename) {
   bits_lines_t<bit_width> bits_lines;
   readfile_op(filename, [&](std::string_view line) {
     bits_array<bit_width> bits;
@@ -107,16 +108,17 @@ void solve_part2(const std::string& filename) {
   bits_array<bit_width> oxy_generator{bits_lines_oxy[0]};
   bits_array<bit_width> co2_scrubber{bits_lines_co2[0]};
 
-  std::cout << filename << " -> "
-            << (to_decimal(oxy_generator) * to_decimal(co2_scrubber))
-            << std::endl;
+  auto life_support = to_decimal(oxy_generator) * to_decimal(co2_scrubber);
+  std::cout << filename << " -> " << life_support << std::endl;
+  return life_support;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  solve_part1<5>("day03.example");
-  solve_part1<12>("day03.input");
+  AOC_EXPECT_RESULT(198, solve_part1<5>("day03.example"));
+  AOC_EXPECT_RESULT(4138664, solve_part1<12>("day03.input"));
   std::cout << "Part 2" << std::endl;
-  solve_part2<5>("day03.example");
-  solve_part2<12>("day03.input");
+  AOC_EXPECT_RESULT(230, solve_part2<5>("day03.example"));
+  AOC_EXPECT_RESULT(4273224, solve_part2<12>("day03.input"));
+  AOC_RETURN_CHECK_RESULT();
 }
