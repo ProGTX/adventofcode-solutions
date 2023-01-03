@@ -45,7 +45,7 @@ std::string solve_case(const std::string& filename) {
       } else {
         // Done parsing crate stacks, put them in correct order
         auto stack_numbers =
-            split<std::vector<std::string>>(std::string{line}, ' ');
+            split<std::vector<std::string>>(line, ' ');
         num_stacks = static_cast<int>(stack_numbers.back().at(0) - '0');
         for (int i = 0; i < num_stacks; ++i) {
           std::ranges::reverse(crates[i]);
@@ -58,7 +58,7 @@ std::string solve_case(const std::string& filename) {
 
     // move N from A to B
     auto [move_str, n_str, from_str, from_pos_str, to_str, to_pos_str] =
-        split<std::array<std::string, 6>>(std::string{line}, ' ');
+        split<std::array<std::string, 6>>(line, ' ');
 
     auto move_num_crates = std::stoi(n_str);
 

@@ -63,7 +63,7 @@ item_t solve_case(const std::string& filename) {
     if (line.empty()) {
       return;
     }
-    auto items = split<std::vector<std::string>>(std::string{line}, ',');
+    auto items = split<std::vector<std::string>>(line, ',');
     auto instructions = split<std::vector<std::string>>(items[0], ' ');
     if (instructions[0] == "Monkey") {
       current = &monkeys.emplace_back();

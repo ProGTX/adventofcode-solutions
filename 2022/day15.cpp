@@ -140,7 +140,7 @@ std::int64_t solve_case(const std::string& filename) {
 
   readfile_op(filename, [&](std::string_view line) {
     auto [sensor_info, beacon_info] =
-        split<std::array<std::string, 2>>(std::string{line}, ':');
+        split<std::array<std::string, 2>>(line, ':');
 
     // Don't include the space at end, the null terminator is counted instead
     sensor_info = sensor_info.substr(sizeof("Sensor at"));

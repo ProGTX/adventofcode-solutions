@@ -102,7 +102,7 @@ int solve_case(const std::string& filename) {
 
   readfile_op(filename, [&](std::string_view line) {
     auto [instruction, name, cd_to] =
-        split<std::array<std::string, 3>>(std::string{line}, ' ');
+        split<std::array<std::string, 3>>(line, ' ');
     if (instruction[0] == '$') {
       auto command = name;
       if (name == "cd") {

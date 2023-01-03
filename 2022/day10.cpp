@@ -132,7 +132,7 @@ int solve_case(const std::string& filename) {
 
   readfile_op(filename, [&](std::string_view line) {
     auto [op, value] =
-        split<std::array<std::string, 2>>(std::string{line}, ' ');
+        split<std::array<std::string, 2>>(line, ' ');
 
     // Place new instruction into the pipeline
     if (op == "noop") {

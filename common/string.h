@@ -94,9 +94,9 @@ std::vector<int> readfile_numbers(const std::string& filename) {
 
 // https://stackoverflow.com/a/236803
 template <class out_it_t, class item_op_t = std::identity>
-void split_line_to_iterator(const std::string& input, char delimiter,
+void split_line_to_iterator(std::string_view input, char delimiter,
                             out_it_t outputIt, item_op_t item_op = {}) {
-  std::stringstream stream{input};
+  std::stringstream stream{std::string{input}};
   for (std::string item; std::getline(stream, item, delimiter);) {
     if (item.empty()) {
       continue;
@@ -133,7 +133,7 @@ constexpr auto split_item_op() {
 }
 
 template <class output_t, class string_item_op_t = std::identity>
-output_t split(const std::string& input, char delimiter) {
+output_t split(std::string_view input, char delimiter) {
   output_t elems;
   split_line_to_iterator(input, delimiter, inserter_it(elems),
                          split_item_op<output_t, string_item_op_t>());

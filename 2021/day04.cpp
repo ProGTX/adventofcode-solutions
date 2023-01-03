@@ -121,7 +121,7 @@ int solve_case(const std::string& filename, int game_rounds) {
   readfile_op_header(
       filename,
       [&](std::string_view line) {
-        bingo_numbers = split<decltype(bingo_numbers)>(std::string{line}, ',');
+        bingo_numbers = split<decltype(bingo_numbers)>(line, ',');
       },
       [&](std::string_view line) {
         if (line.empty()) {
@@ -131,7 +131,7 @@ int solve_case(const std::string& filename, int game_rounds) {
           // Don't do anything with the board yet
           return;
         }
-        auto row = split<board::row_t>(std::string{line}, ' ');
+        auto row = split<board::row_t>(line, ' ');
         current_board_ptr->add(row);
       });
 

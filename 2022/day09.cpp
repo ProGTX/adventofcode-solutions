@@ -176,7 +176,7 @@ int solve_case(const std::string& filename) {
 
   readfile_op(filename, [&](std::string_view line) {
     auto [operation, value_str] =
-        split<std::array<std::string, 2>>(std::string{line}, ' ');
+        split<std::array<std::string, 2>>(line, ' ');
     auto value = std::stoi(value_str);
     switch (operation[0]) {
       case 'R':

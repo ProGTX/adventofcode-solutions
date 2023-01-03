@@ -86,7 +86,7 @@ int solve_case(const std::string& filename) {
 
   readfile_op(filename, [&](std::string_view line) {
     auto [valve_info, tunnel_info] =
-        split<std::array<std::string, 2>>(std::string{line}, ';');
+        split<std::array<std::string, 2>>(line, ';');
 
     auto [vstr0, name, vstr1, vstr2, rate_str] =
         split<std::array<std::string, 5>>(valve_info, ' ');
