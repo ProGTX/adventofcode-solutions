@@ -23,3 +23,23 @@
 #endif // NDEBUG
 
 #define AOC_ASSERT(condition, message) AOC_ASSERT_HELPER((condition), (message))
+
+static bool g_success = true;
+
+#define EXPECT_RESULT(expected, actual)                                        \
+  {                                                                            \
+    constexpr auto expected_v = (expected);                                    \
+    const auto actual_v = (actual);                                            \
+    if (expected_v != actual_v) {                                              \
+      std::cout << "Wrong result! Expected " << expected_v << ", got "         \
+                << actual_v << std::endl;                                      \
+      g_success = false;                                                       \
+    }                                                                          \
+  }
+
+#define RETURN_CHECK_RESULT()                                                  \
+  if (g_success) {                                                             \
+    return 0;                                                                  \
+  } else {                                                                     \
+    return -1;                                                                 \
+  }
