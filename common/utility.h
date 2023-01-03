@@ -54,6 +54,50 @@ struct ranged_iterator {
 template <class T>
 ranged_iterator(T*, std::ptrdiff_t)->ranged_iterator<T>;
 
+template <class map_iterator>
+struct map_value_iterator {
+ protected:
+  using map_iterator_t = map_iterator;
+  using map_value_t = map_iterator_t::value_type;
+
+ public:
+  using iterator_category = std::random_access_iterator_tag;
+  using difference_type = std::ptrdiff_t;
+  using value_type = decltype(std::declval<map_value_t>().second);
+  using pointer = value_type*;
+  using reference = value_type&;
+
+  map_value_iterator(map_iterator map_it) : m_map_it{map_it} {}
+
+  reference operator*() const { return m_map_it->second; }
+
+  pointer operator->() { return &m_map_it->second; }
+
+  map_value_iterator& operator++() {
+    ++m_map_it;
+    return *this;
+  }
+  map_value_iterator operator++(int) {
+    map_value_iterator tmp = *this;
+    ++(*this);
+    return tmp;
+  }
+
+  friend bool operator==(const map_value_iterator& lhs,
+                         const map_value_iterator& rhs) {
+    return lhs.m_map_it == rhs.m_map_it;
+  };
+  friend bool operator!=(const map_value_iterator& lhs,
+                         const map_value_iterator& rhs) {
+    return !(lhs == rhs);
+  };
+
+ private:
+  map_iterator_t m_map_it;
+};
+template <class map_iterator>
+map_value_iterator(map_iterator)->map_value_iterator<map_iterator>;
+
 struct min_max_helper {
   point min_value{2'000'000'000, 2'000'000'000};
   point max_value{0, 0};

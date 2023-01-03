@@ -1,11 +1,13 @@
 #pragma once
 
 #include "common.h"
+#include "point.h"
 
 #include <algorithm>
 #include <array>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <ranges>
 #include <utility>
 #include <vector>
@@ -153,3 +155,120 @@ class grid {
 template <class T, size_t row_length, size_t num_rows = row_length>
 using array_grid =
     grid<T, std::array<T, row_length>, std::array<T, row_length * num_rows>>;
+
+template <class T, class point_class = point,
+          class row_storage_t = std::vector<T>>
+class sparse_grid {
+ protected:
+  using key_type = point_class;
+
+ public:
+  using container_type =
+      std::map<key_type, T,
+               decltype(get_lex_point_sorter<typename key_type::value_type>())>;
+  using row_t = row_storage_t;
+  using value_type = T;
+  using iterator = map_value_iterator<typename container_type::iterator>;
+  using const_iterator =
+      map_value_iterator<typename container_type::const_iterator>;
+
+  static constexpr auto static_row_length =
+      is_array_class_v<row_t> ? row_t{}.size() : 0;
+
+  constexpr iterator add_row(const row_t& row) {
+    m_row_length = row.size();
+    for (int column = 0; const auto& elem : row) {
+      this->insert_single(point_class{column, m_num_rows}, elem);
+      ++column;
+    }
+    ++m_num_rows;
+    return m_data.find(point_class{0, m_num_rows - 1});
+  }
+
+  constexpr row_t get_row(int row) const {
+    row_t return_row;
+    if constexpr (is_specialization_of_v<row_t, std::vector>) {
+      return_row.reserve(this->row_length());
+    }
+    auto it = inserter_it(return_row);
+    for (int column = 0; column < this->row_length(); ++column) {
+      *it = this->at(row, column);
+      ++it;
+    }
+    return return_row;
+  }
+
+  constexpr const value_type& at(int row, int column) const {
+    auto it = m_data.find(point_class{column, row});
+    if (it == std::end(m_data)) {
+      return empty_value;
+    }
+    return it->second;
+  }
+
+  constexpr void modify(value_type value, int row, int column) {
+    auto coords = point_class{column, row};
+    auto it = m_data.find(coords);
+    if (it == std::end(m_data)) {
+      this->insert_single(coords, std::move(value));
+    } else {
+      it->second = std::move(value);
+    }
+  }
+
+  constexpr auto size() const { return m_data.size(); }
+
+  constexpr int row_length() const {
+    if constexpr (static_row_length > 0) {
+      return static_row_length;
+    } else {
+      return m_row_length;
+    }
+  }
+
+  constexpr int num_rows() const { return m_num_rows; }
+
+  template <class print_single_ft = std::identity>
+  void print_all(print_single_ft print_single_f = {},
+                 std::ostream& out = std::cout) const {
+    for (int row = 0; row < this->num_rows(); ++row) {
+      out << "  ";
+      for (int column = 0; column < this->row_length(); ++column) {
+        this->get_print_single_f(print_single_f)(out, row, column);
+      }
+      out << std::endl;
+    }
+    out << std::endl;
+  }
+
+ protected:
+  static constexpr auto empty_value = T{};
+
+  constexpr std::pair<iterator, bool> insert_single(const key_type& key,
+                                                    value_type value) {
+    if (value == empty_value) {
+      m_data.erase(key);
+      return {std::end(m_data), false};
+    } else {
+      auto [it, success] = m_data.emplace(key, value);
+      return {it, success};
+    }
+  }
+
+ private:
+  template <class print_single_ft>
+  constexpr auto get_print_single_f(print_single_ft print_single_f) const {
+    if constexpr (std::is_same_v<print_single_ft, std::identity>) {
+      return [this](std::ostream& out, int row, int column) {
+        out << this->at(row, column);
+      };
+    } else {
+      return print_single_f;
+    }
+  }
+
+ private:
+  container_type m_data;
+  int m_row_length = 0;
+  int m_num_rows = 0;
+};

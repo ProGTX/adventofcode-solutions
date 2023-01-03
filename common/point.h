@@ -86,4 +86,14 @@ struct point_t {
   constexpr const_iterator end() const noexcept { return (&y) + 1; }
 };
 
+template <class T>
+constexpr auto get_lex_point_sorter() {
+  return [](const point_t<T>& lhs, const point_t<T>& rhs) {
+    if (lhs.y == rhs.y) {
+      return lhs.x < rhs.x;
+    }
+    return lhs.y < rhs.y;
+  };
+}
+
 using point = point_t<int>;
