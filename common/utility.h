@@ -52,7 +52,7 @@ struct ranged_iterator {
 template <class T>
 ranged_iterator(T*, std::ptrdiff_t)->ranged_iterator<T>;
 
-template <class Container, bool extra_edge = false, bool experimental = false>
+template <class Container, bool extra_edge = false>
 struct cyclic_iterator {
   using iterator_category = std::random_access_iterator_tag;
   using difference_type = std::ptrdiff_t;
@@ -90,16 +90,19 @@ struct cyclic_iterator {
     if (diff == 0) {
       return *this;
     }
-    if constexpr (experimental) {
-      // TODO: Make it faster
-    }
-    if (diff < 0) {
-      for (int i = 0; i > diff; --i) {
-        this->operator--();
-      }
+    if constexpr (!extra_edge) {
+      auto pos = std::distance(m_begin, m_it);
+      pos = (m_size + (pos + (diff % m_size))) % m_size;
+      m_it = m_begin + pos;
     } else {
-      for (int i = 0; i < diff; ++i) {
-        this->operator++();
+      if (diff < 0) {
+        for (int i = 0; i > diff; --i) {
+          this->operator--();
+        }
+      } else {
+        for (int i = 0; i < diff; ++i) {
+          this->operator++();
+        }
       }
     }
 

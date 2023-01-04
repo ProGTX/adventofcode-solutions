@@ -14,20 +14,37 @@
 #include <string_view>
 #include <vector>
 
+struct indexed_num_t {
+  int value;
+  int index;
+};
+
 using list_t = std::vector<int>;
+using indexed_list_t = std::vector<indexed_num_t>;
 
 template <int num_mixings>
 list_t reorder_list(const list_t& original_list) {
-  list_t reordered_list = original_list;
+  indexed_list_t original_list_indexed;
+  for (int index = 0; index < original_list.size(); ++index) {
+    original_list_indexed.emplace_back(original_list[index], index);
+  }
 
-  for (const int number : original_list) {
-    if (number == 0) {
+  indexed_list_t reordered_list = original_list_indexed;
+
+  for (const auto indexed_number : original_list_indexed) {
+    if (indexed_number.value == 0) {
       continue;
     }
 
-    auto current_it = std::ranges::find(reordered_list, number);
-    auto next_it = static_cast<cyclic_iterator<list_t>::iterator>(
-        cyclic_iterator<list_t, true>{reordered_list, current_it} + number);
+    auto current_it =
+        std::ranges::find_if(reordered_list, [&](const indexed_num_t& rnum) {
+          return rnum.index == indexed_number.index;
+        });
+    auto next_it =
+        static_cast<cyclic_iterator<decltype(reordered_list)>::iterator>(
+            cyclic_iterator<decltype(reordered_list), true>{reordered_list,
+                                                            current_it} +
+            indexed_number.value);
 
     auto it_distance = std::distance(current_it, next_it);
     if (it_distance < 0) {
@@ -35,10 +52,14 @@ list_t reorder_list(const list_t& original_list) {
     } else {
       std::shift_left(current_it, next_it + 1, 1);
     }
-    *next_it = number;
+    *next_it = indexed_number;
   }
 
-  return reordered_list;
+  list_t reordered_simple;
+  std::ranges::transform(
+      reordered_list, std::back_inserter(reordered_simple),
+      [](const indexed_num_t& indexed_number) { return indexed_number.value; });
+  return reordered_simple;
 }
 
 int sum_numbers(const list_t& list) {
