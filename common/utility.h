@@ -52,7 +52,9 @@ struct ranged_iterator {
 template <class T>
 ranged_iterator(T*, std::ptrdiff_t)->ranged_iterator<T>;
 
-template <class Container, bool extra_edge = false>
+struct linked_list_iterator_tag {};
+
+template <class Container, bool linked_list = false>
 struct cyclic_iterator {
   using iterator_category = std::random_access_iterator_tag;
   using difference_type = std::ptrdiff_t;
@@ -79,9 +81,21 @@ struct cyclic_iterator {
     }
   }
 
+  constexpr cyclic_iterator(linked_list_iterator_tag, container_type&&,
+                            iterator) = delete;
+  constexpr cyclic_iterator(linked_list_iterator_tag, container_type& container,
+                            iterator it)
+      : cyclic_iterator{container, it} {}
+
   constexpr cyclic_iterator(container_type&& container) = delete;
   constexpr cyclic_iterator(container_type& container)
       : cyclic_iterator{container, std::begin(container)} {}
+
+  constexpr cyclic_iterator(linked_list_iterator_tag,
+                            container_type&&) = delete;
+  constexpr cyclic_iterator(linked_list_iterator_tag, container_type& container)
+      : cyclic_iterator{linked_list_iterator_tag{}, container,
+                        std::begin(container)} {}
 
   constexpr reference operator*() const { return *m_it; }
   constexpr pointer operator->() { return m_it.operator->(); }
@@ -90,21 +104,16 @@ struct cyclic_iterator {
     if (diff == 0) {
       return *this;
     }
-    if constexpr (!extra_edge) {
-      auto pos = std::distance(m_begin, m_it);
-      pos = (m_size + (pos + (diff % m_size))) % m_size;
-      m_it = m_begin + pos;
-    } else {
-      if (diff < 0) {
-        for (int i = 0; i > diff; --i) {
-          this->operator--();
-        }
+    const auto size = [this]() {
+      if constexpr (linked_list) {
+        return m_size - 1;
       } else {
-        for (int i = 0; i < diff; ++i) {
-          this->operator++();
-        }
+        return m_size;
       }
-    }
+    }();
+    auto pos = std::distance(m_begin, m_it);
+    pos = (size + (pos + (diff % size))) % size;
+    m_it = m_begin + pos;
 
     return *this;
   }
@@ -127,7 +136,7 @@ struct cyclic_iterator {
     ++m_it;
     if (m_it == m_end) {
       m_it = m_begin;
-      if constexpr (extra_edge) {
+      if constexpr (linked_list) {
         ++m_it;
       }
     }
@@ -142,12 +151,12 @@ struct cyclic_iterator {
   constexpr cyclic_iterator& operator--() {
     if (m_it == m_begin) {
       m_it = m_end;
-      if constexpr (extra_edge) {
+      if constexpr (linked_list) {
         --m_it;
       }
     }
     --m_it;
-    if constexpr (extra_edge) {
+    if constexpr (linked_list) {
       if (m_it == m_begin) {
         m_it = m_end - 1;
       }
@@ -166,7 +175,8 @@ struct cyclic_iterator {
            (lhs.m_end == rhs.m_end) && (lhs.m_size == rhs.m_size);
   };
 
-  constexpr operator iterator() const { return m_it; }
+  constexpr iterator to_underlying() const { return m_it; }
+  constexpr operator iterator() const { return this->to_underlying(); }
 
  private:
   iterator m_begin;
@@ -190,6 +200,28 @@ cyclic_iterator(Container&, typename Container::const_iterator)
 template <class Container>
 cyclic_iterator(const Container&, typename Container::const_iterator)
     ->cyclic_iterator<const Container>;
+template <class Container>
+cyclic_iterator(linked_list_iterator_tag, Container&)
+    ->cyclic_iterator<Container, true>;
+template <class Container>
+cyclic_iterator(linked_list_iterator_tag, const Container&)
+    ->cyclic_iterator<const Container, true>;
+template <class Container>
+cyclic_iterator(linked_list_iterator_tag, Container&,
+                typename Container::iterator)
+    ->cyclic_iterator<Container, true>;
+template <class Container>
+cyclic_iterator(linked_list_iterator_tag, const Container&,
+                typename Container::iterator)
+    ->cyclic_iterator<const Container, true>;
+template <class Container>
+cyclic_iterator(linked_list_iterator_tag, Container&,
+                typename Container::const_iterator)
+    ->cyclic_iterator<Container, true>;
+template <class Container>
+cyclic_iterator(linked_list_iterator_tag, const Container&,
+                typename Container::const_iterator)
+    ->cyclic_iterator<const Container, true>;
 
 template <class map_iterator>
 struct map_value_iterator {
