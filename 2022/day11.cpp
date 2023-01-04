@@ -47,18 +47,6 @@ item_t solve_case(const std::string& filename) {
   monkey_t* current = nullptr;
   item_t divisible_max = 1;
 
-  const auto get_binary_op =
-      [](char op) -> std::function<item_t(item_t, item_t)> {
-    switch (op) {
-      case '+':
-        return std::plus<>{};
-      case '*':
-        return std::multiplies<>{};
-      default:
-        throw std::runtime_error("Invalid operation " + std::string{op});
-    }
-  };
-
   readfile_op(filename, [&](std::string_view line) {
     if (line.empty()) {
       return;
@@ -74,7 +62,7 @@ item_t solve_case(const std::string& filename) {
           items | std::views::drop(1), std::back_inserter(current->items),
           [](const std::string& str) { return std::stoi(str); });
     } else if (instructions[0] == "Operation:") {
-      auto binary_op = get_binary_op(instructions[4][0]);
+      auto binary_op = get_binary_op<item_t>(instructions[4][0]);
       bool use_old = (instructions[5] == "old");
       item_t value = use_old ? 0 : std::stoi(instructions[5]);
       current->operation = [=](item_t old) {

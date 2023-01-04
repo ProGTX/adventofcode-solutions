@@ -3,6 +3,7 @@
 #include "point.h"
 
 #include <exception>
+#include <functional>
 #include <iterator>
 #include <type_traits>
 #include <utility>
@@ -281,4 +282,25 @@ struct min_max_helper {
       max_value.y = p.y;
     }
   };
+};
+
+template <class T = int>
+std::function<T(T, T)> get_binary_op(char op) {
+  switch (op) {
+    case '+':
+      return std::plus{};
+    case '*':
+      return std::multiplies{};
+    case '-':
+      return std::minus{};
+    case '/':
+      return std::divides{};
+    default:
+      throw std::runtime_error("Invalid operation " + std::string{op});
+  }
+}
+
+template <class T>
+std::function<T(T, T)> get_constant_binary_op(T value) {
+  return [=](T, T) { return value; };
 };
