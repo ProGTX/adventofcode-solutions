@@ -187,6 +187,6 @@ int main() {
   AOC_EXPECT_RESULT(291425799367130, (solve_case<false>("day21.input")));
   std::cout << "Part 2" << std::endl;
   AOC_EXPECT_RESULT(301, (solve_case<true>("day21.example")));
-  AOC_EXPECT_RESULT(301, (solve_case<true>("day21.input")));
+  AOC_EXPECT_RESULT(3219579395609, (solve_case<true>("day21.input")));
   AOC_RETURN_CHECK_RESULT();
 }
