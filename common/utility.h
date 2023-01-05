@@ -300,6 +300,22 @@ std::function<T(T, T)> get_binary_op(char op) {
   }
 }
 
+template <class T = int>
+std::function<T(T, T)> get_inverse_binary_op(char op) {
+  switch (op) {
+    case '+':
+      return std::minus{};
+    case '*':
+      return std::divides{};
+    case '-':
+      return std::plus{};
+    case '/':
+      return std::multiplies{};
+    default:
+      throw std::runtime_error("Invalid operation " + std::string{op});
+  }
+}
+
 template <class T>
 std::function<T(T, T)> get_constant_binary_op(T value) {
   return [=](T, T) { return value; };
