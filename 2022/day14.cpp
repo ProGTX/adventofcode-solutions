@@ -1,5 +1,6 @@
 // https://adventofcode.com/2022/day/14
 
+#include "../common/assert.h"
 #include "../common/common.h"
 #include "../common/grid.h"
 
