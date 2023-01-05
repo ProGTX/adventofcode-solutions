@@ -7,6 +7,7 @@
 #include <tuple>
 
 #include "common.h"
+#include "utility.h"
 
 std::ostream& print_range(const std::ranges::range auto range,
                           std::string_view separator = ",",
@@ -55,3 +56,9 @@ struct printable_tuple : public std::tuple<Types...> {
 };
 template <class... Types>
 printable_tuple(Types...)->printable_tuple<Types...>;
+
+template <class T>
+std::ostream& operator<<(std::ostream& out, const fractional_t<T>& value) {
+  out << static_cast<double>(value);
+  return out;
+}

@@ -16,7 +16,8 @@
 #include <string_view>
 #include <vector>
 
-using value_t = std::int64_t;
+using int_value_t = std::int64_t;
+using value_t = fractional_t<int_value_t>;
 using operation_t = std::function<value_t(value_t, value_t)>;
 
 template <class index_t, class Operation = operation_t>
@@ -153,7 +154,7 @@ value_t solve_part2(const parsed_monkeys_t& parsed_monkeys) {
 }
 
 template <bool part2>
-value_t solve_case(const std::string& filename) {
+int_value_t solve_case(const std::string& filename) {
   parsed_monkeys_t parsed_monkeys;
   readfile_op(filename, [&](std::string_view line) {
     auto [name, full_op] = split<std::array<std::string, 2>>(line, ':');
@@ -170,11 +171,11 @@ value_t solve_case(const std::string& filename) {
         name, parsing_monkey_t{lhs, rhs, std::nullopt, std::nullopt, op[0]});
   });
 
-  value_t number = 0;
+  int_value_t number = 0;
   if constexpr (!part2) {
-    number = solve_part1(parsed_monkeys);
+    number = static_cast<int_value_t>(solve_part1(parsed_monkeys));
   } else {
-    number = solve_part2(parsed_monkeys);
+    number = static_cast<int_value_t>(solve_part2(parsed_monkeys));
   }
   std::cout << filename << " -> " << number << std::endl;
   return number;

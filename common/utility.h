@@ -1,10 +1,14 @@
 #pragma once
 
+#include "assert.h"
 #include "point.h"
 
+#include <cmath>
 #include <exception>
 #include <functional>
+#include <iostream>
 #include <iterator>
+#include <numeric>
 #include <type_traits>
 #include <utility>
 
@@ -285,7 +289,7 @@ struct min_max_helper {
 };
 
 template <class T = int>
-std::function<T(T, T)> get_binary_op(char op) {
+constexpr std::function<T(T, T)> get_binary_op(char op) {
   switch (op) {
     case '+':
       return std::plus{};
@@ -301,7 +305,7 @@ std::function<T(T, T)> get_binary_op(char op) {
 }
 
 template <class T = int>
-std::function<T(T, T)> get_inverse_binary_op(char op) {
+constexpr std::function<T(T, T)> get_inverse_binary_op(char op) {
   switch (op) {
     case '+':
       return std::minus{};
@@ -317,6 +321,152 @@ std::function<T(T, T)> get_inverse_binary_op(char op) {
 }
 
 template <class T>
-std::function<T(T, T)> get_constant_binary_op(T value) {
+constexpr std::function<T(T, T)> get_constant_binary_op(T value) {
   return [=](T, T) { return value; };
+};
+
+template <std::integral T>
+constexpr T sign(T value) {
+  if (value == 0) {
+    return 0;
+  }
+  return value / std::abs(value);
+}
+template <std::floating_point T>
+constexpr T sign(T value) {
+  return std::copysign(T{1.0}, value);
+}
+
+struct custom_divides {
+  template <class T>
+  constexpr T operator()(const T& lhs, const T& rhs) const {
+    if constexpr (std::integral<T>) {
+      const auto remainder = (lhs % rhs);
+      if (remainder != 0) {
+        std::cout << "Remainder of " << remainder << " for dividing " << lhs
+                  << " by " << rhs << std::endl;
+      }
+    }
+    return lhs / rhs;
+  }
+};
+
+template <std::integral T>
+struct fractional_t {
+ public:
+  using value_type = T;
+  using difference_type = std::ptrdiff_t;
+
+  using value_point = point_t<value_type>;
+
+  constexpr fractional_t(value_type integral = 0)
+      : fractional_t{integral, 0, 1} {}
+
+  constexpr fractional_t(value_type numerator, value_type denominator)
+      : fractional_t{numerator / denominator, numerator % denominator,
+                     denominator} {}
+
+  constexpr friend bool operator==(const fractional_t&,
+                                   const fractional_t&) = default;
+
+  constexpr fractional_t operator+() const { return *this; }
+
+  constexpr fractional_t operator-() const {
+    return {-m_integral, -m_numerator, m_denominator};
+  }
+
+  constexpr fractional_t& operator+=(const fractional_t& rhs) {
+    m_integral += rhs.m_integral;
+    auto lcd = std::lcm(m_denominator, rhs.m_denominator);
+    auto multiplied_numerators =
+        value_point{m_numerator * (lcd / m_denominator),
+                    rhs.m_numerator * (lcd / rhs.m_denominator)};
+    m_numerator = multiplied_numerators.x + multiplied_numerators.y;
+    m_denominator = lcd;
+    this->simplify();
+    return *this;
+  }
+  constexpr friend fractional_t operator+(fractional_t lhs,
+                                          const fractional_t& rhs) {
+    lhs += rhs;
+    return lhs;
+  }
+
+  constexpr fractional_t& operator-=(const fractional_t& rhs) {
+    return this->operator+=(-rhs);
+  }
+  constexpr friend fractional_t operator-(fractional_t lhs,
+                                          const fractional_t& rhs) {
+    lhs -= rhs;
+    return lhs;
+  }
+
+  constexpr fractional_t& operator*=(const fractional_t& rhs) {
+    fractional_t plus_lhs = fractional_t{rhs}.multiply_integral(m_integral);
+    fractional_t plus_rhs =
+        (fractional_t{rhs.m_integral, m_denominator} +
+         fractional_t{rhs.m_numerator, m_denominator * rhs.m_denominator})
+            .multiply_integral(m_numerator);
+    *this = plus_lhs + plus_rhs;
+    return *this;
+  }
+  constexpr friend fractional_t operator*(fractional_t lhs,
+                                          const fractional_t& rhs) {
+    lhs *= rhs;
+    return lhs;
+  }
+
+  constexpr fractional_t& operator/=(const fractional_t& rhs) {
+    return this->operator*=
+        (fractional_t{rhs.m_denominator,
+                      rhs.m_denominator * rhs.m_integral + rhs.m_numerator});
+  }
+  constexpr friend fractional_t operator/(fractional_t lhs,
+                                          const fractional_t& rhs) {
+    lhs /= rhs;
+    return lhs;
+  }
+
+  template <std::floating_point F>
+  constexpr explicit operator F() const {
+    return static_cast<F>(m_integral) +
+           static_cast<F>(m_numerator) / static_cast<F>(m_denominator);
+  }
+
+  constexpr explicit operator value_type() const { return m_integral; }
+
+  constexpr std::array<value_type, 3> to_array() const {
+    return {m_integral, m_numerator, m_denominator};
+  }
+
+ protected:
+  constexpr fractional_t& multiply_integral(value_type integral) {
+    m_integral *= integral;
+    m_numerator *= integral;
+    this->simplify();
+    return *this;
+  }
+
+  constexpr fractional_t(value_type integral, value_type numerator,
+                         value_type denominator)
+      : m_integral{integral},
+        m_numerator{numerator},
+        m_denominator{denominator} {
+    AOC_ASSERT(m_denominator > 0, "Denominator must be positive");
+  }
+
+  constexpr void simplify() {
+    AOC_ASSERT(m_denominator > 0, "Denominator must be positive");
+    auto gcd = std::gcd(m_numerator, m_denominator);
+    AOC_ASSERT(gcd != 0, "gcd cannot be zero");
+    m_numerator /= gcd;
+    m_denominator /= gcd;
+    m_integral += m_numerator / m_denominator;
+    m_numerator = m_numerator % m_denominator;
+  }
+
+ private:
+  value_type m_integral{0};
+  value_type m_numerator{0};
+  value_type m_denominator{1};
 };
