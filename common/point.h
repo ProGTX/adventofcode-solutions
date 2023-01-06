@@ -41,23 +41,30 @@ struct point_t {
 
   // Note that this operator allows division by zero
   // by setting the element to zero
-  constexpr point_t& operator/=(const point_t& other) {
-    if (other.x == 0) {
-      x = 0;
-    } else {
-      x /= other.x;
-    }
-    if (other.y == 0) {
-      y = 0;
-    } else {
-      y /= other.y;
-    }
-    return *this;
+
+#define AOC_POINTWISE_OP(op, op_eq)                                            \
+  constexpr point_t& operator op_eq(const point_t& other) {                    \
+    if (other.x == 0) {                                                        \
+      x = 0;                                                                   \
+    } else {                                                                   \
+      x op_eq other.x;                                                         \
+    }                                                                          \
+    if (other.y == 0) {                                                        \
+      y = 0;                                                                   \
+    } else {                                                                   \
+      y op_eq other.y;                                                         \
+    }                                                                          \
+    return *this;                                                              \
+  }                                                                            \
+  constexpr friend point_t operator op(point_t lhs, const point_t& rhs) {      \
+    lhs op_eq rhs;                                                             \
+    return lhs;                                                                \
   }
-  constexpr friend point_t operator/(point_t lhs, const point_t& rhs) {
-    lhs /= rhs;
-    return lhs;
-  }
+
+  AOC_POINTWISE_OP(/, /=)
+  AOC_POINTWISE_OP(%, %=)
+
+#undef AOC_POINTWISE_OP
 
   constexpr point_t operator-() const { return {-x, -y}; }
 

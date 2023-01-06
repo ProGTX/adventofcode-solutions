@@ -272,7 +272,7 @@ struct min_max_helper {
   point min_value{2'000'000'000, 2'000'000'000};
   point max_value{0, 0};
 
-  constexpr void update(const point& p) {
+  constexpr min_max_helper& update(const point& p) {
     if (p.x < min_value.x) {
       min_value.x = p.x;
     }
@@ -285,7 +285,32 @@ struct min_max_helper {
     if (p.y > max_value.y) {
       max_value.y = p.y;
     }
+    return *this;
   };
+
+#if 0
+  constexpr min_max_helper& update(const min_max_helper& other) {
+    if (other.min_value.x < min_value.x) {
+      min_value.x = other.min_value.x;
+    }
+    if (other.min_value.y < min_value.y) {
+      min_value.y = other.min_value.y;
+    }
+    if (other.max_value.x > max_value.x) {
+      max_value.x = other.max_value.x;
+    }
+    if (other.max_value.y > max_value.y) {
+      max_value.y = other.max_value.y;
+    }
+    return *this;
+  }
+#endif
+
+  friend std::ostream& operator<<(std::ostream& out,
+                                  const min_max_helper& value) {
+    out << "min{" << value.min_value << ',' << value.max_value << '}';
+    return out;
+  }
 };
 
 template <class T = int>

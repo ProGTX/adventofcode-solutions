@@ -39,7 +39,7 @@ constexpr auto get_trimmer() {
   return [](std::string_view str) { return return_t{trim(str)}; };
 };
 template <class return_t = std::string_view>
-constexpr auto get_trimmer_no_spaces() {
+constexpr auto get_trimmer_keep_spaces() {
   return [](std::string_view str) { return return_t{trim(str, "\t\n\r\f\v")}; };
 };
 
@@ -78,6 +78,14 @@ requires(std::invocable<FirstLineOpT, std::string_view>&& std::invocable<
       operation(line);
     }
   });
+}
+
+std::vector<std::string> readfile_lines(const std::string& filename) {
+  std::vector<std::string> lines;
+  readfile_op<decltype(get_trimmer_keep_spaces())>(
+      filename,
+      [&](std::string_view line) { lines.push_back(std::string{line}); });
+  return lines;
 }
 
 std::vector<int> readfile_numbers(const std::string& filename) {

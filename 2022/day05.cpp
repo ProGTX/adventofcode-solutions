@@ -83,7 +83,7 @@ std::string solve_case(const std::string& filename) {
   };
 
   // Don't trim spaces, we need them in this example
-  readfile_op<decltype(get_trimmer_no_spaces())>(filename, parser);
+  readfile_op<decltype(get_trimmer_keep_spaces())>(filename, parser);
 
   std::cout << "Done parsing " << std::endl;
   std::string top_stacks(static_cast<size_t>(num_stacks), ' ');
