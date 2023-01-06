@@ -1,5 +1,6 @@
 // https://adventofcode.com/2022/day/22
 
+#include "../common/assert.h"
 #include "../common/common.h"
 #include "../common/grid.h"
 #include "../common/print.h"
@@ -23,75 +24,106 @@ enum tile_type_t : char {
   wall = '#',
 };
 
-struct cell_t {
+template <class neighborhood_t>
+struct cell_type;
+
+struct neighborhood : public array_grid<cell_type<neighborhood>*, 3> {};
+
+template <class neighborhood_t>
+struct cell_type {
   char value;
-  min_max_helper limits;
+  point pos;
+  neighborhood_t neighbors;
+
+  template <std::same_as<neighborhood> N = neighborhood_t>
+  constexpr cell_type*& get_neighbor(point diff) {
+    this->assert_diff(diff);
+    return neighbors.at(diff.y + 1, diff.x + 1);
+  }
+  template <std::same_as<neighborhood> N = neighborhood_t>
+  constexpr cell_type* const& get_neighbor(point diff) const {
+    this->assert_diff(diff);
+    return neighbors.at(diff.y + 1, diff.x + 1);
+  }
 
   template <std::convertible_to<char> char_t>
-  friend constexpr bool operator==(const cell_t& lhs, char_t value) {
+  friend constexpr bool operator==(cell_type const& lhs, char_t value) {
     return lhs.value == static_cast<char>(value);
   }
   template <std::convertible_to<char> char_t>
-  friend constexpr bool operator==(char_t value, const cell_t& rhs) {
+  friend constexpr bool operator==(char_t value, cell_type const& rhs) {
     return rhs.value == static_cast<char>(value);
   }
 
-  friend std::ostream& operator<<(std::ostream& out, const cell_t& cell) {
+  friend std::ostream& operator<<(std::ostream& out, cell_type const& cell) {
     out << cell.value;
     return out;
   }
+
+ private:
+  constexpr void assert_diff(point diff) {
+    (void)diff;
+    AOC_ASSERT(std::abs(diff.x * diff.y) != 1, "Not valid to go diagonally");
+    AOC_ASSERT(!((diff.x == 0) && (diff.y == 0)), "Not valid to access itself");
+  }
 };
 
+using cell_t = cell_type<neighborhood>;
 using jungle_t = grid<cell_t>;
 using row_t = jungle_t::row_t;
+using min_max_cell_t = cell_type<min_max_helper>;
+using raw_map_t = std::vector<std::vector<min_max_cell_t>>;
 
 enum facing_t : int {
   right = 0,
   down = 1,
   left = 2,
   up = 3,
+  NUM_FACING = 4,
 };
 
 // Store direction change as a non-negative number,
 // store number of steps as a negative number
 using directions_t = std::vector<int>;
 
-void print_jungle(const jungle_t& jungle) {
+void print_jungle(jungle_t const& jungle) {
   //
   jungle.print_all();
 }
 
+constexpr bool is_part_of_cube(char value) {
+  return (value == empty) || (value == wall);
+}
+constexpr bool can_move_to(char value) {
+  return (value != invalid) && (value != wall);
+}
+
+constexpr point get_diff(facing_t facing) {
+  switch (facing) {
+    case right:
+      return {1, 0};
+    case down:
+      return {0, 1};
+    case left:
+      return {-1, 0};
+    case up:
+      return {0, -1};
+    default:
+      AOC_ASSERT(false, "Facing into an invalid direction");
+      return {};
+  }
+};
+
 std::tuple<point, facing_t> get_position(jungle_t& jungle,
-                                         const directions_t& directions,
+                                         directions_t const& directions,
                                          point pos, facing_t facing) {
-  const auto get_diff = [&]() -> point {
-    switch (facing) {
-      case right:
-        return {1, 0};
-      case down:
-        return {0, 1};
-      case left:
-        return {-1, 0};
-      case up:
-        return {0, -1};
-      default:
-        AOC_ASSERT(false, "Facing into an invalid direction");
-        return {};
-    }
-  };
   cell_t* current_ptr = nullptr;
-  const auto try_move = [&](const point& diff) -> bool {
-    auto section_size =
-        current_ptr->limits.max_value - current_ptr->limits.min_value;
-    auto new_pos =
-        current_ptr->limits.min_value +
-        ((section_size + pos - current_ptr->limits.min_value + diff) %
-         section_size);
-    if (new_pos == pos) {
+  const auto try_move = [&](point const& diff) -> bool {
+    auto new_ptr = jungle.at(pos.y, pos.x).get_neighbor(diff);
+    if (new_ptr == current_ptr) {
       return false;
     }
-    auto new_ptr = &jungle.at(new_pos.y, new_pos.x);
-    if ((new_ptr->value == invalid) || (new_ptr->value == wall)) {
+    if (!can_move_to(new_ptr->value)) {
       return false;
     }
     const char facing_char = std::invoke([&]() {
@@ -110,8 +142,9 @@ std::tuple<point, facing_t> get_position(jungle_t& jungle,
       }
     });
     current_ptr->value = facing_char;
+    // print_jungle(jungle);
     current_ptr = new_ptr;
-    pos = new_pos;
+    pos = new_ptr->pos;
     return true;
   };
   for (auto direction : directions) {
@@ -120,7 +153,7 @@ std::tuple<point, facing_t> get_position(jungle_t& jungle,
       continue;
     }
     int num_steps = -direction;
-    auto diff = get_diff();
+    const auto diff = get_diff(facing);
     current_ptr = &jungle.at(pos.y, pos.x);
     for (int i = 0; i < num_steps; ++i) {
       if (!try_move(diff)) {
@@ -131,12 +164,86 @@ std::tuple<point, facing_t> get_position(jungle_t& jungle,
   return {pos, facing};
 }
 
-template <bool part2>
-int solve_case(const std::string& filename) {
+void adjust_top_to_bottom(raw_map_t& raw_map) {
+  const auto row_length = raw_map[0].size();
+  const auto num_rows = raw_map.size();
+  for (int column = 0; column < row_length; ++column) {
+    min_max_helper vertical_limits;
+    for (int row = 0; row < num_rows; ++row) {
+      auto const& value = raw_map[row][column];
+      if (is_part_of_cube(value.value)) {
+        vertical_limits.update({0, row});
+      }
+    }
+    vertical_limits.max_value.y += 1;
+    for (int row = 0; row < num_rows; ++row) {
+      auto& value = raw_map[row][column];
+      if (is_part_of_cube(value.value)) {
+        value.neighbors.min_value.y = vertical_limits.min_value.y;
+        value.neighbors.max_value.y = vertical_limits.max_value.y;
+      }
+    }
+  }
+}
 
-  row_t current_ptr_row;
+constexpr inline auto neighbor_diffs = std::invoke([]() {
+  std::array<point, NUM_FACING> positions;
+  for (int f = 0; f < NUM_FACING; ++f) {
+    auto facing = static_cast<facing_t>(f);
+    positions[f] = get_diff(facing);
+  }
+  return positions;
+});
+
+void set_neighbors_wrapped(jungle_t& jungle, raw_map_t const& raw_map) {
+  print_range(neighbor_diffs) << std::endl;
+  for (int row = 0; row < jungle.num_rows(); ++row) {
+    int column = 0;
+    for (; column < jungle.row_length(); ++column) {
+      if (is_part_of_cube(raw_map[row][column].value)) {
+        break;
+      }
+    }
+    const auto limits = raw_map[row][column].neighbors;
+    for (; column < limits.max_value.x; ++column) {
+      point pos{column, row};
+      const auto current_ptr = &raw_map[row][column];
+      const auto section_size =
+          current_ptr->neighbors.max_value - current_ptr->neighbors.min_value;
+      std::cout << "pos " << pos << std::endl;
+      for (const auto diff : neighbor_diffs) {
+        auto neighbor_pos =
+            current_ptr->neighbors.min_value +
+            ((section_size + pos - current_ptr->neighbors.min_value + diff) %
+             section_size);
+        std::cout << "  neighbor_pos " << neighbor_pos << std::endl;
+        jungle.at(row, column).get_neighbor(diff) =
+            &jungle.at(neighbor_pos.y, neighbor_pos.x);
+      }
+    }
+  }
+}
+
+template <int cube_side>
+void set_neighbors_cube(jungle_t& jungle, raw_map_t const& raw_map) {}
+
+template <bool is_cube, int cube_side>
+void set_neighbors(jungle_t& jungle, raw_map_t& raw_map) {
+  if constexpr (!is_cube) {
+    adjust_top_to_bottom(raw_map);
+  }
+  if constexpr (!is_cube) {
+    set_neighbors_wrapped(jungle, raw_map);
+  } else {
+    set_neighbors_cube<cube_side>(jungle, raw_map);
+  }
+}
+
+template <bool is_cube, int cube_side>
+int solve_case(std::string const& filename) {
   std::string new_line;
-  std::vector<row_t> raw_map;
+  raw_map_t raw_map;
+  typename raw_map_t::value_type current_row;
 
   min_max_helper grid_size;
 
@@ -147,27 +254,26 @@ int solve_case(const std::string& filename) {
     std::ranges::transform(line, std::back_inserter(new_line),
                            [&](const char value) {
                              ++column;
-                             switch (value) {
-                               case empty:
-                                 [[fallthrough]];
-                               case wall:
-                                 grid_size.update({column, row});
-                                 horizontal_limits.update({column, 0});
-                                 return value;
-                               default:
-                                 return static_cast<char>(invalid);
+                             if (is_part_of_cube(value)) {
+                               grid_size.update({column, row});
+                               horizontal_limits.update({column, 0});
+                               return value;
+                             } else {
+                               return static_cast<char>(invalid);
                              }
                            });
     // Needs to point past the end
     // We'll update vertical limits later
     horizontal_limits.max_value.x += 1;
 
-    current_ptr_row.clear();
-    std::ranges::transform(new_line, std::back_inserter(current_ptr_row),
-                           [&](const char value) {
-                             return cell_t{value, horizontal_limits};
-                           });
-    raw_map.push_back(std::move(current_ptr_row));
+    column = -1;
+    current_row.clear();
+    std::ranges::transform(
+        new_line, std::back_inserter(current_row), [&](const char value) {
+          ++column;
+          return min_max_cell_t{value, point{column, row}, horizontal_limits};
+        });
+    raw_map.push_back(std::move(current_row));
   };
 
   directions_t directions;
@@ -218,33 +324,24 @@ int solve_case(const std::string& filename) {
 
   // Convert raw map to jungle
   auto row_length = grid_size.max_value.x;
+  row_t jungle_row;
   jungle_t jungle;
 
-  for (auto& raw_row : raw_map) {
+  for (int row = 0; auto& raw_row : raw_map) {
     for (int column = raw_row.size(); column < row_length; ++column) {
-      raw_row.push_back(cell_t{invalid, grid_size});
+      raw_row.push_back(min_max_cell_t{invalid, point{column, row}, grid_size});
     }
-    jungle.add_row(raw_row);
+    jungle_row.clear();
+    std::ranges::transform(
+        raw_row, std::back_inserter(jungle_row),
+        [](min_max_cell_t const& cell) {
+          return cell_t{cell.value, cell.pos, neighborhood{}};
+        });
+    jungle.add_row(jungle_row);
+    ++row;
   }
 
-  // Adjust top-to-bottom-limits
-  for (int column = 0; column < jungle.row_length(); ++column) {
-    min_max_helper vertical_limits;
-    for (int row = 0; row < jungle.num_rows(); ++row) {
-      const auto& value = jungle.at(row, column);
-      if ((value == empty) || (value == wall)) {
-        vertical_limits.update({0, row});
-      }
-    }
-    vertical_limits.max_value.y += 1;
-    for (int row = 0; row < jungle.num_rows(); ++row) {
-      auto& value = jungle.at(row, column);
-      if ((value == empty) || (value == wall)) {
-        value.limits.min_value.y = vertical_limits.min_value.y;
-        value.limits.max_value.y = vertical_limits.max_value.y;
-      }
-    }
-  }
+  set_neighbors<is_cube, cube_side>(jungle, raw_map);
 
   point start;
   for (int column = 0; column < jungle.row_length(); ++column) {
@@ -265,10 +362,10 @@ int solve_case(const std::string& filename) {
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  AOC_EXPECT_RESULT(6032, (solve_case<false>("day22.example")));
-  AOC_EXPECT_RESULT(97356, (solve_case<false>("day22.input")));
+  AOC_EXPECT_RESULT(6032, (solve_case<false, 4>("day22.example")));
+  // AOC_EXPECT_RESULT(97356, (solve_case<false, 50>("day22.input")));
   // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(301, (solve_case<true>("day22.example")));
-  // AOC_EXPECT_RESULT(3229579395609, (solve_case<true>("day22.input")));
+  // AOC_EXPECT_RESULT(5031, (solve_case<true, 4>("day22.example")));
+  // AOC_EXPECT_RESULT(3229579395609, (solve_case<true, 50>("day22.input")));
   AOC_RETURN_CHECK_RESULT();
 }
