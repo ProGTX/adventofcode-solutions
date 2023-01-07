@@ -75,8 +75,8 @@ std::optional<resource_pack> try_consume_robot_resources(
     const resource_pack& resources, const resource_pack& new_robot_cost) {
   auto new_resources = resources - new_robot_cost;
   if (new_resources.is_sufficient()) {
-    std::cout << "  Start building new robot by spending: ";
-    print_range(new_robot_cost) << std::endl;
+    std::cout << "  Start building new robot by spending: "
+              << print_range(new_robot_cost) << std::endl;
     return new_resources;
   } else {
     return std::nullopt;
@@ -124,8 +124,8 @@ int num_opened_geodes(const blueprint_t& blueprint,
     robots += new_robots;
   }
 
-  std::cout << "Total resources: ";
-  print_range(resources) << std::endl << std::endl;
+  std::cout << "Total resources: " << print_range(resources) << std::endl
+            << std::endl;
 
   return resources[geode];
 }

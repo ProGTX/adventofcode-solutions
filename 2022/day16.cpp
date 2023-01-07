@@ -119,13 +119,15 @@ int solve_case(const std::string& filename) {
                            return valve_t<int>{name_to_index(valve.name),
                                                valve.rate, std::move(tunnels)};
                          });
-  print_range(valves | std::views::transform([&](const valve_t<int>& valve) {
-                return printable_tuple{valve.name,
-                                       named_valves[valve.name].name,
-                                       valve.rate, valve.tunnels};
-              }),
-              "\n")
-      << std::endl;
+  std::cout << print_range(
+                   valves |
+                       std::views::transform([&](const valve_t<int>& valve) {
+                         return printable_tuple{valve.name,
+                                                named_valves[valve.name].name,
+                                                valve.rate, valve.tunnels};
+                       }),
+                   "\n")
+            << std::endl;
 
   auto score =
       release_pressure(valves, {}, name_to_index("AA"), 0, 0, num_minutes);

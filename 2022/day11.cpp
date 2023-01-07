@@ -31,8 +31,7 @@ struct monkey_t {
 
   std::ostream& print(std::string_view indent = "",
                       std::ostream& out = std::cout) const {
-    out << indent;
-    print_range(items, ",", out) << std::endl;
+    out << indent << print_range(items) << std::endl;
     out << indent << "operation(7) = " << operation(7) << std::endl;
     out << indent << "test{" << test.divisible_by << ",true(" << test.on_true
         << "),"

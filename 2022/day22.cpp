@@ -196,7 +196,7 @@ constexpr inline auto neighbor_diffs = std::invoke([]() {
 });
 
 void set_neighbors_wrapped(jungle_t& jungle, raw_map_t const& raw_map) {
-  print_range(neighbor_diffs) << std::endl;
+  std::cout << print_range(neighbor_diffs) << std::endl;
   for (int row = 0; row < jungle.num_rows(); ++row) {
     int column = 0;
     for (; column < jungle.row_length(); ++column) {

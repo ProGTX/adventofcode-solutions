@@ -9,14 +9,23 @@
 #include "common.h"
 #include "utility.h"
 
-std::ostream& print_range(const std::ranges::range auto range,
-                          std::string_view separator = ",",
-                          std::ostream& out = std::cout) {
-  for (const auto& item : range) {
-    out << item << separator;
+template <std::ranges::range R>
+struct print_range {
+  R range;
+  std::string_view separator;
+
+  explicit constexpr print_range(R range_, std::string_view separator_ = ",")
+      : range{std::move(range_)}, separator{separator_} {}
+
+  constexpr friend std::ostream& operator<<(std::ostream& out,
+                                            const print_range& printer) {
+    for (const auto& item : printer.range) {
+      out << item << printer.separator;
+    }
+
+    return out;
   }
-  return out;
-}
+};
 
 // https://stackoverflow.com/a/67687348/793006
 template <std::size_t I, class... Ts>
@@ -27,8 +36,7 @@ void print_tuple(std::ostream& out, const std::tuple<Ts...>& tuple) {
     using current_t = decltype(std::get<I>(tuple));
     if constexpr (std::ranges::range<current_t> &&
                   !std::convertible_to<current_t, std::string>) {
-      out << '{';
-      print_range(std::get<I>(tuple), ",", out) << '}';
+      out << '{' << print_range(std::get<I>(tuple)) << '}';
     } else {
       out << std::get<I>(tuple);
     }

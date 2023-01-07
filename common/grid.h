@@ -123,8 +123,8 @@ class grid {
   }
 
   template <class print_single_ft = std::identity>
-  void print_all(print_single_ft print_single_f = {},
-                 std::ostream& out = std::cout) const {
+  std::ostream& print_all(print_single_ft print_single_f = {},
+                          std::ostream& out = std::cout) const {
     for (int row = 0; row < this->num_rows(); ++row) {
       out << "  ";
       for (int column = 0; column < this->row_length(); ++column) {
@@ -133,6 +133,7 @@ class grid {
       out << std::endl;
     }
     out << std::endl;
+    return out;
   }
 
  private:

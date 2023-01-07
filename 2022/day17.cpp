@@ -191,7 +191,7 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
     return std::tuple{static_cast<rock_index_t>(rock_index), current_height - 1,
                       chamber.get_row(current_height - 1)};
   });
-  print_range(initial_top_row) << std::endl;
+  std::cout << print_range(initial_top_row) << std::endl;
 
   const auto is_same_as_initial = [&](const chamber_row_t& current_top_row) {
     for (int c = 1; c < initial_top_row.size() - 1; ++c) {
@@ -217,7 +217,7 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
         ++rock_index;
       }
       auto current_top_row = chamber.get_row(current_height - 1);
-      print_range(current_top_row) << std::endl;
+      std::cout << print_range(current_top_row) << std::endl;
       if (is_same_as_initial(current_top_row)) {
         break;
       }
