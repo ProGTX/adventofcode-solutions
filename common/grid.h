@@ -1,5 +1,6 @@
 #pragma once
 
+#include "assert.h"
 #include "common.h"
 #include "point.h"
 
@@ -136,6 +137,9 @@ class grid {
     return out;
   }
 
+  auto begin() const { return m_data.begin(); }
+  auto end() const { return m_data.end(); }
+
  private:
   template <class print_single_ft>
   constexpr auto get_print_single_f(print_single_ft print_single_f) const {
@@ -159,6 +163,47 @@ class grid {
 template <class T, size_t row_length, size_t num_rows = row_length>
 using array_grid =
     grid<T, std::array<T, row_length>, std::array<T, row_length * num_rows>>;
+
+template <class CRTP>
+struct grid_neighbors {
+  using neighborhood_type = array_grid<CRTP*, 3>;
+  using pointer = neighborhood_type::value_type;
+
+  constexpr pointer& get(point diff) {
+    this->assert_diff(diff);
+    return m_neighbors.at(diff.y + 1, diff.x + 1);
+  }
+  constexpr pointer const& get(point diff) const {
+    this->assert_diff(diff);
+    return m_neighbors.at(diff.y + 1, diff.x + 1);
+  }
+
+  constexpr grid_neighbors& set(point diff, pointer neighbor) {
+    this->assert_diff(diff);
+    m_neighbors.modify(neighbor, diff.y + 1, diff.x + 1);
+    return *this;
+  }
+
+ private:
+  constexpr void assert_diff(point diff) const {
+    (void)diff;
+    AOC_ASSERT(std::abs(diff.x * diff.y) != 1, "Not valid to go diagonally");
+    AOC_ASSERT(!((diff.x == 0) && (diff.y == 0)), "Not valid to access itself");
+  }
+
+ private:
+  neighborhood_type m_neighbors{nullptr};
+};
+
+template <class Grid>
+concept is_grid = std::ranges::range<Grid>&& requires(Grid g) {
+  g.add_row();
+  g.get_row();
+  g.linear_index();
+  g.at();
+  g.modify();
+  g.print_all();
+};
 
 template <class T, class point_class = point,
           class row_storage_t = std::vector<T>>
@@ -242,6 +287,9 @@ class sparse_grid {
     }
     out << std::endl;
   }
+
+  constexpr auto begin() const { return m_data.begin(); }
+  constexpr auto end() const { return m_data.begin(); }
 
  protected:
   static constexpr auto empty_value = T{};
