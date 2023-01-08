@@ -170,7 +170,7 @@ void set_neighbors_wrapped(jungle_t& jungle, raw_map_t const& raw_map) {
       const auto current_ptr = &raw_map[row][column];
       const auto section_size =
           current_ptr->limits.max_value - current_ptr->limits.min_value;
-      for (const auto diff : neighbor_diffs) {
+      for (const auto diff : basic_neighbor_diffs) {
         auto neighbor_pos =
             current_ptr->limits.min_value +
             ((section_size + pos - current_ptr->limits.min_value + diff) %

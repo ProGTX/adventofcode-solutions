@@ -50,7 +50,11 @@ class grid {
         m_row_length{num_columns},
         m_num_rows(num_rows) {}
 
-  constexpr iterator add_row(const row_t& row) {
+  template <class Row = row_t>
+  requires requires(Row row) {
+    std::ranges::copy_n(std::begin(row), 0, iterator{});
+  }
+  constexpr iterator add_row(Row const& row) {
     m_row_length = row.size();
     // Use m_num_rows instead of num_rows()
     // because we allow setting rows in a fixed size container
@@ -108,6 +112,12 @@ class grid {
 
   constexpr int linear_index(int row, int column) const {
     return row * this->row_length() + column;
+  }
+  constexpr point position(int linear_index) const {
+    AOC_ASSERT(linear_index > 0, "Index must be non-negative");
+    AOC_ASSERT(linear_index < this->size(), "Index cannot be out of bounds");
+    AOC_ASSERT(this->num_rows() > 0, "Cannot get position without any rows");
+    return {linear_index % this->num_rows(), linear_index / this->num_rows()};
   }
 
   constexpr value_type& at(int row, int column) {
@@ -176,30 +186,47 @@ concept is_grid = std::ranges::range<Grid>&& requires(Grid g) {
 };
 
 enum facing_t : int {
-  right = 0,
-  down = 1,
-  left = 2,
-  up = 3,
+  east = 0,
+  south = 1,
+  west = 2,
+  north = 3,
+  southeast = 4,
+  southwest = 5,
+  northwest = 6,
+  northeast = 7,
+  NUM_SKY_DIRECTIONS = 8,
+  right = east,
+  down = south,
+  left = west,
+  up = north,
   NUM_FACING = 4,
 };
 
 constexpr point get_diff(facing_t facing) {
   switch (facing) {
-    case right:
+    case east:
       return {1, 0};
-    case down:
+    case south:
       return {0, 1};
-    case left:
+    case west:
       return {-1, 0};
-    case up:
+    case north:
       return {0, -1};
+    case southeast:
+      return {1, 1};
+    case southwest:
+      return {-1, 1};
+    case northwest:
+      return {-1, -1};
+    case northeast:
+      return {1, -1};
     default:
       AOC_ASSERT(false, "Facing into an invalid direction");
       return {};
   }
 };
 
-constexpr inline auto neighbor_diffs = std::invoke([]() {
+constexpr inline auto basic_neighbor_diffs = std::invoke([]() {
   std::array<point, NUM_FACING> positions;
   for (int f = 0; f < NUM_FACING; ++f) {
     auto facing = static_cast<facing_t>(f);
@@ -208,10 +235,20 @@ constexpr inline auto neighbor_diffs = std::invoke([]() {
   return positions;
 });
 
-template <class CRTP>
+constexpr inline auto all_neighbor_diffs = std::invoke([]() {
+  std::array<point, NUM_SKY_DIRECTIONS> positions;
+  for (int f = 0; f < NUM_SKY_DIRECTIONS; ++f) {
+    auto facing = static_cast<facing_t>(f);
+    positions[f] = get_diff(facing);
+  }
+  return positions;
+});
+
+template <class CRTP, bool enable_diagonal = false>
 struct grid_neighbors {
   using neighborhood_type = array_grid<CRTP*, 3>;
   using pointer = neighborhood_type::value_type;
+  static constexpr bool allow_diagonal = enable_diagonal;
 
   constexpr pointer& get(point diff) {
     this->assert_diff(diff);
@@ -231,8 +268,10 @@ struct grid_neighbors {
  private:
   constexpr void assert_diff(point diff) const {
     (void)diff;
-    AOC_ASSERT(std::abs(diff.x * diff.y) != 1, "Not valid to go diagonally");
     AOC_ASSERT(!((diff.x == 0) && (diff.y == 0)), "Not valid to access itself");
+    if constexpr (!enable_diagonal) {
+      AOC_ASSERT(std::abs(diff.x * diff.y) != 1, "Not valid to go diagonally");
+    }
   }
 
  private:
@@ -247,6 +286,8 @@ requires requires(T value) {
 constexpr void set_standard_neighbors(grid<T, row_storage_t, Container>& grid,
                                       point offset = {0, 0},
                                       point subrange = {0, 0}) {
+  constexpr bool allow_diagonal =
+      decltype(std::declval<T>().neighbors)::allow_diagonal;
   if (subrange == point{0, 0}) {
     subrange = point{grid.row_length(), grid.num_rows()} - offset;
   }
@@ -260,42 +301,81 @@ constexpr void set_standard_neighbors(grid<T, row_storage_t, Container>& grid,
   };
   // Set top row
   for (int column = offset.x + 1; column < postmax.x - 1; ++column) {
-    set_diffs(point{column, offset.y},
-              std::array{neighbor_diffs[left], neighbor_diffs[right],
-                         neighbor_diffs[down]});
+    const point pos{column, offset.y};
+    set_diffs(pos,
+              std::array{basic_neighbor_diffs[west], basic_neighbor_diffs[east],
+                         basic_neighbor_diffs[south]});
+    if constexpr (allow_diagonal) {
+      set_diffs(pos, std::array{all_neighbor_diffs[southeast],
+                                all_neighbor_diffs[southwest]});
+    }
   }
   // Set bottom row
   for (int column = offset.x + 1; column < postmax.x - 1; ++column) {
-    set_diffs(point{column, postmax.y - 1},
-              std::array{neighbor_diffs[left], neighbor_diffs[right],
-                         neighbor_diffs[up]});
+    const point pos{column, postmax.y - 1};
+    set_diffs(pos,
+              std::array{basic_neighbor_diffs[west], basic_neighbor_diffs[east],
+                         basic_neighbor_diffs[north]});
+    if constexpr (allow_diagonal) {
+      set_diffs(pos, std::array{all_neighbor_diffs[northeast],
+                                all_neighbor_diffs[northwest]});
+    }
   }
   // Set leftmost column
   for (int row = offset.y + 1; row < postmax.y - 1; ++row) {
-    set_diffs(point{offset.x, row},
-              std::array{neighbor_diffs[up], neighbor_diffs[down],
-                         neighbor_diffs[right]});
+    const point pos{offset.x, row};
+    set_diffs(pos, std::array{basic_neighbor_diffs[north],
+                              basic_neighbor_diffs[south],
+                              basic_neighbor_diffs[east]});
+    if constexpr (allow_diagonal) {
+      set_diffs(pos, std::array{all_neighbor_diffs[northeast],
+                                all_neighbor_diffs[southeast]});
+    }
   }
   // Set rightmost column
   for (int row = offset.y + 1; row < postmax.y - 1; ++row) {
-    set_diffs(point{postmax.x - 1, row},
-              std::array{neighbor_diffs[up], neighbor_diffs[down],
-                         neighbor_diffs[left]});
+    const point pos{postmax.x - 1, row};
+    set_diffs(pos, std::array{basic_neighbor_diffs[north],
+                              basic_neighbor_diffs[south],
+                              basic_neighbor_diffs[west]});
+    if constexpr (allow_diagonal) {
+      set_diffs(pos, std::array{all_neighbor_diffs[northwest],
+                                all_neighbor_diffs[southwest]});
+    }
   }
   // Set everything in the middle
   for (int row = offset.y + 1; row < postmax.y - 1; ++row) {
     for (int column = offset.x + 1; column < postmax.x - 1; ++column) {
+      constexpr auto neighbor_diffs = std::invoke([&]() {
+        if constexpr (allow_diagonal) {
+          return all_neighbor_diffs;
+        } else {
+          return basic_neighbor_diffs;
+        }
+      });
       set_diffs(point{column, row}, neighbor_diffs);
     }
   }
   // Set corners
-  set_diffs(offset, std::array{neighbor_diffs[down], neighbor_diffs[right]});
+  constexpr auto corner_diagonal_diff = [&](facing_t facing, facing_t backup) {
+    if constexpr (allow_diagonal) {
+      return all_neighbor_diffs[facing];
+    } else {
+      return basic_neighbor_diffs[backup];
+    }
+  };
+  set_diffs(offset,
+            std::array{basic_neighbor_diffs[south], basic_neighbor_diffs[east],
+                       corner_diagonal_diff(southeast, south)});
   set_diffs(offset + point{subrange.x - 1, 0},
-            std::array{neighbor_diffs[down], neighbor_diffs[left]});
+            std::array{basic_neighbor_diffs[south], basic_neighbor_diffs[west],
+                       corner_diagonal_diff(southwest, south)});
   set_diffs(offset + point{0, subrange.y - 1},
-            std::array{neighbor_diffs[up], neighbor_diffs[right]});
+            std::array{basic_neighbor_diffs[north], basic_neighbor_diffs[east],
+                       corner_diagonal_diff(northeast, north)});
   set_diffs(postmax - point{1, 1},
-            std::array{neighbor_diffs[up], neighbor_diffs[left]});
+            std::array{basic_neighbor_diffs[north], basic_neighbor_diffs[west],
+                       corner_diagonal_diff(northwest, north)});
 }
 
 template <class T, class point_class = point,
