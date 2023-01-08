@@ -67,14 +67,6 @@ using jungle_t = grid<cell_t>;
 using row_t = jungle_t::row_t;
 using raw_map_t = std::vector<std::vector<cell_t>>;
 
-enum facing_t : int {
-  right = 0,
-  down = 1,
-  left = 2,
-  up = 3,
-  NUM_FACING = 4,
-};
-
 // Store direction change as a non-negative number,
 // store number of steps as a negative number
 using directions_t = std::vector<int>;
@@ -90,22 +82,6 @@ constexpr bool is_part_of_cube(char value) {
 constexpr bool can_move_to(char value) {
   return (value != invalid) && (value != wall);
 }
-
-constexpr point get_diff(facing_t facing) {
-  switch (facing) {
-    case right:
-      return {1, 0};
-    case down:
-      return {0, 1};
-    case left:
-      return {-1, 0};
-    case up:
-      return {0, -1};
-    default:
-      AOC_ASSERT(false, "Facing into an invalid direction");
-      return {};
-  }
-};
 
 std::tuple<point, facing_t> get_position(jungle_t& jungle,
                                          directions_t const& directions,
@@ -180,15 +156,6 @@ void adjust_top_to_bottom(raw_map_t& raw_map) {
   }
 }
 
-constexpr inline auto neighbor_diffs = std::invoke([]() {
-  std::array<point, NUM_FACING> positions;
-  for (int f = 0; f < NUM_FACING; ++f) {
-    auto facing = static_cast<facing_t>(f);
-    positions[f] = get_diff(facing);
-  }
-  return positions;
-});
-
 void set_neighbors_wrapped(jungle_t& jungle, raw_map_t const& raw_map) {
   for (int row = 0; row < jungle.num_rows(); ++row) {
     int column = 0;
@@ -254,6 +221,7 @@ void set_neighbors_cube(jungle_t& jungle, raw_map_t const& raw_map) {
       cube_corners.at(row_side, column_side) = invalid_corner;
     }
   }
+  set_standard_neighbors(jungle);
 }
 
 template <bool is_cube, int cube_side>

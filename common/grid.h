@@ -9,6 +9,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <ranges>
 #include <utility>
 #include <vector>
@@ -164,6 +165,49 @@ template <class T, size_t row_length, size_t num_rows = row_length>
 using array_grid =
     grid<T, std::array<T, row_length>, std::array<T, row_length * num_rows>>;
 
+template <class Grid>
+concept is_grid = std::ranges::range<Grid>&& requires(Grid g) {
+  g.add_row();
+  g.get_row();
+  g.linear_index();
+  g.at();
+  g.modify();
+  g.print_all();
+};
+
+enum facing_t : int {
+  right = 0,
+  down = 1,
+  left = 2,
+  up = 3,
+  NUM_FACING = 4,
+};
+
+constexpr point get_diff(facing_t facing) {
+  switch (facing) {
+    case right:
+      return {1, 0};
+    case down:
+      return {0, 1};
+    case left:
+      return {-1, 0};
+    case up:
+      return {0, -1};
+    default:
+      AOC_ASSERT(false, "Facing into an invalid direction");
+      return {};
+  }
+};
+
+constexpr inline auto neighbor_diffs = std::invoke([]() {
+  std::array<point, NUM_FACING> positions;
+  for (int f = 0; f < NUM_FACING; ++f) {
+    auto facing = static_cast<facing_t>(f);
+    positions[f] = get_diff(facing);
+  }
+  return positions;
+});
+
 template <class CRTP>
 struct grid_neighbors {
   using neighborhood_type = array_grid<CRTP*, 3>;
@@ -195,15 +239,64 @@ struct grid_neighbors {
   neighborhood_type m_neighbors{nullptr};
 };
 
-template <class Grid>
-concept is_grid = std::ranges::range<Grid>&& requires(Grid g) {
-  g.add_row();
-  g.get_row();
-  g.linear_index();
-  g.at();
-  g.modify();
-  g.print_all();
-};
+template <class T, class row_storage_t, class Container>
+requires requires(T value) {
+  value.neighbors.get(point{});
+  value.neighbors.set(point{}, static_cast<T*>(nullptr));
+}
+constexpr void set_standard_neighbors(grid<T, row_storage_t, Container>& grid,
+                                      point offset = {0, 0},
+                                      point subrange = {0, 0}) {
+  if (subrange == point{0, 0}) {
+    subrange = point{grid.row_length(), grid.num_rows()} - offset;
+  }
+  const point postmax = subrange + offset;
+  const auto set_diffs = [&]<size_t size>(point pos,
+                                          std::array<point, size> diffs) {
+    auto current = &grid.at(pos.y, pos.x);
+    for (const auto diff : diffs) {
+      current->neighbors.set(diff, &grid.at(pos.y + diff.y, pos.x + diff.x));
+    }
+  };
+  // Set top row
+  for (int column = offset.x + 1; column < postmax.x - 1; ++column) {
+    set_diffs(point{column, offset.y},
+              std::array{neighbor_diffs[left], neighbor_diffs[right],
+                         neighbor_diffs[down]});
+  }
+  // Set bottom row
+  for (int column = offset.x + 1; column < postmax.x - 1; ++column) {
+    set_diffs(point{column, postmax.y - 1},
+              std::array{neighbor_diffs[left], neighbor_diffs[right],
+                         neighbor_diffs[up]});
+  }
+  // Set leftmost column
+  for (int row = offset.y + 1; row < postmax.y - 1; ++row) {
+    set_diffs(point{offset.x, row},
+              std::array{neighbor_diffs[up], neighbor_diffs[down],
+                         neighbor_diffs[right]});
+  }
+  // Set rightmost column
+  for (int row = offset.y + 1; row < postmax.y - 1; ++row) {
+    set_diffs(point{postmax.x - 1, row},
+              std::array{neighbor_diffs[up], neighbor_diffs[down],
+                         neighbor_diffs[left]});
+  }
+  // Set everything in the middle
+  for (int row = offset.y + 1; row < postmax.y - 1; ++row) {
+    for (int column = offset.x + 1; column < postmax.x - 1; ++column) {
+      set_diffs(point{column, row}, neighbor_diffs);
+    }
+  }
+  // Set corners
+  set_diffs(offset, std::array{neighbor_diffs[down], neighbor_diffs[right]});
+  set_diffs(offset + point{subrange.x - 1, 0},
+            std::array{neighbor_diffs[down], neighbor_diffs[left]});
+  set_diffs(offset + point{0, subrange.y - 1},
+            std::array{neighbor_diffs[up], neighbor_diffs[right]});
+  set_diffs(postmax - point{1, 1},
+            std::array{neighbor_diffs[up], neighbor_diffs[left]});
+}
 
 template <class T, class point_class = point,
           class row_storage_t = std::vector<T>>
