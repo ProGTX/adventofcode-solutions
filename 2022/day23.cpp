@@ -38,7 +38,7 @@ void print_field(const elves_t elves) {
 }
 
 template <int num_rounds>
-void simulate(elves_t& elves) {
+int simulate(elves_t& elves) {
   static constexpr auto invalid_proposal = facing_t::NUM_SKY_DIRECTIONS;
   std::vector<facing_t> proposals(elves.size(), invalid_proposal);
 
@@ -86,16 +86,21 @@ void simulate(elves_t& elves) {
       }
     }
   };
-  for (int round = 0; round < num_rounds; ++round) {
+  int round = 0;
+  for (; round < num_rounds; ++round) {
     for (int e = 0; e < elves.size(); ++e) {
       proposals[e] = propose(elves[e]);
+    }
+    if (std::ranges::count(proposals, invalid_proposal) == elves.size()) {
+      break;
     }
     execute();
     std::ranges::rotate(possible_proposals, std::begin(possible_proposals) + 1);
   }
+  return (round + 1);
 }
 
-template <int num_rounds>
+template <int num_rounds, bool execute_long>
 int solve_case(std::string const& filename) {
   elves_t elves;
   readfile_op(filename, [&](std::string_view line, int linenum) {
@@ -107,22 +112,29 @@ int solve_case(std::string const& filename) {
       ++column;
     }
   });
-  simulate<num_rounds>(elves);
 
-  point field_size = min_max_helper::get(elves).grid_size();
+  int round_when_none_moved = simulate<num_rounds>(elves);
 
-  int num_empty_tiles = field_size.reduce<std::multiplies<>>() - elves.size();
-  std::cout << filename << " -> " << num_empty_tiles << std::endl;
-  return num_empty_tiles;
+  int score = 0;
+  if constexpr (!execute_long) {
+    point field_size = min_max_helper::get(elves).grid_size();
+    int num_empty_tiles = field_size.reduce<std::multiplies<>>() - elves.size();
+    score = num_empty_tiles;
+  } else {
+    score = round_when_none_moved;
+  }
+  std::cout << filename << " -> " << score << std::endl;
+  return score;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  AOC_EXPECT_RESULT(25, (solve_case<3>("day23.example2")));
-  AOC_EXPECT_RESULT(110, (solve_case<10>("day23.example")));
-  AOC_EXPECT_RESULT(3906, (solve_case<10>("day23.input")));
-  // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(5031, (solve_case<100>("day23.example")));
-  // AOC_EXPECT_RESULT(3239579395609, (solve_case<100>("day23.input")));
+  AOC_EXPECT_RESULT(25, (solve_case<3, false>("day23.example2")));
+  AOC_EXPECT_RESULT(110, (solve_case<10, false>("day23.example")));
+  AOC_EXPECT_RESULT(3906, (solve_case<10, false>("day23.input")));
+  std::cout << "Part 2" << std::endl;
+  AOC_EXPECT_RESULT(4, (solve_case<4, true>("day23.example2")));
+  AOC_EXPECT_RESULT(20, (solve_case<100, true>("day23.example")));
+  AOC_EXPECT_RESULT(895, (solve_case<1000, true>("day23.input")));
   AOC_RETURN_CHECK_RESULT();
 }
