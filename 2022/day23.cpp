@@ -26,7 +26,18 @@ enum field_type_t : char {
   elf_tile = '#',
 };
 
-void print_field(const elves_t elves) {
+struct elf_sim_value_t {
+  int original_index;
+  point pos;
+
+  friend std::ostream& operator<<(std::ostream& out,
+                                  elf_sim_value_t const& elf) {
+    out << '{' << elf.original_index << ':' << elf.pos << '}';
+    return out;
+  }
+};
+
+void print_field(elves_t const& elves) {
   auto bounds = min_max_helper::get(elves);
   auto field =
       grid<char>{empty_tile, bounds.grid_size().y, bounds.grid_size().x};
@@ -39,8 +50,22 @@ void print_field(const elves_t elves) {
 
 template <int num_rounds>
 int simulate(elves_t& elves) {
-  static constexpr auto invalid_proposal = facing_t::NUM_SKY_DIRECTIONS;
-  std::vector<facing_t> proposals(elves.size(), invalid_proposal);
+  using elf_simulation_t = std::map<elf_t, elf_sim_value_t>;
+  using elf_sim_pair_value_t = elf_simulation_t::value_type;
+
+  elf_simulation_t elf_simulation;
+  int elf_index = -1;
+  std::ranges::copy(elves | std::views::transform([&](elf_t const& elf) {
+                      ++elf_index;
+                      return std::pair{elf, elf_sim_value_t{elf_index, elf}};
+                    }),
+                    std::inserter(elf_simulation, std::begin(elf_simulation)));
+
+  const auto update_elves = [&]() {
+    for (elf_sim_pair_value_t const& elf : elf_simulation) {
+      elves[elf.second.original_index] = elf.second.pos;
+    }
+  };
 
   std::array<std::array<facing_t, 3>, 4> possible_proposals{
       std::array{north, northeast, northwest},
@@ -56,47 +81,58 @@ int simulate(elves_t& elves) {
                          [&](facing_t facing) { return get_diff(facing); }),
         [&](const point diff) {
           auto neighbor_pos = pos + diff;
-          return !contains(elves, neighbor_pos);
+          return !elf_simulation.contains(neighbor_pos);
         });
   };
-  const auto propose = [&](point pos) -> facing_t {
+  const auto propose = [&](elf_sim_pair_value_t& elf) {
+    elf.second.pos = elf.first;
     for (auto const& directions : possible_proposals) {
-      if (is_empty(pos, all_sky_directions)) {
-        // Same as not moving
-        return invalid_proposal;
+      if (is_empty(elf.first, all_sky_directions)) {
+        break;
       }
-      if (is_empty(pos, directions)) {
-        return directions[0];
+      if (is_empty(elf.first, directions)) {
+        elf.second.pos += get_diff(directions[0]);
+        break;
       }
     }
-    return invalid_proposal;
   };
-  const auto execute = [&] {
-    std::vector<point> proposed_positions(elves);
-    for (int e = 0; e < elves.size(); ++e) {
-      if (proposals[e] != invalid_proposal) {
-        proposed_positions[e] += get_diff(proposals[e]);
+  auto execute = [&]() {
+    std::map<point, int> counts;
+    for (auto& [current, proposed] : elf_simulation) {
+      if (current != proposed.pos) {
+        if (counts.contains(proposed.pos)) {
+          ++counts[proposed.pos];
+        } else {
+          counts[proposed.pos] = 1;
+        }
       }
     }
-    for (int e = 0; e < elves.size(); ++e) {
-      auto count =
-          std::ranges::count(proposed_positions, proposed_positions[e]);
-      if (count == 1) {
-        elves[e] = proposed_positions[e];
+    elf_simulation_t new_simulation;
+    for (auto& [current, proposed] : elf_simulation) {
+      if (counts[proposed.pos] == 1) {
+        new_simulation.emplace(
+            proposed.pos,
+            elf_sim_value_t{proposed.original_index, proposed.pos});
+      } else {
+        new_simulation.emplace(
+            current, elf_sim_value_t{proposed.original_index, current});
       }
     }
+    elf_simulation = std::move(new_simulation);
   };
   int round = 0;
   for (; round < num_rounds; ++round) {
-    for (int e = 0; e < elves.size(); ++e) {
-      proposals[e] = propose(elves[e]);
-    }
-    if (std::ranges::count(proposals, invalid_proposal) == elves.size()) {
+    std::ranges::for_each(elf_simulation, propose);
+    if (std::ranges::all_of(elf_simulation,
+                            [&](elf_sim_pair_value_t const& elf) {
+                              return elf.first == elf.second.pos;
+                            })) {
       break;
     }
     execute();
     std::ranges::rotate(possible_proposals, std::begin(possible_proposals) + 1);
   }
+  update_elves();
   return (round + 1);
 }
 

@@ -5,11 +5,12 @@
 #include <ranges>
 #include <string_view>
 #include <tuple>
+#include <utility>
 
 #include "common.h"
 #include "utility.h"
 
-template <std::ranges::range R>
+template <class R>
 struct print_range {
   R range;
   std::string_view separator;
@@ -19,13 +20,16 @@ struct print_range {
 
   constexpr friend std::ostream& operator<<(std::ostream& out,
                                             const print_range& printer) {
-    for (const auto& item : printer.range) {
-      if constexpr (std::ranges::range<decltype(item)>) {
-        out << '{' << print_range<decltype(item)>{item} << '}'
-            << printer.separator;
-      } else {
-        out << item << printer.separator;
+    if constexpr (std::ranges::range<R>) {
+      out << '{';
+      for (const auto& item : printer.range) {
+        out << print_range<decltype(item)>{item} << printer.separator;
       }
+      out << '}';
+    } else if constexpr (is_specialization_of_v<std::decay_t<R>, std::pair>) {
+      out << '(' << printer.range.first << ',' << printer.range.second << ')';
+    } else {
+      out << printer.range;
     }
 
     return out;
@@ -68,7 +72,7 @@ struct printable_tuple : public std::tuple<Types...> {
   }
 };
 template <class... Types>
-printable_tuple(Types...)->printable_tuple<Types...>;
+printable_tuple(Types...) -> printable_tuple<Types...>;
 
 template <class T>
 std::ostream& operator<<(std::ostream& out, const fractional_t<T>& value) {
