@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <iterator>
 #include <type_traits>
 
 template <class T>
@@ -23,25 +24,24 @@ template <class T, template <class...> class Primary>
 concept specialization_of = is_specialization_of_v<T, Primary>;
 
 template <class Container>
-concept insertable = requires(Container c,
-                              typename Container::value_type value) {
-  c.begin();
-  c.end();
-  c.insert(value);
-};
+concept insertable =
+    requires(Container c, typename Container::value_type value) {
+      c.begin();
+      c.end();
+      c.insert(value);
+    };
 
 template <class Container>
-concept back_insertable = requires(Container c,
-                                   typename Container::value_type value) {
-  c.begin();
-  c.end();
-  c.push_back(value);
-};
+concept back_insertable =
+    requires(Container c, typename Container::value_type value) {
+      c.begin();
+      c.end();
+      c.push_back(value);
+    };
 
 template <class Container>
-concept has_value_type = requires(Container c) {
-  typename Container::value_type;
-};
+concept has_value_type =
+    requires(Container c) { typename Container::value_type; };
 
 template <class T>
 struct is_array_class : std::false_type {};
