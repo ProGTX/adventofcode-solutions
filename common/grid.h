@@ -226,7 +226,7 @@ constexpr point get_diff(facing_t facing) {
   }
 };
 
-constexpr inline auto basic_neighbor_diffs = std::invoke([]() {
+constexpr inline auto basic_neighbor_diffs = std::invoke([] {
   std::array<point, NUM_FACING> positions;
   for (int f = 0; f < NUM_FACING; ++f) {
     auto facing = static_cast<facing_t>(f);
@@ -235,11 +235,18 @@ constexpr inline auto basic_neighbor_diffs = std::invoke([]() {
   return positions;
 });
 
-constexpr inline auto all_neighbor_diffs = std::invoke([]() {
+constexpr inline auto all_sky_directions = std::invoke([] {
+  std::array<facing_t, NUM_SKY_DIRECTIONS> directions;
+  for (int f = 0; f < NUM_SKY_DIRECTIONS; ++f) {
+    directions[f] = static_cast<facing_t>(f);
+  }
+  return directions;
+});
+
+constexpr inline auto all_neighbor_diffs = std::invoke([] {
   std::array<point, NUM_SKY_DIRECTIONS> positions;
   for (int f = 0; f < NUM_SKY_DIRECTIONS; ++f) {
-    auto facing = static_cast<facing_t>(f);
-    positions[f] = get_diff(facing);
+    positions[f] = get_diff(all_sky_directions[f]);
   }
   return positions;
 });

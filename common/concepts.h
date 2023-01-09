@@ -3,7 +3,6 @@
 #include <array>
 #include <type_traits>
 
-
 template <class T>
 struct inspect_t;
 
@@ -61,3 +60,9 @@ constexpr auto inserter_it(output_t& elems) {
     return std::begin(elems);
   }
 }
+
+// https://stackoverflow.com/a/68066873/793006
+template <typename Op, typename Arg1, typename Arg2>
+concept binary_op = std::is_invocable_v<Op, Arg1, Arg2>;
+template <typename Op, typename Ret, typename Arg1, typename Arg2>
+concept binary_op_r = std::is_invocable_r_v<Ret, Op, Arg1, Arg2>;

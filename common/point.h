@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <functional>
 #include <ostream>
 #include <type_traits>
 
@@ -88,8 +89,8 @@ struct point_t {
            (static_cast<long>(diff.y) * diff.y);
   }
 
-  constexpr static int distance_manhattan(const point_t& lhs,
-                                          const point_t& rhs) {
+  constexpr static value_type distance_manhattan(const point_t& lhs,
+                                                 const point_t& rhs) {
     auto diff = (rhs - lhs).abs();
     return diff.x + diff.y;
   }
@@ -99,6 +100,11 @@ struct point_t {
 
   constexpr iterator end() noexcept { return (&y) + 1; }
   constexpr const_iterator end() const noexcept { return (&y) + 1; }
+
+  template <binary_op_r<value_type, value_type, value_type> Op = std::plus<>>
+  constexpr value_type reduce(Op op = {}) const {
+    return op(x, y);
+  }
 };
 
 using point = point_t<int>;

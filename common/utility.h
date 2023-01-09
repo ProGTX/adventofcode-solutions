@@ -9,6 +9,7 @@
 #include <iostream>
 #include <iterator>
 #include <numeric>
+#include <ranges>
 #include <type_traits>
 #include <utility>
 
@@ -311,6 +312,21 @@ struct min_max_helper {
     out << "min{" << value.min_value << ',' << value.max_value << '}';
     return out;
   }
+
+  constexpr point grid_size() const {
+    return max_value - min_value + point{1, 1};
+  }
+
+  template <std::ranges::range R>
+  requires std::convertible_to<decltype(*std::begin(std::declval<R>())),
+                               point> static constexpr min_max_helper
+  get(R const& range) {
+    min_max_helper helper;
+    for (auto const& elem : range) {
+      helper.update(static_cast<point>(elem));
+    }
+    return helper;
+  }
 };
 
 template <class T = int>
@@ -495,3 +511,24 @@ struct fractional_t {
   value_type m_numerator{0};
   value_type m_denominator{1};
 };
+
+// https://en.cppreference.com/w/cpp/algorithm/ranges/contains
+struct __contains_fn {
+  template <std::input_iterator I, std::sentinel_for<I> S, class T,
+            class Proj = std::identity>
+  requires std::indirect_binary_predicate<
+      std::ranges::equal_to, std::projected<I, Proj>, const T*> constexpr bool
+  operator()(I first, S last, const T& value, Proj proj = {}) const {
+    return std::ranges::find(std::move(first), last, value, proj) != last;
+  }
+
+  template <std::ranges::input_range R, class T, class Proj = std::identity>
+  requires std::indirect_binary_predicate<
+      std::ranges::equal_to, std::projected<std::ranges::iterator_t<R>, Proj>,
+      const T*> constexpr bool
+  operator()(R&& r, const T& value, Proj proj = {}) const {
+    return (*this)(std::ranges::begin(r), std::ranges::end(r), std::move(value),
+                   proj);
+  }
+};
+inline constexpr __contains_fn contains{};

@@ -64,7 +64,7 @@ int solve_case(const std::string& filename) {
     rock_lines.push_back(rock_line);
   }
 
-  auto cave_dimensions = min_max.max_value - min_max.min_value + point{1, 1};
+  auto cave_dimensions = min_max.grid_size();
   std::cout << "Creating cave map " << cave_dimensions.y << ","
             << cave_dimensions.x << std::endl;
   cave_map_t cave_map{empty, cave_dimensions.y, cave_dimensions.x};

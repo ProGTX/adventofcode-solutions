@@ -20,7 +20,12 @@ struct print_range {
   constexpr friend std::ostream& operator<<(std::ostream& out,
                                             const print_range& printer) {
     for (const auto& item : printer.range) {
-      out << item << printer.separator;
+      if constexpr (std::ranges::range<decltype(item)>) {
+        out << '{' << print_range<decltype(item)>{item} << '}'
+            << printer.separator;
+      } else {
+        out << item << printer.separator;
+      }
     }
 
     return out;
