@@ -24,3 +24,5 @@ add_sample(day21 2022)
 add_sample(day22 2022)
 add_sample(day23 2022)
 copy_single_input_file(2022_day23 day23.example2)
+
+add_sample(day25 2022)

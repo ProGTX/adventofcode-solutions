@@ -532,3 +532,26 @@ struct __contains_fn {
   }
 };
 inline constexpr __contains_fn contains{};
+
+template <std::integral T>
+constexpr T num_digits(T n) {
+  return std::abs(static_cast<std::make_signed_t<T>>(n)) >= 10
+             ? num_digits(n / 10) + 1
+             : 1;
+}
+
+// https://stackoverflow.com/a/59420788/793006
+template <typename T>
+constexpr T pown(T x, unsigned p) {
+  T result = 1;
+
+  while (p > 0) {
+    if (p & 0x1) {
+      result *= x;
+    }
+    x *= x;
+    p >>= 1;
+  }
+
+  return result;
+}
