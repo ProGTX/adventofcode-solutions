@@ -26,7 +26,7 @@ struct line_t {
 
 using lines_t = std::vector<line_t>;
 
-template <bool>
+template <bool allow_diagonal>
 int solve_case(const std::string& filename) {
   lines_t lines;
 
@@ -34,6 +34,9 @@ int solve_case(const std::string& filename) {
     auto [start_str, end_str] = split<std::array<std::string, 2>>(line, '-');
     auto start = split<point>(start_str, ',');
     auto end = split<point>(std::string_view{end_str}.substr(sizeof(">")), ',');
+    if (end < start) {
+      std::swap(start, end);
+    }
     lines.emplace_back(start, end);
   });
 
@@ -49,14 +52,31 @@ int solve_case(const std::string& filename) {
 
   for (line_t const& line : lines) {
     if (line.start.x == line.end.x) {
-      int max_y = std::max(line.start.y, line.end.y);
-      for (int y = std::min(line.start.y, line.end.y); y <= max_y; ++y) {
+      // Horizontal
+      for (int y = line.start.y; y <= line.end.y; ++y) {
         increment_count(point{line.start.x, y});
       }
     } else if (line.start.y == line.end.y) {
-      int max_x = std::max(line.start.x, line.end.x);
-      for (int x = std::min(line.start.x, line.end.x); x <= max_x; ++x) {
+      // Vertical
+      for (int x = line.start.x; x <= line.end.x; ++x) {
         increment_count(point{x, line.start.y});
+      }
+    } else {
+      if constexpr (allow_diagonal) {
+        if (line.start.x < line.end.x) {
+          // Down right
+          for (point p = line.start; p != line.end; p += {1, 1}) {
+            increment_count(p);
+          }
+        } else {
+          // Down left
+          for (point p = line.start; p != line.end; p += {-1, 1}) {
+            increment_count(p);
+          }
+        }
+        if (line.start != line.end) {
+          increment_count(line.end);
+        }
       }
     }
   }
@@ -74,8 +94,8 @@ int main() {
   std::cout << "Part 1" << std::endl;
   AOC_EXPECT_RESULT(5, (solve_case<false>("day05.example")));
   AOC_EXPECT_RESULT(6461, (solve_case<false>("day05.input")));
-  // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(11, (solve_case<true>("day05.example")));
-  // AOC_EXPECT_RESULT(11, (solve_case<true>("day05.input")));
+  std::cout << "Part 2" << std::endl;
+  AOC_EXPECT_RESULT(12, (solve_case<true>("day05.example")));
+  AOC_EXPECT_RESULT(18065, (solve_case<true>("day05.input")));
   AOC_RETURN_CHECK_RESULT();
 }
