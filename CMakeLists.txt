@@ -9,6 +9,7 @@ set(AOC_INPUTS_DIR "${CMAKE_SOURCE_DIR}/inputs"
     CACHE PATH "Directory containing input files")
 
 enable_testing()
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 function(copy_single_input_file target filename)
   add_custom_command(
@@ -30,14 +31,16 @@ function(copy_input_files target_basename year)
 endfunction()
 
 function(add_sample sample_name year)
-  add_executable(${year}_${sample_name} "${sample_name}.cpp")
+  set(target ${year}_${sample_name})
+  add_executable(${target} "${sample_name}.cpp")
   if(NOT MSVC)
-    target_compile_options(${year}_${sample_name} PRIVATE
+    target_compile_options(${target} PRIVATE
       -Wall -Wextra -Wno-sign-compare
     )
   endif()
   copy_input_files(${sample_name} ${year})
-  add_test(NAME ${year}_${sample_name} COMMAND ${year}_${sample_name})
+  set_target_properties(${target} PROPERTIES FOLDER ${year})
+  add_test(NAME ${target} COMMAND ${target})
 endfunction()
 
 add_subdirectory(2021)
