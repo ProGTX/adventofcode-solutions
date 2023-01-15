@@ -14,7 +14,7 @@
 #include <string_view>
 #include <vector>
 
-using int_t = int;
+using int_t = std::int64_t;
 
 template <int production_length>
 using school = std::array<int_t, production_length>;
@@ -65,8 +65,8 @@ int main() {
   AOC_EXPECT_RESULT(26, (solve_case<18, 7, 2>("day06.example")));
   AOC_EXPECT_RESULT(5934, (solve_case<80, 7, 2>("day06.example")));
   AOC_EXPECT_RESULT(371379, (solve_case<80, 7, 2>("day06.input")));
-  // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(12, (solve_case<true>("day06.example")));
-  // AOC_EXPECT_RESULT(18065, (solve_case<true>("day06.input")));
+  std::cout << "Part 2" << std::endl;
+  AOC_EXPECT_RESULT(26984457539, (solve_case<256, 7, 2>("day06.example")));
+  AOC_EXPECT_RESULT(1674303997472, (solve_case<256, 7, 2>("day06.input")));
   AOC_RETURN_CHECK_RESULT();
 }
