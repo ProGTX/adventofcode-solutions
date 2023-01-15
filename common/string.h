@@ -106,17 +106,20 @@ template <size_t max_elements = std::string::npos, class out_it_t,
 void split_line_to_iterator(std::string_view input, char delimiter,
                             out_it_t outputIt, item_op_t item_op = {}) {
   std::stringstream stream{std::string{input}};
-  int index = 0;
+  size_t index = 0;
   for (std::string item; std::getline(stream, item, delimiter);) {
     if (item.empty()) {
       continue;
     }
     *outputIt = item_op(std::move(item));
+
     // Must increase as last step, in case an item was skipped
-    ++index;
     ++outputIt;
-    if (index >= max_elements) {
-      break;
+    if constexpr (max_elements < std::string::npos) {
+      ++index;
+      if (index >= max_elements) {
+        break;
+      }
     }
   }
 }
