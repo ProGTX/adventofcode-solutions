@@ -3,6 +3,7 @@
 #include "concepts.h"
 #include "point.h"
 #include "range_to.h"
+#include "static_vector.h"
 #include "string.h"
 #include "utility.h"
 
