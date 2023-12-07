@@ -132,7 +132,7 @@ int solve_case(const std::string& filename) {
       }
     } else {
       // File
-      auto filesize = std::stoi(instruction);
+      auto filesize = to_number<int>(instruction);
       if (child_node == nullptr) {
         current_node->add_file(std::move(name), filesize);
       } else {

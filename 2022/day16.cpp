@@ -91,7 +91,7 @@ int solve_case(const std::string& filename) {
     auto [vstr0, name, vstr1, vstr2, rate_str] =
         split<std::array<std::string, 5>>(valve_info, ' ');
 
-    auto rate = std::stoi(std::string{rate_str.substr(sizeof("rate"))});
+    auto rate = to_number<int>(rate_str.substr(sizeof("rate")));
     tunnel_info = tunnel_info.substr(sizeof("tunnels lead to valves"));
     auto tunnels =
         split<std::vector<std::string>, decltype(get_trimmer<std::string>())>(

@@ -138,7 +138,7 @@ int solve_case(const std::string& filename) {
     if (op == "noop") {
       pipeline.front().clear();
     } else if (op == "addx") {
-      pipeline.front() = instruction::make_addx(std::stoi(value));
+      pipeline.front() = instruction::make_addx(to_number<int>(value));
     } else {
       throw std::runtime_error("Invalid instruction " + op);
     }

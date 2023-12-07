@@ -150,12 +150,12 @@ int solve_case(const std::string& filename) {
         geode_robot.substr(sizeof("Each geode robot costs")), ' ');
 
     blueprints.push_back({
-        resource_pack{std::stoi(ore_robot_costs[0]), 0, 0, 0},
-        resource_pack{std::stoi(clay_robot_costs[0]), 0, 0, 0},
-        resource_pack{std::stoi(obsidian_robot_costs[0]),
-                      std::stoi(obsidian_robot_costs[3]), 0, 0},
-        resource_pack{std::stoi(geode_robot_costs[0]), 0,
-                      std::stoi(geode_robot_costs[3]), 0},
+        resource_pack{to_number<int>(ore_robot_costs[0]), 0, 0, 0},
+        resource_pack{to_number<int>(clay_robot_costs[0]), 0, 0, 0},
+        resource_pack{to_number<int>(obsidian_robot_costs[0]),
+                      to_number<int>(obsidian_robot_costs[3]), 0, 0},
+        resource_pack{to_number<int>(geode_robot_costs[0]), 0,
+                      to_number<int>(geode_robot_costs[3]), 0},
     });
     const blueprint_t& bp = blueprints.back();
 

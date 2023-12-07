@@ -20,7 +20,7 @@ int solve_part1(const std::string& filename) {
   readfile_op(filename, [&](std::string_view line) {
     auto values = split<std::array<std::string, 2>>(line, ' ');
     auto command = values[0];
-    auto number = std::stoi(values[1]);
+    auto number = to_number<int>(values[1]);
 
     if (command == "forward") {
       horizontal += number;
@@ -43,7 +43,7 @@ int solve_part2(const std::string& filename) {
   readfile_op(filename, [&](std::string_view line) {
     auto values = split<std::array<std::string, 2>>(line, ' ');
     auto command = values[0];
-    auto number = std::stoi(values[1]);
+    auto number = to_number<int>(values[1]);
 
     if (command == "forward") {
       horizontal += number;

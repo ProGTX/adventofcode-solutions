@@ -133,7 +133,7 @@ std::int64_t solve_case(const std::string& filename) {
 
   const auto convert_eq_str = [](std::string_view str) {
     // Works for "x=" and "y="
-    return std::stoi(std::string(trim(str).substr(2)));
+    return to_number<int>(trim(str).substr(2));
   };
 
   min_max_helper min_max;

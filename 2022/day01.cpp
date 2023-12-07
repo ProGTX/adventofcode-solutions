@@ -24,7 +24,7 @@ int solve_case(const std::string& filename, int numElvesAverage) {
       return;
     }
     // Same elf
-    int currentCal = std::stoi(std::string{line});
+    int currentCal = to_number<int>(line);
     singleElfCalories += currentCal;
   };
 

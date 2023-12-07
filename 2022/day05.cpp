@@ -60,11 +60,11 @@ std::string solve_case(const std::string& filename) {
     auto [move_str, n_str, from_str, from_pos_str, to_str, to_pos_str] =
         split<std::array<std::string, 6>>(line, ' ');
 
-    auto move_num_crates = std::stoi(n_str);
+    auto move_num_crates = to_number<int>(n_str);
 
     // Adjust the indexing by 1
-    auto& from_crate = crates[std::stoi(from_pos_str) - 1];
-    auto& to_crate = crates[std::stoi(to_pos_str) - 1];
+    auto& from_crate = crates[to_number<int>(from_pos_str) - 1];
+    auto& to_crate = crates[to_number<int>(to_pos_str) - 1];
 
     if constexpr (!grab_multiple) {
       // Part 1

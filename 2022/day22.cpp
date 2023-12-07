@@ -279,7 +279,7 @@ int solve_case(std::string const& filename) {
     facing_t facing = right;
     std::string buffer;
     const auto flush_buffer = [&]() {
-      directions.push_back(-std::stoi(buffer));
+      directions.push_back(-to_number<int>(buffer));
       buffer.clear();
     };
     for (const char value : line) {

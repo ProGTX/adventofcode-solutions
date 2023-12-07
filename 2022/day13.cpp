@@ -126,7 +126,7 @@ int solve_case(const std::string& filename) {
   std::string current_number_str;
   const auto add_number_if_not_empty = [&]() {
     if (!current_number_str.empty()) {
-      packet_stack.top()->add_value(std::stoi(current_number_str));
+      packet_stack.top()->add_value(to_number<int>(current_number_str));
       current_number_str.clear();
     }
   };

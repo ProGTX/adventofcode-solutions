@@ -161,7 +161,7 @@ int_value_t solve_case(const std::string& filename) {
     auto [lhs, op, rhs] = split<std::array<std::string, 3>>(full_op, ' ');
 
     if (op.empty()) {
-      value_t value = std::stoi(lhs);
+      value_t value = to_number<int>(lhs);
       parsed_monkeys.emplace_back(name,
                                   parsing_monkey_t{"", "", value, 0, value_op});
       return;
