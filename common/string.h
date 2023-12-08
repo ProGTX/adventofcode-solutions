@@ -14,6 +14,12 @@
 
 using namespace std::string_view_literals;
 
+template <class value_type, std::ranges::range R>
+constexpr value_type construct_string(R&& r) {
+  // https://stackoverflow.com/a/68121694
+  return value_type(&*r.begin(), std::ranges::distance(r));
+}
+
 // https://stackoverflow.com/a/63050738/793006
 constexpr std::string_view ltrim(std::string_view str,
                                  std::string_view whitespace) {
@@ -37,14 +43,22 @@ constexpr std::string_view trim_simple(std::string_view str) {
   return trim(str);
 }
 
-template <class return_t = std::string_view>
-constexpr auto get_trimmer() {
-  return [](std::string_view str) { return return_t{trim(str)}; };
+template <class return_t = std::string_view, bool keep_spaces = false>
+struct trimmer_base {
+  template <class R>
+  constexpr return_t operator()(R&& r) const {
+    auto str = construct_string<std::string_view>(std::forward<R>(r));
+    if constexpr (keep_spaces) {
+      return return_t{trim(str, "\t\n\r\f\v")};
+    } else {
+      return return_t{trim(str)};
+    }
+  }
 };
 template <class return_t = std::string_view>
-constexpr auto get_trimmer_keep_spaces() {
-  return [](std::string_view str) { return return_t{trim(str, "\t\n\r\f\v")}; };
-};
+using trimmer = trimmer_base<return_t, false>;
+template <class return_t = std::string_view>
+using trimmer_keep_spaces = trimmer_base<return_t, true>;
 
 template <class value_type>
 constexpr auto to_number(std::string_view str) {
@@ -58,7 +72,7 @@ constexpr auto to_number(std::string_view str) {
   return value;
 }
 
-template <class trim_op_t = decltype(get_trimmer()), class OpT>
+template <class trim_op_t = trimmer<>, class OpT>
   requires(std::invocable<OpT, std::string_view, int> ||
            std::invocable<OpT, std::string_view>)
 void readfile_op(const std::string& filename, OpT operation) {
@@ -93,9 +107,9 @@ void readfile_op_header(const std::string& filename,
 
 std::vector<std::string> readfile_lines(const std::string& filename) {
   std::vector<std::string> lines;
-  readfile_op<decltype(get_trimmer_keep_spaces())>(
-      filename,
-      [&](std::string_view line) { lines.push_back(std::string{line}); });
+  readfile_op<trimmer_keep_spaces<>>(filename, [&](std::string_view line) {
+    lines.push_back(std::string{line});
+  });
   return lines;
 }
 
@@ -111,46 +125,6 @@ std::vector<int> readfile_numbers(const std::string& filename) {
   return numbers;
 }
 
-// https://stackoverflow.com/a/236803
-template <size_t max_elements = std::string::npos, class out_it_t,
-          class item_op_t = std::identity>
-void split_line_to_iterator(std::string_view input, char delimiter,
-                            out_it_t outputIt, item_op_t item_op = {}) {
-  std::stringstream stream{std::string{input}};
-  size_t index = 0;
-  for (std::string item; std::getline(stream, item, delimiter);) {
-    if (item.empty()) {
-      continue;
-    }
-    *outputIt = item_op(std::move(item));
-
-    // Must increase as last step, in case an item was skipped
-    ++outputIt;
-    if constexpr (max_elements < std::string::npos) {
-      ++index;
-      if (index >= max_elements) {
-        break;
-      }
-    }
-  }
-}
-
-template <class output_t, class string_item_op_t = std::identity>
-constexpr auto split_item_op() {
-  if constexpr (has_value_type<output_t>) {
-    using value_type = typename output_t::value_type;
-    if constexpr (std::integral<value_type>) {
-      return [](auto&& item) {
-        return to_number<value_type>(string_item_op_t{}(item));
-      };
-    } else {
-      return string_item_op_t{};
-    }
-  } else {
-    return string_item_op_t{};
-  }
-}
-
 template <class output_t>
 constexpr size_t max_container_elems() {
   if constexpr (is_array_class_v<output_t>) {
@@ -160,22 +134,12 @@ constexpr size_t max_container_elems() {
   }
 }
 
-template <class output_t, class string_item_op_t = std::identity>
-output_t split_legacy(std::string_view input, char delimiter) {
-  output_t elems;
-  split_line_to_iterator<max_container_elems<output_t>()>(
-      input, delimiter, inserter_it(elems),
-      split_item_op<output_t, string_item_op_t>());
-  return elems;
-}
-
 template <class value_type, std::ranges::range R>
 constexpr value_type construct(R&& r) {
   if constexpr (contains_type<value_type, std::string_view, std::string>) {
-    // https://stackoverflow.com/a/68121694
-    return value_type(&*r.begin(), std::ranges::distance(r));
+    return construct_string<value_type>(std::forward<R>(r));
   } else if constexpr (std::is_arithmetic_v<value_type>) {
-    std::string_view view(&*r.begin(), std::ranges::distance(r));
+    auto view = construct_string<std::string_view>(std::forward<R>(r));
     return to_number<value_type>(view);
   } else {
     return value_type{r};

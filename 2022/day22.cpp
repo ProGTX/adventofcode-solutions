@@ -316,7 +316,7 @@ int solve_case(std::string const& filename) {
     }
   };
 
-  readfile_op<decltype(get_trimmer_keep_spaces())>(filename, parser);
+  readfile_op<trimmer_keep_spaces<>>(filename, parser);
 
   grid_size.max_value += point{1, 1};
 

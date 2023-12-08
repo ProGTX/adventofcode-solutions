@@ -93,9 +93,8 @@ int solve_case(const std::string& filename) {
 
     auto rate = to_number<int>(rate_str.substr(sizeof("rate")));
     tunnel_info = tunnel_info.substr(sizeof("tunnels lead to valves"));
-    auto tunnels =
-        split_legacy<std::vector<std::string>,
-                     decltype(get_trimmer<std::string>())>(tunnel_info, ',');
+    auto tunnels = split<std::vector<std::string>>(tunnel_info, ',',
+                                                   trimmer<std::string>());
 
     named_valves.emplace_back(std::move(name), rate, std::move(tunnels));
   });
