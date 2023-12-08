@@ -56,7 +56,7 @@ struct ranged_iterator {
   difference_type m_diff;
 };
 template <class T>
-ranged_iterator(T*, std::ptrdiff_t)->ranged_iterator<T>;
+ranged_iterator(T*, std::ptrdiff_t) -> ranged_iterator<T>;
 
 struct linked_list_iterator_tag {};
 
@@ -191,43 +191,43 @@ struct cyclic_iterator {
   difference_type m_size;
 };
 template <class Container>
-cyclic_iterator(Container&)->cyclic_iterator<Container>;
+cyclic_iterator(Container&) -> cyclic_iterator<Container>;
 template <class Container>
-cyclic_iterator(const Container&)->cyclic_iterator<const Container>;
+cyclic_iterator(const Container&) -> cyclic_iterator<const Container>;
 template <class Container>
 cyclic_iterator(Container&, typename Container::iterator)
-    ->cyclic_iterator<Container>;
+    -> cyclic_iterator<Container>;
 template <class Container>
 cyclic_iterator(const Container&, typename Container::iterator)
-    ->cyclic_iterator<const Container>;
+    -> cyclic_iterator<const Container>;
 template <class Container>
 cyclic_iterator(Container&, typename Container::const_iterator)
-    ->cyclic_iterator<Container>;
+    -> cyclic_iterator<Container>;
 template <class Container>
 cyclic_iterator(const Container&, typename Container::const_iterator)
-    ->cyclic_iterator<const Container>;
+    -> cyclic_iterator<const Container>;
 template <class Container>
 cyclic_iterator(linked_list_iterator_tag, Container&)
-    ->cyclic_iterator<Container, true>;
+    -> cyclic_iterator<Container, true>;
 template <class Container>
 cyclic_iterator(linked_list_iterator_tag, const Container&)
-    ->cyclic_iterator<const Container, true>;
+    -> cyclic_iterator<const Container, true>;
 template <class Container>
 cyclic_iterator(linked_list_iterator_tag, Container&,
                 typename Container::iterator)
-    ->cyclic_iterator<Container, true>;
+    -> cyclic_iterator<Container, true>;
 template <class Container>
 cyclic_iterator(linked_list_iterator_tag, const Container&,
                 typename Container::iterator)
-    ->cyclic_iterator<const Container, true>;
+    -> cyclic_iterator<const Container, true>;
 template <class Container>
 cyclic_iterator(linked_list_iterator_tag, Container&,
                 typename Container::const_iterator)
-    ->cyclic_iterator<Container, true>;
+    -> cyclic_iterator<Container, true>;
 template <class Container>
 cyclic_iterator(linked_list_iterator_tag, const Container&,
                 typename Container::const_iterator)
-    ->cyclic_iterator<const Container, true>;
+    -> cyclic_iterator<const Container, true>;
 
 template <class map_iterator>
 struct map_value_iterator {
@@ -267,7 +267,7 @@ struct map_value_iterator {
   map_iterator_t m_map_it;
 };
 template <class map_iterator>
-map_value_iterator(map_iterator)->map_value_iterator<map_iterator>;
+map_value_iterator(map_iterator) -> map_value_iterator<map_iterator>;
 
 struct min_max_helper {
   point min_value{2'000'000'000, 2'000'000'000};
@@ -318,9 +318,9 @@ struct min_max_helper {
   }
 
   template <std::ranges::range R>
-  requires std::convertible_to<decltype(*std::begin(std::declval<R>())),
-                               point> static constexpr min_max_helper
-  get(R const& range) {
+    requires std::convertible_to<decltype(*std::begin(std::declval<R>())),
+                                 point>
+  static constexpr min_max_helper get(R const& range) {
     min_max_helper helper;
     for (auto const& elem : range) {
       helper.update(static_cast<point>(elem));
@@ -458,9 +458,9 @@ struct fractional_t {
   }
 
   constexpr fractional_t& operator/=(const fractional_t& rhs) {
-    return this->operator*=
-        (fractional_t{rhs.m_denominator,
-                      rhs.m_denominator * rhs.m_integral + rhs.m_numerator});
+    return this->operator*=(
+        fractional_t{rhs.m_denominator,
+                     rhs.m_denominator * rhs.m_integral + rhs.m_numerator});
   }
   constexpr friend fractional_t operator/(fractional_t lhs,
                                           const fractional_t& rhs) {
@@ -516,17 +516,18 @@ struct fractional_t {
 struct __contains_fn {
   template <std::input_iterator I, std::sentinel_for<I> S, class T,
             class Proj = std::identity>
-  requires std::indirect_binary_predicate<
-      std::ranges::equal_to, std::projected<I, Proj>, const T*> constexpr bool
-  operator()(I first, S last, const T& value, Proj proj = {}) const {
+    requires std::indirect_binary_predicate<std::ranges::equal_to,
+                                            std::projected<I, Proj>, const T*>
+  constexpr bool operator()(I first, S last, const T& value,
+                            Proj proj = {}) const {
     return std::ranges::find(std::move(first), last, value, proj) != last;
   }
 
   template <std::ranges::input_range R, class T, class Proj = std::identity>
-  requires std::indirect_binary_predicate<
-      std::ranges::equal_to, std::projected<std::ranges::iterator_t<R>, Proj>,
-      const T*> constexpr bool
-  operator()(R&& r, const T& value, Proj proj = {}) const {
+    requires std::indirect_binary_predicate<
+        std::ranges::equal_to, std::projected<std::ranges::iterator_t<R>, Proj>,
+        const T*>
+  constexpr bool operator()(R&& r, const T& value, Proj proj = {}) const {
     return (*this)(std::ranges::begin(r), std::ranges::end(r), std::move(value),
                    proj);
   }
