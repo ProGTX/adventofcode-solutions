@@ -171,7 +171,7 @@ output_t split(std::string_view input, char delimiter) {
 
 template <class value_type, std::ranges::viewable_range R>
 constexpr value_type construct(R&& r) {
-  if constexpr (std::same_as<value_type, std::string_view>) {
+  if constexpr (contains_type<value_type, std::string_view, std::string>) {
     // https://stackoverflow.com/a/68121694
     return value_type(&*r.begin(), std::ranges::distance(r));
   } else {
