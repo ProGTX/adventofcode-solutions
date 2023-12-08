@@ -131,8 +131,7 @@ int solve_case(const std::string& filename) {
   };
 
   readfile_op(filename, [&](std::string_view line) {
-    auto [op, value] =
-        split<std::array<std::string, 2>>(line, ' ');
+    auto [op, value] = split<std::array<std::string_view, 2>>(line, ' ');
 
     // Place new instruction into the pipeline
     if (op == "noop") {
@@ -140,7 +139,7 @@ int solve_case(const std::string& filename) {
     } else if (op == "addx") {
       pipeline.front() = instruction::make_addx(to_number<int>(value));
     } else {
-      throw std::runtime_error("Invalid instruction " + op);
+      throw std::runtime_error("Invalid instruction " + std::string{op});
     }
 
     if constexpr (insert_noop) {

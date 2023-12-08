@@ -18,7 +18,7 @@ int solve_part1(const std::string& filename) {
   int depth = 0;
 
   readfile_op(filename, [&](std::string_view line) {
-    auto values = split<std::array<std::string, 2>>(line, ' ');
+    auto values = split<std::array<std::string_view, 2>>(line, ' ');
     auto command = values[0];
     auto number = to_number<int>(values[1]);
 
@@ -41,7 +41,7 @@ int solve_part2(const std::string& filename) {
   int aim = 0;
 
   readfile_op(filename, [&](std::string_view line) {
-    auto values = split<std::array<std::string, 2>>(line, ' ');
+    auto values = split<std::array<std::string_view, 2>>(line, ' ');
     auto command = values[0];
     auto number = to_number<int>(values[1]);
 

@@ -102,9 +102,8 @@ int solve_case(const std::string& filename) {
 
   readfile_op(filename, [&](std::string_view line) {
     auto [instruction, name, cd_to] =
-        split<std::array<std::string, 3>>(line, ' ');
+        split<std::array<std::string_view, 3>>(line, ' ');
     if (instruction[0] == '$') {
-      auto command = name;
       if (name == "cd") {
         if (cd_to == "/") {
           current_node = &filesystem;
@@ -112,21 +111,21 @@ int solve_case(const std::string& filename) {
         }
         auto child_node = current_node->get_child(cd_to);
         if (child_node == nullptr) {
-          current_node = current_node->add_folder(std::move(cd_to));
+          current_node = current_node->add_folder(std::string{cd_to});
         } else {
           current_node = child_node;
         }
       } else if (name == "ls") {
         // Don't have to do anything with ls
       } else {
-        throw std::runtime_error("Unknown instruction " + name);
+        throw std::runtime_error("Unknown instruction " + std::string{name});
       }
       return;
     }
     auto child_node = current_node->get_child(name);
     if (instruction == "dir") {
       if (child_node == nullptr) {
-        current_node->add_folder(std::move(name));
+        current_node->add_folder(std::string{name});
       } else {
         // Folder already exists
       }
@@ -134,7 +133,7 @@ int solve_case(const std::string& filename) {
       // File
       auto filesize = to_number<int>(instruction);
       if (child_node == nullptr) {
-        current_node->add_file(std::move(name), filesize);
+        current_node->add_file(std::string{name}, filesize);
       } else {
         // File already exists
       }

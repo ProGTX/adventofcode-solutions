@@ -198,7 +198,7 @@ int_t solve_case(const std::string& filename) {
 
   readfile_op(filename, [&](std::string_view line) {
     auto [signal_patterns_str, output_str] =
-        split<std::array<std::string, 2>>(line, '|');
+        split<std::array<std::string_view, 2>>(line, '|');
     input.emplace_back(split<typename input_line_t::signal_patterns_t>(
                            signal_patterns_str, ' '),
                        split<typename input_line_t::output_t>(output_str, ' '));

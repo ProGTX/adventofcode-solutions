@@ -176,7 +176,7 @@ int solve_case(const std::string& filename) {
 
   readfile_op(filename, [&](std::string_view line) {
     auto [operation, value_str] =
-        split<std::array<std::string, 2>>(line, ' ');
+        split<std::array<std::string_view, 2>>(line, ' ');
     auto value = to_number<int>(value_str);
     switch (operation[0]) {
       case 'R':
@@ -192,7 +192,7 @@ int solve_case(const std::string& filename) {
         move({0, -value});
         break;
       default:
-        throw std::runtime_error("Invalid command " + operation);
+        throw std::runtime_error("Invalid command " + std::string{operation});
     }
   });
 

@@ -136,17 +136,18 @@ int solve_case(const std::string& filename) {
   std::vector<blueprint_t> blueprints;
 
   readfile_op(filename, [&](std::string_view line) {
-    auto [blueprint_id, costs] = split<std::array<std::string, 2>>(line, ':');
+    auto [blueprint_id, costs] =
+        split<std::array<std::string_view, 2>>(line, ':');
     auto [ore_robot, clay_robot, obsidian_robot, geode_robot] =
-        split<std::array<std::string, 4>>(costs, '.');
+        split<std::array<std::string_view, 4>>(costs, '.');
 
-    auto ore_robot_costs = split<std::array<std::string, 1>>(
+    auto ore_robot_costs = split<std::array<std::string_view, 1>>(
         ore_robot.substr(sizeof("Each ore robot costs")), ' ');
-    auto clay_robot_costs = split<std::array<std::string, 1>>(
+    auto clay_robot_costs = split<std::array<std::string_view, 1>>(
         clay_robot.substr(sizeof("Each clay robot costs")), ' ');
-    auto obsidian_robot_costs = split<std::array<std::string, 4>>(
+    auto obsidian_robot_costs = split<std::array<std::string_view, 4>>(
         obsidian_robot.substr(sizeof("Each obsidian robot costs")), ' ');
-    auto geode_robot_costs = split<std::array<std::string, 4>>(
+    auto geode_robot_costs = split<std::array<std::string_view, 4>>(
         geode_robot.substr(sizeof("Each geode robot costs")), ' ');
 
     blueprints.push_back({

@@ -40,7 +40,7 @@ int solve_case(const std::string& filename) {
 
   readfile_op(filename, [&](std::string_view line) {
     auto [firstElfStr, secondElfStr] =
-        split<std::array<std::string, 2>>(line, ',');
+        split<std::array<std::string_view, 2>>(line, ',');
 
     auto firstElf = range{split<std::array<int, 2>>(firstElfStr, '-')};
     auto secondElf = range{split<std::array<int, 2>>(secondElfStr, '-')};

@@ -140,7 +140,7 @@ std::int64_t solve_case(const std::string& filename) {
 
   readfile_op(filename, [&](std::string_view line) {
     auto [sensor_info, beacon_info] =
-        split<std::array<std::string, 2>>(line, ':');
+        split<std::array<std::string_view, 2>>(line, ':');
 
     // Don't include the space at end, the null terminator is counted instead
     sensor_info = sensor_info.substr(sizeof("Sensor at"));
@@ -149,13 +149,15 @@ std::int64_t solve_case(const std::string& filename) {
     point beacon;
     point sensor;
     {
-      auto [x_eq, y_eq] = split<std::array<std::string, 2>>(beacon_info, ',');
+      auto [x_eq, y_eq] =
+          split<std::array<std::string_view, 2>>(beacon_info, ',');
       beacon = point{convert_eq_str(x_eq), convert_eq_str(y_eq)};
       min_max.update(beacon);
       beacons.push_back(beacon);
     }
     {
-      auto [x_eq, y_eq] = split<std::array<std::string, 2>>(sensor_info, ',');
+      auto [x_eq, y_eq] =
+          split<std::array<std::string_view, 2>>(sensor_info, ',');
       sensor = point{convert_eq_str(x_eq), convert_eq_str(y_eq)};
       min_max.update(sensor);
       auto range = point::distance_manhattan(sensor, beacon);
