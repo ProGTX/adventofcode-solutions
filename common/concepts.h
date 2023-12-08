@@ -66,3 +66,9 @@ template <typename Op, typename Arg1, typename Arg2>
 concept binary_op = std::is_invocable_v<Op, Arg1, Arg2>;
 template <typename Op, typename Ret, typename Arg1, typename Arg2>
 concept binary_op_r = std::is_invocable_r_v<Ret, Op, Arg1, Arg2>;
+
+template <typename T, typename... U>
+concept contains_type = (std::same_as<T, U> || ...);
+
+static_assert(contains_type<std::string_view, std::string_view>);
+static_assert(contains_type<std::string_view, int, std::string_view>);
