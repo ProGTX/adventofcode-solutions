@@ -5,11 +5,14 @@
 #include <exception>
 #include <fstream>
 #include <functional>
+#include <ranges>
 #include <sstream>
 #include <string>
 #include <string_view>
 #include <system_error>
 #include <vector>
+
+using namespace std::string_view_literals;
 
 // https://stackoverflow.com/a/63050738/793006
 constexpr std::string_view ltrim(std::string_view str,
@@ -165,3 +168,31 @@ output_t split(std::string_view input, char delimiter) {
       split_item_op<output_t, string_item_op_t>());
   return elems;
 }
+
+template <class value_type, std::ranges::viewable_range R>
+constexpr value_type construct(R&& r) {
+  if constexpr (std::same_as<value_type, std::string_view>) {
+    // https://stackoverflow.com/a/68121694
+    return value_type(&*r.begin(), std::ranges::distance(r));
+  } else {
+    return value_type{r};
+  }
+}
+
+template <class output_t, std::ranges::viewable_range R, class Pattern,
+          class Proj = std::identity>
+constexpr output_t split_string(R&& r, Pattern&& delimiter, Proj proj = {}) {
+  using value_type = typename output_t::value_type;
+  auto split_view = r | std::views::split(delimiter);
+  output_t out;
+  for (auto out_it = inserter_it(out); auto&& v : split_view) {
+    *out_it = construct<value_type>(proj(v));
+    ++out_it;
+  }
+  return out;
+}
+
+static_assert(std::ranges::equal(
+    std::array{"adsf", "qwret", "nvfkbdsj", "orthdfjgh", "dfjrleih"},
+    split_string<std::array<std::string_view, 5>>(
+        "adsf-+qwret-+nvfkbdsj-+orthdfjgh-+dfjrleih"sv, "-+"sv)));
