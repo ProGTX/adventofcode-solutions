@@ -169,17 +169,20 @@ output_t split(std::string_view input, char delimiter) {
   return elems;
 }
 
-template <class value_type, std::ranges::viewable_range R>
+template <class value_type, std::ranges::range R>
 constexpr value_type construct(R&& r) {
   if constexpr (contains_type<value_type, std::string_view, std::string>) {
     // https://stackoverflow.com/a/68121694
     return value_type(&*r.begin(), std::ranges::distance(r));
+  } else if constexpr (std::is_arithmetic_v<value_type>) {
+    std::string_view view(&*r.begin(), std::ranges::distance(r));
+    return to_number<value_type>(view);
   } else {
     return value_type{r};
   }
 }
 
-template <class output_t, std::ranges::viewable_range R, class Pattern,
+template <class output_t, std::ranges::range R, class Pattern,
           class Proj = std::identity>
 constexpr output_t split_string(R&& r, Pattern&& delimiter, Proj proj = {}) {
   using value_type = typename output_t::value_type;
