@@ -161,7 +161,7 @@ constexpr size_t max_container_elems() {
 }
 
 template <class output_t, class string_item_op_t = std::identity>
-output_t split(std::string_view input, char delimiter) {
+output_t split_legacy(std::string_view input, char delimiter) {
   output_t elems;
   split_line_to_iterator<max_container_elems<output_t>()>(
       input, delimiter, inserter_it(elems),
@@ -184,7 +184,7 @@ constexpr value_type construct(R&& r) {
 
 template <class output_t, std::ranges::range R, class Pattern,
           class Proj = std::identity>
-constexpr output_t split_string(R&& r, Pattern&& delimiter, Proj proj = {}) {
+constexpr output_t split(R&& r, Pattern&& delimiter, Proj proj = {}) {
   using value_type = typename output_t::value_type;
   auto split_view = r | std::views::split(delimiter);
   output_t out;
@@ -197,5 +197,5 @@ constexpr output_t split_string(R&& r, Pattern&& delimiter, Proj proj = {}) {
 
 static_assert(std::ranges::equal(
     std::array{"adsf", "qwret", "nvfkbdsj", "orthdfjgh", "dfjrleih"},
-    split_string<std::array<std::string_view, 5>>(
+    split<std::array<std::string_view, 5>>(
         "adsf-+qwret-+nvfkbdsj-+orthdfjgh-+dfjrleih"sv, "-+"sv)));
