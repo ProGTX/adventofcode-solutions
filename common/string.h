@@ -72,9 +72,17 @@ constexpr auto to_number(std::string_view str) {
   return value;
 }
 
+template <class T>
+concept readfile_invocable_no_filenum = std::invocable<T, std::string_view>;
+template <class T>
+concept readfile_invocable_with_filenum =
+    std::invocable<T, std::string_view, int>;
+template <class T>
+concept readfile_invocable =
+    readfile_invocable_no_filenum<T> || readfile_invocable_with_filenum<T>;
+
 template <class trim_op_t = trimmer<>, class OpT>
-  requires(std::invocable<OpT, std::string_view, int> ||
-           std::invocable<OpT, std::string_view>)
+  requires(readfile_invocable<OpT>)
 void readfile_op(const std::string& filename, OpT operation) {
   std::ifstream file{filename};
   if (!file.is_open()) {
@@ -82,7 +90,7 @@ void readfile_op(const std::string& filename, OpT operation) {
   }
   std::string line;
   for (int linenum = 1; std::getline(file, line); ++linenum) {
-    if constexpr (std::invocable<OpT, std::string_view, int>) {
+    if constexpr (readfile_invocable_with_filenum<OpT>) {
       operation(trim_op_t{}(line), linenum);
     } else {
       operation(trim_op_t{}(line));
@@ -91,16 +99,20 @@ void readfile_op(const std::string& filename, OpT operation) {
   file.close();
 }
 
-template <class FirstLineOpT, class OpT>
-  requires(std::invocable<FirstLineOpT, std::string_view> &&
-           std::invocable<OpT, std::string_view>)
+template <class trim_op_t = trimmer<>, class FirstLineOpT, class OpT>
+  requires(readfile_invocable_no_filenum<FirstLineOpT> &&
+           readfile_invocable<OpT>)
 void readfile_op_header(const std::string& filename,
                         FirstLineOpT first_line_operation, OpT operation) {
   readfile_op(filename, [&](std::string_view line, int linenum) {
-    if (linenum == 1) {
-      first_line_operation(line);
-    } else {
-      operation(line);
+    if (linenum == 1) [[unlikely]] {
+      first_line_operation(trim_op_t{}(line));
+    } else [[likely]] {
+      if constexpr (readfile_invocable_with_filenum<OpT>) {
+        operation(trim_op_t{}(line), linenum);
+      } else {
+        operation(trim_op_t{}(line));
+      }
     }
   });
 }
