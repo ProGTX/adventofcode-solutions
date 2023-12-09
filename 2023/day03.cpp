@@ -59,24 +59,40 @@ static_assert(number_t{0, 0, 3} == *find_number("467..114..", 1, 0));
 static_assert(number_t{0, 0, 3} == *find_number("467..114..", 1, 1));
 static_assert(number_t{0, 0, 3} == *find_number("467..114..", 1, 2));
 
-template <bool>
+template <bool check_gears>
 int solve_case(const std::string& filename) {
   using number_pair_t = std::pair<number_t, int>;
-  std::vector<number_pair_t> numbers;
+  std::vector<number_pair_t> all_numbers;
+  [[maybe_unused]] std::vector<number_pair_t> current_numbers;
+
   auto add_number = [&](std::string_view line, int linenum, int pos) {
     auto number = find_number(line, linenum, pos);
     if (!number) {
       return;
     }
-    if (contains(numbers, *number, &number_pair_t::first)) {
+    auto it = std::ranges::find(all_numbers, *number, &number_pair_t::first);
+    if (it != std::end(all_numbers)) {
+      if constexpr (check_gears) {
+        if (!contains(current_numbers, it->first, &number_pair_t::first)) {
+          current_numbers.emplace_back(it->first, it->second);
+        }
+      }
       return;
     }
-    numbers.emplace_back(
-        *number, to_number<int>(line.substr(number->column, number->size)));
+    auto number_value =
+        to_number<int>(line.substr(number->column, number->size));
+    all_numbers.emplace_back(*number, number_value);
+    if constexpr (check_gears) {
+      if (!contains(current_numbers, *number, &number_pair_t::first)) {
+        current_numbers.emplace_back(*number, number_value);
+      }
+    }
   };
 
+  [[maybe_unused]] std::vector<int> gear_ratios;
   std::string line_minus2;
   std::string line_minus1;
+
   auto solver = [&](std::string_view line, int linenum) {
     if (linenum < 3) [[unlikely]] {
       if (linenum == 1) {
@@ -95,6 +111,9 @@ int solve_case(const std::string& filename) {
       if (!is_symbol(c)) {
         continue;
       }
+      if constexpr (check_gears) {
+        current_numbers.clear();
+      }
       add_number(line_minus2, linenum - 2, pos - 1);
       add_number(line_minus2, linenum - 2, pos);
       add_number(line_minus2, linenum - 2, pos + 1);
@@ -103,6 +122,12 @@ int solve_case(const std::string& filename) {
       add_number(line, linenum, pos - 1);
       add_number(line, linenum, pos);
       add_number(line, linenum, pos + 1);
+      if constexpr (check_gears) {
+        if (current_numbers.size() == 2) {
+          gear_ratios.push_back(current_numbers[0].second *
+                                current_numbers[1].second);
+        }
+      }
     }
     line_minus2 = std::string{line};
     std::swap(line_minus1, line_minus2);
@@ -111,8 +136,11 @@ int solve_case(const std::string& filename) {
   readfile_op(filename, solver);
 
   int sum = 0;
-  for (auto&& [number, value] : numbers) {
-    sum += value;
+  if constexpr (!check_gears) {
+    sum = fold_left(all_numbers | std::views::transform(&number_pair_t::second),
+                    0, std::plus<>{});
+  } else {
+    sum = fold_left(gear_ratios, 0, std::plus<>{});
   }
 
   std::cout << filename << " -> " << sum << std::endl;
@@ -123,8 +151,8 @@ int main() {
   std::cout << "Part 1" << std::endl;
   AOC_EXPECT_RESULT(4361, solve_case<false>("day03.example"));
   AOC_EXPECT_RESULT(537732, solve_case<false>("day03.input"));
-  // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(2286, solve_case<true>("day03.example"));
-  // AOC_EXPECT_RESULT(86036, solve_case<true>("day03.input"));
+  std::cout << "Part 2" << std::endl;
+  AOC_EXPECT_RESULT(467835, solve_case<true>("day03.example"));
+  AOC_EXPECT_RESULT(84883664, solve_case<true>("day03.input"));
   AOC_RETURN_CHECK_RESULT();
 }
