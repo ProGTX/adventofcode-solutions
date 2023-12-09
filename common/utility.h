@@ -534,6 +534,30 @@ struct __contains_fn {
 };
 inline constexpr __contains_fn contains{};
 
+// https://en.cppreference.com/w/cpp/algorithm/ranges/fold_left
+struct fold_left_fn {
+  template <std::input_iterator I, std::sentinel_for<I> S, class T, class F>
+  constexpr auto operator()(I first, S last, T init, F f) const {
+    using U =
+        std::decay_t<std::invoke_result_t<F&, T, std::iter_reference_t<I>>>;
+    if (first == last) {
+      return U(std::move(init));
+    }
+    U accum = std::invoke(f, std::move(init), *first);
+    for (++first; first != last; ++first) {
+      accum = std::invoke(f, std::move(accum), *first);
+    }
+    return std::move(accum);
+  }
+
+  template <std::ranges::input_range R, class T, class F>
+  constexpr auto operator()(R&& r, T init, F f) const {
+    return (*this)(std::ranges::begin(r), std::ranges::end(r), std::move(init),
+                   std::ref(f));
+  }
+};
+inline constexpr fold_left_fn fold_left;
+
 template <std::integral T>
 constexpr T num_digits(T n) {
   return std::abs(static_cast<std::make_signed_t<T>>(n)) >= 10
