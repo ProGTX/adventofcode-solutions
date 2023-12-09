@@ -146,13 +146,18 @@ constexpr value_type construct(R&& r) {
   }
 }
 
-template <class output_t, std::ranges::range R, class Pattern,
-          class Proj = std::identity>
+template <class output_t, bool skip_empty = false, std::ranges::range R,
+          class Pattern, class Proj = std::identity>
 constexpr output_t split(R&& r, Pattern&& delimiter, Proj proj = {}) {
   using value_type = typename output_t::value_type;
   auto split_view = r | std::views::split(delimiter);
   output_t out;
   for (auto out_it = inserter_it(out); auto&& v : split_view) {
+    if constexpr (skip_empty) {
+      if (std::ranges::empty(v)) {
+        continue;
+      }
+    }
     *out_it = construct<value_type>(proj(v));
     ++out_it;
   }
@@ -161,5 +166,5 @@ constexpr output_t split(R&& r, Pattern&& delimiter, Proj proj = {}) {
 
 static_assert(std::ranges::equal(
     std::array{"adsf", "qwret", "nvfkbdsj", "orthdfjgh", "dfjrleih"},
-    split<std::array<std::string_view, 5>>(
-        "adsf-+qwret-+nvfkbdsj-+orthdfjgh-+dfjrleih"sv, "-+"sv)));
+    split<std::array<std::string_view, 5>, true>(
+        "adsf-+qwret-+nvfkbdsj-+orthdfjgh-+-+dfjrleih"sv, "-+"sv)));
