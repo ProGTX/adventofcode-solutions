@@ -66,8 +66,9 @@ constexpr auto to_number(std::string_view str) {
   auto last = first + str.size();
   value_type value;
   auto result = std::from_chars(first, last, value);
-  if (result.ec != std::errc{}) {
-    throw std::runtime_error("Failed to parse " + std::string(result.ptr));
+  if (result.ec != std::errc{}) [[unlikely]] {
+    throw std::runtime_error("to_number failed to parse " +
+                             std::string(result.ptr));
   }
   return value;
 }
