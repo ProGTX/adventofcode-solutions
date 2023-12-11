@@ -17,7 +17,6 @@
 
 using namespace std::string_view_literals;
 
-constexpr bool is_number(char c) { return (c >= '0') && (c <= '9'); }
 constexpr bool is_symbol(char c) { return !is_number(c) && (c != '.'); }
 
 struct number_t {
