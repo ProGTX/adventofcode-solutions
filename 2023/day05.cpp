@@ -15,13 +15,17 @@ using namespace std::string_view_literals;
 
 using int_t = long;
 
+struct range_t {
+  int_t origin;
+  int_t size;
+};
+
 struct single_mapping_t {
-  int_t dest_start;
-  int_t source_start;
-  int_t range;
+  range_t src;
+  range_t dst;
 
   constexpr bool in_source_range(int_t value) const {
-    return (value >= source_start) && (value < (source_start + range));
+    return (value >= src.origin) && (value < (src.origin + src.size));
   }
 };
 
@@ -32,7 +36,7 @@ template <size_t num_seeds>
 constexpr seeds_type<num_seeds> apply_mapping(seeds_type<num_seeds> input,
                                               seeds_type<num_seeds> output,
                                               single_mapping_t mapping) {
-  const auto diff = mapping.dest_start - mapping.source_start;
+  const auto diff = mapping.dst.origin - mapping.src.origin;
   for (int i = 0; i < num_seeds; ++i) {
     const auto seed = input[i];
     if (!mapping.in_source_range(seed)) {
@@ -48,7 +52,7 @@ inline constexpr int_t invalid = -1;
 static_assert(seeds_type<4>{81, invalid, 57, invalid} ==
               apply_mapping(seeds_type<4>{79, 14, 55, 13},
                             seeds_type<4>{invalid, invalid, invalid, invalid},
-                            single_mapping_t{52, 50, 48}));
+                            single_mapping_t{{50, 48}, {52, 48}}));
 
 template <size_t num_seeds, bool>
 int_t solve_case(const std::string& filename) {
@@ -82,9 +86,9 @@ int_t solve_case(const std::string& filename) {
     }
     auto [dest_start, source_start, range] =
         split<std::array<int_t, 3>>(line, ' ');
-    next_seeds =
-        apply_mapping(current_seeds, next_seeds,
-                      single_mapping_t{dest_start, source_start, range});
+    next_seeds = apply_mapping(
+        current_seeds, next_seeds,
+        single_mapping_t{{source_start, range}, {dest_start, range}});
   };
 
   readfile_op_header(filename, read_first_line, solver);
