@@ -14,11 +14,7 @@
 using namespace std::string_view_literals;
 
 using int_t = long;
-
-struct range_t {
-  int_t origin;
-  int_t size;
-};
+using range_t = range_type<int_t>;
 
 struct single_mapping_t {
   range_t src;

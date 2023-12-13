@@ -512,6 +512,29 @@ struct fractional_t {
   value_type m_denominator{1};
 };
 
+template <class T, class SizeT = T>
+struct range_type {
+  T origin;
+  SizeT size;
+
+  constexpr T end() const { return origin + size; }
+
+  constexpr bool contains(const range_type& other) const {
+    return (other.origin >= origin) && (other.end() <= end());
+  }
+
+  constexpr bool overlaps_with(const range_type& other) const {
+    return (origin < other.end()) && (end() > other.origin);
+  }
+
+  bool operator==(const range_type&) const = default;
+
+  friend constexpr bool operator<(const range_type& lhs,
+                                  const range_type& rhs) {
+    return lhs.origin < rhs.origin;
+  }
+};
+
 // https://en.cppreference.com/w/cpp/algorithm/ranges/contains
 struct __contains_fn {
   template <std::input_iterator I, std::sentinel_for<I> S, class T,
