@@ -54,8 +54,8 @@ struct range_common_iterator_impl<Rng> {
 };
 
 template <r::range Rng>
-requires(!std::copyable<
-         std::ranges::iterator_t<Rng>>) struct range_common_iterator_impl<Rng> {
+  requires(!std::copyable<std::ranges::iterator_t<Rng>>)
+struct range_common_iterator_impl<Rng> {
   using type = dummy_input_iterator<Rng>;
 };
 
@@ -66,16 +66,13 @@ template <typename C>
 struct container_value;
 
 template <typename C>
-requires requires {
-  typename r::range_value_t<C>;
-}
+  requires requires { typename r::range_value_t<C>; }
 struct container_value<C> {
   using type = r::range_value_t<C>;
 };
 template <typename C>
-requires(!requires {
-  typename r::range_value_t<C>;
-}) struct container_value<C> {
+  requires(!requires { typename r::range_value_t<C>; })
+struct container_value<C> {
   using type = typename C::value_type;
 };
 
@@ -91,15 +88,16 @@ template <class C, class R>
 concept recursive_container_convertible =
     container_convertible<C, R> ||
     (r::input_range<r::range_reference_t<R>> && requires {
-      { to<r::range_value_t<C>>(std::declval<r::range_reference_t<R>>()) }
-      ->std::convertible_to<r::range_value_t<C>>;
+      {
+        to<r::range_value_t<C>>(std::declval<r::range_reference_t<R>>())
+      } -> std::convertible_to<r::range_value_t<C>>;
     });
 
 } // namespace detail
 
 template <typename Cont, std::ranges::input_range Rng, typename... Args>
-requires detail::recursive_container_convertible<Cont, Rng> constexpr auto to(
-    Rng&& rng, Args&&... args) -> Cont;
+  requires detail::recursive_container_convertible<Cont, Rng>
+constexpr auto to(Rng&& rng, Args&&... args) -> Cont;
 
 namespace detail {
 
@@ -114,9 +112,9 @@ struct unwrap {
 template <template <class...> class Cont, typename Rng, typename... Args>
 struct unwrap<wrap<Cont>, Rng, Args...> {
   template <typename R>
-  static auto from_rng(int)
-      -> decltype(Cont(range_common_iterator<Rng>(),
-                       range_common_iterator<Rng>(), std::declval<Args>()...));
+  static auto from_rng(int) -> decltype(Cont(range_common_iterator<Rng>(),
+                                             range_common_iterator<Rng>(),
+                                             std::declval<Args>()...));
   template <typename R>
   static auto from_rng(long) -> decltype(Cont(from_range, std::declval<Rng>(),
                                               std::declval<Args>()...));
@@ -128,16 +126,13 @@ struct unwrap<wrap<Cont>, Rng, Args...> {
 template <typename T>
 concept reservable_container = requires(T& c) {
   c.reserve(r::size(c));
-  { c.capacity() }
-  ->std::same_as<decltype(r::size(c))>;
-  { c.max_size() }
-  ->std::same_as<decltype(r::size(c))>;
+  { c.capacity() } -> std::same_as<decltype(r::size(c))>;
+  { c.max_size() } -> std::same_as<decltype(r::size(c))>;
 };
 
 template <typename T>
-concept insertable_container = requires(T& c, T::value_type& e) {
-  c.insert(c.end(), e);
-};
+concept insertable_container =
+    requires(T& c, T::value_type& e) { c.insert(c.end(), e); };
 
 struct to_container {
  private:
@@ -190,18 +185,18 @@ struct to_container {
 
    private:
     template <typename Cont, r::range Rng>
-    requires container_convertible<Cont, Rng> constexpr static auto impl(
-        Rng&& rng, Args&&... args) {
+      requires container_convertible<Cont, Rng>
+    constexpr static auto impl(Rng&& rng, Args&&... args) {
       return construct<Cont>(std::forward<Rng>(rng),
                              std::forward<Args>(args)...);
     }
 
     template <typename Cont, r::range Rng>
-        requires recursive_container_convertible<Cont, Rng>&&
-            std::constructible_from<Cont, Args...> &&
-        (!container_convertible<Cont, Rng> &&
-         !std::constructible_from<
-             Cont, Rng>)constexpr static auto impl(Rng&& rng, Args&&... args) {
+      requires recursive_container_convertible<Cont, Rng> &&
+               std::constructible_from<Cont, Args...> &&
+               (!container_convertible<Cont, Rng> &&
+                !std::constructible_from<Cont, Rng>)
+    constexpr static auto impl(Rng&& rng, Args&&... args) {
 
       return to<Cont, Args...>(rng | r::views::transform([](auto&& elem) {
                                  return to<r::range_value_t<Cont>>(
@@ -212,9 +207,10 @@ struct to_container {
 
    public:
     template <typename Rng>
-    requires r::input_range<Rng>&& recursive_container_convertible<
-        container_t<C, Rng, Args...>, Rng&&> inline constexpr auto
-    operator()(Rng&& rng, Args&&... args) const {
+      requires r::input_range<Rng> &&
+               recursive_container_convertible<container_t<C, Rng, Args...>,
+                                               Rng&&>
+    inline constexpr auto operator()(Rng&& rng, Args&&... args) const {
       return impl<container_t<C, Rng, Args...>>(std::forward<Rng>(rng),
                                                 std::forward<Args>(args)...);
     }
@@ -222,15 +218,15 @@ struct to_container {
   };
 
   template <typename Rng, typename ToContainer, typename... Args>
-  requires r::input_range<Rng>&& recursive_container_convertible<
-      container_t<ToContainer, Rng, Args...>, Rng> constexpr friend auto
-  operator|(Rng&& rng, fn<ToContainer, Args...>&& f)
+    requires r::input_range<Rng> &&
+                 recursive_container_convertible<
+                     container_t<ToContainer, Rng, Args...>, Rng>
+  constexpr friend auto operator|(Rng&& rng, fn<ToContainer, Args...>&& f)
       -> container_t<ToContainer, Rng, Args...> {
     return [&]<size_t... I>(std::index_sequence<I...>) {
       return f(std::forward<Rng>(rng),
                std::forward<Args>(std::get<I>(f.args))...);
-    }
-    (std::make_index_sequence<sizeof...(Args)>());
+    }(std::make_index_sequence<sizeof...(Args)>());
   }
 };
 
@@ -240,7 +236,8 @@ using to_container_fn = to_container::fn<ToContainer, Args...>;
 
 template <template <typename...> class ContT, typename... Args,
           detail::to_container = {}>
-requires(!std::ranges::range<Args> && ...) constexpr auto to(Args&&... args)
+  requires(!std::ranges::range<Args> && ...)
+constexpr auto to(Args&&... args)
     -> detail::to_container_fn<detail::wrap<ContT>, Args...> {
   detail::to_container_fn<detail::wrap<ContT>, Args...> fn;
   fn.args = std::forward_as_tuple(std::forward<Args>(args)...);
@@ -249,22 +246,23 @@ requires(!std::ranges::range<Args> && ...) constexpr auto to(Args&&... args)
 
 template <template <typename...> class ContT, std::ranges::input_range Rng,
           typename... Args>
-requires std::ranges::range<Rng> constexpr auto to(Rng&& rng, Args&&... args) {
+  requires std::ranges::range<Rng>
+constexpr auto to(Rng&& rng, Args&&... args) {
   return detail::to_container_fn<detail::wrap<ContT>, Args...>{}(
       std::forward<Rng>(rng), std::forward<Args>(args)...);
 }
 
 template <typename Cont, typename... Args, detail::to_container = {}>
-requires(!std::ranges::range<Args> && ...) constexpr auto to(Args&&... args)
-    -> detail::to_container_fn<Cont, Args...> {
+  requires(!std::ranges::range<Args> && ...)
+constexpr auto to(Args&&... args) -> detail::to_container_fn<Cont, Args...> {
   detail::to_container_fn<Cont, Args...> fn;
   fn.args = std::forward_as_tuple(std::forward<Args>(args)...);
   return fn;
 }
 
 template <typename Cont, std::ranges::input_range Rng, typename... Args>
-requires detail::recursive_container_convertible<Cont, Rng> constexpr auto to(
-    Rng&& rng, Args&&... args) -> Cont {
+  requires detail::recursive_container_convertible<Cont, Rng>
+constexpr auto to(Rng&& rng, Args&&... args) -> Cont {
   return detail::to_container_fn<Cont, Args...>{}(std::forward<Rng>(rng),
                                                   std::forward<Args>(args)...);
 }

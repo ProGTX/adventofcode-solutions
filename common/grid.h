@@ -33,27 +33,26 @@ class grid {
   constexpr grid() {}
 
   template <class container_dependent = container_type>
-  requires((static_row_length > 0) &&
-           (static_data_size >
-            0)) explicit constexpr grid(const value_type& value)
+    requires((static_row_length > 0) && (static_data_size > 0))
+  explicit constexpr grid(const value_type& value)
       : m_row_length{this->row_length()}, m_num_rows(this->num_rows()) {
     std::ranges::fill(m_data, value);
   }
 
   template <class container_dependent = container_type>
-  requires requires(Container c, size_t count,
-                    const typename Container::value_type& value) {
-    Container(count, value);
-  }
+    requires requires(Container c, size_t count,
+                      const typename Container::value_type& value) {
+      Container(count, value);
+    }
   constexpr grid(value_type value, int num_rows, int num_columns)
       : m_data(num_rows * num_columns, value),
         m_row_length{num_columns},
         m_num_rows(num_rows) {}
 
   template <class Row = row_t>
-  requires requires(Row row) {
-    std::ranges::copy_n(std::begin(row), 0, iterator{});
-  }
+    requires requires(Row row) {
+      std::ranges::copy_n(std::begin(row), 0, iterator{});
+    }
   constexpr iterator add_row(Row const& row) {
     m_row_length = row.size();
     // Use m_num_rows instead of num_rows()
@@ -176,7 +175,7 @@ using array_grid =
     grid<T, std::array<T, row_length>, std::array<T, row_length * num_rows>>;
 
 template <class Grid>
-concept is_grid = std::ranges::range<Grid>&& requires(Grid g) {
+concept is_grid = std::ranges::range<Grid> && requires(Grid g) {
   g.add_row();
   g.get_row();
   g.linear_index();
@@ -286,10 +285,10 @@ struct grid_neighbors {
 };
 
 template <class T, class row_storage_t, class Container>
-requires requires(T value) {
-  value.neighbors.get(point{});
-  value.neighbors.set(point{}, static_cast<T*>(nullptr));
-}
+  requires requires(T value) {
+    value.neighbors.get(point{});
+    value.neighbors.set(point{}, static_cast<T*>(nullptr));
+  }
 constexpr void set_standard_neighbors(grid<T, row_storage_t, Container>& grid,
                                       point offset = {0, 0},
                                       point subrange = {0, 0}) {

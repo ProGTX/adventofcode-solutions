@@ -8,7 +8,8 @@
 #include <vector>
 
 template <class T, class Compare = std::less<T>>
-requires std::equality_comparable<T> class sorted_flat_set {
+  requires std::equality_comparable<T>
+class sorted_flat_set {
 
  public:
   using container_type = std::vector<T>;

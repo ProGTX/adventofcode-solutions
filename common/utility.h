@@ -195,8 +195,8 @@ cyclic_iterator(Container&) -> cyclic_iterator<Container>;
 template <class Container>
 cyclic_iterator(const Container&) -> cyclic_iterator<const Container>;
 template <class Container>
-cyclic_iterator(Container&, typename Container::iterator)
-    -> cyclic_iterator<Container>;
+cyclic_iterator(Container&,
+                typename Container::iterator) -> cyclic_iterator<Container>;
 template <class Container>
 cyclic_iterator(const Container&, typename Container::iterator)
     -> cyclic_iterator<const Container>;
@@ -207,11 +207,11 @@ template <class Container>
 cyclic_iterator(const Container&, typename Container::const_iterator)
     -> cyclic_iterator<const Container>;
 template <class Container>
-cyclic_iterator(linked_list_iterator_tag, Container&)
-    -> cyclic_iterator<Container, true>;
+cyclic_iterator(linked_list_iterator_tag,
+                Container&) -> cyclic_iterator<Container, true>;
 template <class Container>
-cyclic_iterator(linked_list_iterator_tag, const Container&)
-    -> cyclic_iterator<const Container, true>;
+cyclic_iterator(linked_list_iterator_tag,
+                const Container&) -> cyclic_iterator<const Container, true>;
 template <class Container>
 cyclic_iterator(linked_list_iterator_tag, Container&,
                 typename Container::iterator)

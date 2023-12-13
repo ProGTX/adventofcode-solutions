@@ -24,7 +24,7 @@ struct point_t {
   };
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
-  constexpr point_t& operator op_eq(const point_t& other) {                    \
+  constexpr point_t& operator op_eq(const point_t & other) {                   \
     x op_eq other.x;                                                           \
     y op_eq other.y;                                                           \
     return *this;                                                              \
@@ -44,7 +44,7 @@ struct point_t {
   // by setting the element to zero
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
-  constexpr point_t& operator op_eq(const point_t& other) {                    \
+  constexpr point_t& operator op_eq(const point_t & other) {                   \
     if (other.x == 0) {                                                        \
       x = 0;                                                                   \
     } else {                                                                   \
@@ -118,7 +118,7 @@ struct cube_t {
   T z{0};
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
-  constexpr cube_t& operator op_eq(const cube_t& other) {                      \
+  constexpr cube_t& operator op_eq(const cube_t & other) {                     \
     x op_eq other.x;                                                           \
     y op_eq other.y;                                                           \
     z op_eq other.z;                                                           \

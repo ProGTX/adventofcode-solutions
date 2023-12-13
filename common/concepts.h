@@ -2,8 +2,8 @@
 
 #include <array>
 #include <iterator>
-#include <type_traits>
 #include <string_view>
+#include <type_traits>
 
 template <class T>
 struct inspect_t;
