@@ -533,6 +533,12 @@ struct range_type {
                                   const range_type& rhs) {
     return lhs.origin < rhs.origin;
   }
+
+  friend std::ostream& operator<<(std::ostream& out,
+                                  const range_type& range) {
+    out << '[' << range.origin << ',' << (range.end() - 1) << ']';
+    return out;
+  }
 };
 
 // https://en.cppreference.com/w/cpp/algorithm/ranges/contains
