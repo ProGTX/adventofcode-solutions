@@ -15,19 +15,26 @@
 
 using namespace std::string_view_literals;
 
+inline constexpr int joker_card_number = 1;
 inline constexpr int ace_card_number = 14;
 
+template <bool joker>
 constexpr int card_to_number(char c) {
   if (is_number(c)) {
     int number = static_cast<int>(c - '0');
-    AOC_ASSERT((number >= 2) && (number < 10), "Invalid card number");
+    AOC_ASSERT((number > joker_card_number) && (number < 10),
+               "Invalid card number");
     return number;
   }
   switch (c) {
     case 'T':
       return 10;
     case 'J':
-      return 11;
+      if constexpr (joker) {
+        return joker_card_number;
+      } else {
+        return 11;
+      }
     case 'Q':
       return 12;
     case 'K':
@@ -39,8 +46,10 @@ constexpr int card_to_number(char c) {
   }
 }
 
-static_assert(7 == card_to_number('7'));
-static_assert(13 == card_to_number('K'));
+static_assert(7 == card_to_number<false>('7'));
+static_assert(13 == card_to_number<false>('K'));
+static_assert(11 == card_to_number<false>('J'));
+static_assert(1 == card_to_number<true>('J'));
 
 enum class type_t {
   high_card,
@@ -52,23 +61,38 @@ enum class type_t {
   five_kind,
 };
 
-struct hand_t {
+template <bool joker>
+struct hand_type {
   using cards_t = std::array<int, 5>;
 
   cards_t cards;
 
-  constexpr hand_t(std::string_view cards_str) {
-    std::ranges::transform(cards_str, cards.begin(), &card_to_number);
+  constexpr hand_type(std::string_view cards_str) {
+    std::ranges::transform(cards_str, cards.begin(), &card_to_number<joker>);
   }
 
-  constexpr hand_t(const cards_t& cards_) : cards{cards_} {}
+  constexpr hand_type(const cards_t& cards_) : cards{cards_} {}
 
   constexpr type_t type() const {
-    std::array<int, ace_card_number + 1> card_map{};
+    std::array<int, ace_card_number> card_map{};
+    int num_jokers = 0;
     for (auto c : cards) {
-      ++card_map[c];
+      if (c == joker_card_number) {
+        if constexpr (joker) {
+          ++num_jokers;
+        } else {
+          // This shouldn't actually be triggered,
+          // we're just preventing code from being generated unnecessarily
+        }
+      } else {
+        // Minus 2 to exclude 0 and 1
+        ++card_map[c - 2];
+      }
     }
     std::ranges::sort(card_map, std::greater<>{});
+    if constexpr (joker) {
+      card_map[0] += num_jokers;
+    }
     switch (card_map[0]) {
       case 5:
         return type_t::five_kind;
@@ -91,7 +115,7 @@ struct hand_t {
     }
   }
 
-  constexpr std::strong_ordering operator<=>(const hand_t& other) {
+  constexpr std::strong_ordering operator<=>(const hand_type& other) {
     auto type_comp = (type() <=> other.type());
     if (type_comp != std::strong_ordering::equal) {
       return type_comp;
@@ -99,27 +123,37 @@ struct hand_t {
     return std::strong_order(cards, other.cards);
   }
 
-  constexpr bool operator==(const hand_t& other) const = default;
+  constexpr bool operator==(const hand_type& other) const = default;
 };
 
-static_assert(hand_t{"AAAAA"}.type() == type_t::five_kind);
-static_assert(hand_t{"AA8AA"}.type() == type_t::four_kind);
-static_assert(hand_t{"23332"}.type() == type_t::full_house);
-static_assert(hand_t{"TTT98"}.type() == type_t::three_kind);
-static_assert(hand_t{"23432"}.type() == type_t::two_pair);
-static_assert(hand_t{"A23A4"}.type() == type_t::one_pair);
-static_assert(hand_t{"23456"}.type() == type_t::high_card);
+static_assert(hand_type<false>{"AAAAA"}.type() == type_t::five_kind);
+static_assert(hand_type<false>{"AA8AA"}.type() == type_t::four_kind);
+static_assert(hand_type<false>{"23332"}.type() == type_t::full_house);
+static_assert(hand_type<false>{"TTT98"}.type() == type_t::three_kind);
+static_assert(hand_type<false>{"23432"}.type() == type_t::two_pair);
+static_assert(hand_type<false>{"A23A4"}.type() == type_t::one_pair);
+static_assert(hand_type<false>{"23456"}.type() == type_t::high_card);
 
-static_assert(hand_t{"23332"} > hand_t{"TTT98"});
-static_assert(hand_t{"33332"} > hand_t{"2AAAA"});
-static_assert(hand_t{"77888"} > hand_t{"77788"});
+static_assert(hand_type<false>{"T55J5"}.type() == type_t::three_kind);
+static_assert(hand_type<true>{"T55J5"}.type() == type_t::four_kind);
 
-using single_bid_t = std::pair<hand_t, int>;
-using bids_t = std::vector<single_bid_t>;
+static_assert(hand_type<false>{"23332"} > hand_type<false>{"TTT98"});
+static_assert(hand_type<false>{"33332"} > hand_type<false>{"2AAAA"});
+static_assert(hand_type<false>{"77888"} > hand_type<false>{"77788"});
 
-constexpr int total_winnings(const bids_t& bids) {
-  bids_t sorted_bids{bids};
-  std::ranges::sort(sorted_bids, std::less<>{}, &single_bid_t::first);
+static_assert(hand_type<false>{"KTJJT"} < hand_type<false>{"KK677"});
+static_assert(hand_type<true>{"KTJJT"} > hand_type<true>{"KK677"});
+
+template <bool joker>
+using single_bid_type = std::pair<hand_type<false>, int>;
+
+template <bool joker>
+using bids_type = std::vector<single_bid_type<joker>>;
+
+template <bool joker>
+constexpr int total_winnings(const bids_type<joker>& bids) {
+  bids_type<joker> sorted_bids{bids};
+  std::ranges::sort(sorted_bids, std::less<>{}, &single_bid_type<joker>::first);
   int sum = 0;
   for (int i = 0; i < sorted_bids.size(); ++i) {
     sum += (i + 1) * sorted_bids[i].second;
@@ -127,12 +161,16 @@ constexpr int total_winnings(const bids_t& bids) {
   return sum;
 }
 
-static_assert((765 + 2 * 684) == total_winnings({single_bid_t{"32T3K", 765},
-                                                 single_bid_t{"T55J5", 684}}));
+static_assert((765 + 2 * 684) ==
+              total_winnings<false>({single_bid_type<false>{"32T3K", 765},
+                                     single_bid_type<false>{"T55J5", 684}}));
+static_assert((765 + 2 * 684) ==
+              total_winnings<true>({single_bid_type<true>{"32T3K", 765},
+                                    single_bid_type<true>{"T55J5", 684}}));
 
-template <bool>
+template <bool joker>
 int solve_case(const std::string& filename) {
-  bids_t bids;
+  bids_type<joker> bids;
   auto read_values = [&](std::string_view line) {
     auto [hand_str, bid_str] =
         split<std::array<std::string_view, 2>>(line, ' ');
@@ -140,7 +178,7 @@ int solve_case(const std::string& filename) {
   };
   readfile_op(filename, read_values);
 
-  int sum = total_winnings(bids);
+  int sum = total_winnings<joker>(bids);
   std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
@@ -149,8 +187,8 @@ int main() {
   std::cout << "Part 1" << std::endl;
   AOC_EXPECT_RESULT(6440, (solve_case<false>("day07.example")));
   AOC_EXPECT_RESULT(249638405, (solve_case<false>("day07.input")));
-  // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(71503, (solve_case<true>("day07.example")));
+  std::cout << "Part 2" << std::endl;
+  AOC_EXPECT_RESULT(5905, (solve_case<true>("day07.example")));
   // AOC_EXPECT_RESULT(32583852, (solve_case<true>("day07.input")));
   AOC_RETURN_CHECK_RESULT();
 }
