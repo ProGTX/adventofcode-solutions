@@ -23,6 +23,12 @@ struct single_mapping_t {
   constexpr bool in_source_range(int_t value) const {
     return (value >= src.origin) && (value < (src.origin + src.size));
   }
+
+  friend std::ostream& operator<<(std::ostream& out,
+                                  const single_mapping_t& map) {
+    out << map.src << " -> " << map.dst;
+    return out;
+  }
 };
 
 using seeds_t = std::vector<range_t>;
@@ -42,7 +48,7 @@ constexpr range_t map_single(const range_t& seed, const single_mapping_t& map) {
 // (a,x,b,y) - (x+b)(b+1-y)
 // (x,a,y,b) - (x-a-1)(a+y)
 // (a,x,y,b) - (x+y)
-constexpr seeds_t apply_mapping(const seeds_t& current_seeds,
+constexpr seeds_t apply_mapping(seeds_t current_seeds,
                                 const std::vector<single_mapping_t>& mapping) {
   // We want all the ranges to be sorted to simplify the algorithm
   AOC_ASSERT(std::ranges::is_sorted(current_seeds, std::less<>{}),
@@ -86,15 +92,22 @@ constexpr seeds_t apply_mapping(const seeds_t& current_seeds,
     }
   };
 
+  auto split_seed_range = [&](const range_t& update_seed,
+                              const range_t& new_seed) {
+    *seed_it = update_seed;
+    seed_it = current_seeds.insert(seed_it + 1, new_seed);
+    ++map_it;
+  };
+
   auto apply_map_to_seeds = [&]() {
     // Find last seed range where the map applies
     // For everything in between apply the map
-    for (; seed_it != std::cend(current_seeds); ++seed_it) {
+    for (; seed_it != std::end(current_seeds); ++seed_it) {
       if (!seed_it->overlaps_with(map_it->src)) {
         // Map doesn't apply anymore, return to outer loop
         break;
       }
-      // Note that b and y point to 1 beyond the last element,
+      // Note that end() points to 1 beyond the last element,
       // so we decrement by one
       const auto a = map_it->src.origin;
       const auto b = map_it->src.end() - 1;
@@ -106,12 +119,15 @@ constexpr seeds_t apply_mapping(const seeds_t& current_seeds,
           // (x-a-1)
           next_seeds.emplace_back(x, a - x);
         }
-        if ((y - b) > 0) {
-          // (b+1-y)
-          next_seeds.emplace_back(b + 1, y - b + 1);
-        }
         // (a+b)
         next_seeds.push_back(map_single(map_it->src, *map_it));
+        if ((y - b) > 0) {
+          // (b+1-y)
+          split_seed_range({x, b - x + 2}, {b + 1, y - b});
+          // Important to break the loop after the split
+          // because the map doesn't apply anymore
+          break;
+        }
       } else if (map_it->src.contains(*seed_it)) {
         // (a,x,y,b) - (x+y)
         next_seeds.push_back(map_single(*seed_it, *map_it));
@@ -120,7 +136,10 @@ constexpr seeds_t apply_mapping(const seeds_t& current_seeds,
         // (x+b)
         next_seeds.push_back(map_single(range_t{x, b - x + 1}, *map_it));
         // (b+1-y)
-        next_seeds.emplace_back(b + 1, y - b);
+        split_seed_range({x, b - x + 2}, {b + 1, y - b});
+        // Important to break the loop after the split
+        // because the map doesn't apply anymore
+        break;
       } else {
         // (x,a,y,b) - (x-a-1)(a+y)
         // (x-a-1)
@@ -167,7 +186,7 @@ int_t solve_case(const std::string& filename) {
     for (int i = 0; i < seeds_ints.size(); i += 2) {
       if constexpr (!full_ranges) {
         current_seeds.emplace_back(seeds_ints[i], 1);
-        current_seeds.emplace_back(seeds_ints[i], 1);
+        current_seeds.emplace_back(seeds_ints[i + 1], 1);
       } else {
         current_seeds.emplace_back(seeds_ints[i], seeds_ints[i + 1]);
       }
@@ -207,6 +226,6 @@ int main() {
   AOC_EXPECT_RESULT(486613012, (solve_case<false>("day05.input")));
   std::cout << "Part 2" << std::endl;
   AOC_EXPECT_RESULT(46, (solve_case<true>("day05.example")));
-  AOC_EXPECT_RESULT(14624680, (solve_case<true>("day05.input")));
+  AOC_EXPECT_RESULT(56931769, (solve_case<true>("day05.input")));
   AOC_RETURN_CHECK_RESULT();
 }
