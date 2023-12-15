@@ -115,7 +115,7 @@ struct hand_type {
     }
   }
 
-  constexpr std::strong_ordering operator<=>(const hand_type& other) {
+  constexpr std::strong_ordering operator<=>(const hand_type& other) const {
     auto type_comp = (type() <=> other.type());
     if (type_comp != std::strong_ordering::equal) {
       return type_comp;
@@ -145,15 +145,14 @@ static_assert(hand_type<false>{"KTJJT"} < hand_type<false>{"KK677"});
 static_assert(hand_type<true>{"KTJJT"} > hand_type<true>{"KK677"});
 
 template <bool joker>
-using single_bid_type = std::pair<hand_type<false>, int>;
+using single_bid_type = std::pair<hand_type<joker>, int>;
 
 template <bool joker>
 using bids_type = std::vector<single_bid_type<joker>>;
 
 template <bool joker>
 constexpr int total_winnings(const bids_type<joker>& bids) {
-  bids_type<joker> sorted_bids{bids};
-  std::ranges::sort(sorted_bids, std::less<>{}, &single_bid_type<joker>::first);
+  bids_type<joker> sorted_bids = sorted_range(bids);
   int sum = 0;
   for (int i = 0; i < sorted_bids.size(); ++i) {
     sum += (i + 1) * sorted_bids[i].second;
@@ -161,12 +160,12 @@ constexpr int total_winnings(const bids_type<joker>& bids) {
   return sum;
 }
 
-static_assert((765 + 2 * 684) ==
-              total_winnings<false>({single_bid_type<false>{"32T3K", 765},
-                                     single_bid_type<false>{"T55J5", 684}}));
-static_assert((765 + 2 * 684) ==
-              total_winnings<true>({single_bid_type<true>{"32T3K", 765},
-                                    single_bid_type<true>{"T55J5", 684}}));
+static_assert((765 * 1 + 12 * 2) ==
+              total_winnings<false>({single_bid_type<false>{"KTJJT", 765},
+                                     single_bid_type<false>{"QQQJA", 12}}));
+static_assert((765 * 2 + 12 * 1) ==
+              total_winnings<true>({single_bid_type<true>{"KTJJT", 765},
+                                    single_bid_type<true>{"QQQJA", 12}}));
 
 template <bool joker>
 int solve_case(const std::string& filename) {
@@ -189,6 +188,6 @@ int main() {
   AOC_EXPECT_RESULT(249638405, (solve_case<false>("day07.input")));
   std::cout << "Part 2" << std::endl;
   AOC_EXPECT_RESULT(5905, (solve_case<true>("day07.example")));
-  // AOC_EXPECT_RESULT(32583852, (solve_case<true>("day07.input")));
+  AOC_EXPECT_RESULT(249776650, (solve_case<true>("day07.input")));
   AOC_RETURN_CHECK_RESULT();
 }
