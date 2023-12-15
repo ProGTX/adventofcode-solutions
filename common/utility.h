@@ -587,6 +587,14 @@ struct fold_left_fn {
 };
 inline constexpr fold_left_fn fold_left;
 
+template <std::ranges::random_access_range R, class Comp = std::ranges::less,
+          class Proj = std::identity>
+constexpr auto sorted_range(R&& r, Comp comp = {}, Proj proj = {}) {
+  auto r_copy = r;
+  std::ranges::sort(r_copy, comp, proj);
+  return r_copy;
+}
+
 template <std::integral T>
 constexpr T num_digits(T n) {
   return std::abs(static_cast<std::make_signed_t<T>>(n)) >= 10
