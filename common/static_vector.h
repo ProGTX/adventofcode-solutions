@@ -22,9 +22,9 @@ class static_vector {
   using const_reference = const value_type&;
   using size_type = size_t;
   using difference_type = std::make_signed_t<size_type>;
-  using iterator = container_type::iterator; // see [container.requirements]
+  using iterator = typename container_type::iterator; //[container.requirements]
   using const_iterator =
-      container_type::const_iterator; // see [container.requirements]
+     typename container_type::const_iterator; // see [container.requirements]
   using reverse_iterator = std::reverse_iterator<iterator>;
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 

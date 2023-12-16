@@ -77,7 +77,7 @@ struct container_value<C> {
 };
 
 template <typename C>
-using container_value_t = container_value<C>::type;
+using container_value_t = typename container_value<C>::type;
 
 template <class C, class R>
 concept container_convertible =
@@ -132,7 +132,7 @@ concept reservable_container = requires(T& c) {
 
 template <typename T>
 concept insertable_container =
-    requires(T& c, T::value_type& e) { c.insert(c.end(), e); };
+    requires(T& c, typename T::value_type& e) { c.insert(c.end(), e); };
 
 struct to_container {
  private:

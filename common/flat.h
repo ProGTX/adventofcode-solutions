@@ -13,9 +13,9 @@ class sorted_flat_set {
 
  public:
   using container_type = std::vector<T>;
-  using value_type = container_type::value_type;
-  using iterator = container_type::iterator;
-  using const_iterator = container_type::const_iterator;
+  using value_type = typename container_type::value_type;
+  using iterator = typename container_type::iterator;
+  using const_iterator = typename container_type::const_iterator;
 
   constexpr sorted_flat_set() : sorted_flat_set{{}, Compare{}} {}
 
