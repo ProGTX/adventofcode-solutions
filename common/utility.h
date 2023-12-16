@@ -588,6 +588,38 @@ struct fold_left_fn {
 };
 inline constexpr fold_left_fn fold_left;
 
+struct lcm_fn {
+  template <std::input_iterator I, std::sentinel_for<I> S>
+  constexpr auto operator()(I first, S last) const {
+    using T = std::iter_value_t<I>;
+    return fold_left(first, last, T(1), [&](T first, T second) {
+      return std::lcm(first, second);
+    });
+  }
+
+  template <std::ranges::input_range R>
+  constexpr auto operator()(R&& r) const {
+    return (*this)(std::ranges::begin(r), std::ranges::end(r));
+  }
+};
+inline constexpr lcm_fn lcm;
+
+struct gcd_fn {
+  template <std::input_iterator I, std::sentinel_for<I> S>
+  constexpr auto operator()(I first, S last) const {
+    using T = std::iter_value_t<I>;
+    return fold_left(first, last, T(1), [&](T first, T second) {
+      return std::gcd(first, second);
+    });
+  }
+
+  template <std::ranges::input_range R>
+  constexpr auto operator()(R&& r) const {
+    return (*this)(std::ranges::begin(r), std::ranges::end(r));
+  }
+};
+inline constexpr gcd_fn gcd;
+
 } // namespace ranges
 
 template <std::ranges::random_access_range R, class Comp = std::ranges::less,
