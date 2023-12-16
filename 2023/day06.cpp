@@ -66,7 +66,7 @@ int_t solve_case(const std::string& filename) {
       container = std::move(tmp_container);
     } else {
       auto full_str =
-          std::views::join(tmp_container) | rangesnext::to<std::basic_string>();
+          std::views::join(tmp_container) | ranges::to<std::basic_string>();
       container.push_back(to_number<int_t>(full_str));
     }
   };

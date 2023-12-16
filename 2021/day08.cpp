@@ -119,8 +119,9 @@ std::string get_mapping(input_line_t::signal_patterns_t const& patterns) {
       for (auto digit : combination) {
         auto digit_wire = digit_wires[digit];
         const auto& intersecting_set =
-            contains(digit_wire, static_cast<char>(w + 'a')) ? valid_set
-                                                             : invalid_set;
+            ranges::contains(digit_wire, static_cast<char>(w + 'a'))
+                ? valid_set
+                : invalid_set;
 
         new_set.clear();
         std::ranges::set_intersection(segment_set[w], intersecting_set,

@@ -3,7 +3,7 @@ Copyright (c) 2020 - present Corentin Jabot
 
 Licenced under Boost Software License license. See LICENSE.md for details.
 
-https://github.com/cor3ntin/rangesnext/blob/master/include/cor3ntin/rangesnext/to.hpp
+https://github.com/cor3ntin/ranges/blob/master/include/cor3ntin/ranges/to.hpp
 
 */
 
@@ -15,7 +15,7 @@ https://github.com/cor3ntin/rangesnext/blob/master/include/cor3ntin/rangesnext/t
 #include <tuple>
 #include <utility>
 
-namespace rangesnext {
+namespace ranges {
 
 struct from_range_t {};
 inline constexpr from_range_t from_range;
@@ -112,9 +112,9 @@ struct unwrap {
 template <template <class...> class Cont, typename Rng, typename... Args>
 struct unwrap<wrap<Cont>, Rng, Args...> {
   template <typename R>
-  static auto from_rng(int) -> decltype(Cont(range_common_iterator<Rng>(),
-                                             range_common_iterator<Rng>(),
-                                             std::declval<Args>()...));
+  static auto from_rng(int)
+      -> decltype(Cont(range_common_iterator<Rng>(),
+                       range_common_iterator<Rng>(), std::declval<Args>()...));
   template <typename R>
   static auto from_rng(long) -> decltype(Cont(from_range, std::declval<Rng>(),
                                               std::declval<Args>()...));
@@ -219,8 +219,8 @@ struct to_container {
 
   template <typename Rng, typename ToContainer, typename... Args>
     requires r::input_range<Rng> &&
-                 recursive_container_convertible<
-                     container_t<ToContainer, Rng, Args...>, Rng>
+             recursive_container_convertible<
+                 container_t<ToContainer, Rng, Args...>, Rng>
   constexpr friend auto operator|(Rng&& rng, fn<ToContainer, Args...>&& f)
       -> container_t<ToContainer, Rng, Args...> {
     return [&]<size_t... I>(std::index_sequence<I...>) {
@@ -267,4 +267,4 @@ constexpr auto to(Rng&& rng, Args&&... args) -> Cont {
                                                   std::forward<Args>(args)...);
 }
 
-} // namespace rangesnext
+} // namespace ranges

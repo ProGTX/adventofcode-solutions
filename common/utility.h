@@ -195,8 +195,8 @@ cyclic_iterator(Container&) -> cyclic_iterator<Container>;
 template <class Container>
 cyclic_iterator(const Container&) -> cyclic_iterator<const Container>;
 template <class Container>
-cyclic_iterator(Container&,
-                typename Container::iterator) -> cyclic_iterator<Container>;
+cyclic_iterator(Container&, typename Container::iterator)
+    -> cyclic_iterator<Container>;
 template <class Container>
 cyclic_iterator(const Container&, typename Container::iterator)
     -> cyclic_iterator<const Container>;
@@ -207,11 +207,11 @@ template <class Container>
 cyclic_iterator(const Container&, typename Container::const_iterator)
     -> cyclic_iterator<const Container>;
 template <class Container>
-cyclic_iterator(linked_list_iterator_tag,
-                Container&) -> cyclic_iterator<Container, true>;
+cyclic_iterator(linked_list_iterator_tag, Container&)
+    -> cyclic_iterator<Container, true>;
 template <class Container>
-cyclic_iterator(linked_list_iterator_tag,
-                const Container&) -> cyclic_iterator<const Container, true>;
+cyclic_iterator(linked_list_iterator_tag, const Container&)
+    -> cyclic_iterator<const Container, true>;
 template <class Container>
 cyclic_iterator(linked_list_iterator_tag, Container&,
                 typename Container::iterator)
@@ -534,12 +534,13 @@ struct range_type {
     return lhs.origin < rhs.origin;
   }
 
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const range_type& range) {
+  friend std::ostream& operator<<(std::ostream& out, const range_type& range) {
     out << '[' << range.origin << ',' << (range.end() - 1) << ']';
     return out;
   }
 };
+
+namespace ranges {
 
 // https://en.cppreference.com/w/cpp/algorithm/ranges/contains
 struct __contains_fn {
@@ -586,6 +587,8 @@ struct fold_left_fn {
   }
 };
 inline constexpr fold_left_fn fold_left;
+
+} // namespace ranges
 
 template <std::ranges::random_access_range R, class Comp = std::ranges::less,
           class Proj = std::identity>
