@@ -30,23 +30,17 @@ static_assert(std::invoke(get_direction('L'), node_t{5, 6}) == 5);
 
 constexpr int num_steps(const std::vector<node_t>& directions,
                         const std::vector<node_select_func_t>& instructions,
-                        std::vector<int> start_indexes,
-                        std::vector<int> end_indexes) {
-  const auto num_start_indexes = start_indexes.size();
-  auto next_indexes = start_indexes;
+                        int start_index, const std::vector<int>& end_indexes) {
+  auto next_index = start_index;
   int steps = 0;
   int inst_index = 0;
   while (true) {
-    if (std::ranges::all_of(start_indexes, [&](int index) {
-          return contains(end_indexes, index);
-        })) {
+    if (ranges::contains(end_indexes, start_index)) {
       break;
     }
     auto inst = instructions[inst_index];
-    for (int i = 0; i < num_start_indexes; ++i) {
-      next_indexes[i] = std::invoke(inst, directions[start_indexes[i]]);
-    }
-    std::swap(next_indexes, start_indexes);
+    next_index = std::invoke(inst, directions[start_index]);
+    std::swap(next_index, start_index);
     inst_index = (inst_index + 1) % instructions.size();
     ++steps;
   }
@@ -57,7 +51,18 @@ static_assert(6 ==
               num_steps(std::vector{node_t{1, 1}, node_t{0, 2}, node_t{2, 2}},
                         std::vector{get_direction('L'), get_direction('L'),
                                     get_direction('R')},
-                        {0}, {2}));
+                        0, {2}));
+
+constexpr int num_steps(const std::vector<node_t>& directions,
+                        const std::vector<node_select_func_t>& instructions,
+                        const std::vector<int>& start_indexes,
+                        const std::vector<int>& end_indexes) {
+  auto steps = ranges::lcm(
+      start_indexes | std::views::transform([&](int start_index) {
+        return num_steps(directions, instructions, start_index, end_indexes);
+      }));
+  return std::lcm(instructions.size(), steps);
+}
 
 template <bool all_paths>
 int solve_case(const std::string& filename) {
