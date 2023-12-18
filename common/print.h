@@ -7,6 +7,7 @@
 #include <tuple>
 #include <utility>
 
+#include "assert.h"
 #include "common.h"
 #include "utility.h"
 
@@ -78,4 +79,18 @@ template <class T>
 std::ostream& operator<<(std::ostream& out, const fractional_t<T>& value) {
   out << static_cast<std::conditional_t<(sizeof(T) > 4), double, float>>(value);
   return out;
+}
+
+constexpr void println(std::string_view str) {
+  AOC_NOT_CONSTEXPR(std::cout << str << std::endl);
+}
+
+template <class FirstT, class... Args>
+constexpr void println(std::string_view str, FirstT first, Args&&... args) {
+  AOC_NOT_CONSTEXPR({
+    std::cout << str << ": " << std::forward<FirstT>(first);
+    // https://stackoverflow.com/a/27375675
+    ((std::cout << ',' << std::forward<Args>(args)), ...);
+    std::cout << std::endl;
+  });
 }
