@@ -14,7 +14,10 @@
 #endif // __assume  || _MSC_VER
 #else
 #include <cassert>
-#define AOC_ASSERT_HELPER(condition, message) assert((condition) && (message))
+#define AOC_ASSERT_HELPER(condition, message)                                  \
+  if (!std::is_constant_evaluated()) {                                         \
+    assert((condition) && (message));                                          \
+  }
 #endif // NDEBUG
 
 #define AOC_ASSERT(condition, message) AOC_ASSERT_HELPER((condition), (message))
