@@ -14,6 +14,8 @@
 
 using namespace std::string_view_literals;
 
+using int_t = std::int64_t;
+
 using node_t = std::pair<int, int>;
 using node_select_func_t = decltype(&node_t::first);
 
@@ -28,11 +30,12 @@ constexpr node_select_func_t get_direction(char c) {
 static_assert(std::invoke(get_direction('R'), node_t{5, 6}) == 6);
 static_assert(std::invoke(get_direction('L'), node_t{5, 6}) == 5);
 
-constexpr int num_steps(const std::vector<node_t>& directions,
-                        const std::vector<node_select_func_t>& instructions,
-                        int start_index, const std::vector<int>& end_indexes) {
+constexpr int_t num_steps(const std::vector<node_t>& directions,
+                          const std::vector<node_select_func_t>& instructions,
+                          int start_index,
+                          const std::vector<int>& end_indexes) {
   auto next_index = start_index;
-  int steps = 0;
+  int_t steps = 0;
   int inst_index = 0;
   while (true) {
     if (ranges::contains(end_indexes, start_index)) {
@@ -53,19 +56,19 @@ static_assert(6 ==
                                     get_direction('R')},
                         0, {2}));
 
-constexpr int num_steps(const std::vector<node_t>& directions,
-                        const std::vector<node_select_func_t>& instructions,
-                        const std::vector<int>& start_indexes,
-                        const std::vector<int>& end_indexes) {
-  auto steps = ranges::lcm(
+constexpr int_t num_steps(const std::vector<node_t>& directions,
+                          const std::vector<node_select_func_t>& instructions,
+                          const std::vector<int>& start_indexes,
+                          const std::vector<int>& end_indexes) {
+  return ranges::fold_left(
       start_indexes | std::views::transform([&](int start_index) {
         return num_steps(directions, instructions, start_index, end_indexes);
-      }));
-  return std::lcm(instructions.size(), steps);
+      }),
+      instructions.size(), &std::lcm<int_t, int_t>);
 }
 
 template <bool all_paths>
-int solve_case(const std::string& filename) {
+int_t solve_case(const std::string& filename) {
   std::vector<node_select_func_t> instructions;
   auto read_instructions = [&](std::string_view line) {
     std::ranges::transform(line, std::back_inserter(instructions),
@@ -128,7 +131,7 @@ int solve_case(const std::string& filename) {
 
   readfile_op_header(filename, read_instructions, read_values);
 
-  int sum = num_steps(directions, instructions, start_indexes, end_indexes);
+  int_t sum = num_steps(directions, instructions, start_indexes, end_indexes);
   std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
@@ -142,6 +145,6 @@ int main() {
   AOC_EXPECT_RESULT(2, (solve_case<true>("day08.example")));
   AOC_EXPECT_RESULT(6, (solve_case<true>("day08.example2")));
   AOC_EXPECT_RESULT(6, (solve_case<true>("day08.example3")));
-  // AOC_EXPECT_RESULT(249776650, (solve_case<true>("day08.input")));
+  AOC_EXPECT_RESULT(9064949303801, (solve_case<true>("day08.input")));
   AOC_RETURN_CHECK_RESULT();
 }
