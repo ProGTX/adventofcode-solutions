@@ -1,7 +1,9 @@
 #pragma once
 
 #include "assert.h"
+#include "ranges.h"
 
+#include <algorithm>
 #include <array>
 #include <iterator>
 #include <type_traits>
@@ -24,9 +26,30 @@ class static_vector {
   using difference_type = std::make_signed_t<size_type>;
   using iterator = typename container_type::iterator; //[container.requirements]
   using const_iterator =
-     typename container_type::const_iterator; // see [container.requirements]
+      typename container_type::const_iterator; // see [container.requirements]
   using reverse_iterator = std::reverse_iterator<iterator>;
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+  // 5.2, copy/move construction:
+  constexpr static_vector() noexcept = default;
+  constexpr explicit static_vector(size_type n) : m_size{n} {
+    this->assert_size(n);
+  }
+  constexpr static_vector(size_type n, const value_type& value) : m_size{n} {
+    this->assert_size(n);
+    std::ranges::fill_n(std::begin(m_data), n, value);
+  }
+  template <std::input_iterator I, std::sentinel_for<I> S>
+  constexpr static_vector(I first, S last) {
+    std::ranges::copy(first, last, std::begin(m_data));
+  }
+  constexpr static_vector(std::initializer_list<value_type> il)
+      : static_vector(std::ranges::begin(il), std::ranges::end(il)) {}
+
+  template <std::ranges::range R>
+  // requires (container-compatible-range<R, T>)
+  constexpr static_vector(ranges::from_range_t, R&& rg)
+      : static_vector(std::ranges::begin(rg), std::ranges::end(rg)) {}
 
   // Iterators
   constexpr iterator begin() noexcept { return m_data.begin(); }
@@ -122,6 +145,13 @@ class static_vector {
     --m_size;
   }
   constexpr void clear() noexcept { m_size = 0; }
+
+ protected:
+  constexpr void assert_size(size_type n) const {
+    AOC_ASSERT(
+        n <= N,
+        "Cannot construct a static_vector larger than the allocated storage");
+  }
 
  private:
   container_type m_data;
