@@ -152,7 +152,7 @@ using bids_type = std::vector<single_bid_type<joker>>;
 
 template <bool joker>
 constexpr int total_winnings(const bids_type<joker>& bids) {
-  bids_type<joker> sorted_bids = sorted_range(bids);
+  bids_type<joker> sorted_bids = ranges::sorted(bids);
   int sum = 0;
   for (int i = 0; i < sorted_bids.size(); ++i) {
     sum += (i + 1) * sorted_bids[i].second;
