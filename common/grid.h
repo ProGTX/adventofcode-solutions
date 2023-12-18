@@ -49,6 +49,13 @@ class grid {
         m_row_length{num_columns},
         m_num_rows(num_rows) {}
 
+  constexpr grid(Container&& c, int num_rows, int num_columns)
+      : m_data(std::move(c)), m_row_length{num_columns}, m_num_rows(num_rows) {
+    AOC_ASSERT(((num_rows * num_columns) <= c.size()),
+               "Container is not large enough for requested number"
+               "of rows and columns");
+  }
+
   template <class Row = row_t>
     requires requires(Row row) {
       std::ranges::copy_n(std::begin(row), 0, iterator{});
@@ -113,9 +120,7 @@ class grid {
     return row * this->row_length() + column;
   }
   constexpr point position(int linear_index) const {
-    AOC_ASSERT(linear_index > 0, "Index must be non-negative");
-    AOC_ASSERT(linear_index < this->size(), "Index cannot be out of bounds");
-    AOC_ASSERT(this->num_rows() > 0, "Cannot get position without any rows");
+    this->assert_linear_index(linear_index);
     return {linear_index % this->num_rows(), linear_index / this->num_rows()};
   }
 
@@ -133,6 +138,15 @@ class grid {
     this->modify(std::move(value), this->linear_index(row, column));
   }
 
+  constexpr value_type& at_index(int linear_index) {
+    this->assert_linear_index(linear_index);
+    return m_data[linear_index];
+  }
+  constexpr const value_type& at_index(int linear_index) const {
+    this->assert_linear_index(linear_index);
+    return m_data[linear_index];
+  }
+
   template <class print_single_ft = std::identity>
   std::ostream& print_all(print_single_ft print_single_f = {},
                           std::ostream& out = std::cout) const {
@@ -147,8 +161,13 @@ class grid {
     return out;
   }
 
-  auto begin() const { return m_data.begin(); }
-  auto end() const { return m_data.end(); }
+  constexpr auto begin() const { return m_data.begin(); }
+  constexpr auto end() const { return m_data.end(); }
+
+  constexpr bool in_bounds(int row, int column) const {
+    return (row >= 0) && (row < this->num_rows()) && (column >= 0) &&
+           (column < this->row_length());
+  }
 
  private:
   template <class print_single_ft>
@@ -163,6 +182,12 @@ class grid {
   }
 
  protected:
+  constexpr void assert_linear_index([[maybe_unused]] int linear_index) const {
+    AOC_ASSERT(linear_index > 0, "Index must be non-negative");
+    AOC_ASSERT(linear_index < this->size(), "Index cannot be out of bounds");
+    AOC_ASSERT(this->num_rows() > 0, "Cannot get position without any rows");
+  };
+
   container_type m_data;
 
  private:
