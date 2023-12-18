@@ -32,6 +32,16 @@ class static_vector {
 
   // 5.2, copy/move construction:
   constexpr static_vector() noexcept = default;
+
+  constexpr static_vector(const static_vector& other) noexcept(
+      std::is_nothrow_copy_constructible_v<value_type>) = default;
+  constexpr static_vector(static_vector&& other) noexcept(
+      std::is_nothrow_move_constructible_v<value_type>) = default;
+  constexpr static_vector& operator=(const static_vector& other) noexcept(
+      std::is_nothrow_copy_assignable_v<value_type>) = default;
+  constexpr static_vector& operator=(static_vector&& other) noexcept(
+      std::is_nothrow_move_assignable_v<value_type>) = default;
+
   constexpr explicit static_vector(size_type n) : m_size{n} {
     this->assert_size(n);
   }
@@ -40,7 +50,8 @@ class static_vector {
     std::ranges::fill_n(std::begin(m_data), n, value);
   }
   template <std::input_iterator I, std::sentinel_for<I> S>
-  constexpr static_vector(I first, S last) {
+  constexpr static_vector(I first, S last)
+      : m_size{static_cast<size_t>(std::ranges::distance(first, last))} {
     std::ranges::copy(first, last, std::begin(m_data));
   }
   constexpr static_vector(std::initializer_list<value_type> il)

@@ -51,7 +51,7 @@ class grid {
 
   constexpr grid(Container&& c, int num_rows, int num_columns)
       : m_data(std::move(c)), m_row_length{num_columns}, m_num_rows(num_rows) {
-    AOC_ASSERT(((num_rows * num_columns) <= c.size()),
+    AOC_ASSERT(((num_rows * num_columns) <= m_data.size()),
                "Container is not large enough for requested number"
                "of rows and columns");
   }
