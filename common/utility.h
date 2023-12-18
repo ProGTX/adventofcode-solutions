@@ -10,6 +10,7 @@
 #include <iterator>
 #include <numeric>
 #include <ranges>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -18,6 +19,22 @@ template <class Enum>
 constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept {
   return static_cast<std::underlying_type_t<Enum>>(e);
 }
+
+// https://stackoverflow.com/a/35348334
+template <class ReturnT, class... Args>
+std::tuple<Args...> function_args_helper(ReturnT (*)(Args...));
+template <class ReturnT, class F, class... Args>
+std::tuple<Args...> function_args_helper(ReturnT (F::*)(Args...));
+template <class ReturnT, class F, class... Args>
+std::tuple<Args...> function_args_helper(ReturnT (F::*)(Args...) const);
+template <class F>
+decltype(function_args_helper(&F::operator())) function_args_helper(F);
+
+template <class T>
+using function_args_t = decltype(function_args_helper(std::declval<T>()));
+
+template <std::size_t I, class T>
+using function_arg_n_t = std::tuple_element_t<I, function_args_t<T>>;
 
 // https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp
 
