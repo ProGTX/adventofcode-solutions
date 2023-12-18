@@ -39,9 +39,7 @@ class board : public array_grid<int, 5> {
 
   constexpr auto add(const row_t& row) {
     if (this->is_complete()) {
-      if (!std::is_constant_evaluated()) {
-        throw std::runtime_error("Cannot add any more rows");
-      }
+      AOC_NOT_CONSTEXPR(throw std::runtime_error("Cannot add any more rows"));
     }
     base_t::add_row(row);
   }

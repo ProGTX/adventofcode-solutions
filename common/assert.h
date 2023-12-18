@@ -1,5 +1,10 @@
 #pragma once
 
+#define AOC_NOT_CONSTEXPR(statement)                                           \
+  if (!std::is_constant_evaluated()) {                                         \
+    statement;                                                                 \
+  }
+
 #if defined(NDEBUG)
 #if defined(__assume) || defined(_MSC_VER)
 #define AOC_ASSERT_HELPER(condition, message) __assume(condition)
@@ -15,9 +20,7 @@
 #else
 #include <cassert>
 #define AOC_ASSERT_HELPER(condition, message)                                  \
-  if (!std::is_constant_evaluated()) {                                         \
-    assert((condition) && (message));                                          \
-  }
+  AOC_NOT_CONSTEXPR(assert((condition) && (message)))
 #endif // NDEBUG
 
 #define AOC_ASSERT(condition, message) AOC_ASSERT_HELPER((condition), (message))
