@@ -89,14 +89,20 @@ class sorted_flat_set {
     return {this->find(value), true};
   }
 
+  constexpr iterator erase(const_iterator pos) { return m_data.erase(pos); }
+  constexpr iterator erase(iterator pos)
+    requires(!std::same_as<iterator, const_iterator>)
+  {
+    return m_data.erase(pos);
+  }
+
   constexpr size_t erase(
       const std::equality_comparable_with<value_type> auto& value) {
     auto it = this->find(value);
     if (it == this->end()) {
       return 0;
     }
-    m_data.erase(it);
-    this->sort();
+    this->erase(it);
     return 1;
   }
 
