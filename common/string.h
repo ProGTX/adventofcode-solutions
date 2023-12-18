@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utility.h"
+
 #include <charconv>
 #include <concepts>
 #include <exception>
@@ -43,21 +45,26 @@ constexpr std::string_view trim_simple(std::string_view str) {
   return trim(str);
 }
 
-template <class return_t = std::string_view, bool keep_spaces = false>
+template <class return_t = void, bool keep_spaces = false>
 struct trimmer_base {
   template <class R>
-  constexpr return_t operator()(R&& r) const {
+  constexpr auto operator()(R&& r) const {
+    using actual_ret_t = std::conditional_t<
+        std::same_as<return_t, void>,
+        std::conditional_t<std::same_as<std::remove_cvref_t<R>, std::string>,
+                           std::string, std::string_view>,
+        return_t>;
     auto str = construct_string<std::string_view>(std::forward<R>(r));
     if constexpr (keep_spaces) {
-      return return_t{trim(str, "\t\n\r\f\v")};
+      return construct_string<actual_ret_t>(trim(str, "\t\n\r\f\v"));
     } else {
-      return return_t{trim(str)};
+      return construct_string<actual_ret_t>(trim(str));
     }
   }
 };
-template <class return_t = std::string_view>
+template <class return_t = void>
 using trimmer = trimmer_base<return_t, false>;
-template <class return_t = std::string_view>
+template <class return_t = void>
 using trimmer_keep_spaces = trimmer_base<return_t, true>;
 
 template <class value_type>
@@ -74,10 +81,12 @@ constexpr auto to_number(std::string_view str) {
 }
 
 template <class T>
-concept readfile_invocable_no_filenum = std::invocable<T, std::string_view>;
+concept readfile_invocable_no_filenum =
+    std::invocable<T, std::string_view> || std::invocable<T, std::string>;
 template <class T>
 concept readfile_invocable_with_filenum =
-    std::invocable<T, std::string_view, int>;
+    std::invocable<T, std::string_view, int> ||
+    std::invocable<T, std::string, int>;
 template <class T>
 concept readfile_invocable =
     readfile_invocable_no_filenum<T> || readfile_invocable_with_filenum<T>;
@@ -105,7 +114,8 @@ template <class trim_op_t = trimmer<>, class FirstLineOpT, class OpT>
            readfile_invocable<OpT>)
 void readfile_op_header(const std::string& filename,
                         FirstLineOpT first_line_operation, OpT operation) {
-  readfile_op(filename, [&](std::string_view line, int linenum) {
+  using line_t = function_arg_n_t<0, OpT>;
+  readfile_op(filename, [&](line_t line, int linenum) {
     if (linenum == 1) [[unlikely]] {
       first_line_operation(trim_op_t{}(line));
     } else [[likely]] {
@@ -120,9 +130,8 @@ void readfile_op_header(const std::string& filename,
 
 std::vector<std::string> readfile_lines(const std::string& filename) {
   std::vector<std::string> lines;
-  readfile_op<trimmer_keep_spaces<>>(filename, [&](std::string_view line) {
-    lines.push_back(std::string{line});
-  });
+  readfile_op<trimmer_keep_spaces<>>(
+      filename, [&](std::string&& line) { lines.push_back(std::move(line)); });
   return lines;
 }
 
