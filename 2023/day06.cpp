@@ -14,7 +14,7 @@
 
 using namespace std::string_view_literals;
 
-using int_t = long;
+using int_t = std::int64_t;
 
 // d=v*tr
 // tr=t-tb
@@ -39,7 +39,10 @@ constexpr int_t num_ways_to_win(int_t total_time, int_t record_distance) {
 static_assert(4 == num_ways_to_win(7, 9));
 static_assert(8 == num_ways_to_win(15, 40));
 static_assert(9 == num_ways_to_win(30, 200));
+
+#ifndef __clang__
 static_assert(71503 == num_ways_to_win(71530, 940200));
+#endif
 
 constexpr int_t num_ways_to_win(std::span<const int_t> total_times,
                                 std::span<const int_t> record_distances) {
@@ -66,7 +69,7 @@ int_t solve_case(const std::string& filename) {
       container = std::move(tmp_container);
     } else {
       auto full_str =
-          std::views::join(tmp_container) | ranges::to<std::basic_string>();
+          std::views::join(tmp_container) | ranges::to<std::string>();
       container.push_back(to_number<int_t>(full_str));
     }
   };

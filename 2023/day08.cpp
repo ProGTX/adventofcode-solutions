@@ -109,9 +109,9 @@ int_t solve_case(const std::string& filename) {
     }
 
     // node = (left, right)
-    auto [node, lr] = split<std::array<std::string, 2>>(line, '=', trimmer{});
+    auto [node, lr] = split<std::array<std::string, 2>>(line, '=', trimmer<>{});
     lr = trim(lr, " ())");
-    auto [left, right] = split<std::array<std::string, 2>>(lr, ',', trimmer{});
+    auto [left, right] = split<std::array<std::string, 2>>(lr, ',', trimmer<>{});
 
     auto node_it = add_name_index(node);
     auto left_it = add_name_index(left);
