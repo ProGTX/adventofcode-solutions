@@ -31,7 +31,7 @@ struct __contains_fn {
 inline constexpr __contains_fn contains{};
 
 // https://en.cppreference.com/w/cpp/algorithm/ranges/fold_left
-struct fold_left_fn {
+struct __fold_left_fn {
   template <std::input_iterator I, std::sentinel_for<I> S, class T, class F>
   constexpr auto operator()(I first, S last, T init, F f) const {
     using U =
@@ -52,15 +52,14 @@ struct fold_left_fn {
                    std::ref(f));
   }
 };
-inline constexpr fold_left_fn fold_left;
+inline constexpr __fold_left_fn fold_left;
 
-struct lcm_fn {
+struct __lcm_fn {
   template <std::input_iterator I, std::sentinel_for<I> S>
   constexpr auto operator()(I first, S last) const {
     using T = std::iter_value_t<I>;
-    return fold_left(first, last, T(1), [&](T first, T second) {
-      return std::lcm(first, second);
-    });
+    return fold_left(first, last, T(1),
+                     [](T first, T second) { return std::lcm(first, second); });
   }
 
   template <std::ranges::input_range R>
@@ -68,15 +67,14 @@ struct lcm_fn {
     return (*this)(std::ranges::begin(r), std::ranges::end(r));
   }
 };
-inline constexpr lcm_fn lcm;
+inline constexpr __lcm_fn lcm;
 
 struct gcd_fn {
   template <std::input_iterator I, std::sentinel_for<I> S>
   constexpr auto operator()(I first, S last) const {
     using T = std::iter_value_t<I>;
-    return fold_left(first, last, T(1), [&](T first, T second) {
-      return std::gcd(first, second);
-    });
+    return fold_left(first, last, T(1),
+                     [](T first, T second) { return std::gcd(first, second); });
   }
 
   template <std::ranges::input_range R>

@@ -60,11 +60,10 @@ constexpr int_t num_steps(const std::vector<node_t>& directions,
                           const std::vector<node_select_func_t>& instructions,
                           const std::vector<int>& start_indexes,
                           const std::vector<int>& end_indexes) {
-  return ranges::fold_left(
+  return ranges::lcm(
       start_indexes | std::views::transform([&](int start_index) {
         return num_steps(directions, instructions, start_index, end_indexes);
-      }),
-      instructions.size(), &std::lcm<int_t, int_t>);
+      }));
 }
 
 template <bool all_paths>
@@ -111,7 +110,8 @@ int_t solve_case(const std::string& filename) {
     // node = (left, right)
     auto [node, lr] = split<std::array<std::string, 2>>(line, '=', trimmer<>{});
     lr = trim(lr, " ())");
-    auto [left, right] = split<std::array<std::string, 2>>(lr, ',', trimmer<>{});
+    auto [left, right] =
+        split<std::array<std::string, 2>>(lr, ',', trimmer<>{});
 
     auto node_it = add_name_index(node);
     auto left_it = add_name_index(left);
