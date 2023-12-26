@@ -20,7 +20,9 @@
 #else
 #include <cassert>
 #define AOC_ASSERT_HELPER(condition, message)                                  \
-  AOC_NOT_CONSTEXPR(assert((condition) && (message)))
+  AOC_NOT_CONSTEXPR(assert((condition) && (message))) else if (!(condition)) { \
+    throw 0;                                                                   \
+  }
 #endif // NDEBUG
 
 #define AOC_ASSERT(condition, message) AOC_ASSERT_HELPER((condition), (message))
