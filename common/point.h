@@ -3,10 +3,13 @@
 #include "math.h"
 #include "utility.h"
 
+#include <array>
+#include <concepts>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
 #include <ostream>
+#include <span>
 #include <type_traits>
 
 template <class T>
@@ -212,3 +215,29 @@ struct min_max_helper {
     return helper;
   }
 };
+
+namespace aoc {
+
+// https://en.wikipedia.org/wiki/Shoelace_formula
+template <class return_t = void>
+constexpr auto calculate_area(std::span<const point> polygon) {
+  using actual_ret_t =
+      std::conditional_t<std::same_as<return_t, void>, int, return_t>;
+  const auto n = polygon.size();
+  AOC_ASSERT(n >= 3, "Formula only works on triangles or higher");
+  // First add the edges
+  int area = polygon[0].x * polygon[1].y - polygon[n - 1].x * polygon[n - 2].y +
+             polygon[n - 1].x * polygon[0].y - polygon[0].x * polygon[n - 1].y;
+  for (int i = 1; i < (n - 1); ++i) {
+    area += polygon[i].x * (polygon[i + 1].y - polygon[i - 1].y);
+  }
+  return abs(area) / actual_ret_t{2};
+}
+static_assert(16 ==
+              calculate_area(std::array{point{1, 6}, point{3, 1}, point{7, 2},
+                                        point{4, 4}, point{8, 5}}));
+static_assert(16.5f == calculate_area<float>(std::array{
+                           point{1, 6}, point{3, 1}, point{7, 2}, point{4, 4},
+                           point{8, 5}}));
+
+} // namespace aoc
