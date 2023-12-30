@@ -188,6 +188,11 @@ class grid {
     AOC_ASSERT(this->num_rows() > 0, "Cannot get position without any rows");
   };
 
+  constexpr void set_size(int num_rows_, int row_length_) {
+    m_num_rows = num_rows_;
+    m_row_length = row_length_;
+  }
+
   container_type m_data;
 
  private:
@@ -198,16 +203,6 @@ class grid {
 template <class T, size_t row_length, size_t num_rows = row_length>
 using array_grid =
     grid<T, std::array<T, row_length>, std::array<T, row_length * num_rows>>;
-
-template <class Grid>
-concept is_grid = std::ranges::range<Grid> && requires(Grid g) {
-  g.add_row();
-  g.get_row();
-  g.linear_index();
-  g.at();
-  g.modify();
-  g.print_all();
-};
 
 enum facing_t : int {
   east = 0,
@@ -409,31 +404,60 @@ constexpr void set_standard_neighbors(grid<T, row_storage_t, Container>& grid,
                        corner_diagonal_diff(northwest, north)});
 }
 
-template <class T, class point_class = point,
+template <class T, T empty_value_param = T{}, class point_class = point,
           class row_storage_t = std::vector<T>>
-class sparse_grid {
+class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
+ private:
+  using base_t = grid<T, row_storage_t, std::map<point_class, T>>;
+
  protected:
   using key_type = point_class;
 
  public:
-  using container_type = std::map<key_type, T>;
-  using row_t = row_storage_t;
-  using value_type = T;
+  using typename base_t::container_type;
+  using typename base_t::row_t;
+  using typename base_t::value_type;
   using iterator = map_value_iterator<typename container_type::iterator>;
   using const_iterator =
       map_value_iterator<typename container_type::const_iterator>;
 
-  static constexpr auto static_row_length =
-      is_array_class_v<row_t> ? row_t{}.size() : 0;
+  using base_t::static_data_size;
+  using base_t::static_row_length;
+
+  using base_t::data;
+
+  using base_t::size;
+  using base_t::size_dynamic;
+
+  using base_t::row_length;
+  using base_t::row_length_dynamic;
+
+  using base_t::num_rows;
+  using base_t::num_rows_dynamic;
+
+  using base_t::begin;
+  using base_t::end;
+
+  // Note that sparse_grid doesn't allow linear index calculations
+
+  constexpr sparse_grid() = default;
+
+  constexpr sparse_grid(int num_rows, int num_columns) {
+    this->set_size(num_rows, num_columns);
+  }
 
   constexpr iterator add_row(const row_t& row) {
-    m_row_length = row.size();
+    this->set_size(this->num_rows(), row.size());
     for (int column = 0; const auto& elem : row) {
-      this->insert_single(point_class{column, m_num_rows}, elem);
+      this->insert_single(point_class{column, this->num_rows()}, elem);
       ++column;
     }
-    ++m_num_rows;
-    return m_data.find(point_class{0, m_num_rows - 1});
+    this->set_size(this->num_rows() + 1, this->row_length());
+    return base_t::m_data.find(point_class{0, this->num_rows() - 1});
+  }
+
+  constexpr iterator add_empty_row() {
+    this->set_size(this->num_rows() + 1, this->row_length());
   }
 
   constexpr row_t get_row(int row) const {
@@ -450,8 +474,8 @@ class sparse_grid {
   }
 
   constexpr const value_type& at(int row, int column) const {
-    auto it = m_data.find(point_class{column, row});
-    if (it == std::end(m_data)) {
+    auto it = base_t::m_data.find(point_class{column, row});
+    if (it == std::end(base_t::m_data)) {
       return empty_value;
     }
     return it->second;
@@ -459,25 +483,13 @@ class sparse_grid {
 
   constexpr void modify(value_type value, int row, int column) {
     auto coords = point_class{column, row};
-    auto it = m_data.find(coords);
-    if (it == std::end(m_data)) {
+    auto it = base_t::m_data.find(coords);
+    if (it == std::end(base_t::m_data)) {
       this->insert_single(coords, std::move(value));
     } else {
       it->second = std::move(value);
     }
   }
-
-  constexpr auto size() const { return m_data.size(); }
-
-  constexpr int row_length() const {
-    if constexpr (static_row_length > 0) {
-      return static_row_length;
-    } else {
-      return m_row_length;
-    }
-  }
-
-  constexpr int num_rows() const { return m_num_rows; }
 
   template <class print_single_ft = std::identity>
   void print_all(print_single_ft print_single_f = {},
@@ -492,19 +504,16 @@ class sparse_grid {
     out << std::endl;
   }
 
-  constexpr auto begin() const { return m_data.begin(); }
-  constexpr auto end() const { return m_data.begin(); }
-
  protected:
-  static constexpr auto empty_value = T{};
+  static constexpr auto empty_value = empty_value_param;
 
   constexpr std::pair<iterator, bool> insert_single(const key_type& key,
                                                     value_type value) {
     if (value == empty_value) {
-      m_data.erase(key);
-      return {std::end(m_data), false};
+      base_t::m_data.erase(key);
+      return {std::end(base_t::m_data), false};
     } else {
-      auto [it, success] = m_data.emplace(key, value);
+      auto [it, success] = base_t::m_data.emplace(key, value);
       return {it, success};
     }
   }
@@ -520,9 +529,23 @@ class sparse_grid {
       return print_single_f;
     }
   }
-
- private:
-  container_type m_data;
-  int m_row_length = 0;
-  int m_num_rows = 0;
 };
+
+template <class Grid>
+concept is_grid = std::ranges::range<Grid> &&
+                  requires(Grid g, typename Grid::value_type value,
+                           typename Grid::row_t row) {
+                    g.data();
+                    g.size();
+                    g.row_length();
+                    g.num_rows();
+                    g.add_row(row);
+                    g.get_row(0);
+                    g.at(0, 0);
+                    g.modify(value, 0, 0);
+                    g.print_all();
+                  };
+
+static_assert(is_grid<grid<int>>);
+static_assert(is_grid<array_grid<int, 7, 5>>);
+static_assert(is_grid<sparse_grid<int>>);

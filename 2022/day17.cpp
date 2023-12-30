@@ -72,7 +72,7 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
 
   auto chamber = std::invoke([]() {
     if constexpr (use_sparse_grid) {
-      return sparse_grid<char, grid_point, chamber_row_t>{};
+      return sparse_grid<char, char{}, grid_point, chamber_row_t>{};
     } else {
       return grid<char, chamber_row_t, std::vector<char>>{};
     }
