@@ -581,3 +581,13 @@ constexpr T pown(T x, unsigned p) {
 }
 
 constexpr bool is_number(char c) { return (c >= '0') && (c <= '9'); }
+
+template <class T>
+struct equal_to_value {
+  T value;
+
+  template <std::equality_comparable_with<T> U>
+  constexpr bool operator()(U&& other) const {
+    return value == other;
+  }
+};
