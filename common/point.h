@@ -6,7 +6,7 @@
 #include <type_traits>
 
 template <class T>
-struct point_t {
+struct point_type {
   using value_type = T;
   using iterator = value_type*;
   using const_iterator = const value_type*;
@@ -14,9 +14,11 @@ struct point_t {
   value_type x = 0;
   value_type y = 0;
 
-  constexpr friend bool operator==(const point_t&, const point_t&) = default;
+  constexpr friend bool operator==(const point_type&,
+                                   const point_type&) = default;
 
-  constexpr friend bool operator<(const point_t& lhs, const point_t& rhs) {
+  constexpr friend bool operator<(const point_type& lhs,
+                                  const point_type& rhs) {
     if (lhs.y == rhs.y) {
       return lhs.x < rhs.x;
     }
@@ -24,12 +26,13 @@ struct point_t {
   };
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
-  constexpr point_t& operator op_eq(const point_t & other) {                   \
+  constexpr point_type& operator op_eq(const point_type & other) {             \
     x op_eq other.x;                                                           \
     y op_eq other.y;                                                           \
     return *this;                                                              \
   }                                                                            \
-  constexpr friend point_t operator op(point_t lhs, const point_t& rhs) {      \
+  constexpr friend point_type operator op(point_type lhs,                      \
+                                          const point_type& rhs) {             \
     lhs op_eq rhs;                                                             \
     return lhs;                                                                \
   }
@@ -44,7 +47,7 @@ struct point_t {
   // by setting the element to zero
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
-  constexpr point_t& operator op_eq(const point_t & other) {                   \
+  constexpr point_type& operator op_eq(const point_type & other) {             \
     if (other.x == 0) {                                                        \
       x = 0;                                                                   \
     } else {                                                                   \
@@ -57,7 +60,8 @@ struct point_t {
     }                                                                          \
     return *this;                                                              \
   }                                                                            \
-  constexpr friend point_t operator op(point_t lhs, const point_t& rhs) {      \
+  constexpr friend point_type operator op(point_type lhs,                      \
+                                          const point_type& rhs) {             \
     lhs op_eq rhs;                                                             \
     return lhs;                                                                \
   }
@@ -67,14 +71,14 @@ struct point_t {
 
 #undef AOC_POINTWISE_OP
 
-  constexpr point_t operator-() const { return {-x, -y}; }
+  constexpr point_type operator-() const { return {-x, -y}; }
 
-  friend std::ostream& operator<<(std::ostream& out, const point_t& p) {
+  friend std::ostream& operator<<(std::ostream& out, const point_type& p) {
     out << "{" << p.x << "," << p.y << "}";
     return out;
   }
 
-  constexpr point_t abs() const {
+  constexpr point_type abs() const {
     if (std::is_constant_evaluated()) {
       return {(x < 0) ? -x : x, (y < 0) ? -y : y};
     } else {
@@ -82,15 +86,15 @@ struct point_t {
     }
   }
 
-  constexpr static long distance_squared(const point_t& lhs,
-                                         const point_t& rhs) {
+  constexpr static long distance_squared(const point_type& lhs,
+                                         const point_type& rhs) {
     auto diff = rhs - lhs;
     return (static_cast<long>(diff.x) * diff.x) +
            (static_cast<long>(diff.y) * diff.y);
   }
 
-  constexpr static value_type distance_manhattan(const point_t& lhs,
-                                                 const point_t& rhs) {
+  constexpr static value_type distance_manhattan(const point_type& lhs,
+                                                 const point_type& rhs) {
     auto diff = (rhs - lhs).abs();
     return diff.x + diff.y;
   }
@@ -107,7 +111,7 @@ struct point_t {
   }
 };
 
-using point = point_t<int>;
+using point = point_type<int>;
 
 template <class T>
 struct cube_t {

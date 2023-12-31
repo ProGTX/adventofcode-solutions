@@ -415,7 +415,7 @@ struct fractional_t {
   using value_type = T;
   using difference_type = std::ptrdiff_t;
 
-  using value_point = point_t<value_type>;
+  using value_point = point_type<value_type>;
 
   constexpr fractional_t(value_type integral = 0)
       : fractional_t{integral, 0, 1} {}

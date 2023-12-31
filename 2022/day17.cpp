@@ -18,7 +18,7 @@
 #include <vector>
 
 using rock_index_t = std::int64_t;
-using grid_point = point_t<rock_index_t>;
+using grid_point = point_type<rock_index_t>;
 using rock_t = std::array<grid_point, 5>;
 
 constexpr void move_rock(rock_t& rock, grid_point move) {
