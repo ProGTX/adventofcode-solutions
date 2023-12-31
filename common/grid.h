@@ -121,7 +121,8 @@ class grid {
   }
   constexpr point position(size_t linear_index) const {
     this->assert_linear_index(linear_index);
-    return {linear_index % this->num_rows(), linear_index / this->num_rows()};
+    return point(linear_index % this->num_rows(),
+                 linear_index / this->num_rows());
   }
 
   constexpr value_type& at(size_t row, size_t column) {
@@ -165,8 +166,7 @@ class grid {
   constexpr auto end() const { return m_data.end(); }
 
   constexpr bool in_bounds(size_t row, size_t column) const {
-    return (row >= 0) && (row < this->num_rows()) && (column >= 0) &&
-           (column < this->row_length());
+    return (row < this->num_rows()) && (column < this->row_length());
   }
 
  private:
@@ -316,7 +316,7 @@ constexpr void set_standard_neighbors(grid<T, row_storage_t, Container>& grid,
   constexpr bool allow_diagonal =
       decltype(std::declval<T>().neighbors)::allow_diagonal;
   if (subrange == point{0, 0}) {
-    subrange = point{grid.row_length(), grid.num_rows()} - offset;
+    subrange = point(grid.row_length(), grid.num_rows()) - offset;
   }
   const point postmax = subrange + offset;
   const auto set_diffs = [&]<size_t size>(point pos,

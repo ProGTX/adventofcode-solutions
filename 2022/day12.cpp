@@ -176,11 +176,11 @@ int solve_case(const std::string& filename) {
     std::ranges::transform(line, std::back_inserter(row), [&](char value) {
       switch (value) {
         case 'S':
-          heightmap.begin_pos = point{column, heightmap.num_rows()};
+          heightmap.begin_pos = point(column, heightmap.num_rows());
           ++column;
           return 0;
         case 'E':
-          heightmap.end_pos = point{column, heightmap.num_rows()};
+          heightmap.end_pos = point(column, heightmap.num_rows());
           ++column;
           return static_cast<int>('z' - 'a');
         default:

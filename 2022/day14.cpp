@@ -68,7 +68,7 @@ int solve_case(const std::string& filename) {
   auto cave_dimensions = min_max.grid_size();
   std::cout << "Creating cave map " << cave_dimensions.y << ","
             << cave_dimensions.x << std::endl;
-  cave_map_t cave_map{empty, cave_dimensions.y, cave_dimensions.x};
+  cave_map_t cave_map(empty, cave_dimensions.y, cave_dimensions.x);
 
   const auto adjust_coordinates = [&](const point& p) {
     return p - min_max.min_value;

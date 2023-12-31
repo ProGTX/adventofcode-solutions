@@ -40,7 +40,7 @@ struct elf_sim_value_t {
 void print_field(elves_t const& elves) {
   auto bounds = min_max_helper::get(elves);
   auto field =
-      grid<char>{empty_tile, bounds.grid_size().y, bounds.grid_size().x};
+      grid<char>(empty_tile, bounds.grid_size().y, bounds.grid_size().x);
   for (auto elf : elves) {
     elf -= bounds.min_value;
     field.modify(elf_tile, elf.y, elf.x);

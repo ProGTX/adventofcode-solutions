@@ -55,7 +55,8 @@ constexpr int get_num_steps(const field_t& field, const int start_index) {
         value != tile_t::start,
         "Something went wrong, cannot use start as neighbor at this point");
     if (ranges::contains(valid_values, value)) {
-      unvisited_indexes.emplace(field.linear_index(pos.y, pos.x), 1);
+      unvisited_indexes.emplace(
+          static_cast<int>(field.linear_index(pos.y, pos.x)), 1);
     }
   };
   auto pos_2d = field.position(start_index);
@@ -114,7 +115,7 @@ constexpr int get_num_steps(const field_t& field, const int start_index) {
         continue;
       }
       auto new_distance = current.distance + 1;
-      unvisited_indexes.emplace(index, new_distance);
+      unvisited_indexes.emplace(static_cast<int>(index), new_distance);
       if (new_distance > max_distance) {
         max_distance = new_distance;
       }
