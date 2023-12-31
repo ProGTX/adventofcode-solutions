@@ -44,12 +44,12 @@ class grid {
                       const typename Container::value_type& value) {
       Container(count, value);
     }
-  constexpr grid(value_type value, int num_rows, int num_columns)
+  constexpr grid(value_type value, size_t num_rows, size_t num_columns)
       : m_data(num_rows * num_columns, value),
         m_row_length{num_columns},
         m_num_rows(num_rows) {}
 
-  constexpr grid(Container&& c, int num_rows, int num_columns)
+  constexpr grid(Container&& c, size_t num_rows, size_t num_columns)
       : m_data(std::move(c)), m_row_length{num_columns}, m_num_rows(num_rows) {
     AOC_ASSERT(((num_rows * num_columns) <= m_data.size()),
                "Container is not large enough for requested number"
@@ -76,7 +76,7 @@ class grid {
     return std::begin(m_data) + old_size;
   }
 
-  constexpr row_t get_row(int row) const {
+  constexpr row_t get_row(size_t row) const {
     row_t return_row;
     if constexpr (is_specialization_of_v<row_t, std::vector>) {
       return_row.reserve(this->row_length());
@@ -98,8 +98,8 @@ class grid {
     }
   }
 
-  constexpr int row_length_dynamic() const { return m_row_length; }
-  constexpr int row_length() const {
+  constexpr size_t row_length_dynamic() const { return m_row_length; }
+  constexpr size_t row_length() const {
     if constexpr (static_row_length > 0) {
       return static_row_length;
     } else {
@@ -107,8 +107,8 @@ class grid {
     }
   }
 
-  constexpr int num_rows_dynamic() const { return m_num_rows; }
-  constexpr int num_rows() const {
+  constexpr size_t num_rows_dynamic() const { return m_num_rows; }
+  constexpr size_t num_rows() const {
     if constexpr ((static_data_size > 0) && (static_row_length > 0)) {
       return static_data_size / static_row_length;
     } else {
@@ -116,33 +116,33 @@ class grid {
     }
   }
 
-  constexpr int linear_index(int row, int column) const {
+  constexpr size_t linear_index(size_t row, size_t column) const {
     return row * this->row_length() + column;
   }
-  constexpr point position(int linear_index) const {
+  constexpr point position(size_t linear_index) const {
     this->assert_linear_index(linear_index);
     return {linear_index % this->num_rows(), linear_index / this->num_rows()};
   }
 
-  constexpr value_type& at(int row, int column) {
+  constexpr value_type& at(size_t row, size_t column) {
     return m_data[this->linear_index(row, column)];
   }
-  constexpr const value_type& at(int row, int column) const {
+  constexpr const value_type& at(size_t row, size_t column) const {
     return m_data[this->linear_index(row, column)];
   }
 
-  constexpr void modify(value_type value, int linear_index) {
+  constexpr void modify(value_type value, size_t linear_index) {
     m_data[linear_index] = std::move(value);
   }
-  constexpr void modify(value_type value, int row, int column) {
+  constexpr void modify(value_type value, size_t row, size_t column) {
     this->modify(std::move(value), this->linear_index(row, column));
   }
 
-  constexpr value_type& at_index(int linear_index) {
+  constexpr value_type& at_index(size_t linear_index) {
     this->assert_linear_index(linear_index);
     return m_data[linear_index];
   }
-  constexpr const value_type& at_index(int linear_index) const {
+  constexpr const value_type& at_index(size_t linear_index) const {
     this->assert_linear_index(linear_index);
     return m_data[linear_index];
   }
@@ -150,9 +150,9 @@ class grid {
   template <class print_single_ft = std::identity>
   std::ostream& print_all(print_single_ft print_single_f = {},
                           std::ostream& out = std::cout) const {
-    for (int row = 0; row < this->num_rows(); ++row) {
+    for (size_t row = 0; row < this->num_rows(); ++row) {
       out << "  ";
-      for (int column = 0; column < this->row_length(); ++column) {
+      for (size_t column = 0; column < this->row_length(); ++column) {
         this->get_print_single_f(print_single_f)(out, row, column);
       }
       out << std::endl;
@@ -164,7 +164,7 @@ class grid {
   constexpr auto begin() const { return m_data.begin(); }
   constexpr auto end() const { return m_data.end(); }
 
-  constexpr bool in_bounds(int row, int column) const {
+  constexpr bool in_bounds(size_t row, size_t column) const {
     return (row >= 0) && (row < this->num_rows()) && (column >= 0) &&
            (column < this->row_length());
   }
@@ -173,7 +173,7 @@ class grid {
   template <class print_single_ft>
   constexpr auto get_print_single_f(print_single_ft print_single_f) const {
     if constexpr (std::is_same_v<print_single_ft, std::identity>) {
-      return [this](std::ostream& out, int row, int column) {
+      return [this](std::ostream& out, size_t row, size_t column) {
         out << this->at(row, column);
       };
     } else {
@@ -182,13 +182,14 @@ class grid {
   }
 
  protected:
-  constexpr void assert_linear_index([[maybe_unused]] int linear_index) const {
+  constexpr void assert_linear_index(
+      [[maybe_unused]] size_t linear_index) const {
     AOC_ASSERT(linear_index > 0, "Index must be non-negative");
     AOC_ASSERT(linear_index < this->size(), "Index cannot be out of bounds");
     AOC_ASSERT(this->num_rows() > 0, "Cannot get position without any rows");
   };
 
-  constexpr void set_size(int num_rows_, int row_length_) {
+  constexpr void set_size(size_t num_rows_, size_t row_length_) {
     m_num_rows = num_rows_;
     m_row_length = row_length_;
   }
@@ -196,8 +197,8 @@ class grid {
   container_type m_data;
 
  private:
-  int m_row_length = 0;
-  int m_num_rows = 0;
+  size_t m_row_length = 0;
+  size_t m_num_rows = 0;
 };
 
 template <class T, size_t row_length, size_t num_rows = row_length>
@@ -442,47 +443,47 @@ class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
 
   constexpr sparse_grid() = default;
 
-  constexpr sparse_grid(int num_rows, int num_columns) {
+  constexpr sparse_grid(size_t num_rows, size_t num_columns) {
     this->set_size(num_rows, num_columns);
   }
 
   constexpr iterator add_row(const row_t& row) {
     this->set_size(this->num_rows(), row.size());
-    for (int column = 0; const auto& elem : row) {
-      this->insert_single(point_class{column, this->num_rows()}, elem);
+    for (size_t column = 0; const auto& elem : row) {
+      this->insert_single(point_class(column, this->num_rows()), elem);
       ++column;
     }
     this->set_size(this->num_rows() + 1, this->row_length());
-    return base_t::m_data.find(point_class{0, this->num_rows() - 1});
+    return base_t::m_data.find(point_class(0, this->num_rows() - 1));
   }
 
   constexpr iterator add_empty_row() {
     this->set_size(this->num_rows() + 1, this->row_length());
   }
 
-  constexpr row_t get_row(int row) const {
+  constexpr row_t get_row(size_t row) const {
     row_t return_row;
     if constexpr (is_specialization_of_v<row_t, std::vector>) {
       return_row.reserve(this->row_length());
     }
     auto it = inserter_it(return_row);
-    for (int column = 0; column < this->row_length(); ++column) {
+    for (size_t column = 0; column < this->row_length(); ++column) {
       *it = this->at(row, column);
       ++it;
     }
     return return_row;
   }
 
-  constexpr const value_type& at(int row, int column) const {
-    auto it = base_t::m_data.find(point_class{column, row});
+  constexpr const value_type& at(size_t row, size_t column) const {
+    auto it = base_t::m_data.find(point_class(column, row));
     if (it == std::end(base_t::m_data)) {
       return empty_value;
     }
     return it->second;
   }
 
-  constexpr void modify(value_type value, int row, int column) {
-    auto coords = point_class{column, row};
+  constexpr void modify(value_type value, size_t row, size_t column) {
+    auto coords = point_class(column, row);
     auto it = base_t::m_data.find(coords);
     if (it == std::end(base_t::m_data)) {
       this->insert_single(coords, std::move(value));
@@ -494,9 +495,9 @@ class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
   template <class print_single_ft = std::identity>
   void print_all(print_single_ft print_single_f = {},
                  std::ostream& out = std::cout) const {
-    for (int row = 0; row < this->num_rows(); ++row) {
+    for (size_t row = 0; row < this->num_rows(); ++row) {
       out << "  ";
-      for (int column = 0; column < this->row_length(); ++column) {
+      for (size_t column = 0; column < this->row_length(); ++column) {
         this->get_print_single_f(print_single_f)(out, row, column);
       }
       out << std::endl;
@@ -522,7 +523,7 @@ class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
   template <class print_single_ft>
   constexpr auto get_print_single_f(print_single_ft print_single_f) const {
     if constexpr (std::is_same_v<print_single_ft, std::identity>) {
-      return [this](std::ostream& out, int row, int column) {
+      return [this](std::ostream& out, size_t row, size_t column) {
         out << this->at(row, column);
       };
     } else {
