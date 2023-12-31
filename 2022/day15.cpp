@@ -61,8 +61,7 @@ std::vector<point> find_positions(const std::vector<sensor_t>& sensors,
     point current{column, inspect_row};
     bool within_range =
         std::ranges::any_of(sensors, [&](const sensor_t& sensor) {
-          return (point::distance_manhattan(sensor.pos, current) <=
-                  sensor.range);
+          return (distance_manhattan(sensor.pos, current) <= sensor.range);
         });
     if (within_range == find_distress) {
       continue;
@@ -160,7 +159,7 @@ std::int64_t solve_case(const std::string& filename) {
           split<std::array<std::string_view, 2>>(sensor_info, ',');
       sensor = point{convert_eq_str(x_eq), convert_eq_str(y_eq)};
       min_max.update(sensor);
-      auto range = point::distance_manhattan(sensor, beacon);
+      auto range = distance_manhattan(sensor, beacon);
       sensors.emplace_back(sensor, range);
     }
   });

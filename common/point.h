@@ -2,6 +2,7 @@
 
 #include "utility.h"
 
+#include <cstdint>
 #include <cstdlib>
 #include <functional>
 #include <ostream>
@@ -82,14 +83,17 @@ struct point_type {
 
   constexpr point_type abs() const { return {abs_value(x), abs_value(y)}; }
 
-  constexpr static long distance_squared(const point_type& lhs,
-                                         const point_type& rhs) {
+  constexpr friend std::uint64_t distance_squared(const point_type& lhs,
+                                                  const point_type& rhs) {
     auto diff = rhs - lhs;
-    return (static_cast<long>(diff.x) * diff.x) +
-           (static_cast<long>(diff.y) * diff.y);
+    // TODO: Handle sizes better
+    return static_cast<std::uint64_t>(static_cast<std::int64_t>(diff.x) *
+                                      diff.x) +
+           static_cast<std::uint64_t>(static_cast<std::int64_t>(diff.y) *
+                                      diff.y);
   }
 
-  constexpr static value_type distance_manhattan(const point_type& lhs,
+  constexpr friend value_type distance_manhattan(const point_type& lhs,
                                                  const point_type& rhs) {
     auto diff = (rhs - lhs).abs();
     return diff.x + diff.y;

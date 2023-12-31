@@ -54,7 +54,7 @@ int_t sum_distances(const space_t& space) {
   for (auto it1 = std::begin(space); it1 != std::end(space); ++it1) {
     auto it2 = it1;
     for (++it2; it2 != std::end(space); ++it2) {
-      sum += point_t::distance_manhattan(it1->first, it2->first);
+      sum += distance_manhattan(it1->first, it2->first);
     }
   }
   return sum;
