@@ -80,13 +80,7 @@ struct point_type {
     return out;
   }
 
-  constexpr point_type abs() const {
-    if (std::is_constant_evaluated()) {
-      return {(x < 0) ? -x : x, (y < 0) ? -y : y};
-    } else {
-      return {std::abs(x), std::abs(y)};
-    }
-  }
+  constexpr point_type abs() const { return {abs_value(x), abs_value(y)}; }
 
   constexpr static long distance_squared(const point_type& lhs,
                                          const point_type& rhs) {

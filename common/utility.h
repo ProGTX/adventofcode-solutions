@@ -528,3 +528,11 @@ struct equal_to_value {
     return value == other;
   }
 };
+
+constexpr auto abs_value(std::integral auto value) {
+  if (std::is_constant_evaluated()) {
+    return (value < 0) ? -value : value;
+  } else {
+    return std::abs(value);
+  }
+}
