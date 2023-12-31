@@ -1,7 +1,6 @@
 #pragma once
 
 #include "assert.h"
-#include "point.h"
 
 #include <cmath>
 #include <exception>
@@ -286,66 +285,6 @@ struct map_value_iterator {
 template <class map_iterator>
 map_value_iterator(map_iterator) -> map_value_iterator<map_iterator>;
 
-struct min_max_helper {
-  point min_value{2'000'000'000, 2'000'000'000};
-  point max_value{0, 0};
-
-  constexpr min_max_helper& update(const point& p) {
-    if (p.x < min_value.x) {
-      min_value.x = p.x;
-    }
-    if (p.y < min_value.y) {
-      min_value.y = p.y;
-    }
-    if (p.x > max_value.x) {
-      max_value.x = p.x;
-    }
-    if (p.y > max_value.y) {
-      max_value.y = p.y;
-    }
-    return *this;
-  };
-
-#if 0
-  constexpr min_max_helper& update(const min_max_helper& other) {
-    if (other.min_value.x < min_value.x) {
-      min_value.x = other.min_value.x;
-    }
-    if (other.min_value.y < min_value.y) {
-      min_value.y = other.min_value.y;
-    }
-    if (other.max_value.x > max_value.x) {
-      max_value.x = other.max_value.x;
-    }
-    if (other.max_value.y > max_value.y) {
-      max_value.y = other.max_value.y;
-    }
-    return *this;
-  }
-#endif
-
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const min_max_helper& value) {
-    out << "min{" << value.min_value << ',' << value.max_value << '}';
-    return out;
-  }
-
-  constexpr point grid_size() const {
-    return max_value - min_value + point{1, 1};
-  }
-
-  template <std::ranges::range R>
-    requires std::convertible_to<decltype(*std::begin(std::declval<R>())),
-                                 point>
-  static constexpr min_max_helper get(R const& range) {
-    min_max_helper helper;
-    for (auto const& elem : range) {
-      helper.update(static_cast<point>(elem));
-    }
-    return helper;
-  }
-};
-
 template <class T = int>
 constexpr std::function<T(T, T)> get_binary_op(char op) {
   switch (op) {
@@ -415,8 +354,6 @@ struct fractional_t {
   using value_type = T;
   using difference_type = std::ptrdiff_t;
 
-  using value_point = point_type<value_type>;
-
   constexpr fractional_t(value_type integral = 0)
       : fractional_t{integral, 0, 1} {}
 
@@ -437,9 +374,9 @@ struct fractional_t {
     m_integral += rhs.m_integral;
     auto lcd = std::lcm(m_denominator, rhs.m_denominator);
     auto multiplied_numerators =
-        value_point{m_numerator * (lcd / m_denominator),
-                    rhs.m_numerator * (lcd / rhs.m_denominator)};
-    m_numerator = multiplied_numerators.x + multiplied_numerators.y;
+        std::pair{m_numerator * (lcd / m_denominator),
+                  rhs.m_numerator * (lcd / rhs.m_denominator)};
+    m_numerator = multiplied_numerators.first + multiplied_numerators.second;
     m_denominator = lcd;
     this->simplify();
     return *this;
