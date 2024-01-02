@@ -130,13 +130,38 @@ static_assert(1 == num_arrangements("???.###", std::array{1, 1, 3}));
 static_assert(4 == num_arrangements(".??..??...?##.", std::array{1, 1, 3}));
 static_assert(10 == num_arrangements("?###????????", std::array{3, 2, 1}));
 
-template <int>
+template <int factor>
+constexpr std::pair<std::string, std::vector<int>> unfold(
+    std::string_view springs, std::span<const int> spring_groups) {
+  std::string new_springs{springs};
+  std::vector<int> new_groups;
+  new_springs.reserve(springs.size() * factor + (factor - 1));
+  new_groups.reserve(spring_groups.size() * factor);
+  std::ranges::copy(spring_groups, std::back_inserter(new_groups));
+  for (int i = 1; i < factor; ++i) {
+    new_springs.append("?");
+    new_springs.append(springs);
+    std::ranges::copy(spring_groups, std::back_inserter(new_groups));
+  }
+  return {new_springs, new_groups};
+}
+
+static_assert(".#?.#?.#?.#?.#" == unfold<5>(".#", std::array{1}).first);
+static_assert(std::ranges::equal(std::array{1, 1, 1, 1, 1},
+                                 unfold<5>(".#", std::array{1}).second));
+static_assert("???.###????.###????.###????.###????.###" ==
+              unfold<5>("???.###", std::array{1, 1, 3}).first);
+static_assert(
+    std::ranges::equal(std::array{1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3},
+                       unfold<5>("???.###", std::array{1, 1, 3}).second));
+
+template <int factor>
 int solve_case(const std::string& filename) {
   int sum = 0;
   auto read_values = [&](std::string_view line) {
-    auto [springs, groups_str] =
-        split<std::array<std::string_view, 2>>(line, ' ');
+    auto [springs, groups_str] = split<std::array<std::string, 2>>(line, ' ');
     auto spring_groups = split<std::vector<int>>(groups_str, ',');
+    std::tie(springs, spring_groups) = unfold<factor>(springs, spring_groups);
     sum += num_arrangements(springs, spring_groups);
   };
   readfile_op(filename, read_values);
@@ -147,10 +172,10 @@ int solve_case(const std::string& filename) {
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  AOC_EXPECT_RESULT(21, (solve_case<2>("day12.example")));
-  AOC_EXPECT_RESULT(7379, (solve_case<2>("day12.input")));
-  // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(1030, (solve_case<10>("day12.example")));
-  // AOC_EXPECT_RESULT(447073334102, (solve_case<1000000>("day12.input")));
+  AOC_EXPECT_RESULT(21, (solve_case<1>("day12.example")));
+  AOC_EXPECT_RESULT(7379, (solve_case<1>("day12.input")));
+  std::cout << "Part 2" << std::endl;
+  AOC_EXPECT_RESULT(525152, (solve_case<5>("day12.example")));
+  // AOC_EXPECT_RESULT(525152, (solve_case<5>("day12.input")));
   AOC_RETURN_CHECK_RESULT();
 }
