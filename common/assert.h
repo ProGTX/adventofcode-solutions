@@ -19,10 +19,11 @@
 #endif // __assume  || _MSC_VER
 #else
 #include <cassert>
-#define AOC_ASSERT_HELPER(condition, message)                                  \
-  AOC_NOT_CONSTEXPR(assert((condition) && (message))) else if (!(condition)) { \
-    throw 0;                                                                   \
-  }
+#define AOC_ASSERT_HELPER(condition, message) assert((condition) && (message))
 #endif // NDEBUG
 
-#define AOC_ASSERT(condition, message) AOC_ASSERT_HELPER((condition), (message))
+#define AOC_ASSERT(condition, message)                                         \
+  AOC_NOT_CONSTEXPR(AOC_ASSERT_HELPER((condition), (message)))                 \
+  else if (!(condition)) {                                                     \
+    throw 0;                                                                   \
+  }
