@@ -76,7 +76,7 @@ template <class... Types>
 printable_tuple(Types...) -> printable_tuple<Types...>;
 
 template <class T>
-std::ostream& operator<<(std::ostream& out, const fractional_t<T>& value) {
+std::ostream& operator<<(std::ostream& out, const fractional_type<T>& value) {
   out << static_cast<std::conditional_t<(sizeof(T) > 4), double, float>>(value);
   return out;
 }

@@ -349,28 +349,28 @@ struct custom_divides {
 };
 
 template <std::integral T>
-struct fractional_t {
+struct fractional_type {
  public:
   using value_type = T;
   using difference_type = std::ptrdiff_t;
 
-  constexpr fractional_t(value_type integral = 0)
-      : fractional_t{integral, 0, 1} {}
+  constexpr fractional_type(value_type integral = 0)
+      : fractional_type{integral, 0, 1} {}
 
-  constexpr fractional_t(value_type numerator, value_type denominator)
-      : fractional_t{numerator / denominator, numerator % denominator,
-                     denominator} {}
+  constexpr fractional_type(value_type numerator, value_type denominator)
+      : fractional_type{numerator / denominator, numerator % denominator,
+                        denominator} {}
 
-  constexpr friend bool operator==(const fractional_t&,
-                                   const fractional_t&) = default;
+  constexpr friend bool operator==(const fractional_type&,
+                                   const fractional_type&) = default;
 
-  constexpr fractional_t operator+() const { return *this; }
+  constexpr fractional_type operator+() const { return *this; }
 
-  constexpr fractional_t operator-() const {
+  constexpr fractional_type operator-() const {
     return {-m_integral, -m_numerator, m_denominator};
   }
 
-  constexpr fractional_t& operator+=(const fractional_t& rhs) {
+  constexpr fractional_type& operator+=(const fractional_type& rhs) {
     m_integral += rhs.m_integral;
     auto lcd = std::lcm(m_denominator, rhs.m_denominator);
     auto multiplied_numerators =
@@ -381,43 +381,44 @@ struct fractional_t {
     this->simplify();
     return *this;
   }
-  constexpr friend fractional_t operator+(fractional_t lhs,
-                                          const fractional_t& rhs) {
+  constexpr friend fractional_type operator+(fractional_type lhs,
+                                             const fractional_type& rhs) {
     lhs += rhs;
     return lhs;
   }
 
-  constexpr fractional_t& operator-=(const fractional_t& rhs) {
+  constexpr fractional_type& operator-=(const fractional_type& rhs) {
     return this->operator+=(-rhs);
   }
-  constexpr friend fractional_t operator-(fractional_t lhs,
-                                          const fractional_t& rhs) {
+  constexpr friend fractional_type operator-(fractional_type lhs,
+                                             const fractional_type& rhs) {
     lhs -= rhs;
     return lhs;
   }
 
-  constexpr fractional_t& operator*=(const fractional_t& rhs) {
-    fractional_t plus_lhs = fractional_t{rhs}.multiply_integral(m_integral);
-    fractional_t plus_rhs =
-        (fractional_t{rhs.m_integral, m_denominator} +
-         fractional_t{rhs.m_numerator, m_denominator * rhs.m_denominator})
+  constexpr fractional_type& operator*=(const fractional_type& rhs) {
+    fractional_type plus_lhs =
+        fractional_type{rhs}.multiply_integral(m_integral);
+    fractional_type plus_rhs =
+        (fractional_type{rhs.m_integral, m_denominator} +
+         fractional_type{rhs.m_numerator, m_denominator * rhs.m_denominator})
             .multiply_integral(m_numerator);
     *this = plus_lhs + plus_rhs;
     return *this;
   }
-  constexpr friend fractional_t operator*(fractional_t lhs,
-                                          const fractional_t& rhs) {
+  constexpr friend fractional_type operator*(fractional_type lhs,
+                                             const fractional_type& rhs) {
     lhs *= rhs;
     return lhs;
   }
 
-  constexpr fractional_t& operator/=(const fractional_t& rhs) {
+  constexpr fractional_type& operator/=(const fractional_type& rhs) {
     return this->operator*=(
-        fractional_t{rhs.m_denominator,
-                     rhs.m_denominator * rhs.m_integral + rhs.m_numerator});
+        fractional_type{rhs.m_denominator,
+                        rhs.m_denominator * rhs.m_integral + rhs.m_numerator});
   }
-  constexpr friend fractional_t operator/(fractional_t lhs,
-                                          const fractional_t& rhs) {
+  constexpr friend fractional_type operator/(fractional_type lhs,
+                                             const fractional_type& rhs) {
     lhs /= rhs;
     return lhs;
   }
@@ -435,15 +436,15 @@ struct fractional_t {
   }
 
  protected:
-  constexpr fractional_t& multiply_integral(value_type integral) {
+  constexpr fractional_type& multiply_integral(value_type integral) {
     m_integral *= integral;
     m_numerator *= integral;
     this->simplify();
     return *this;
   }
 
-  constexpr fractional_t(value_type integral, value_type numerator,
-                         value_type denominator)
+  constexpr fractional_type(value_type integral, value_type numerator,
+                            value_type denominator)
       : m_integral{integral},
         m_numerator{numerator},
         m_denominator{denominator} {
