@@ -357,9 +357,9 @@ struct fractional_type {
   constexpr fractional_type(value_type integral = 0)
       : fractional_type{integral, 0, 1} {}
 
-  constexpr fractional_type(value_type numerator, value_type denominator)
-      : fractional_type{numerator / denominator, numerator % denominator,
-                        denominator} {}
+  constexpr fractional_type(value_type numerator_, value_type denominator_)
+      : fractional_type{numerator_ / denominator_, numerator_ % denominator_,
+                        denominator_} {}
 
   constexpr friend bool operator==(const fractional_type&,
                                    const fractional_type&) = default;
@@ -397,6 +397,9 @@ struct fractional_type {
   }
 
   constexpr fractional_type& operator*=(const fractional_type& rhs) {
+    // (x + y/z) * (a + b/c)
+    //   = (x*a + x*b/c + x*y/z + y*b/(z*c))
+    //   = x*(a + b/c) + y*(x/z + b/(z*c))
     fractional_type plus_lhs =
         fractional_type{rhs}.multiply_integral(m_integral);
     fractional_type plus_rhs =
@@ -435,6 +438,12 @@ struct fractional_type {
     return {m_integral, m_numerator, m_denominator};
   }
 
+  constexpr value_type numerator() const {
+    return m_integral * m_denominator + m_numerator;
+  }
+
+  constexpr value_type denominator() const { return m_denominator; }
+
  protected:
   constexpr fractional_type& multiply_integral(value_type integral) {
     m_integral *= integral;
@@ -443,12 +452,13 @@ struct fractional_type {
     return *this;
   }
 
-  constexpr fractional_type(value_type integral, value_type numerator,
-                            value_type denominator)
+  constexpr fractional_type(value_type integral, value_type numerator_,
+                            value_type denominator_)
       : m_integral{integral},
-        m_numerator{numerator},
-        m_denominator{denominator} {
+        m_numerator{numerator_},
+        m_denominator{denominator_} {
     AOC_ASSERT(m_denominator > 0, "Denominator must be positive");
+    this->simplify();
   }
 
   constexpr void simplify() {
