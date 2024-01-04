@@ -9,6 +9,7 @@
 
 #include "assert.h"
 #include "common.h"
+#include "concepts.h"
 #include "utility.h"
 
 template <class R>
@@ -21,7 +22,10 @@ struct print_range {
 
   constexpr friend std::ostream& operator<<(std::ostream& out,
                                             const print_range& printer) {
-    if constexpr (std::ranges::range<R>) {
+    if constexpr (contains_type<std::decay_t<R>, std::string,
+                                std::string_view>) {
+      out << printer.range;
+    } else if constexpr (std::ranges::range<R>) {
       out << '{';
       for (const auto& item : printer.range) {
         out << print_range<decltype(item)>{item} << printer.separator;
