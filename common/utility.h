@@ -3,6 +3,7 @@
 #include "assert.h"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <exception>
 #include <functional>
@@ -608,3 +609,10 @@ static_assert(std::ranges::equal(transpose(std::vector{
                                      std::array{3, 6, 9, 12},
                                  }));
 #endif
+
+constexpr unsigned flip_bit(unsigned number, unsigned index) {
+  const unsigned mask = 1 << index;
+  return number ^ mask;
+}
+static_assert(3 == flip_bit(2, 0));
+static_assert(2 == flip_bit(3, 0));
