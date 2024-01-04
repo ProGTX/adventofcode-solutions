@@ -540,10 +540,15 @@ struct equal_to_value {
   }
 };
 
-constexpr auto abs_value(std::integral auto value) {
+template <class T>
+constexpr T abs_value(T value) {
   if (std::is_constant_evaluated()) {
     return (value < 0) ? -value : value;
-  } else {
+  } else if constexpr (std::is_integral_v<T>) {
     return std::abs(value);
+  } else {
+    return (value < 0) ? -value : value;
+  }
+}
   }
 }
