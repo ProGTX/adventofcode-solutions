@@ -185,8 +185,34 @@ constexpr output_t split(R&& r, Pattern&& delimiter, Proj proj = {}) {
   }
   return out;
 }
-
 static_assert(std::ranges::equal(
     std::array{"adsf", "qwret", "nvfkbdsj", "orthdfjgh", "dfjrleih"},
     split<std::array<std::string_view, 5>, true>(
         "adsf-+qwret-+nvfkbdsj-+orthdfjgh-+-+dfjrleih"sv, "-+"sv)));
+
+template <char one, class return_t = unsigned, std::ranges::range R>
+constexpr return_t binary_to_number(R&& str) {
+  return_t num = 0;
+  return_t multiplier = 1;
+  for (char v : str) {
+    num += multiplier * static_cast<int>(v == one);
+    multiplier *= 2;
+  }
+  return num;
+}
+
+template <char one, class return_t = unsigned>
+constexpr return_t binary_to_number(const char* str) {
+  return binary_to_number<one, return_t>(std::string_view{str});
+}
+template <char one, class return_t = unsigned, size_t size>
+constexpr return_t binary_to_number(const char str[size]) {
+  return binary_to_number<one, return_t>(std::string_view{str, size});
+}
+
+static_assert(0 == binary_to_number<'1'>("0"));
+static_assert(1 == binary_to_number<'1'>("1"));
+static_assert(2 == binary_to_number<'1'>("01"));
+static_assert(13 == binary_to_number<'1'>("1011"));
+static_assert(205 == binary_to_number<'#'>("#.##..##."));
+static_assert(6757 == binary_to_number<'#'>("#.#..##..#.##"));
