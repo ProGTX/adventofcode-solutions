@@ -2,6 +2,7 @@
 
 #include "assert.h"
 
+#include <algorithm>
 #include <cmath>
 #include <exception>
 #include <functional>
@@ -550,5 +551,60 @@ constexpr T abs_value(T value) {
     return (value < 0) ? -value : value;
   }
 }
+
+template <std::ranges::common_range Container>
+constexpr Container transpose(const Container& container) {
+  Container transposed_container;
+  const auto num_rows = std::size(container);
+  AOC_ASSERT(num_rows > 0, "Cannot transpose empty container");
+  const auto num_columns = std::size(container[0]);
+  AOC_ASSERT(num_columns > 0, "Cannot transpose empty container");
+  transposed_container.resize(num_columns);
+  for (unsigned row = 0; row < num_rows; ++row) {
+    for (unsigned column = 0; column < num_columns; ++column) {
+      transposed_container[column].resize(num_rows);
+      transposed_container[column][row] = container[row][column];
+    }
   }
+  return transposed_container;
 }
+#if defined(AOC_COMPILER_MSVC)
+static_assert(std::ranges::equal(transpose(std::vector{
+                                     std::vector{1, 2, 3},
+                                     std::vector{4, 5, 6},
+                                     std::vector{7, 8, 9},
+                                     std::vector{10, 11, 12},
+                                 }),
+                                 std::vector{
+                                     std::vector{1, 4, 7, 10},
+                                     std::vector{2, 5, 8, 11},
+                                     std::vector{3, 6, 9, 12},
+                                 }));
+#endif
+#if !defined(AOC_COMPILER_GCC)
+static_assert(std::ranges::equal(transpose(std::vector<std::string>{
+                                     "123",
+                                     "456",
+                                     "789",
+                                     "ABC",
+                                 }),
+                                 std::vector<std::string>{
+                                     "147A",
+                                     "258B",
+                                     "369C",
+                                 }));
+#endif
+#if 0
+// TODO
+static_assert(std::ranges::equal(transpose(std::vector{
+                                     std::array{1, 2, 3},
+                                     std::array{4, 5, 6},
+                                     std::array{7, 8, 9},
+                                     std::array{10, 11, 12},
+                                 }),
+                                 std::vector{
+                                     std::array{1, 4, 7, 10},
+                                     std::array{2, 5, 8, 11},
+                                     std::array{3, 6, 9, 12},
+                                 }));
+#endif
