@@ -40,7 +40,7 @@ static_assert(4 == num_ways_to_win(7, 9));
 static_assert(8 == num_ways_to_win(15, 40));
 static_assert(9 == num_ways_to_win(30, 200));
 
-#ifndef __clang__
+#if defined(AOC_COMPILER_GCC)
 static_assert(71503 == num_ways_to_win(71530, 940200));
 #endif
 

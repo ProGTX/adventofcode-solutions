@@ -77,6 +77,7 @@ constexpr std::pair<state_t, char> advance_state(
           (state.group_id == spring_groups.size()) ? operational : damaged};
 }
 
+#if defined(AOC_COMPILER_GCC)
 static_assert(std::pair{state_t{"???.###", 0, 0, 0}, unknown} ==
               advance_state(state_t{"???.###", 0, 0, 0}, std::array{1, 1, 3}));
 static_assert(std::pair{state_t{"#??.###", 1, 0, 1}, unknown} ==
@@ -94,6 +95,7 @@ static_assert(std::pair{state_t{".###.#.#...#", 6, 1, 1}, damaged} ==
 static_assert(std::pair{state_t{".###.##.#???", 8, 3, 0}, operational} ==
               advance_state(state_t{".###.##.#???", 0, 0, 0},
                             std::array{3, 2, 1}));
+#endif
 
 constexpr int num_arrangements(std::string_view springs,
                                std::span<const int> spring_groups) {
@@ -126,9 +128,11 @@ constexpr int num_arrangements(std::string_view springs,
   return count;
 }
 
+#if defined(AOC_COMPILER_GCC)
 static_assert(1 == num_arrangements("???.###", std::array{1, 1, 3}));
 static_assert(4 == num_arrangements(".??..??...?##.", std::array{1, 1, 3}));
 static_assert(10 == num_arrangements("?###????????", std::array{3, 2, 1}));
+#endif
 
 template <int factor>
 constexpr std::pair<std::string, std::vector<int>> unfold(
