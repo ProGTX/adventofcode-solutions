@@ -71,5 +71,8 @@ concept binary_op_r = std::is_invocable_r_v<Ret, Op, Arg1, Arg2>;
 template <typename T, typename... U>
 concept contains_type = (std::same_as<T, U> || ...);
 
+template <typename T, typename... U>
+concept contains_uncvref = (std::same_as<std::remove_cvref_t<T>, U> || ...);
+
 static_assert(contains_type<std::string_view, std::string_view>);
 static_assert(contains_type<std::string_view, int, std::string_view>);
