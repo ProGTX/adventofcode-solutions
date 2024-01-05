@@ -88,7 +88,7 @@ std::ostream& operator<<(std::ostream& out, const ratio<T>& value) {
 }
 } // namespace aoc
 
-constexpr void println(std::string_view str) {
+constexpr void println(std::string_view str = "") {
   AOC_NOT_CONSTEXPR(std::cout << str << std::endl);
 }
 
