@@ -1,5 +1,7 @@
 #pragma once
 
+#include "math.h"
+
 #include <compare>
 #include <concepts>
 #include <numeric>
@@ -23,9 +25,11 @@ class ratio {
       : m_numerator(numerator_), m_denominator(1) {}
 
   constexpr ratio(value_type numerator_, value_type denominator_)
-      : m_numerator(numerator_), m_denominator(denominator_) {
-    if (m_denominator <= 0) {
-      throw std::runtime_error("Ratio denominator must be positive");
+      : m_numerator(aoc::sign(numerator_) * aoc::sign(denominator_) *
+                    aoc::abs(numerator_)),
+        m_denominator(aoc::abs(denominator_)) {
+    if (m_denominator == 0) {
+      throw std::runtime_error("Ratio denominator cannot be zero");
     }
     simplify();
   }
