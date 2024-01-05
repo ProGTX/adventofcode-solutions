@@ -10,6 +10,7 @@
 #include "assert.h"
 #include "common.h"
 #include "concepts.h"
+#include "ratio.h"
 #include "utility.h"
 
 template <class R>
@@ -79,11 +80,13 @@ struct printable_tuple : public std::tuple<Types...> {
 template <class... Types>
 printable_tuple(Types...) -> printable_tuple<Types...>;
 
+namespace aoc {
 template <class T>
-std::ostream& operator<<(std::ostream& out, const fractional_type<T>& value) {
-  out << static_cast<std::conditional_t<(sizeof(T) > 4), double, float>>(value);
+std::ostream& operator<<(std::ostream& out, const ratio<T>& value) {
+  out << '(' << value.numerator() << '/' << value.denominator() << ')';
   return out;
 }
+} // namespace aoc
 
 constexpr void println(std::string_view str) {
   AOC_NOT_CONSTEXPR(std::cout << str << std::endl);

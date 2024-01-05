@@ -1,7 +1,7 @@
 // https://adventofcode.com/2022/day/21
 
 #include "../common/common.h"
-#include "../common/print.h"
+#include "../common/ratio.h"
 
 #include <algorithm>
 #include <array>
@@ -17,7 +17,7 @@
 #include <vector>
 
 using int_value_t = std::int64_t;
-using value_t = fractional_type<int_value_t>;
+using value_t = aoc::ratio<int_value_t>;
 using operation_t = std::function<value_t(value_t, value_t)>;
 
 template <class index_t, class Operation = operation_t>
