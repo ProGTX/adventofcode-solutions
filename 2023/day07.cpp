@@ -20,7 +20,7 @@ inline constexpr int ace_card_number = 14;
 
 template <bool joker>
 constexpr int card_to_number(char c) {
-  if (is_number(c)) {
+  if (aoc::is_number(c)) {
     int number = static_cast<int>(c - '0');
     AOC_ASSERT((number > joker_card_number) && (number < 10),
                "Invalid card number");

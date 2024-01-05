@@ -1,5 +1,6 @@
 #pragma once
 
+#include "math.h"
 #include "utility.h"
 
 #include <cstdint>
@@ -81,7 +82,7 @@ struct point_type {
     return out;
   }
 
-  constexpr point_type abs() const { return {abs_value(x), abs_value(y)}; }
+  constexpr point_type abs() const { return {aoc::abs(x), aoc::abs(y)}; }
 
   constexpr friend std::uint64_t distance_squared(const point_type& lhs,
                                                   const point_type& rhs) {

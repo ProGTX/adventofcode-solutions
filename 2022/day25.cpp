@@ -103,8 +103,8 @@ constexpr std::string sum_input_as_snafus(input_t const& input) {
 
 template <int base>
 constexpr std::string to_snafu(const int_t number) {
-  int size = num_digits(number);
-  int_t multiplier = pown<int_t>(base, size - 1);
+  int size = aoc::num_digits(number);
+  int_t multiplier = aoc::pown<int_t>(base, size - 1);
   do {
     ++size;
     multiplier *= base;

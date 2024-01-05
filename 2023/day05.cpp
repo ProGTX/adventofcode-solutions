@@ -197,7 +197,7 @@ int_t solve_case(const std::string& filename) {
     if (line.empty()) {
       return;
     }
-    if (!is_number(line[0])) {
+    if (!aoc::is_number(line[0])) {
       std::ranges::sort(mapping, std::less<>{}, &single_mapping_t::src);
       current_seeds = apply_mapping(current_seeds, mapping);
       mapping.clear();

@@ -50,7 +50,7 @@ constexpr int card_value(const card_type<num_winning, num_actual>& card) {
   if (matching == 0) {
     return 0;
   }
-  return pown(2, (matching - 1));
+  return aoc::pown(2, (matching - 1));
 }
 
 static_assert(8 == card_value(card_type<5, 8>{{41, 48, 83, 86, 17},

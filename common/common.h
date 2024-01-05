@@ -1,6 +1,7 @@
 #pragma once
 
 #include "concepts.h"
+#include "math.h"
 #include "point.h"
 #include "range_to.h"
 #include "ranges.h"

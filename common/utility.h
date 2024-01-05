@@ -3,8 +3,6 @@
 #include "assert.h"
 
 #include <algorithm>
-#include <bit>
-#include <cmath>
 #include <exception>
 #include <functional>
 #include <iostream>
@@ -324,18 +322,6 @@ constexpr std::function<T(T, T)> get_constant_binary_op(T value) {
   return [=](T, T) { return value; };
 };
 
-template <std::integral T>
-constexpr T sign(T value) {
-  if (value == 0) {
-    return 0;
-  }
-  return value / std::abs(value);
-}
-template <std::floating_point T>
-constexpr T sign(T value) {
-  return std::copysign(T{1.0}, value);
-}
-
 struct custom_divides {
   template <class T>
   constexpr T operator()(const T& lhs, const T& rhs) const {
@@ -378,31 +364,6 @@ struct range_type {
   }
 };
 
-template <std::integral T>
-constexpr T num_digits(T n) {
-  return std::abs(static_cast<std::make_signed_t<T>>(n)) >= 10
-             ? num_digits(n / 10) + 1
-             : 1;
-}
-
-// https://stackoverflow.com/a/59420788/793006
-template <typename T>
-constexpr T pown(T x, unsigned p) {
-  T result = 1;
-
-  while (p > 0) {
-    if (p & 0x1) {
-      result *= x;
-    }
-    x *= x;
-    p >>= 1;
-  }
-
-  return result;
-}
-
-constexpr bool is_number(char c) { return (c >= '0') && (c <= '9'); }
-
 template <class T>
 struct equal_to_value {
   T value;
@@ -412,17 +373,6 @@ struct equal_to_value {
     return value == other;
   }
 };
-
-template <class T>
-constexpr T abs_value(T value) {
-  if (std::is_constant_evaluated()) {
-    return (value < 0) ? -value : value;
-  } else if constexpr (std::is_integral_v<T>) {
-    return std::abs(value);
-  } else {
-    return (value < 0) ? -value : value;
-  }
-}
 
 template <std::ranges::common_range Container>
 constexpr Container transpose(const Container& container) {
@@ -480,10 +430,3 @@ static_assert(std::ranges::equal(transpose(std::vector{
                                      std::array{3, 6, 9, 12},
                                  }));
 #endif
-
-constexpr unsigned flip_bit(unsigned number, unsigned index) {
-  const unsigned mask = 1 << index;
-  return number ^ mask;
-}
-static_assert(3 == flip_bit(2, 0));
-static_assert(2 == flip_bit(3, 0));

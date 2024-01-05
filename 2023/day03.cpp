@@ -17,7 +17,7 @@
 
 using namespace std::string_view_literals;
 
-constexpr bool is_symbol(char c) { return !is_number(c) && (c != '.'); }
+constexpr bool is_symbol(char c) { return !aoc::is_number(c) && (c != '.'); }
 
 struct number_t {
   int row;
@@ -29,14 +29,14 @@ struct number_t {
 
 constexpr std::optional<number_t> find_number(std::string_view line,
                                               int linenum, int init_pos) {
-  if (!is_number(line[init_pos])) {
+  if (!aoc::is_number(line[init_pos])) {
     return std::nullopt;
   }
 
   number_t number{linenum - 1, 0, 0};
   int start_pos = init_pos;
   for (; start_pos >= 0; --start_pos) {
-    if (!is_number(line[start_pos])) {
+    if (!aoc::is_number(line[start_pos])) {
       break;
     }
   }
@@ -45,7 +45,7 @@ constexpr std::optional<number_t> find_number(std::string_view line,
 
   int end_pos = init_pos + 1;
   for (; end_pos < line.size(); ++end_pos) {
-    if (!is_number(line[end_pos])) {
+    if (!aoc::is_number(line[end_pos])) {
       break;
     }
   }
