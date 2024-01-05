@@ -11,6 +11,8 @@ set(AOC_INPUTS_DIR "${CMAKE_SOURCE_DIR}/inputs"
 enable_testing()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+add_compile_definitions(AOC_CXX_STANDARD=${CMAKE_CXX_STANDARD})
+
 function(copy_single_input_file target filename)
   add_custom_command(
     TARGET ${target} PRE_BUILD

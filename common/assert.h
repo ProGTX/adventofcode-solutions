@@ -37,3 +37,10 @@
   else if (!(condition)) {                                                     \
     throw 0;                                                                   \
   }
+
+namespace aoc {
+template <int cpp_version>
+constexpr bool not_constant_before() noexcept {
+  return AOC_CXX_STANDARD < cpp_version;
+}
+} // namespace aoc

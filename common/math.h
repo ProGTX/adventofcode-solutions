@@ -1,5 +1,7 @@
 #pragma once
 
+#include "assert.h"
+
 #include <bit>
 #include <cmath>
 #include <concepts>
@@ -9,7 +11,7 @@ namespace aoc {
 
 template <class T>
 constexpr T abs(T value) {
-  if (std::is_constant_evaluated()) {
+  if constexpr (not_constant_before<23>()) {
     return (value < 0) ? -value : value;
   } else if constexpr (std::is_integral_v<T>) {
     return std::abs(value);
@@ -31,7 +33,7 @@ constexpr T sign(T value) {
 }
 template <std::floating_point T>
 constexpr T sign(T value) {
-  if (std::is_constant_evaluated()) {
+  if constexpr (not_constant_before<23>()) {
     return (value < T{0}) ? T{-1} : T{1};
   } else {
     return std::copysign(T{1.0}, value);
