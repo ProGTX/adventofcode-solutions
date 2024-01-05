@@ -93,3 +93,25 @@ constexpr auto sorted(R&& r, Comp comp = {}, Proj proj = {}) {
 }
 
 } // namespace ranges
+
+namespace views {
+
+template <class W>
+constexpr auto transform_to_value(W&& value) {
+  return std::views::transform(
+      [val = std::forward<W>(value)](auto) { return val; });
+}
+
+// Not quite std::views::repeat, but close enough
+// https://en.cppreference.com/w/cpp/ranges/repeat_view
+template <class W>
+constexpr auto repeat(W&& value) {
+  return std::views::iota(0) | transform_to_value(std::forward<W>(value));
+}
+template <class W, std::integral Bound>
+constexpr auto repeat(W&& value, Bound&& bound) {
+  return std::views::iota(0, std::forward<Bound>(bound)) |
+         transform_to_value(std::forward<W>(value));
+}
+
+} // namespace views
