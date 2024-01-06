@@ -121,8 +121,8 @@ class grid {
   }
   constexpr point position(size_t linear_index) const {
     this->assert_linear_index(linear_index);
-    return point(linear_index % this->num_rows(),
-                 linear_index / this->num_rows());
+    return point(linear_index % this->row_length(),
+                 linear_index / this->row_length());
   }
 
   constexpr value_type& at(size_t row, size_t column) {
