@@ -2,6 +2,7 @@
 
 #include "range_to.h"
 
+#include <functional>
 #include <iterator>
 #include <numeric>
 #include <ranges>
@@ -113,5 +114,35 @@ constexpr auto repeat(W&& value, Bound&& bound) {
   return std::views::iota(0, std::forward<Bound>(bound)) |
          transform_to_value(std::forward<W>(value));
 }
+static_assert(std::ranges::equal(std::array{7, 7, 7}, repeat(7, 3)));
+static_assert(std::ranges::equal(std::array{"ha", "ha"},
+                                 repeat("ha") | std::views::take(2)));
+
+// Approximate implementation of std::views::stride
+// https://en.cppreference.com/w/cpp/ranges/stride_view
+template <class DifferenceType>
+constexpr auto stride(DifferenceType&& n) {
+  return std::views::filter(
+      [index = DifferenceType{0},
+       n = std::forward<DifferenceType>(n)](auto) mutable {
+        if (index == 0) {
+          ++index;
+          return true;
+        }
+        ++index;
+        if (index == n) {
+          index = 0;
+        }
+        return false;
+      });
+}
+static_assert(std::ranges::equal(std::array{1, 4, 7, 10},
+                                 std::views::iota(1, 13) | stride(3)));
+static_assert(std::ranges::equal(std::array{10, 7, 4, 1},
+                                 std::views::iota(1, 13) | stride(3) |
+                                     std::views::reverse));
+static_assert(std::ranges::equal(std::array{12, 9, 6, 3},
+                                 std::views::iota(1, 13) | std::views::reverse |
+                                     stride(3)));
 
 } // namespace views
