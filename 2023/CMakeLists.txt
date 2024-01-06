@@ -19,3 +19,4 @@ add_sample(day13 2023)
 # https://www.reddit.com/r/adventofcode/comments/18hitog/2023_day_13_easy_additional_examples/
 copy_single_input_file(2023_day13 day13.example2)
 add_sample(day14 2023)
+add_sample(day15 2023)
