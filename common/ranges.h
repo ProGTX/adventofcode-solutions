@@ -103,6 +103,11 @@ constexpr auto transform_to_value(W&& value) {
       [val = std::forward<W>(value)](auto) { return val; });
 }
 
+template <class T>
+constexpr auto transform_cast() {
+  return std::views::transform([](auto val) { return static_cast<T>(val); });
+}
+
 // Not quite std::views::repeat, but close enough
 // https://en.cppreference.com/w/cpp/ranges/repeat_view
 template <class W>
