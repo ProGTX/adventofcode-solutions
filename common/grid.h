@@ -162,8 +162,23 @@ class grid {
     return out;
   }
 
+  constexpr auto begin() { return m_data.begin(); }
   constexpr auto begin() const { return m_data.begin(); }
+  constexpr auto end() { return m_data.end(); }
   constexpr auto end() const { return m_data.end(); }
+
+  constexpr auto begin_row(size_t row) {
+    return m_data.begin() + this->linear_index(row, 0);
+  }
+  constexpr auto begin_row(size_t row) const {
+    return m_data.begin() + this->linear_index(row, 0);
+  }
+  constexpr auto end_row(size_t row) {
+    return this->begin_row(row) + this->row_length();
+  }
+  constexpr auto end_row(size_t row) const {
+    return this->begin_row(row) + this->row_length();
+  }
 
   constexpr bool in_bounds(size_t row, size_t column) const {
     return (row < this->num_rows()) && (column < this->row_length());
