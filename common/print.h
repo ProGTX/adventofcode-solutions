@@ -17,9 +17,11 @@ template <class R>
 struct print_range {
   R range;
   std::string_view separator;
+  bool braces;
 
-  explicit constexpr print_range(R range_, std::string_view separator_ = ",")
-      : range{std::move(range_)}, separator{separator_} {}
+  explicit constexpr print_range(R range_, std::string_view separator_ = ",",
+                                 bool braces_ = true)
+      : range{std::move(range_)}, separator{separator_}, braces{braces_} {}
 
   constexpr friend std::ostream& operator<<(std::ostream& out,
                                             const print_range& printer) {
@@ -27,11 +29,15 @@ struct print_range {
                                 std::string_view>) {
       out << printer.range;
     } else if constexpr (std::ranges::range<R>) {
-      out << '{';
+      if (printer.braces) {
+        out << '{';
+      }
       for (const auto& item : printer.range) {
         out << print_range<decltype(item)>{item} << printer.separator;
       }
-      out << '}';
+      if (printer.braces) {
+        out << '}';
+      }
     } else if constexpr (is_specialization_of_v<std::decay_t<R>, std::pair>) {
       out << '(' << printer.range.first << ',' << printer.range.second << ')';
     } else {
