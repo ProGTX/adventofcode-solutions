@@ -55,6 +55,19 @@ struct __fold_left_fn {
 };
 inline constexpr __fold_left_fn fold_left;
 
+struct __accumulate_fn {
+  template <std::input_iterator I, std::sentinel_for<I> S, class T>
+  constexpr auto operator()(I first, S last, T init) const {
+    return fold_left(first, last, std::move(init), std::plus<>{});
+  }
+
+  template <std::ranges::input_range R, class T>
+  constexpr auto operator()(R&& r, T init) const {
+    return (*this)(std::ranges::begin(r), std::ranges::end(r), std::move(init));
+  }
+};
+inline constexpr __accumulate_fn accumulate;
+
 struct __lcm_fn {
   template <std::input_iterator I, std::sentinel_for<I> S>
   constexpr auto operator()(I first, S last) const {

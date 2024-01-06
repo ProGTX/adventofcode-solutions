@@ -137,11 +137,10 @@ int solve_case(const std::string& filename) {
 
   int sum = 0;
   if constexpr (!check_gears) {
-    sum = ranges::fold_left(
-        all_numbers | std::views::transform(&number_pair_t::second), 0,
-        std::plus<>{});
+    sum = ranges::accumulate(
+        all_numbers | std::views::transform(&number_pair_t::second), 0);
   } else {
-    sum = ranges::fold_left(gear_ratios, 0, std::plus<>{});
+    sum = ranges::accumulate(gear_ratios, 0);
   }
 
   std::cout << filename << " -> " << sum << std::endl;

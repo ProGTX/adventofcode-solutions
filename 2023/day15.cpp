@@ -29,8 +29,7 @@ static_assert(hash_alg("HASH") == 52);
 using steps_t = std::vector<std::string>;
 
 constexpr int sum_steps(const steps_t& steps) {
-  return ranges::fold_left(steps | std::views::transform(hash_alg), 0,
-                           std::plus{});
+  return ranges::accumulate(steps | std::views::transform(hash_alg), 0);
 }
 
 constexpr steps_t test_case() {

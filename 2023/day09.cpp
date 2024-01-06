@@ -54,11 +54,11 @@ static_assert(5 == predict_value<-1>({10, 13, 16, 21, 30, 45}));
 
 template <int multiplier>
 constexpr int sum_predictions(const std::vector<std::vector<int>>& values) {
-  return ranges::fold_left(
+  return ranges::accumulate(
       values | std::views::transform([](const std::vector<int>& reading) {
         return predict_value<multiplier>(reading);
       }),
-      int_t{0}, std::plus<>{});
+      int_t{0});
 }
 
 template <int multiplier>
