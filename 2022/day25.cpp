@@ -1,11 +1,10 @@
 // https://adventofcode.com/2022/day/25
 
-#include "../common/assert.h"
 #include "../common/common.h"
-#include "../common/print.h"
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <memory>

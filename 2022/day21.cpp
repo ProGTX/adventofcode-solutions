@@ -1,10 +1,10 @@
 // https://adventofcode.com/2022/day/21
 
 #include "../common/common.h"
-#include "../common/ratio.h"
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <memory>

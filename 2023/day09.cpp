@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#include <algorithm>
 #include <iostream>
 #include <ostream>
 #include <ranges>

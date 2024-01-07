@@ -1,8 +1,13 @@
 // https://adventofcode.com/2022/day/12
 
+#include "../common/compiler.h"
+
+#if defined(AOC_COMPILER_MSVC)
+// WORKAROUND
+#define AOC_DISABLE_MODULES
+#endif
+
 #include "../common/common.h"
-#include "../common/flat.h"
-#include "../common/grid.h"
 
 #include <algorithm>
 #include <array>
@@ -17,6 +22,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 struct heightmap_t : public grid<int> {

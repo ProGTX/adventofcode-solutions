@@ -3,7 +3,9 @@
 #include "../common/common.h"
 
 #include <algorithm>
+#include <array>
 #include <compare>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <ostream>

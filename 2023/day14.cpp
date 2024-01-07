@@ -1,8 +1,8 @@
 // https://adventofcode.com/2023/day/14
 
 #include "../common/common.h"
-#include "../common/grid.h"
 
+#include <algorithm>
 #include <iostream>
 #include <ostream>
 #include <ranges>

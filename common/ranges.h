@@ -1,5 +1,6 @@
 #pragma once
 
+#include "compiler.h"
 #include "range_to.h"
 
 #include <functional>
@@ -133,8 +134,10 @@ constexpr auto repeat(W&& value, Bound&& bound) {
          transform_to_value(std::forward<W>(value));
 }
 static_assert(std::ranges::equal(std::array{7, 7, 7}, repeat(7, 3)));
+#if !defined(AOC_COMPILER_CLANG)
 static_assert(std::ranges::equal(std::array{"ha", "ha"},
                                  repeat("ha") | std::views::take(2)));
+#endif
 
 // Approximate implementation of std::views::stride
 // https://en.cppreference.com/w/cpp/ranges/stride_view

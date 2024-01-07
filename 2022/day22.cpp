@@ -1,12 +1,17 @@
 // https://adventofcode.com/2022/day/22
 
-#include "../common/assert.h"
+#include "../common/compiler.h"
+
+#if defined(AOC_COMPILER_MSVC)
+// WORKAROUND
+#define AOC_DISABLE_MODULES
+#endif
+
 #include "../common/common.h"
-#include "../common/grid.h"
-#include "../common/print.h"
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <memory>

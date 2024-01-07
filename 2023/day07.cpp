@@ -3,6 +3,7 @@
 #include "../common/common.h"
 
 #include <algorithm>
+#include <array>
 #include <compare>
 #include <iostream>
 #include <map>

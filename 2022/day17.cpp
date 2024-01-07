@@ -1,12 +1,10 @@
 // https://adventofcode.com/2022/day/17
 
-#include "../common/assert.h"
 #include "../common/common.h"
-#include "../common/grid.h"
-#include "../common/print.h"
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <memory>

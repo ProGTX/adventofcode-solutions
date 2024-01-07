@@ -2,6 +2,8 @@
 
 #include "../common/common.h"
 
+#include <algorithm>
+#include <array>
 #include <bit>
 #include <iostream>
 #include <ostream>
@@ -155,15 +157,15 @@ static_assert(5 == reflection_point(pattern_t{
                        "..##..##.",
                        "#.#.##.#.",
                    }));
-static_assert(-1 == reflection_point(pattern_t{
-                        "#...##..#",
-                        "#....#..#",
-                        "..##..###",
-                        "#####.##.",
-                        "#####.##.",
-                        "..##..###",
-                        "#....#..#",
-                    }));
+static_assert(0 == reflection_point(pattern_t{
+                       "#...##..#",
+                       "#....#..#",
+                       "..##..###",
+                       "#####.##.",
+                       "#####.##.",
+                       "..##..###",
+                       "#....#..#",
+                   }));
 static_assert(4 == reflection_point(transpose(pattern_t{
                        "#...##..#",
                        "#....#..#",

@@ -1,13 +1,38 @@
 #pragma once
 
+// These two files need to be included here because the macros they define
+// are not exported by the module
+#include "assert.h"
+#include "compiler.h"
+
+#if !defined(AOC_DISABLE_MODULES) && defined(AOC_MODULE_SUPPORT) &&            \
+    !defined(__INTELLISENSE__)
+
+import aoc;
+
+#else
+
+// WORKAROUND: Include the same headers as the module does
+#include "assert.h"
+#include "compiler.h"
 #include "concepts.h"
+#include "flat.h"
+#include "grid.h"
 #include "math.h"
 #include "point.h"
+#include "print.h"
 #include "range_to.h"
 #include "ranges.h"
+#include "ratio.h"
 #include "static_vector.h"
 #include "string.h"
+#include "timer.h"
 #include "utility.h"
+
+#endif
+
+// We're using std::cout and std::end in this file
+#include <iostream>
 
 static bool g_success = true;
 

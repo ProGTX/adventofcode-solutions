@@ -1,7 +1,6 @@
 #pragma once
 
 #include "assert.h"
-#include "common.h"
 #include "point.h"
 
 #include <algorithm>
@@ -11,6 +10,7 @@
 #include <map>
 #include <optional>
 #include <ranges>
+#include <type_traits>
 #include <utility>
 #include <vector>
 

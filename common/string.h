@@ -2,6 +2,7 @@
 
 #include "utility.h"
 
+#include <array>
 #include <charconv>
 #include <concepts>
 #include <exception>
@@ -12,6 +13,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <type_traits>
 #include <vector>
 
 using namespace std::string_view_literals;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <concepts>
 #include <exception>
 #include <iostream>
@@ -9,7 +10,10 @@
 #include <string_view>
 #include <vector>
 
-template <class T, class CRTP, class String = std::string>
+// WORKAROUND: MSVC has issues with default template parameters
+// if compiled with modules.
+// Otherwise String should default to std::string.
+template <class T, class CRTP, class String>
 class graph {
  public:
   using child_ptr_t = std::unique_ptr<CRTP>;

@@ -1,17 +1,16 @@
 #pragma once
 
+#include "compiler.h"
+#include "concepts.h"
+#include "ratio.h"
+#include "utility.h"
+
 #include <concepts>
 #include <iostream>
 #include <ranges>
 #include <string_view>
 #include <tuple>
 #include <utility>
-
-#include "assert.h"
-#include "common.h"
-#include "concepts.h"
-#include "ratio.h"
-#include "utility.h"
 
 template <class R>
 struct print_range {

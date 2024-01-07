@@ -15,9 +15,9 @@
 #include <string_view>
 #include <vector>
 
-class filesystem_t : public graph<int, filesystem_t> {
+class filesystem_t : public graph<int, filesystem_t, std::string> {
  private:
-  using base_t = graph<int, filesystem_t>;
+  using base_t = graph<int, filesystem_t, std::string>;
 
  public:
   enum type_t {

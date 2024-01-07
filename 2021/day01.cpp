@@ -1,5 +1,7 @@
 // https://adventofcode.com/2021/day/1
 
+#include "../common/common.h"
+
 #include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -9,8 +11,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "../common/common.h"
 
 int solve_case(const std::string& filename, int window_width) {
   auto measurements = readfile_numbers(filename);

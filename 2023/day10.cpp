@@ -1,9 +1,9 @@
 // https://adventofcode.com/2023/day/10
 
 #include "../common/common.h"
-#include "../common/flat.h"
-#include "../common/grid.h"
 
+#include <algorithm>
+#include <array>
 #include <iostream>
 #include <ostream>
 #include <ranges>

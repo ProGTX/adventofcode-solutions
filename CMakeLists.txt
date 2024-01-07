@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16.0)
+cmake_minimum_required(VERSION 3.28)
 project(adventofcode VERSION 2022 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -12,6 +12,30 @@ enable_testing()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_compile_definitions(AOC_CXX_STANDARD=${CMAKE_CXX_STANDARD})
+
+message("CMAKE_CXX_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION}")
+
+if (((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND
+      (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "16.0")) OR
+    ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") AND
+      (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "14.1")) OR
+    ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") AND
+      (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "17.4")))
+  set(AOC_MODULE_SUPPORT ON)
+  add_compile_definitions(AOC_MODULE_SUPPORT)
+else()
+  set(AOC_MODULE_SUPPORT OFF)
+endif()
+
+if (AOC_MODULE_SUPPORT)
+  # Add module library aoc
+  add_library(aoc)
+  target_sources(aoc
+    PUBLIC
+      FILE_SET CXX_MODULES FILES
+        common/module.cpp
+  )
+endif()
 
 function(copy_single_input_file target filename)
   add_custom_command(
@@ -42,6 +66,11 @@ function(add_sample sample_name year)
   endif()
   copy_input_files(${sample_name} ${year})
   set_target_properties(${target} PROPERTIES FOLDER ${year})
+  
+  if (AOC_MODULE_SUPPORT)
+    target_link_libraries(${target} aoc)
+  endif()
+
   add_test(NAME ${target} COMMAND ${target})
 endfunction()
 

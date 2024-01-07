@@ -1,7 +1,6 @@
 // https://adventofcode.com/2022/day/9
 
 #include "../common/common.h"
-#include "../common/grid.h"
 
 #include <algorithm>
 #include <array>
