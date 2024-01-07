@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_GRID_H
+#define AOC_GRID_H
 
 #include "assert.h"
 #include "point.h"
@@ -565,3 +566,5 @@ concept is_grid = std::ranges::range<Grid> &&
 static_assert(is_grid<grid<int>>);
 static_assert(is_grid<array_grid<int, 7, 5>>);
 static_assert(is_grid<sparse_grid<int>>);
+
+#endif // AOC_GRID_H

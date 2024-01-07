@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_GRAPH_H
+#define AOC_GRAPH_H
 
 #include <algorithm>
 #include <concepts>
@@ -101,3 +102,5 @@ class graph {
   T m_value{};
   bool m_is_leaf{false};
 };
+
+#endif // AOC_GRAPH_H

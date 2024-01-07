@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_POINT_H
+#define AOC_POINT_H
 
 #include "assert.h"
 #include "math.h"
@@ -242,3 +243,5 @@ static_assert(16.5f == calculate_area<float>(std::array{
                            point{8, 5}}));
 
 } // namespace aoc
+
+#endif // AOC_POINT_H

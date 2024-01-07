@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_PRINT_H
+#define AOC_PRINT_H
 
 #include "compiler.h"
 #include "concepts.h"
@@ -106,3 +107,5 @@ constexpr void println(std::string_view str, FirstT first, Args&&... args) {
     std::cout << std::endl;
   });
 }
+
+#endif // AOC_PRINT_H

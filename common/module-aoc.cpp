@@ -10,6 +10,7 @@ module;
 #include <charconv>
 #include <chrono>
 #include <cmath>
+#include <compare>
 #include <concepts>
 #include <cstdint>
 #include <cstdlib>
@@ -24,6 +25,7 @@ module;
 #include <optional>
 #include <ostream>
 #include <ranges>
+#include <set>
 #include <span>
 #include <sstream>
 #include <string>
@@ -31,6 +33,8 @@ module;
 #include <system_error>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -42,7 +46,7 @@ export {
 // This exports all the standard headers that are included transitively,
 // hence the need for the workaround above.
 // WORKAROUND: MSVC doesn't support CRTP with modules,
-// add graph.h and grid.h once that's fixed
+// add graph.h once that's fixed
 #include "assert.h"
 #include "compiler.h"
 #include "concepts.h"

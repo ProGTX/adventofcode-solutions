@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_TIMER_H
+#define AOC_TIMER_H
 
 // https://github.com/biggysmith/advent_of_code_2022/blob/master/src/util/timer.hpp
 
@@ -51,3 +52,5 @@ class scoped_timer {
  private:
   timer timer_;
 };
+
+#endif // AOC_TIMER_H

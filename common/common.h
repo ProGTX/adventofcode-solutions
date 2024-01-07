@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_COMMON_H
+#define AOC_COMMON_H
 
 // These two files need to be included here because the macros they define
 // are not exported by the module
@@ -29,10 +30,10 @@ import aoc;
 #include "timer.h"
 #include "utility.h"
 
-#endif
-
 // We're using std::cout and std::end in this file
 #include <iostream>
+
+#endif
 
 static bool g_success = true;
 
@@ -53,3 +54,5 @@ static bool g_success = true;
   } else {                                                                     \
     return -1;                                                                 \
   }
+
+#endif // AOC_COMMON_H

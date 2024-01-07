@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_STRING_H
+#define AOC_STRING_H
 
 #include "utility.h"
 
@@ -218,3 +219,5 @@ static_assert(2 == binary_to_number<'1'>("01"));
 static_assert(13 == binary_to_number<'1'>("1011"));
 static_assert(205 == binary_to_number<'#'>("#.##..##."));
 static_assert(6757 == binary_to_number<'#'>("#.#..##..#.##"));
+
+#endif // AOC_STRING_H

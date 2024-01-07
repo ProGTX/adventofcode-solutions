@@ -1,3 +1,6 @@
+#ifndef AOC_RANGE_TO_H
+#define AOC_RANGE_TO_H
+
 /*
 Copyright (c) 2020 - present Corentin Jabot
 
@@ -6,8 +9,6 @@ Licenced under Boost Software License license. See LICENSE.md for details.
 https://github.com/cor3ntin/ranges/blob/master/include/cor3ntin/ranges/to.hpp
 
 */
-
-#pragma once
 
 #include <algorithm>
 #include <iterator>
@@ -268,3 +269,5 @@ constexpr auto to(Rng&& rng, Args&&... args) -> Cont {
 }
 
 } // namespace ranges
+
+#endif // AOC_RANGE_TO_H

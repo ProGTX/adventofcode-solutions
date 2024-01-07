@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_STATIC_VECTOR_H
+#define AOC_STATIC_VECTOR_H
 
 #include "assert.h"
 #include "ranges.h"
@@ -168,3 +169,5 @@ class static_vector {
   container_type m_data;
   size_t m_size = 0;
 };
+
+#endif // AOC_STATIC_VECTOR_H

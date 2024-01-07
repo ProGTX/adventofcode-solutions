@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_CONCEPTS_H
+#define AOC_CONCEPTS_H
 
 #include <array>
 #include <iterator>
@@ -76,3 +77,5 @@ concept contains_uncvref = (std::same_as<std::remove_cvref_t<T>, U> || ...);
 
 static_assert(contains_type<std::string_view, std::string_view>);
 static_assert(contains_type<std::string_view, int, std::string_view>);
+
+#endif // AOC_CONCEPTS_H

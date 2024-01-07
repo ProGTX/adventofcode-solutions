@@ -33,7 +33,7 @@ if (AOC_MODULE_SUPPORT)
   target_sources(aoc
     PUBLIC
       FILE_SET CXX_MODULES FILES
-        common/module.cpp
+        common/module-aoc.cpp
   )
 endif()
 

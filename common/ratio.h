@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_RATIO_H
+#define AOC_RATIO_H
 
 #include "math.h"
 
@@ -139,3 +140,5 @@ static_assert(2 <= ratio{4, 2});
 static_assert(2 < ratio{5, 2});
 
 } // namespace aoc
+
+#endif // AOC_RATIO_H

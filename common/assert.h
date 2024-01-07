@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_ASSERT_H
+#define AOC_ASSERT_H
 
 #include "compiler.h"
 
@@ -24,3 +25,5 @@
   else if (!(condition)) {                                                     \
     throw 0;                                                                   \
   }
+
+#endif // AOC_ASSERT_H

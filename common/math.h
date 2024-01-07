@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_MATH_H
+#define AOC_MATH_H
 
 #include "assert.h"
 
@@ -66,3 +67,5 @@ static_assert(3 == flip_bit(2, 0));
 static_assert(2 == flip_bit(3, 0));
 
 } // namespace aoc
+
+#endif // AOC_MATH_H

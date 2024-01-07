@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_RANGES_H
+#define AOC_RANGES_H
 
 #include "compiler.h"
 #include "range_to.h"
@@ -167,3 +168,5 @@ static_assert(std::ranges::equal(std::array{12, 9, 6, 3},
                                      stride(3)));
 
 } // namespace views
+
+#endif // AOC_RANGES_H

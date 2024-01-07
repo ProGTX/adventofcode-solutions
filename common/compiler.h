@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_COMPILER_H
+#define AOC_COMPILER_H
 
 #if defined(_MSC_VER)
 #define AOC_COMPILER_MSVC _MSC_VER
@@ -21,3 +22,5 @@ constexpr bool not_constant_before() noexcept {
   return AOC_CXX_STANDARD < cpp_version;
 }
 } // namespace aoc
+
+#endif // AOC_COMPILER_H

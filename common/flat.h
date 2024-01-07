@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_FLAT_H
+#define AOC_FLAT_H
 
 #include <algorithm>
 #include <concepts>
@@ -112,3 +113,5 @@ class sorted_flat_set {
   container_type m_data;
   Compare m_comparator;
 };
+
+#endif // AOC_FLAT_H

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AOC_UTILITY_H
+#define AOC_UTILITY_H
 
 #include "assert.h"
 #include "compiler.h"
@@ -431,3 +432,5 @@ static_assert(std::ranges::equal(transpose(std::vector{
                                      std::array{3, 6, 9, 12},
                                  }));
 #endif
+
+#endif // AOC_UTILITY_H
