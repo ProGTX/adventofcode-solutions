@@ -21,6 +21,9 @@ if (((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND
       (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "14.1")) OR
     ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") AND
       (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "17.4")))
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_definitions(AOC_MODULE_SUPPORT_AOC_STD)
+  endif()
   set(AOC_MODULE_SUPPORT ON)
   add_compile_definitions(AOC_MODULE_SUPPORT)
 else()
@@ -34,6 +37,12 @@ if (AOC_MODULE_SUPPORT)
     PUBLIC
       FILE_SET CXX_MODULES FILES
         common/module-aoc.cpp
+  )
+  add_library(aoc.std)
+  target_sources(aoc.std
+    PUBLIC
+      FILE_SET CXX_MODULES FILES
+        common/module-aoc-std.cpp
   )
 endif()
 
@@ -68,7 +77,7 @@ function(add_sample sample_name year)
   set_target_properties(${target} PROPERTIES FOLDER ${year})
   
   if (AOC_MODULE_SUPPORT)
-    target_link_libraries(${target} aoc)
+    target_link_libraries(${target} aoc aoc.std)
   endif()
 
   add_test(NAME ${target} COMMAND ${target})
