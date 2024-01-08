@@ -167,6 +167,20 @@ static_assert(std::ranges::equal(std::array{12, 9, 6, 3},
                                  std::views::iota(1, 13) | std::views::reverse |
                                      stride(3)));
 
+// Approximate implementation of std::views::enumerate
+// https://en.cppreference.com/w/cpp/ranges/enumerate_view
+// NOTE: Deviations from C++23:
+//   * Overload with no arguments should be an object instance, not a function
+constexpr auto enumerate() {
+  return std::views::transform([index = 0]<class T>(T&& val) mutable {
+    return std::pair<int, decltype(val)>{index++, std::forward<T>(val)};
+  });
+}
+template <std::ranges::viewable_range R>
+constexpr auto enumerate(R&& r) {
+  return r | enumerate();
+}
+
 } // namespace views
 
 #endif // AOC_RANGES_H
