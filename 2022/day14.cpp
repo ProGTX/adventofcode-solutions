@@ -26,9 +26,9 @@ int solve_case(const std::string& filename) {
   using rock_line_t = std::array<point, 2>;
   std::vector<rock_line_t> rock_lines;
 
-  min_max_helper min_max;
+  aoc::min_max_helper min_max;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     // Simplify "->" delimiter to a single char
     std::string transformed_line(line.size(), 0);
     std::ranges::transform(line, std::begin(transformed_line), [](char value) {
@@ -38,18 +38,18 @@ int solve_case(const std::string& filename) {
       return value;
     });
     auto rock_pairs =
-        split<std::vector<std::string_view>>(transformed_line, '-');
-    auto previous = split<point>(rock_pairs[0], ',');
+        aoc::split<std::vector<std::string_view>>(transformed_line, '-');
+    auto previous = aoc::split<point>(rock_pairs[0], ',');
     min_max.update(previous);
     for (const auto& rock_pair_str : rock_pairs | std::views::drop(1)) {
-      auto current = split<point>(trim(rock_pair_str), ',');
+      auto current = aoc::split<point>(aoc::trim(rock_pair_str), ',');
       min_max.update(current);
       rock_lines.push_back(rock_line_t{previous, current});
       previous = current;
     }
   });
 
-  using cave_map_t = grid<char>;
+  using cave_map_t = aoc::grid<char>;
 
   point sand_starter{500, 0};
   min_max.update(sand_starter);

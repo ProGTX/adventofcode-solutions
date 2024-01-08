@@ -90,7 +90,7 @@ std::tuple<monkeys_t, int, int> transform_monkeys(
     monkeys.emplace_back(std::distance(begin_it, lhs_it),
                          std::distance(begin_it, rhs_it), monkey.value_lhs,
                          monkey.value_rhs,
-                         get_binary_op<value_t>(monkey.operation));
+                         aoc::get_binary_op<value_t>(monkey.operation));
   }
   return {monkeys, root_index, human_index};
 }
@@ -142,8 +142,8 @@ value_t solve_part2(const parsed_monkeys_t& parsed_monkeys) {
       current_it->operation = std::plus{};
       break;
     } else {
-      current_it->operation =
-          get_inverse_binary_op<value_t>(parsed_parent_it->second.operation);
+      current_it->operation = aoc::get_inverse_binary_op<value_t>(
+          parsed_parent_it->second.operation);
       // Do not break
     }
 
@@ -156,12 +156,12 @@ value_t solve_part2(const parsed_monkeys_t& parsed_monkeys) {
 template <bool part2>
 int_value_t solve_case(const std::string& filename) {
   parsed_monkeys_t parsed_monkeys;
-  readfile_op(filename, [&](std::string_view line) {
-    auto [name, full_op] = split<std::array<std::string, 2>>(line, ':');
-    auto [lhs, op, rhs] = split<std::array<std::string, 3>>(full_op, ' ');
+  aoc::readfile_op(filename, [&](std::string_view line) {
+    auto [name, full_op] = aoc::split<std::array<std::string, 2>>(line, ':');
+    auto [lhs, op, rhs] = aoc::split<std::array<std::string, 3>>(full_op, ' ');
 
     if (op.empty()) {
-      value_t value = to_number<int>(lhs);
+      value_t value = aoc::to_number<int>(lhs);
       parsed_monkeys.emplace_back(name,
                                   parsing_monkey_t{"", "", value, 0, value_op});
       return;

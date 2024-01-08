@@ -16,7 +16,7 @@
 #include <vector>
 
 using rock_index_t = std::int64_t;
-using grid_point = point_type<rock_index_t>;
+using grid_point = aoc::point_type<rock_index_t>;
 using rock_t = std::array<grid_point, 5>;
 
 constexpr void move_rock(rock_t& rock, grid_point move) {
@@ -70,9 +70,9 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
 
   auto chamber = std::invoke([]() {
     if constexpr (use_sparse_grid) {
-      return sparse_grid<char, char{}, grid_point, chamber_row_t>{};
+      return aoc::sparse_grid<char, char{}, grid_point, chamber_row_t>{};
     } else {
-      return grid<char, chamber_row_t, std::vector<char>>{};
+      return aoc::grid<char, chamber_row_t, std::vector<char>>{};
     }
   });
 
@@ -189,7 +189,7 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
     return std::tuple{static_cast<rock_index_t>(rock_index), current_height - 1,
                       chamber.get_row(current_height - 1)};
   });
-  std::cout << print_range(initial_top_row) << std::endl;
+  std::cout << aoc::print_range(initial_top_row) << std::endl;
 
   const auto is_same_as_initial = [&](const chamber_row_t& current_top_row) {
     for (int c = 1; c < initial_top_row.size() - 1; ++c) {
@@ -215,7 +215,7 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
         ++rock_index;
       }
       auto current_top_row = chamber.get_row(current_height - 1);
-      std::cout << print_range(current_top_row) << std::endl;
+      std::cout << aoc::print_range(current_top_row) << std::endl;
       if (is_same_as_initial(current_top_row)) {
         break;
       }
@@ -265,7 +265,7 @@ template <rock_index_t num_rocks>
 rock_index_t solve_case(const std::string& filename) {
   std::vector<int> pattern;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     if (line.empty()) {
       return;
     }

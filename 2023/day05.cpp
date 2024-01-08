@@ -15,7 +15,7 @@
 using namespace std::string_view_literals;
 
 using int_t = long;
-using range_t = range_type<int_t>;
+using range_t = aoc::range_type<int_t>;
 
 struct single_mapping_t {
   range_t src;
@@ -183,7 +183,7 @@ int_t solve_case(const std::string& filename) {
 
   auto read_first_line = [&](std::string_view line) {
     const auto seeds_ints =
-        split<std::vector<int_t>>(line.substr(sizeof("seeds:")), ' ');
+        aoc::split<std::vector<int_t>>(line.substr(sizeof("seeds:")), ' ');
     for (int i = 0; i < seeds_ints.size(); i += 2) {
       if constexpr (!full_ranges) {
         current_seeds.emplace_back(seeds_ints[i], 1);
@@ -205,12 +205,12 @@ int_t solve_case(const std::string& filename) {
       return;
     }
     auto [dest_start, source_start, range] =
-        split<std::array<int_t, 3>>(line, ' ');
+        aoc::split<std::array<int_t, 3>>(line, ' ');
     mapping.emplace_back(range_t{source_start, range},
                          range_t{dest_start, range});
   };
 
-  readfile_op_header(filename, read_first_line, solver);
+  aoc::readfile_op_header(filename, read_first_line, solver);
 
   // Have to run this one last time
   std::ranges::sort(mapping, std::less<>{}, &single_mapping_t::src);

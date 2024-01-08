@@ -9,6 +9,8 @@
 #include <numeric>
 #include <ranges>
 
+namespace aoc {
+
 namespace ranges {
 
 // https://en.cppreference.com/w/cpp/algorithm/ranges/contains
@@ -182,5 +184,7 @@ constexpr auto enumerate(R&& r) {
 }
 
 } // namespace views
+
+} // namespace aoc
 
 #endif // AOC_RANGES_H

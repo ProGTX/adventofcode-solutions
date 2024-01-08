@@ -17,8 +17,8 @@
 #include <utility>
 #include <vector>
 
-struct range : public range_type<int> {
-  using base_t = range_type<int>;
+struct range : public aoc::range_type<int> {
+  using base_t = aoc::range_type<int>;
   constexpr range(int begin_ = 1, int end_ = 1)
       : base_t{begin_, end_ - begin_ + 1} {}
   constexpr range(std::array<int, 2> range_array)
@@ -29,12 +29,12 @@ template <bool use_overlaps>
 int solve_case(const std::string& filename) {
   int score = 0;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     auto [firstElfStr, secondElfStr] =
-        split<std::array<std::string_view, 2>>(line, ',');
+        aoc::split<std::array<std::string_view, 2>>(line, ',');
 
-    auto firstElf = range{split<std::array<int, 2>>(firstElfStr, '-')};
-    auto secondElf = range{split<std::array<int, 2>>(secondElfStr, '-')};
+    auto firstElf = range{aoc::split<std::array<int, 2>>(firstElfStr, '-')};
+    auto secondElf = range{aoc::split<std::array<int, 2>>(secondElfStr, '-')};
 
     if constexpr (use_overlaps) {
       if (firstElf.overlaps_with(secondElf)) {

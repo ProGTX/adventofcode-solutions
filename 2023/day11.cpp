@@ -13,11 +13,11 @@
 using namespace std::string_view_literals;
 
 using int_t = std::int64_t;
-using point_t = point_type<int_t>;
+using point_t = aoc::point_type<int_t>;
 
 inline constexpr char galaxy = '#';
 inline constexpr char empty_space = '.';
-using space_t = sparse_grid<char, empty_space, point_t>;
+using space_t = aoc::sparse_grid<char, empty_space, point_t>;
 
 template <int factor>
 space_t expand_space(const std::vector<std::string>& space_rows,
@@ -81,7 +81,7 @@ int_t solve_case(const std::string& filename) {
     }
     space_rows.push_back(std::move(line));
   };
-  readfile_op(filename, read_values);
+  aoc::readfile_op(filename, read_values);
 
   auto space =
       expand_space<factor>(space_rows, row_populated, column_populated);

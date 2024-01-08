@@ -11,6 +11,8 @@
 #include <string_view>
 #include <vector>
 
+namespace aoc {
+
 // WORKAROUND: MSVC has issues with default template parameters
 // if compiled with modules.
 // Otherwise String should default to std::string.
@@ -102,5 +104,7 @@ class graph {
   T m_value{};
   bool m_is_leaf{false};
 };
+
+} // namespace aoc
 
 #endif // AOC_GRAPH_H

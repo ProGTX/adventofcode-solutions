@@ -43,7 +43,7 @@ class unique_vector {
   data_t m_data;
 };
 
-using rope_bridge_t = grid<char>;
+using rope_bridge_t = aoc::grid<char>;
 
 std::tuple<rope_bridge_t, point, point> get_rope_bridge(
     const std::ranges::range auto& rope) {
@@ -173,10 +173,10 @@ int solve_case(const std::string& filename) {
     }
   };
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     auto [operation, value_str] =
-        split<std::array<std::string_view, 2>>(line, ' ');
-    auto value = to_number<int>(value_str);
+        aoc::split<std::array<std::string_view, 2>>(line, ' ');
+    auto value = aoc::to_number<int>(value_str);
     switch (operation[0]) {
       case 'R':
         move({value, 0});

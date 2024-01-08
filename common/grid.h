@@ -15,6 +15,8 @@
 #include <utility>
 #include <vector>
 
+namespace aoc {
+
 template <class T, class row_storage_t = std::vector<T>,
           class Container = row_storage_t>
 class grid {
@@ -24,6 +26,8 @@ class grid {
   using value_type = T;
   using iterator = typename container_type::iterator;
   using const_iterator = typename container_type::const_iterator;
+
+  using point = point_type<int>;
 
   static constexpr auto static_row_length =
       is_array_class_v<row_t> ? row_t{}.size() : 0;
@@ -238,7 +242,7 @@ enum facing_t : int {
   NUM_FACING = 4,
 };
 
-constexpr point get_diff(facing_t facing) {
+constexpr point_type<int> get_diff(facing_t facing) {
   switch (facing) {
     case east:
       return {1, 0};
@@ -263,7 +267,7 @@ constexpr point get_diff(facing_t facing) {
 };
 
 constexpr inline auto basic_neighbor_diffs = std::invoke([] {
-  std::array<point, NUM_FACING> positions;
+  std::array<point_type<int>, NUM_FACING> positions;
   for (int f = 0; f < NUM_FACING; ++f) {
     auto facing = static_cast<facing_t>(f);
     positions[f] = get_diff(facing);
@@ -280,7 +284,7 @@ constexpr inline auto all_sky_directions = std::invoke([] {
 });
 
 constexpr inline auto all_neighbor_diffs = std::invoke([] {
-  std::array<point, NUM_SKY_DIRECTIONS> positions;
+  std::array<point_type<int>, NUM_SKY_DIRECTIONS> positions;
   for (int f = 0; f < NUM_SKY_DIRECTIONS; ++f) {
     positions[f] = get_diff(all_sky_directions[f]);
   }
@@ -291,6 +295,8 @@ template <class CRTP, bool enable_diagonal = false>
 struct grid_neighbors {
   using neighborhood_type = array_grid<CRTP*, 3>;
   using pointer = neighborhood_type::value_type;
+  using point = point_type<int>;
+
   static constexpr bool allow_diagonal = enable_diagonal;
 
   constexpr pointer& get(point diff) {
@@ -323,12 +329,13 @@ struct grid_neighbors {
 
 template <class T, class row_storage_t, class Container>
   requires requires(T value) {
-    value.neighbors.get(point{});
-    value.neighbors.set(point{}, static_cast<T*>(nullptr));
+    value.neighbors.get(point_type<int>{});
+    value.neighbors.set(point_type<int>{}, static_cast<T*>(nullptr));
   }
 constexpr void set_standard_neighbors(grid<T, row_storage_t, Container>& grid,
-                                      point offset = {0, 0},
-                                      point subrange = {0, 0}) {
+                                      point_type<int> offset = {0, 0},
+                                      point_type<int> subrange = {0, 0}) {
+  using point = point_type<int>;
   constexpr bool allow_diagonal =
       decltype(std::declval<T>().neighbors)::allow_diagonal;
   if (subrange == point{0, 0}) {
@@ -421,7 +428,8 @@ constexpr void set_standard_neighbors(grid<T, row_storage_t, Container>& grid,
                        corner_diagonal_diff(northwest, north)});
 }
 
-template <class T, T empty_value_param = T{}, class point_class = point,
+template <class T, T empty_value_param = T{},
+          class point_class = point_type<int>,
           class row_storage_t = std::vector<T>>
 class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
  private:
@@ -566,5 +574,7 @@ concept is_grid = std::ranges::range<Grid> &&
 static_assert(is_grid<grid<int>>);
 static_assert(is_grid<array_grid<int, 7, 5>>);
 static_assert(is_grid<sparse_grid<int>>);
+
+} // namespace aoc
 
 #endif // AOC_GRID_H

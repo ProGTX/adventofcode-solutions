@@ -153,7 +153,7 @@ using bids_type = std::vector<single_bid_type<joker>>;
 
 template <bool joker>
 constexpr int total_winnings(const bids_type<joker>& bids) {
-  bids_type<joker> sorted_bids = ranges::sorted(bids);
+  bids_type<joker> sorted_bids = aoc::ranges::sorted(bids);
   int sum = 0;
   for (int i = 0; i < sorted_bids.size(); ++i) {
     sum += (i + 1) * sorted_bids[i].second;
@@ -173,10 +173,10 @@ int solve_case(const std::string& filename) {
   bids_type<joker> bids;
   auto read_values = [&](std::string_view line) {
     auto [hand_str, bid_str] =
-        split<std::array<std::string_view, 2>>(line, ' ');
-    bids.emplace_back(hand_str, to_number<int>(bid_str));
+        aoc::split<std::array<std::string_view, 2>>(line, ' ');
+    bids.emplace_back(hand_str, aoc::to_number<int>(bid_str));
   };
-  readfile_op(filename, read_values);
+  aoc::readfile_op(filename, read_values);
 
   int sum = total_winnings<joker>(bids);
   std::cout << filename << " -> " << sum << std::endl;

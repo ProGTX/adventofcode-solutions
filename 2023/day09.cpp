@@ -55,7 +55,7 @@ static_assert(5 == predict_value<-1>({10, 13, 16, 21, 30, 45}));
 
 template <int multiplier>
 constexpr int sum_predictions(const std::vector<std::vector<int>>& values) {
-  return ranges::accumulate(
+  return aoc::ranges::accumulate(
       values | std::views::transform([](const std::vector<int>& reading) {
         return predict_value<multiplier>(reading);
       }),
@@ -66,9 +66,9 @@ template <int multiplier>
 int solve_case(const std::string& filename) {
   std::vector<std::vector<int>> values;
   auto read_values = [&](std::string_view line) {
-    values.push_back(split<std::vector<int>>(line, ' '));
+    values.push_back(aoc::split<std::vector<int>>(line, ' '));
   };
-  readfile_op(filename, read_values);
+  aoc::readfile_op(filename, read_values);
 
   int sum = sum_predictions<multiplier>(values);
   std::cout << filename << " -> " << sum << std::endl;

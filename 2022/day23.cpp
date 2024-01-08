@@ -35,9 +35,9 @@ struct elf_sim_value_t {
 };
 
 void print_field(elves_t const& elves) {
-  auto bounds = min_max_helper::get(elves);
+  auto bounds = aoc::min_max_helper::get(elves);
   auto field =
-      grid<char>(empty_tile, bounds.grid_size().y, bounds.grid_size().x);
+      aoc::grid<char>(empty_tile, bounds.grid_size().y, bounds.grid_size().x);
   for (auto elf : elves) {
     elf -= bounds.min_value;
     field.modify(elf_tile, elf.y, elf.x);
@@ -64,18 +64,20 @@ int simulate(elves_t& elves) {
     }
   };
 
-  std::array<std::array<facing_t, 3>, 4> possible_proposals{
-      std::array{north, northeast, northwest},
-      std::array{south, southwest, southeast},
-      std::array{west, southwest, northwest},
-      std::array{east, northeast, southeast},
+  std::array<std::array<aoc::facing_t, 3>, 4> possible_proposals{
+      std::array{aoc::north, aoc::northeast, aoc::northwest},
+      std::array{aoc::south, aoc::southwest, aoc::southeast},
+      std::array{aoc::west, aoc::southwest, aoc::northwest},
+      std::array{aoc::east, aoc::northeast, aoc::southeast},
   };
   const auto is_empty =
-      [&]<size_t size>(point pos,
-                       std::array<facing_t, size> const& directions) -> bool {
+      [&]<size_t size>(
+          point pos,
+          std::array<aoc::facing_t, size> const& directions) -> bool {
     return std::ranges::all_of(
-        directions | std::views::transform(
-                         [&](facing_t facing) { return get_diff(facing); }),
+        directions | std::views::transform([&](aoc::facing_t facing) {
+          return get_diff(facing);
+        }),
         [&](const point diff) {
           auto neighbor_pos = pos + diff;
           return !elf_simulation.contains(neighbor_pos);
@@ -84,7 +86,7 @@ int simulate(elves_t& elves) {
   const auto propose = [&](elf_sim_pair_value_t& elf) {
     elf.second.pos = elf.first;
     for (auto const& directions : possible_proposals) {
-      if (is_empty(elf.first, all_sky_directions)) {
+      if (is_empty(elf.first, aoc::all_sky_directions)) {
         break;
       }
       if (is_empty(elf.first, directions)) {
@@ -136,7 +138,7 @@ int simulate(elves_t& elves) {
 template <int num_rounds, bool execute_long>
 int solve_case(std::string const& filename) {
   elves_t elves;
-  readfile_op(filename, [&](std::string_view line, int linenum) {
+  aoc::readfile_op(filename, [&](std::string_view line, int linenum) {
     const int row = linenum - 1;
     for (int column = 0; char value : line) {
       if (value == elf_tile) {
@@ -150,7 +152,7 @@ int solve_case(std::string const& filename) {
 
   int score = 0;
   if constexpr (!execute_long) {
-    point field_size = min_max_helper::get(elves).grid_size();
+    point field_size = aoc::min_max_helper::get(elves).grid_size();
     int num_empty_tiles = field_size.reduce<std::multiplies<>>() - elves.size();
     score = num_empty_tiles;
   } else {

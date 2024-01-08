@@ -63,13 +63,14 @@ int solve_case(const std::string& filename) {
   int sum = 0;
 
   auto solver = [&](std::string_view line, int linenum) {
-    auto [card_id, numbers] = split<std::array<std::string_view, 2>>(line, ':');
+    auto [card_id, numbers] =
+        aoc::split<std::array<std::string_view, 2>>(line, ':');
     auto [winning_str, actual_str] =
-        split<std::array<std::string_view, 2>>(numbers, '|');
+        aoc::split<std::array<std::string_view, 2>>(numbers, '|');
     using card_t = card_type<num_winning, num_actual>;
     card_t current_card{
-        split<typename card_t::winning_t, true>(winning_str, ' '),
-        split<typename card_t::actual_t, true>(actual_str, ' ')};
+        aoc::split<typename card_t::winning_t, true>(winning_str, ' '),
+        aoc::split<typename card_t::actual_t, true>(actual_str, ' ')};
 
     if constexpr (!count_scratchcards) {
       sum += card_value(current_card);
@@ -91,7 +92,7 @@ int solve_case(const std::string& filename) {
     }
   };
 
-  readfile_op(filename, solver);
+  aoc::readfile_op(filename, solver);
 
   std::cout << filename << " -> " << sum << std::endl;
   return sum;

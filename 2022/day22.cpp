@@ -31,7 +31,7 @@ enum tile_type_t : char {
 
 struct corner_t {
   point pos;
-  grid_neighbors<corner_t> neighbors;
+  aoc::grid_neighbors<corner_t> neighbors;
 
   constexpr corner_t(point pos_ = {}) : pos{pos_} {}
 
@@ -46,11 +46,11 @@ struct corner_t {
 struct cell_t {
   char value;
   point pos;
-  min_max_helper limits;
-  grid_neighbors<cell_t> neighbors;
+  aoc::min_max_helper limits;
+  aoc::grid_neighbors<cell_t> neighbors;
 
   cell_t(char value_ = invalid, point pos_ = {0, 0},
-         min_max_helper limits_ = {})
+         aoc::min_max_helper limits_ = {})
       : value{value_}, pos{pos_}, limits{limits_} {}
 
   template <std::convertible_to<char> char_t>
@@ -68,7 +68,7 @@ struct cell_t {
   }
 };
 
-using jungle_t = grid<cell_t>;
+using jungle_t = aoc::grid<cell_t>;
 using row_t = jungle_t::row_t;
 using raw_map_t = std::vector<std::vector<cell_t>>;
 
@@ -88,9 +88,9 @@ constexpr bool can_move_to(char value) {
   return (value != invalid) && (value != wall);
 }
 
-std::tuple<point, facing_t> get_position(jungle_t& jungle,
-                                         directions_t const& directions,
-                                         point pos, facing_t facing) {
+std::tuple<point, aoc::facing_t> get_position(jungle_t& jungle,
+                                              directions_t const& directions,
+                                              point pos, aoc::facing_t facing) {
   cell_t* current_ptr = nullptr;
   const auto try_move = [&](point const& diff) -> bool {
     auto new_ptr = jungle.at(pos.y, pos.x).neighbors.get(diff);
@@ -103,13 +103,13 @@ std::tuple<point, facing_t> get_position(jungle_t& jungle,
     }
     const char facing_char = std::invoke([&]() {
       switch (facing) {
-        case right:
+        case aoc::right:
           return '>';
-        case down:
+        case aoc::down:
           return 'v';
-        case left:
+        case aoc::left:
           return '<';
-        case up:
+        case aoc::up:
           return '^';
         default:
           AOC_ASSERT(false, "Facing into an invalid direction");
@@ -124,7 +124,7 @@ std::tuple<point, facing_t> get_position(jungle_t& jungle,
   };
   for (auto direction : directions) {
     if (direction >= 0) {
-      facing = static_cast<facing_t>(direction);
+      facing = static_cast<aoc::facing_t>(direction);
       continue;
     }
     int num_steps = -direction;
@@ -143,7 +143,7 @@ void adjust_top_to_bottom(raw_map_t& raw_map) {
   const auto row_length = raw_map[0].size();
   const auto num_rows = raw_map.size();
   for (int column = 0; column < row_length; ++column) {
-    min_max_helper vertical_limits;
+    aoc::min_max_helper vertical_limits;
     for (int row = 0; row < num_rows; ++row) {
       auto const& value = raw_map[row][column];
       if (is_part_of_cube(value.value)) {
@@ -175,7 +175,7 @@ void set_neighbors_wrapped(jungle_t& jungle, raw_map_t const& raw_map) {
       const auto current_ptr = &raw_map[row][column];
       const auto section_size =
           current_ptr->limits.max_value - current_ptr->limits.min_value;
-      for (const auto diff : basic_neighbor_diffs) {
+      for (const auto diff : aoc::basic_neighbor_diffs) {
         auto neighbor_pos =
             current_ptr->limits.min_value +
             ((section_size + pos - current_ptr->limits.min_value + diff) %
@@ -202,7 +202,7 @@ void set_neighbors_cube(jungle_t& jungle, raw_map_t const& raw_map) {
     }
   });
 
-  array_grid<corner_t, max_sides> cube_corners;
+  aoc::array_grid<corner_t, max_sides> cube_corners;
   constexpr corner_t invalid_corner = point{-1, -1};
   for (int row_side = 0; row_side < num_sides.y; ++row_side) {
     for (int column_side = 0; column_side < num_sides.x; ++column_side) {
@@ -247,11 +247,11 @@ int solve_case(std::string const& filename) {
   raw_map_t raw_map;
   typename raw_map_t::value_type current_row;
 
-  min_max_helper grid_size;
+  aoc::min_max_helper grid_size;
 
   const auto parse_map_raw = [&](std::string_view line, int linenum) {
     int row = linenum - 1;
-    min_max_helper horizontal_limits;
+    aoc::min_max_helper horizontal_limits;
     int column = -1;
     new_line.clear();
     std::ranges::transform(line, std::back_inserter(new_line),
@@ -281,20 +281,20 @@ int solve_case(std::string const& filename) {
 
   directions_t directions;
   const auto parse_directions = [&](std::string_view line) {
-    facing_t facing = right;
+    auto facing = aoc::right;
     std::string buffer;
     const auto flush_buffer = [&]() {
-      directions.push_back(-to_number<int>(buffer));
+      directions.push_back(-aoc::to_number<int>(buffer));
       buffer.clear();
     };
     for (const char value : line) {
       if (value == 'R') {
         flush_buffer();
-        facing = static_cast<facing_t>((facing + 1) % 4);
+        facing = static_cast<aoc::facing_t>((facing + 1) % 4);
         directions.push_back(facing);
       } else if (value == 'L') {
         flush_buffer();
-        facing = static_cast<facing_t>((4 + facing - 1) % 4);
+        facing = static_cast<aoc::facing_t>((4 + facing - 1) % 4);
         directions.push_back(facing);
       } else {
         buffer.push_back(value);
@@ -321,7 +321,7 @@ int solve_case(std::string const& filename) {
     }
   };
 
-  readfile_op<trimmer_keep_spaces<>>(filename, parser);
+  aoc::readfile_op<aoc::trimmer_keep_spaces<>>(filename, parser);
 
   grid_size.max_value += point{1, 1};
 
@@ -349,7 +349,7 @@ int solve_case(std::string const& filename) {
     }
   }
 
-  auto [pos, facing] = get_position(jungle, directions, start, right);
+  auto [pos, facing] = get_position(jungle, directions, start, aoc::right);
 
   // Indexing starts at 1 for the puzzle
   pos += {1, 1};

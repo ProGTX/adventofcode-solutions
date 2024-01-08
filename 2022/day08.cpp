@@ -14,7 +14,7 @@
 #include <string_view>
 #include <vector>
 
-using forrest_t = grid<int>;
+using forrest_t = aoc::grid<int>;
 using row_t = forrest_t::row_t;
 
 std::vector<int> check_visibility(forrest_t& forrest) {
@@ -69,7 +69,7 @@ int solve_part1(const std::string& filename) {
   forrest_t forrest;
   row_t row;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     row.clear();
     for (auto number_str : line) {
       row.push_back(static_cast<int>(number_str - '0'));
@@ -86,7 +86,8 @@ int solve_part1(const std::string& filename) {
 }
 
 std::vector<int> check_scenic_score(forrest_t& forrest) {
-  const auto get_score = [](ranged_iterator<const int> it, int num_iterations) {
+  const auto get_score = [](aoc::ranged_iterator<const int> it,
+                            int num_iterations) {
     int num_trees = 0;
     int origin_height = *it;
     for (int iteration = 0; iteration < num_iterations; ++iteration) {
@@ -112,16 +113,16 @@ std::vector<int> check_scenic_score(forrest_t& forrest) {
     int row = i / row_length;
     int column = i % row_length;
 
-    auto ltr_it = ranged_iterator(&data[i], 1);
+    auto ltr_it = aoc::ranged_iterator(&data[i], 1);
     score *= get_score(ltr_it, row_length - 1 - column);
 
-    auto rtl_it = ranged_iterator(&data[i], -1);
+    auto rtl_it = aoc::ranged_iterator(&data[i], -1);
     score *= get_score(rtl_it, column);
 
-    auto ttb_it = ranged_iterator(&data[i], row_length);
+    auto ttb_it = aoc::ranged_iterator(&data[i], row_length);
     score *= get_score(ttb_it, num_rows - 1 - row);
 
-    auto btt_it = ranged_iterator(&data[i], -row_length);
+    auto btt_it = aoc::ranged_iterator(&data[i], -row_length);
     score *= get_score(btt_it, row);
 
     scenic_score[i] = score;
@@ -134,7 +135,7 @@ int solve_part2(const std::string& filename) {
   forrest_t forrest;
   row_t row;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     row.clear();
     for (auto number_str : line) {
       row.push_back(static_cast<int>(number_str - '0'));

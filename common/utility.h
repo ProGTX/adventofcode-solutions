@@ -15,6 +15,8 @@
 #include <type_traits>
 #include <utility>
 
+namespace aoc {
+
 // https://en.cppreference.com/w/cpp/utility/to_underlying
 template <class Enum>
 constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept {
@@ -432,5 +434,7 @@ static_assert(std::ranges::equal(transpose(std::vector{
                                      std::array{3, 6, 9, 12},
                                  }));
 #endif
+
+} // namespace aoc
 
 #endif // AOC_UTILITY_H

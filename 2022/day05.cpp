@@ -44,7 +44,8 @@ std::string solve_case(const std::string& filename) {
         }
       } else {
         // Done parsing crate stacks, put them in correct order
-        auto stack_numbers = split<std::vector<std::string_view>>(line, ' ');
+        auto stack_numbers =
+            aoc::split<std::vector<std::string_view>>(line, ' ');
         num_stacks = static_cast<int>(stack_numbers.back().at(0) - '0');
         for (int i = 0; i < num_stacks; ++i) {
           std::ranges::reverse(crates[i]);
@@ -57,13 +58,13 @@ std::string solve_case(const std::string& filename) {
 
     // move N from A to B
     auto [move_str, n_str, from_str, from_pos_str, to_str, to_pos_str] =
-        split<std::array<std::string_view, 6>>(line, ' ');
+        aoc::split<std::array<std::string_view, 6>>(line, ' ');
 
-    auto move_num_crates = to_number<int>(n_str);
+    auto move_num_crates = aoc::to_number<int>(n_str);
 
     // Adjust the indexing by 1
-    auto& from_crate = crates[to_number<int>(from_pos_str) - 1];
-    auto& to_crate = crates[to_number<int>(to_pos_str) - 1];
+    auto& from_crate = crates[aoc::to_number<int>(from_pos_str) - 1];
+    auto& to_crate = crates[aoc::to_number<int>(to_pos_str) - 1];
 
     if constexpr (!grab_multiple) {
       // Part 1
@@ -82,7 +83,7 @@ std::string solve_case(const std::string& filename) {
   };
 
   // Don't trim spaces, we need them in this example
-  readfile_op<trimmer_keep_spaces<>>(filename, parser);
+  aoc::readfile_op<aoc::trimmer_keep_spaces<>>(filename, parser);
 
   std::cout << "Done parsing " << std::endl;
   std::string top_stacks(static_cast<size_t>(num_stacks), ' ');

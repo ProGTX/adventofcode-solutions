@@ -13,7 +13,7 @@
 #include <vector>
 
 int solve_case(const std::string& filename, int window_width) {
-  auto measurements = readfile_numbers(filename);
+  auto measurements = aoc::readfile_numbers(filename);
   const auto displacement = window_width - 1;
 
   const auto it = std::begin(measurements);

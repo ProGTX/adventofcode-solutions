@@ -8,6 +8,8 @@
 #include <utility>
 #include <vector>
 
+namespace aoc {
+
 template <class T, class Compare = std::less<T>>
   requires std::equality_comparable<T>
 class sorted_flat_set {
@@ -113,5 +115,7 @@ class sorted_flat_set {
   container_type m_data;
   Compare m_comparator;
 };
+
+} // namespace aoc
 
 #endif // AOC_FLAT_H

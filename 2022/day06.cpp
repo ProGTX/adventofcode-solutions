@@ -33,7 +33,7 @@ template <int window_size>
 void solve_case(const std::string& filename) {
   std::vector<int> positions;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     for (int pos = window_size - 1; pos < line.size(); ++pos) {
       int start = pos - window_size + 1;
       auto window = line.substr(start, window_size);

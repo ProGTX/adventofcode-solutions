@@ -30,11 +30,12 @@ template <bool allow_diagonal>
 int solve_case(const std::string& filename) {
   lines_t lines;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     auto [start_str, end_str] =
-        split<std::array<std::string_view, 2>>(line, '-');
-    auto start = split<point>(start_str, ',');
-    auto end = split<point>(std::string_view{end_str}.substr(sizeof(">")), ',');
+        aoc::split<std::array<std::string_view, 2>>(line, '-');
+    auto start = aoc::split<point>(start_str, ',');
+    auto end =
+        aoc::split<point>(std::string_view{end_str}.substr(sizeof(">")), ',');
     if (end < start) {
       std::swap(start, end);
     }

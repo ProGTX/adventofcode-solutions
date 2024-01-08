@@ -16,9 +16,9 @@
 #include <string_view>
 #include <vector>
 
-class board : public array_grid<int, 5> {
+class board : public aoc::array_grid<int, 5> {
  private:
-  using base_t = array_grid<int, 5>;
+  using base_t = aoc::array_grid<int, 5>;
   constexpr static auto m_size = 5 * 5;
 
  public:
@@ -115,10 +115,10 @@ int solve_case(const std::string& filename, int game_rounds) {
   std::vector<board> boards;
   board* current_board_ptr = nullptr;
 
-  readfile_op_header(
+  aoc::readfile_op_header(
       filename,
       [&](std::string_view line) {
-        bingo_numbers = split<decltype(bingo_numbers)>(line, ',');
+        bingo_numbers = aoc::split<decltype(bingo_numbers)>(line, ',');
       },
       [&](std::string_view line) {
         if (line.empty()) {
@@ -128,7 +128,7 @@ int solve_case(const std::string& filename, int game_rounds) {
           // Don't do anything with the board yet
           return;
         }
-        auto row = split<board::row_t>(line, ' ');
+        auto row = aoc::split<board::row_t>(line, ' ');
         current_board_ptr->add(row);
       });
 

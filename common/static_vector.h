@@ -10,6 +10,8 @@
 #include <type_traits>
 #include <utility>
 
+namespace aoc {
+
 // https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0843r2.html
 template <class T, size_t N>
 class static_vector {
@@ -169,5 +171,7 @@ class static_vector {
   container_type m_data;
   size_t m_size = 0;
 };
+
+} // namespace aoc
 
 #endif // AOC_STATIC_VECTOR_H

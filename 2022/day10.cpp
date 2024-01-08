@@ -83,7 +83,7 @@ int solve_case(const std::string& filename) {
   static constexpr size_t width = 40;
   static constexpr size_t height = 6;
 
-  using crt = array_grid<char, width, height>;
+  using crt = aoc::array_grid<char, width, height>;
   crt monitor;
   typename crt::row_t row;
   for (int i = 0; i < width; ++i) {
@@ -130,14 +130,14 @@ int solve_case(const std::string& filename) {
     pipeline.front().clear();
   };
 
-  readfile_op(filename, [&](std::string_view line) {
-    auto [op, value] = split<std::array<std::string_view, 2>>(line, ' ');
+  aoc::readfile_op(filename, [&](std::string_view line) {
+    auto [op, value] = aoc::split<std::array<std::string_view, 2>>(line, ' ');
 
     // Place new instruction into the pipeline
     if (op == "noop") {
       pipeline.front().clear();
     } else if (op == "addx") {
-      pipeline.front() = instruction::make_addx(to_number<int>(value));
+      pipeline.front() = instruction::make_addx(aoc::to_number<int>(value));
     } else {
       throw std::runtime_error("Invalid instruction " + std::string{op});
     }

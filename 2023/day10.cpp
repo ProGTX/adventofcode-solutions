@@ -35,13 +35,13 @@ inline constexpr auto east_allowed =
 
 } // namespace tile_t
 
-using field_t = grid<char, std::string, std::vector<char>>;
+using field_t = aoc::grid<char, std::string, std::vector<char>>;
 
 constexpr std::pair<std::vector<int>, char> get_pipe_loop(
     const field_t& field, const int start_index) {
   std::vector<int> loop_indexes;
   loop_indexes.push_back(start_index);
-  static_vector<point, 2> start_neighbor_diffs;
+  aoc::static_vector<point, 2> start_neighbor_diffs;
 
   // Separate logic for finding the neighbors of the start position
   auto add_starting_neighbor = [&](point current_pos, point diff,
@@ -57,7 +57,7 @@ constexpr std::pair<std::vector<int>, char> get_pipe_loop(
     AOC_ASSERT(
         value != tile_t::start,
         "Something went wrong, cannot use start as neighbor at this point");
-    if (!ranges::contains(valid_values, value)) {
+    if (!aoc::ranges::contains(valid_values, value)) {
       return;
     }
     start_neighbor_diffs.push_back(diff);
@@ -83,7 +83,7 @@ constexpr std::pair<std::vector<int>, char> get_pipe_loop(
                                 auto pos = pos_2d + diff;
                                 return field.linear_index(pos.y, pos.x);
                               }) |
-        ranges::to<static_vector<int, 2>>();
+        aoc::ranges::to<aoc::static_vector<int, 2>>();
     loop_indexes.push_back(start_neighbor_indexes[0]);
 
     // Figure out what the start tile actually is
@@ -95,8 +95,8 @@ constexpr std::pair<std::vector<int>, char> get_pipe_loop(
             const std::array<char, 3>& second, point req_diff_second) {
           return (start_neighbor_diffs[0] == req_diff_first) &&
                  (start_neighbor_diffs[1] == req_diff_second) &&
-                 ranges::contains(first, neigh1) &&
-                 ranges::contains(second, neigh2);
+                 aoc::ranges::contains(first, neigh1) &&
+                 aoc::ranges::contains(second, neigh2);
         };
     auto neighbors_compare_weak =
         [&](const std::array<char, 3>& first, point req_diff_first,
@@ -130,7 +130,7 @@ constexpr std::pair<std::vector<int>, char> get_pipe_loop(
   }
 
   auto get_neighbors_no_check =
-      [&](int current_index) -> static_vector<point, 2> {
+      [&](int current_index) -> aoc::static_vector<point, 2> {
     pos_2d = field.position(current_index);
     auto current_value = field.at_index(current_index);
     // No need to check edges, assume each pipe always has two neighbors
@@ -201,14 +201,14 @@ constexpr int num_inside(const field_t& field, const int start_index) {
     bool inside = false;
     auto index = field.linear_index(row, 0);
     for (int col = 0; col < field.row_length(); ++col, ++index) {
-      const bool is_pipe = ranges::contains(pipe_loop, index);
+      const bool is_pipe = aoc::ranges::contains(pipe_loop, index);
       if (is_pipe) {
         auto value = field.at_index(index);
         if (index == start_index) {
           value = start_tile;
         }
-        // Using south_allowed because they're all facing north
-        if (ranges::contains(tile_t::south_allowed, value)) {
+        // Using south_allowed because they're all facing aoc::north
+        if (aoc::ranges::contains(tile_t::south_allowed, value)) {
           inside = !inside;
         }
       } else if (inside) {
@@ -234,7 +234,7 @@ int solve_case(const std::string& filename) {
     }
     field.add_row(std::move(line));
   };
-  readfile_op(filename, read_values);
+  aoc::readfile_op(filename, read_values);
 
   int sum = 0;
   if constexpr (!calc_area) {

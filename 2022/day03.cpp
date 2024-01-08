@@ -30,7 +30,7 @@ constexpr int calc_priority(char value) {
 int solve_part1(const std::string& filename) {
   int score = 0;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     ascii_array<bool> occurs_in_half1{false};
     ascii_array<bool> occurs_in_half2{false};
 
@@ -73,7 +73,7 @@ int solve_part2(const std::string& filename) {
 
   reset_count();
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     for (char value : line) {
       occurrences[index][value] = true;
     }

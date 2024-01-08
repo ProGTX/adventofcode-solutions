@@ -24,11 +24,11 @@ int solve_case(const std::string& filename, int numElvesAverage) {
       return;
     }
     // Same elf
-    int currentCal = to_number<int>(line);
+    int currentCal = aoc::to_number<int>(line);
     singleElfCalories += currentCal;
   };
 
-  readfile_op(filename, elfSolver);
+  aoc::readfile_op(filename, elfSolver);
   // Need to add last elf
   caloriesPerElf.push_back(singleElfCalories);
 

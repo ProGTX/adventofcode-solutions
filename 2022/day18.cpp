@@ -15,7 +15,7 @@
 #include <string_view>
 #include <vector>
 
-using droplet_t = cube_t<int>;
+using droplet_t = aoc::cube_type<int>;
 using droplets_t = std::set<droplet_t>;
 
 int calc_surface_area(const droplets_t& droplets) {
@@ -42,8 +42,8 @@ template <bool>
 int solve_case(const std::string& filename) {
   droplets_t droplets;
 
-  readfile_op(filename, [&](std::string_view line) {
-    auto [x, y, z] = split<std::array<int, 3>>(line, ',');
+  aoc::readfile_op(filename, [&](std::string_view line) {
+    auto [x, y, z] = aoc::split<std::array<int, 3>>(line, ',');
     droplets.emplace(x, y, z);
   });
 

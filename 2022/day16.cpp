@@ -82,17 +82,17 @@ template <int num_minutes, bool>
 int solve_case(const std::string& filename) {
   named_valves_t named_valves;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     auto [valve_info, tunnel_info] =
-        split<std::array<std::string, 2>>(line, ';');
+        aoc::split<std::array<std::string, 2>>(line, ';');
 
     auto [vstr0, name, vstr1, vstr2, rate_str] =
-        split<std::array<std::string, 5>>(valve_info, ' ');
+        aoc::split<std::array<std::string, 5>>(valve_info, ' ');
 
-    auto rate = to_number<int>(rate_str.substr(sizeof("rate")));
+    auto rate = aoc::to_number<int>(rate_str.substr(sizeof("rate")));
     tunnel_info = tunnel_info.substr(sizeof("tunnels lead to valves"));
-    auto tunnels = split<std::vector<std::string>>(tunnel_info, ',',
-                                                   trimmer<std::string>());
+    auto tunnels = aoc::split<std::vector<std::string>>(
+        tunnel_info, ',', aoc::trimmer<std::string>());
 
     named_valves.emplace_back(std::move(name), rate, std::move(tunnels));
   });
@@ -116,12 +116,12 @@ int solve_case(const std::string& filename) {
                            return valve_t<int>{name_to_index(valve.name),
                                                valve.rate, std::move(tunnels)};
                          });
-  std::cout << print_range(
+  std::cout << aoc::print_range(
                    valves |
                        std::views::transform([&](const valve_t<int>& valve) {
-                         return printable_tuple{valve.name,
-                                                named_valves[valve.name].name,
-                                                valve.rate, valve.tunnels};
+                         return aoc::printable_tuple{
+                             valve.name, named_valves[valve.name].name,
+                             valve.rate, valve.tunnels};
                        }),
                    "\n")
             << std::endl;

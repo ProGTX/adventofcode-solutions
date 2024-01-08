@@ -36,7 +36,7 @@ int solve_part1(const std::string& filename) {
     occurrences[i] = {0, 0};
   }
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     for (int bitPos = 0; auto bit_char : line) {
       auto bit = static_cast<int>(bit_char - '0');
       ++occurrences[bitPos][bit];
@@ -60,7 +60,7 @@ int solve_part1(const std::string& filename) {
 template <size_t bit_width>
 int solve_part2(const std::string& filename) {
   bits_lines_t<bit_width> bits_lines;
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     bits_array<bit_width> bits;
     std::ranges::transform(line, std::begin(bits), [&](unsigned char bit_char) {
       return static_cast<int>(bit_char - '0');

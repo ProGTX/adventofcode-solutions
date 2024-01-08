@@ -58,7 +58,7 @@ int count_easy(input_t const& input) {
   return count;
 }
 
-using digit_possibility_t = static_vector<int, digit_wires.size()>;
+using digit_possibility_t = aoc::static_vector<int, digit_wires.size()>;
 using digit_combinations_t =
     std::array<digit_possibility_t, digit_wires.size()>;
 
@@ -75,7 +75,7 @@ digit_combinations_t get_digit_combinations(
   return digit_combinations;
 }
 
-using wire_set_t = static_vector<char, original_map.size()>;
+using wire_set_t = aoc::static_vector<char, original_map.size()>;
 using segment_set_t = std::array<wire_set_t, original_map.size()>;
 
 constexpr wire_set_t pattern_to_set(std::string_view wire) {
@@ -119,7 +119,7 @@ std::string get_mapping(input_line_t::signal_patterns_t const& patterns) {
       for (auto digit : combination) {
         auto digit_wire = digit_wires[digit];
         const auto& intersecting_set =
-            ranges::contains(digit_wire, static_cast<char>(w + 'a'))
+            aoc::ranges::contains(digit_wire, static_cast<char>(w + 'a'))
                 ? valid_set
                 : invalid_set;
 
@@ -168,7 +168,7 @@ int output_to_number(std::string_view out, std::string_view mapping) {
       return w;
     }
   }
-  std::cout << "Error: Invalid wire set: " << print_range(wire_set)
+  std::cout << "Error: Invalid wire set: " << aoc::print_range(wire_set)
             << std::endl;
   throw std::runtime_error("Invalid wire set given");
 }
@@ -197,12 +197,13 @@ template <bool deduce>
 int_t solve_case(const std::string& filename) {
   input_t input;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     auto [signal_patterns_str, output_str] =
-        split<std::array<std::string_view, 2>>(line, '|');
-    input.emplace_back(split<typename input_line_t::signal_patterns_t>(
-                           signal_patterns_str, ' '),
-                       split<typename input_line_t::output_t>(output_str, ' '));
+        aoc::split<std::array<std::string_view, 2>>(line, '|');
+    input.emplace_back(
+        aoc::split<typename input_line_t::signal_patterns_t>(
+            signal_patterns_str, ' '),
+        aoc::split<typename input_line_t::output_t>(output_str, ' '));
   });
 
   int_t count = 0;

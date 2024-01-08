@@ -17,7 +17,7 @@ inline constexpr char round_rock = 'O';
 inline constexpr char cube_rock = '#';
 inline constexpr char empty = '.';
 
-using platform_t = grid<char, std::string, std::string>;
+using platform_t = aoc::grid<char, std::string, std::string>;
 
 constexpr int north_load(const platform_t& platform) {
   int total_load = 0;
@@ -89,7 +89,7 @@ constexpr void rocks_fall_horizontal(platform_t& platform,
 }
 
 constexpr void rocks_fall_inplace(platform_t& platform,
-                                  const facing_t direction) {
+                                  const aoc::facing_t direction) {
   const auto fall_diff = get_diff(direction);
   if (fall_diff.x == 0) {
     rocks_fall_vertical(platform, fall_diff);
@@ -98,16 +98,17 @@ constexpr void rocks_fall_inplace(platform_t& platform,
   }
 }
 
-constexpr platform_t rocks_fall(platform_t platform, const facing_t direction) {
+constexpr platform_t rocks_fall(platform_t platform,
+                                const aoc::facing_t direction) {
   rocks_fall_inplace(platform, direction);
   return platform;
 }
 
 constexpr void spin_cycle(platform_t& platform) {
-  rocks_fall_vertical(platform, get_diff(north));
-  rocks_fall_horizontal(platform, get_diff(west));
-  rocks_fall_vertical(platform, get_diff(south));
-  rocks_fall_horizontal(platform, get_diff(east));
+  rocks_fall_vertical(platform, get_diff(aoc::north));
+  rocks_fall_horizontal(platform, get_diff(aoc::west));
+  rocks_fall_vertical(platform, get_diff(aoc::south));
+  rocks_fall_horizontal(platform, get_diff(aoc::east));
 }
 
 constexpr platform_t test_platform() {
@@ -136,8 +137,8 @@ static_assert(std::ranges::equal(platform_t{std::string{"OOOO.#.O.."
                                                         "#....###.."
                                                         "#....#...."},
                                             10,10},
-                                 rocks_fall(test_platform(), north)));
-static_assert(136 == north_load(rocks_fall(test_platform(), north)));
+                                 rocks_fall(test_platform(), aoc::north)));
+static_assert(136 == north_load(rocks_fall(test_platform(), aoc::north)));
 #endif
 
 template <bool run_cycles>
@@ -147,11 +148,11 @@ int solve_case(const std::string& filename) {
   platform_t platform;
 
   auto read_values = [&](std::string_view line) { platform.add_row(line); };
-  readfile_op(filename, read_values);
+  aoc::readfile_op(filename, read_values);
 
   auto sum = 0;
   if constexpr (!run_cycles) {
-    sum = north_load(rocks_fall(std::move(platform), north));
+    sum = north_load(rocks_fall(std::move(platform), aoc::north));
   } else {
     // Imagine an iteration that looks something like this:
     // |........|.................|.................|.................|........|

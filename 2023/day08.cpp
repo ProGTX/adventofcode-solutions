@@ -40,7 +40,7 @@ constexpr int_t num_steps(const std::vector<node_t>& directions,
   int_t steps = 0;
   int inst_index = 0;
   while (true) {
-    if (ranges::contains(end_indexes, start_index)) {
+    if (aoc::ranges::contains(end_indexes, start_index)) {
       break;
     }
     auto inst = instructions[inst_index];
@@ -62,7 +62,7 @@ constexpr int_t num_steps(const std::vector<node_t>& directions,
                           const std::vector<node_select_func_t>& instructions,
                           const std::vector<int>& start_indexes,
                           const std::vector<int>& end_indexes) {
-  return ranges::lcm(
+  return aoc::ranges::lcm(
       start_indexes | std::views::transform([&](int start_index) {
         return num_steps(directions, instructions, start_index, end_indexes);
       }));
@@ -110,10 +110,11 @@ int_t solve_case(const std::string& filename) {
     }
 
     // node = (left, right)
-    auto [node, lr] = split<std::array<std::string, 2>>(line, '=', trimmer<>{});
-    lr = trim(lr, " ())");
+    auto [node, lr] =
+        aoc::split<std::array<std::string, 2>>(line, '=', aoc::trimmer<>{});
+    lr = aoc::trim(lr, " ())");
     auto [left, right] =
-        split<std::array<std::string, 2>>(lr, ',', trimmer<>{});
+        aoc::split<std::array<std::string, 2>>(lr, ',', aoc::trimmer<>{});
 
     auto node_it = add_name_index(node);
     auto left_it = add_name_index(left);
@@ -131,7 +132,7 @@ int_t solve_case(const std::string& filename) {
     directions[node_it->second] = node_t{left_it->second, right_it->second};
   };
 
-  readfile_op_header(filename, read_instructions, read_values);
+  aoc::readfile_op_header(filename, read_instructions, read_values);
 
   int_t sum = num_steps(directions, instructions, start_indexes, end_indexes);
   std::cout << filename << " -> " << sum << std::endl;

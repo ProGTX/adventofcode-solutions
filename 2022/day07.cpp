@@ -15,9 +15,9 @@
 #include <string_view>
 #include <vector>
 
-class filesystem_t : public graph<int, filesystem_t, std::string> {
+class filesystem_t : public aoc::graph<int, filesystem_t, std::string> {
  private:
-  using base_t = graph<int, filesystem_t, std::string>;
+  using base_t = aoc::graph<int, filesystem_t, std::string>;
 
  public:
   enum type_t {
@@ -100,9 +100,9 @@ int solve_case(const std::string& filename) {
   filesystem_t filesystem;
   filesystem_t* current_node = &filesystem;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     auto [instruction, name, cd_to] =
-        split<std::array<std::string_view, 3>>(line, ' ');
+        aoc::split<std::array<std::string_view, 3>>(line, ' ');
     if (instruction[0] == '$') {
       if (name == "cd") {
         if (cd_to == "/") {
@@ -131,7 +131,7 @@ int solve_case(const std::string& filename) {
       }
     } else {
       // File
-      auto filesize = to_number<int>(instruction);
+      auto filesize = aoc::to_number<int>(instruction);
       if (child_node == nullptr) {
         current_node->add_file(std::string{name}, filesize);
       } else {

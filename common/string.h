@@ -17,6 +17,8 @@
 #include <type_traits>
 #include <vector>
 
+namespace aoc {
+
 using namespace std::string_view_literals;
 
 template <class value_type, std::ranges::range R>
@@ -219,5 +221,7 @@ static_assert(2 == binary_to_number<'1'>("01"));
 static_assert(13 == binary_to_number<'1'>("1011"));
 static_assert(205 == binary_to_number<'#'>("#.##..##."));
 static_assert(6757 == binary_to_number<'#'>("#.#..##..#.##"));
+
+} // namespace aoc
 
 #endif // AOC_STRING_H

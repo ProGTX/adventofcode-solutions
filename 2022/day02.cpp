@@ -38,9 +38,9 @@ int solve_part1(const std::string& filename) {
       {'X', rock}, {'Y', paper}, {'Z', scissors},
   };
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     auto [opponentStr, responseStr] =
-        split<std::array<std::string_view, 2>>(line, ' ');
+        aoc::split<std::array<std::string_view, 2>>(line, ' ');
     auto opponent = hand_map.at(opponentStr.at(0));
     auto response = hand_map.at(responseStr.at(0));
     // Add 1 because values are lower
@@ -69,9 +69,9 @@ int solve_part2(const std::string& filename) {
       {'X', lose}, {'Y', draw},  {'Z', win},
   };
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     auto [opponentStr, outcomeStr] =
-        split<std::array<std::string_view, 2>>(line, ' ');
+        aoc::split<std::array<std::string_view, 2>>(line, ' ');
     auto opponent = hand_map.at(opponentStr.at(0));
     auto outcome = hand_map.at(outcomeStr.at(0));
     score += outcome;

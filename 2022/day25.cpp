@@ -80,7 +80,7 @@ constexpr std::string sum_snafus(std::string_view lhs, std::string_view rhs) {
     outr[i] = int_to_snafu_char(sum - (carry * base));
   }
   outr[i] = int_to_snafu_char(carry);
-  output = std::string{ltrim(output, "0")};
+  output = std::string{aoc::ltrim(output, "0")};
   return output;
 }
 
@@ -119,12 +119,12 @@ constexpr std::string to_snafu(const int_t number) {
     current = current - (multiple * multiplier);
     multiplier /= base;
   }
-  return std::string{ltrim(snafu, "0")};
+  return std::string{aoc::ltrim(snafu, "0")};
 }
 
 template <int base, bool execute_long>
 std::string solve_case(std::string const& filename) {
-  input_t input = readfile_lines(filename);
+  input_t input = aoc::readfile_lines(filename);
 
   auto snafu = sum_input_as_snafus<base>(input);
 

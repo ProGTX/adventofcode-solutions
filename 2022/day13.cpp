@@ -17,9 +17,9 @@
 #include <string_view>
 #include <vector>
 
-struct packet_tree : public graph<int, packet_tree, std::string_view> {
+struct packet_tree : public aoc::graph<int, packet_tree, std::string_view> {
  private:
-  using base_t = graph<int, packet_tree, std::string_view>;
+  using base_t = aoc::graph<int, packet_tree, std::string_view>;
 
  protected:
   constexpr packet_tree(packet_tree* parent, int value, bool is_leaf)
@@ -126,7 +126,7 @@ int solve_case(const std::string& filename) {
   std::string current_number_str;
   const auto add_number_if_not_empty = [&]() {
     if (!current_number_str.empty()) {
-      packet_stack.top()->add_value(to_number<int>(current_number_str));
+      packet_stack.top()->add_value(aoc::to_number<int>(current_number_str));
       current_number_str.clear();
     }
   };
@@ -151,7 +151,7 @@ int solve_case(const std::string& filename) {
   };
 
   int index = 0;
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     if (line.empty()) {
       return;
     }

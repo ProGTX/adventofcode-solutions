@@ -47,8 +47,8 @@ int_t solve_case(const std::string& filename) {
   lanternfish fish;
   std::ranges::fill(fish, 0);
 
-  readfile_op(filename, [&](std::string_view line) {
-    auto stages = split<std::vector<int>>(line, ',');
+  aoc::readfile_op(filename, [&](std::string_view line) {
+    auto stages = aoc::split<std::vector<int>>(line, ',');
     for (const int fish_stage : stages) {
       ++fish[fish_stage];
     }

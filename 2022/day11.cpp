@@ -31,7 +31,7 @@ struct monkey_t {
 
   std::ostream& print(std::string_view indent = "",
                       std::ostream& out = std::cout) const {
-    out << indent << print_range(items) << std::endl;
+    out << indent << aoc::print_range(items) << std::endl;
     out << indent << "operation(7) = " << operation(7) << std::endl;
     out << indent << "test{" << test.divisible_by << ",true(" << test.on_true
         << "),"
@@ -46,12 +46,12 @@ item_t solve_case(const std::string& filename) {
   monkey_t* current = nullptr;
   item_t divisible_max = 1;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     if (line.empty()) {
       return;
     }
-    auto items = split<std::vector<std::string>>(line, ',');
-    auto instructions = split<std::vector<std::string>>(items[0], ' ');
+    auto items = aoc::split<std::vector<std::string>>(line, ',');
+    auto instructions = aoc::split<std::vector<std::string>>(items[0], ' ');
     if (instructions[0] == "Monkey") {
       current = &monkeys.emplace_back();
     } else if (instructions[0] == "Starting") {
@@ -61,7 +61,7 @@ item_t solve_case(const std::string& filename) {
           items | std::views::drop(1), std::back_inserter(current->items),
           [](const std::string& str) { return std::stoi(str); });
     } else if (instructions[0] == "Operation:") {
-      auto binary_op = get_binary_op<item_t>(instructions[4][0]);
+      auto binary_op = aoc::get_binary_op<item_t>(instructions[4][0]);
       bool use_old = (instructions[5] == "old");
       item_t value = use_old ? 0 : std::stoi(instructions[5]);
       current->operation = [=](item_t old) {

@@ -16,6 +16,8 @@ https://github.com/cor3ntin/ranges/blob/master/include/cor3ntin/ranges/to.hpp
 #include <tuple>
 #include <utility>
 
+namespace aoc {
+
 namespace ranges {
 
 struct from_range_t {};
@@ -269,5 +271,7 @@ constexpr auto to(Rng&& rng, Args&&... args) -> Cont {
 }
 
 } // namespace ranges
+
+} // namespace aoc
 
 #endif // AOC_RANGE_TO_H

@@ -13,6 +13,8 @@
 #include <tuple>
 #include <utility>
 
+namespace aoc {
+
 template <class R>
 struct print_range {
   R range;
@@ -107,5 +109,7 @@ constexpr void println(std::string_view str, FirstT first, Args&&... args) {
     std::cout << std::endl;
   });
 }
+
+} // namespace aoc
 
 #endif // AOC_PRINT_H

@@ -63,17 +63,18 @@ int_t solve_case(const std::string& filename) {
     auto number_str =
         line.substr((linenum == 1) ? sizeof("Time:") : sizeof("Distance:"));
     using store_t = std::conditional_t<single_race, std::string_view, int_t>;
-    auto tmp_container = split<std::vector<store_t>, true>(number_str, ' ');
+    auto tmp_container =
+        aoc::split<std::vector<store_t>, true>(number_str, ' ');
     auto& container = (linenum == 1) ? total_times : record_distances;
     if constexpr (!single_race) {
       container = std::move(tmp_container);
     } else {
       auto full_str =
-          std::views::join(tmp_container) | ranges::to<std::string>();
-      container.push_back(to_number<int_t>(full_str));
+          std::views::join(tmp_container) | aoc::ranges::to<std::string>();
+      container.push_back(aoc::to_number<int_t>(full_str));
     }
   };
-  readfile_op(filename, read_values);
+  aoc::readfile_op(filename, read_values);
 
   int_t error_margin = num_ways_to_win(total_times, record_distances);
   std::cout << filename << " -> " << error_margin << std::endl;

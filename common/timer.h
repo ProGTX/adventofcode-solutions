@@ -6,6 +6,8 @@
 #include <chrono>
 #include <iostream>
 
+namespace aoc {
+
 class timer {
  public:
   void start() {
@@ -52,5 +54,7 @@ class scoped_timer {
  private:
   timer timer_;
 };
+
+} // namespace aoc
 
 #endif // AOC_TIMER_H

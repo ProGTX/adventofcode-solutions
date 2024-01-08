@@ -22,7 +22,7 @@ constexpr inline auto rock = '#';
 // where ash is 0 and rock is 1
 // But we always add an extra 1 bit at the end to ensure a fixed end bit
 constexpr unsigned transform_to_number(std::string_view line) {
-  auto num = binary_to_number<rock>(line);
+  auto num = aoc::binary_to_number<rock>(line);
   num += (1 << line.size());
   return num;
 }
@@ -66,7 +66,7 @@ constexpr return_t reflection_points(unsigned number) {
       number_size > 1,
       "Cannot find reflection point on an empty line or single character");
   return_t refl_points;
-  if constexpr (is_specialization_of_v<return_t, std::vector>) {
+  if constexpr (aoc::is_specialization_of_v<return_t, std::vector>) {
     refl_points.resize(number_size);
   }
   std::ranges::fill(refl_points, 0);
@@ -166,7 +166,7 @@ static_assert(0 == reflection_point(pattern_t{
                        "..##..###",
                        "#....#..#",
                    }));
-static_assert(4 == reflection_point(transpose(pattern_t{
+static_assert(4 == reflection_point(aoc::transpose(pattern_t{
                        "#...##..#",
                        "#....#..#",
                        "..##..###",
@@ -186,7 +186,7 @@ static_assert(12 == reflection_point(pattern_t{
                     }));
 #endif
 
-constexpr int unsmudge_case(contains_uncvref<num_pattern_t> auto&& pattern,
+constexpr int unsmudge_case(aoc::contains_uncvref<num_pattern_t> auto&& pattern,
                             const int ignore_p) {
   const auto pattern_size = pattern.size();
   AOC_ASSERT(pattern.size() > 0, "Cannot work without lines");
@@ -209,7 +209,7 @@ constexpr int unsmudge_case(contains_uncvref<num_pattern_t> auto&& pattern,
 template <bool unsmudge>
 constexpr int check_pattern(const pattern_t& pattern) {
   auto pattern_numbers = to_numbers(pattern);
-  auto transposed_numbers = to_numbers(transpose(pattern));
+  auto transposed_numbers = to_numbers(aoc::transpose(pattern));
 
   auto p1 = reflection_point(pattern_numbers);
   auto p1t = 100 * reflection_point(transposed_numbers);
@@ -237,7 +237,7 @@ int solve_case(const std::string& filename) {
       pattern.push_back(std::move(line));
     }
   };
-  readfile_op(filename, read_values);
+  aoc::readfile_op(filename, read_values);
   sum += check_pattern<unsmudge>(pattern);
 
   std::cout << "  -> " << sum << std::endl;

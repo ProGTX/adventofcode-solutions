@@ -35,6 +35,8 @@ import aoc;
 
 #endif
 
+using point = aoc::point_type<int>;
+
 static bool g_success = true;
 
 #define AOC_EXPECT_RESULT(expected, actual)                                    \

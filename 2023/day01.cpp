@@ -77,7 +77,7 @@ int solve_case(const std::string& filename) {
     }
   };
 
-  readfile_op(filename, solver);
+  aoc::readfile_op(filename, solver);
 
   std::cout << filename << " -> " << sum << std::endl;
   return sum;

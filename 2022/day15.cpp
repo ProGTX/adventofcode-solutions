@@ -132,14 +132,14 @@ std::int64_t solve_case(const std::string& filename) {
 
   const auto convert_eq_str = [](std::string_view str) {
     // Works for "x=" and "y="
-    return to_number<int>(trim(str).substr(2));
+    return aoc::to_number<int>(aoc::trim(str).substr(2));
   };
 
-  min_max_helper min_max;
+  aoc::min_max_helper min_max;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     auto [sensor_info, beacon_info] =
-        split<std::array<std::string_view, 2>>(line, ':');
+        aoc::split<std::array<std::string_view, 2>>(line, ':');
 
     // Don't include the space at end, the null terminator is counted instead
     sensor_info = sensor_info.substr(sizeof("Sensor at"));
@@ -149,14 +149,14 @@ std::int64_t solve_case(const std::string& filename) {
     point sensor;
     {
       auto [x_eq, y_eq] =
-          split<std::array<std::string_view, 2>>(beacon_info, ',');
+          aoc::split<std::array<std::string_view, 2>>(beacon_info, ',');
       beacon = point{convert_eq_str(x_eq), convert_eq_str(y_eq)};
       min_max.update(beacon);
       beacons.push_back(beacon);
     }
     {
       auto [x_eq, y_eq] =
-          split<std::array<std::string_view, 2>>(sensor_info, ',');
+          aoc::split<std::array<std::string_view, 2>>(sensor_info, ',');
       sensor = point{convert_eq_str(x_eq), convert_eq_str(y_eq)};
       min_max.update(sensor);
       auto range = distance_manhattan(sensor, beacon);

@@ -25,7 +25,7 @@
 #include <utility>
 #include <vector>
 
-struct heightmap_t : public grid<int> {
+struct heightmap_t : public aoc::grid<int> {
   point begin_pos;
   point end_pos;
 };
@@ -79,7 +79,7 @@ int shortest_path_length_dijkstra(const heightmap_t& heightmap,
   // During the run of the algorithm,
   // the tentative distance of a node v is the length of the shortest path
   // discovered so far between the node v and the starting node.
-  using distances_t = grid<int>;
+  using distances_t = aoc::grid<int>;
   distances_t distances;
 
   // 1. Mark all nodes unvisited. Create a set of all the unvisited nodes called
@@ -87,7 +87,7 @@ int shortest_path_length_dijkstra(const heightmap_t& heightmap,
   const auto compare_points = [&](const point& lhs, const point& rhs) {
     return distances.at(lhs.y, lhs.x) < distances.at(rhs.y, rhs.x);
   };
-  using unvisited_t = sorted_flat_set<point, decltype(compare_points)>;
+  using unvisited_t = aoc::sorted_flat_set<point, decltype(compare_points)>;
   unvisited_t unvisited{compare_points};
 
   // 2. Since initially no path is known to any other vertex than the source
@@ -172,7 +172,7 @@ int solve_case(const std::string& filename) {
   heightmap_t heightmap;
   row_t row;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     if (line.empty()) {
       return;
     }

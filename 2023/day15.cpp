@@ -18,20 +18,20 @@ using namespace std::string_view_literals;
 // Set the current value to itself multiplied by 17.
 // Set the current value to the remainder of dividing itself by 256.
 constexpr int hash_alg(std::string_view str) {
-  return ranges::fold_left(str | views::transform_cast<int>(), 0,
-                           [](int current_value, int ascii) {
-                             current_value += ascii;
-                             current_value *= 17;
-                             current_value %= 256;
-                             return current_value;
-                           });
+  return aoc::ranges::fold_left(str | aoc::views::transform_cast<int>(), 0,
+                                [](int current_value, int ascii) {
+                                  current_value += ascii;
+                                  current_value *= 17;
+                                  current_value %= 256;
+                                  return current_value;
+                                });
 }
 static_assert(hash_alg("HASH") == 52);
 
 using steps_t = std::vector<std::string>;
 
 constexpr int sum_steps(const steps_t& steps) {
-  return ranges::accumulate(steps | std::views::transform(hash_alg), 0);
+  return aoc::ranges::accumulate(steps | std::views::transform(hash_alg), 0);
 }
 
 constexpr steps_t test_case() {
@@ -48,8 +48,8 @@ lens_t split_label(std::string_view str) {
   if (str.back() == '-') {
     return {std::string(str.substr(0, str.size() - 1)), -1};
   }
-  auto [name, number] = split<std::array<std::string_view, 2>>(str, "="sv);
-  return {std::string(name), to_number<int>(number)};
+  auto [name, number] = aoc::split<std::array<std::string_view, 2>>(str, "="sv);
+  return {std::string(name), aoc::to_number<int>(number)};
 }
 
 using instructions_t = std::vector<lens_t>;
@@ -80,7 +80,7 @@ constexpr boxes_t sort_boxes(const instructions_t& instructions) {
 
 constexpr int focusing_power(const box_t& box) {
   int multiplier = 1;
-  return ranges::fold_left(box, 0, [&](int power, const lens_t& lens) {
+  return aoc::ranges::fold_left(box, 0, [&](int power, const lens_t& lens) {
     power += multiplier * lens.second;
     ++multiplier;
     return power;
@@ -89,7 +89,7 @@ constexpr int focusing_power(const box_t& box) {
 
 constexpr int sum_boxes(const boxes_t& boxes) {
   int multiplier = 1;
-  return ranges::fold_left(boxes, 0, [&](int sum, const box_t& box) {
+  return aoc::ranges::fold_left(boxes, 0, [&](int sum, const box_t& box) {
     sum += multiplier * focusing_power(box);
     ++multiplier;
     return sum;
@@ -104,14 +104,14 @@ int solve_case(const std::string& filename) {
   instructions_t instructions;
 
   auto read_values = [&](std::string_view line) {
-    steps = split<steps_t>(line, ',');
+    steps = aoc::split<steps_t>(line, ',');
     if constexpr (lens_sort) {
       for (const auto& step : steps) {
         instructions.push_back(split_label(step));
       }
     }
   };
-  readfile_op(filename, read_values);
+  aoc::readfile_op(filename, read_values);
 
   int sum = 0;
   if constexpr (!lens_sort) {

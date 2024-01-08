@@ -75,7 +75,7 @@ std::optional<resource_pack> try_consume_robot_resources(
   auto new_resources = resources - new_robot_cost;
   if (new_resources.is_sufficient()) {
     std::cout << "  Start building new robot by spending: "
-              << print_range(new_robot_cost) << std::endl;
+              << aoc::print_range(new_robot_cost) << std::endl;
     return new_resources;
   } else {
     return std::nullopt;
@@ -123,7 +123,7 @@ int num_opened_geodes(const blueprint_t& blueprint,
     robots += new_robots;
   }
 
-  std::cout << "Total resources: " << print_range(resources) << std::endl
+  std::cout << "Total resources: " << aoc::print_range(resources) << std::endl
             << std::endl;
 
   return resources[geode];
@@ -134,28 +134,28 @@ int solve_case(const std::string& filename) {
   std::vector<resource_pack> max_costs;
   std::vector<blueprint_t> blueprints;
 
-  readfile_op(filename, [&](std::string_view line) {
+  aoc::readfile_op(filename, [&](std::string_view line) {
     auto [blueprint_id, costs] =
-        split<std::array<std::string_view, 2>>(line, ':');
+        aoc::split<std::array<std::string_view, 2>>(line, ':');
     auto [ore_robot, clay_robot, obsidian_robot, geode_robot] =
-        split<std::array<std::string_view, 4>>(costs, '.');
+        aoc::split<std::array<std::string_view, 4>>(costs, '.');
 
-    auto ore_robot_costs = split<std::array<std::string_view, 1>>(
+    auto ore_robot_costs = aoc::split<std::array<std::string_view, 1>>(
         ore_robot.substr(sizeof("Each ore robot costs")), ' ');
-    auto clay_robot_costs = split<std::array<std::string_view, 1>>(
+    auto clay_robot_costs = aoc::split<std::array<std::string_view, 1>>(
         clay_robot.substr(sizeof("Each clay robot costs")), ' ');
-    auto obsidian_robot_costs = split<std::array<std::string_view, 4>>(
+    auto obsidian_robot_costs = aoc::split<std::array<std::string_view, 4>>(
         obsidian_robot.substr(sizeof("Each obsidian robot costs")), ' ');
-    auto geode_robot_costs = split<std::array<std::string_view, 4>>(
+    auto geode_robot_costs = aoc::split<std::array<std::string_view, 4>>(
         geode_robot.substr(sizeof("Each geode robot costs")), ' ');
 
     blueprints.push_back({
-        resource_pack{to_number<int>(ore_robot_costs[0]), 0, 0, 0},
-        resource_pack{to_number<int>(clay_robot_costs[0]), 0, 0, 0},
-        resource_pack{to_number<int>(obsidian_robot_costs[0]),
-                      to_number<int>(obsidian_robot_costs[3]), 0, 0},
-        resource_pack{to_number<int>(geode_robot_costs[0]), 0,
-                      to_number<int>(geode_robot_costs[3]), 0},
+        resource_pack{aoc::to_number<int>(ore_robot_costs[0]), 0, 0, 0},
+        resource_pack{aoc::to_number<int>(clay_robot_costs[0]), 0, 0, 0},
+        resource_pack{aoc::to_number<int>(obsidian_robot_costs[0]),
+                      aoc::to_number<int>(obsidian_robot_costs[3]), 0, 0},
+        resource_pack{aoc::to_number<int>(geode_robot_costs[0]), 0,
+                      aoc::to_number<int>(geode_robot_costs[3]), 0},
     });
     const blueprint_t& bp = blueprints.back();
 

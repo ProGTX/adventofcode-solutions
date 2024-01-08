@@ -14,6 +14,8 @@
 #include <span>
 #include <type_traits>
 
+namespace aoc {
+
 template <class T>
 struct point_type {
   using value_type = T;
@@ -117,10 +119,8 @@ struct point_type {
   }
 };
 
-using point = point_type<int>;
-
 template <class T>
-struct cube_t {
+struct cube_type {
   using value_type = T;
 
   T x{0};
@@ -128,13 +128,14 @@ struct cube_t {
   T z{0};
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
-  constexpr cube_t& operator op_eq(const cube_t & other) {                     \
+  constexpr cube_type& operator op_eq(const cube_type & other) {               \
     x op_eq other.x;                                                           \
     y op_eq other.y;                                                           \
     z op_eq other.z;                                                           \
     return *this;                                                              \
   }                                                                            \
-  constexpr friend cube_t operator op(cube_t lhs, const cube_t& rhs) {         \
+  constexpr friend cube_type operator op(cube_type lhs,                        \
+                                         const cube_type& rhs) {               \
     lhs op_eq rhs;                                                             \
     return lhs;                                                                \
   }
@@ -145,9 +146,10 @@ struct cube_t {
 
 #undef AOC_POINTWISE_OP
 
-  constexpr friend bool operator==(const cube_t&, const cube_t&) = default;
+  constexpr friend bool operator==(const cube_type&,
+                                   const cube_type&) = default;
 
-  constexpr friend bool operator<(const cube_t& lhs, const cube_t& rhs) {
+  constexpr friend bool operator<(const cube_type& lhs, const cube_type& rhs) {
     if (lhs.z == rhs.z) {
       if (lhs.y == rhs.y) {
         return lhs.x < rhs.x;
@@ -159,6 +161,8 @@ struct cube_t {
 };
 
 struct min_max_helper {
+  using point = point_type<int>;
+
   point min_value{2'000'000'000, 2'000'000'000};
   point max_value{0, 0};
 
@@ -218,11 +222,9 @@ struct min_max_helper {
   }
 };
 
-namespace aoc {
-
 // https://en.wikipedia.org/wiki/Shoelace_formula
-template <class return_t = void>
-constexpr auto calculate_area(std::span<const point> polygon) {
+template <class return_t = void, class T>
+constexpr auto calculate_area(std::span<const point_type<T>> polygon) {
   using actual_ret_t =
       std::conditional_t<std::same_as<return_t, void>, int, return_t>;
   const auto n = polygon.size();
@@ -236,11 +238,15 @@ constexpr auto calculate_area(std::span<const point> polygon) {
   return abs(area) / actual_ret_t{2};
 }
 static_assert(16 ==
-              calculate_area(std::array{point{1, 6}, point{3, 1}, point{7, 2},
-                                        point{4, 4}, point{8, 5}}));
-static_assert(16.5f == calculate_area<float>(std::array{
-                           point{1, 6}, point{3, 1}, point{7, 2}, point{4, 4},
-                           point{8, 5}}));
+              calculate_area(std::span{std::array<const point_type<int>, 5>{
+                  point_type<int>{1, 6}, point_type<int>{3, 1},
+                  point_type<int>{7, 2}, point_type<int>{4, 4},
+                  point_type<int>{8, 5}}}));
+static_assert(16.5f == calculate_area<float>(std::span{
+                           std::array<const point_type<int>, 5>{
+                               point_type<int>{1, 6}, point_type<int>{3, 1},
+                               point_type<int>{7, 2}, point_type<int>{4, 4},
+                               point_type<int>{8, 5}}}));
 
 } // namespace aoc
 
