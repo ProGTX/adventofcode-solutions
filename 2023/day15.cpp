@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#include <array>
 #include <iostream>
 #include <ostream>
 #include <ranges>
@@ -41,18 +42,83 @@ constexpr steps_t test_case() {
 }
 static_assert(1320 == sum_steps(test_case()));
 
-template <bool>
+using lens_t = std::pair<std::string, int>;
+
+lens_t split_label(std::string_view str) {
+  if (str.back() == '-') {
+    return {std::string(str.substr(0, str.size() - 1)), -1};
+  }
+  auto [name, number] = split<std::array<std::string_view, 2>>(str, "="sv);
+  return {std::string(name), to_number<int>(number)};
+}
+
+using instructions_t = std::vector<lens_t>;
+using box_t = std::vector<lens_t>;
+using boxes_t = std::array<box_t, 256>;
+
+constexpr boxes_t sort_boxes(const instructions_t& instructions) {
+  boxes_t boxes{};
+
+  for (auto&& [name, number] : instructions) {
+    auto& box = boxes[hash_alg(name)];
+    auto it = std::ranges::find(box, name, &lens_t::first);
+    if (it != std::end(box)) {
+      if (number < 0) {
+        box.erase(it);
+      } else {
+        *it = {name, number};
+      }
+    } else if (number >= 0) {
+      box.emplace_back(name, number);
+    } else {
+      // Trying to remove from an empty box, do nothing
+    }
+  }
+
+  return boxes;
+}
+
+constexpr int focusing_power(const box_t& box) {
+  int multiplier = 1;
+  return ranges::fold_left(box, 0, [&](int power, const lens_t& lens) {
+    power += multiplier * lens.second;
+    ++multiplier;
+    return power;
+  });
+}
+
+constexpr int sum_boxes(const boxes_t& boxes) {
+  int multiplier = 1;
+  return ranges::fold_left(boxes, 0, [&](int sum, const box_t& box) {
+    sum += multiplier * focusing_power(box);
+    ++multiplier;
+    return sum;
+  });
+}
+
+template <bool lens_sort>
 int solve_case(const std::string& filename) {
   std::cout << filename << std::endl;
 
   steps_t steps;
+  instructions_t instructions;
 
   auto read_values = [&](std::string_view line) {
     steps = split<steps_t>(line, ',');
+    if constexpr (lens_sort) {
+      for (const auto& step : steps) {
+        instructions.push_back(split_label(step));
+      }
+    }
   };
   readfile_op(filename, read_values);
 
-  int sum = sum_steps(steps);
+  int sum = 0;
+  if constexpr (!lens_sort) {
+    sum = sum_steps(steps);
+  } else {
+    sum = sum_boxes(sort_boxes(instructions));
+  }
   std::cout << "  -> " << sum << std::endl;
   return sum;
 }
@@ -61,8 +127,8 @@ int main() {
   std::cout << "Part 1" << std::endl;
   AOC_EXPECT_RESULT(1320, (solve_case<false>("day15.example")));
   AOC_EXPECT_RESULT(510273, (solve_case<false>("day15.input")));
-  // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(64, (solve_case<true>("day15.example")));
-  // AOC_EXPECT_RESULT(95273, (solve_case<true>("day15.input")));
+  std::cout << "Part 2" << std::endl;
+  AOC_EXPECT_RESULT(145, (solve_case<true>("day15.example")));
+  AOC_EXPECT_RESULT(212449, (solve_case<true>("day15.input")));
   AOC_RETURN_CHECK_RESULT();
 }
