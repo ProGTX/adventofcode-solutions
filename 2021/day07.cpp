@@ -101,7 +101,7 @@ template <bool progressive_cost>
 int_t solve_case(const std::string& filename) {
   crabs_t crabs;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto crabs_pos = aoc::split<std::vector<int>>(line, ',');
     for (const int pos : crabs_pos) {
       auto crab_it = crabs.find(pos);
@@ -111,7 +111,7 @@ int_t solve_case(const std::string& filename) {
         ++(crab_it->second);
       }
     }
-  });
+  }
 
   int_t cost = 0;
   if constexpr (!progressive_cost) {

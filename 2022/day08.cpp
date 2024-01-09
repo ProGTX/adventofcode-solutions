@@ -69,13 +69,13 @@ int solve_part1(const std::string& filename) {
   forrest_t forrest;
   row_t row;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     row.clear();
     for (auto number_str : line) {
       row.push_back(static_cast<int>(number_str - '0'));
     }
     forrest.add_row(row);
-  });
+  }
 
   auto visible = check_visibility(forrest);
   auto score =
@@ -135,13 +135,13 @@ int solve_part2(const std::string& filename) {
   forrest_t forrest;
   row_t row;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     row.clear();
     for (auto number_str : line) {
       row.push_back(static_cast<int>(number_str - '0'));
     }
     forrest.add_row(row);
-  });
+  }
 
   auto scenic_score = check_scenic_score(forrest);
   auto score = std::ranges::max(scenic_score);

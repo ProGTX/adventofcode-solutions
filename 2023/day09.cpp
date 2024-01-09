@@ -65,10 +65,9 @@ constexpr int sum_predictions(const std::vector<std::vector<int>>& values) {
 template <int multiplier>
 int solve_case(const std::string& filename) {
   std::vector<std::vector<int>> values;
-  auto read_values = [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     values.push_back(aoc::split<std::vector<int>>(line, ' '));
-  };
-  aoc::readfile_op(filename, read_values);
+  }
 
   int sum = sum_predictions<multiplier>(values);
   std::cout << filename << " -> " << sum << std::endl;

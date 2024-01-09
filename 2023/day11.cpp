@@ -67,7 +67,7 @@ int_t solve_case(const std::string& filename) {
   std::vector<bool> column_populated;
   std::vector<bool> row_populated;
 
-  auto read_values = [&](std::string&& line) {
+  for (std::string& line : aoc::views::read_lines(filename)) {
     const auto size = line.size();
     if (empty_row.empty()) {
       empty_row.reserve(size);
@@ -80,8 +80,7 @@ int_t solve_case(const std::string& filename) {
       column_populated[i] = column_populated[i] || (line[i] != empty_space);
     }
     space_rows.push_back(std::move(line));
-  };
-  aoc::readfile_op(filename, read_values);
+  }
 
   auto space =
       expand_space<factor>(space_rows, row_populated, column_populated);

@@ -138,7 +138,8 @@ int simulate(elves_t& elves) {
 template <int num_rounds, bool execute_long>
 int solve_case(std::string const& filename) {
   elves_t elves;
-  aoc::readfile_op(filename, [&](std::string_view line, int linenum) {
+  for (int linenum = 1;
+       std::string_view line : aoc::views::read_lines(filename)) {
     const int row = linenum - 1;
     for (int column = 0; char value : line) {
       if (value == elf_tile) {
@@ -146,7 +147,8 @@ int solve_case(std::string const& filename) {
       }
       ++column;
     }
-  });
+    ++linenum;
+  }
 
   int round_when_none_moved = simulate<num_rounds>(elves);
 

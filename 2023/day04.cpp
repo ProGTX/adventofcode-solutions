@@ -62,7 +62,8 @@ int solve_case(const std::string& filename) {
   std::vector<int> num_scratchcards(1, 0);
   int sum = 0;
 
-  auto solver = [&](std::string_view line, int linenum) {
+  for (int linenum = 1;
+       std::string_view line : aoc::views::read_lines(filename)) {
     auto [card_id, numbers] =
         aoc::split<std::array<std::string_view, 2>>(line, ':');
     auto [winning_str, actual_str] =
@@ -90,9 +91,8 @@ int solve_case(const std::string& filename) {
         num_scratchcards[linenum + i] += current_num;
       }
     }
+    ++linenum;
   };
-
-  aoc::readfile_op(filename, solver);
 
   std::cout << filename << " -> " << sum << std::endl;
   return sum;

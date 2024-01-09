@@ -82,7 +82,7 @@ template <int num_minutes, bool>
 int solve_case(const std::string& filename) {
   named_valves_t named_valves;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [valve_info, tunnel_info] =
         aoc::split<std::array<std::string, 2>>(line, ';');
 
@@ -95,7 +95,7 @@ int solve_case(const std::string& filename) {
         tunnel_info, ',', aoc::trimmer<std::string>());
 
     named_valves.emplace_back(std::move(name), rate, std::move(tunnels));
-  });
+  }
 
   const auto named_valves_begin = std::begin(named_valves);
   const auto name_to_index = [&](std::string_view name) {

@@ -156,7 +156,7 @@ value_t solve_part2(const parsed_monkeys_t& parsed_monkeys) {
 template <bool part2>
 int_value_t solve_case(const std::string& filename) {
   parsed_monkeys_t parsed_monkeys;
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [name, full_op] = aoc::split<std::array<std::string, 2>>(line, ':');
     auto [lhs, op, rhs] = aoc::split<std::array<std::string, 3>>(full_op, ' ');
 
@@ -164,12 +164,12 @@ int_value_t solve_case(const std::string& filename) {
       value_t value = aoc::to_number<int>(lhs);
       parsed_monkeys.emplace_back(name,
                                   parsing_monkey_t{"", "", value, 0, value_op});
-      return;
+      continue;
     }
 
     parsed_monkeys.emplace_back(
         name, parsing_monkey_t{lhs, rhs, std::nullopt, std::nullopt, op[0]});
-  });
+  }
 
   int_value_t number = 0;
   if constexpr (!part2) {

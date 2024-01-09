@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <exception>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -111,26 +112,24 @@ class board : public aoc::array_grid<int, 5> {
 };
 
 int solve_case(const std::string& filename, int game_rounds) {
-  std::vector<int> bingo_numbers;
   std::vector<board> boards;
   board* current_board_ptr = nullptr;
 
-  aoc::readfile_op_header(
-      filename,
-      [&](std::string_view line) {
-        bingo_numbers = aoc::split<decltype(bingo_numbers)>(line, ',');
-      },
-      [&](std::string_view line) {
-        if (line.empty()) {
-          // Create new board
-          current_board_ptr = &boards.emplace_back();
+  std::ifstream file{filename};
+  auto bingo_numbers = aoc::split<std::vector<int>>(aoc::read_line(file), ',');
 
-          // Don't do anything with the board yet
-          return;
-        }
-        auto row = aoc::split<board::row_t>(line, ' ');
-        current_board_ptr->add(row);
-      });
+  for (std::string_view line :
+       aoc::views::read_lines(file, aoc::keep_empty{})) {
+    if (line.empty()) {
+      // Create new board
+      current_board_ptr = &boards.emplace_back();
+
+      // Don't do anything with the board yet
+      continue;
+    }
+    auto row = aoc::split<board::row_t, true>(line, ' ');
+    current_board_ptr->add(row);
+  }
 
   if (game_rounds < 0) {
     game_rounds = boards.size();

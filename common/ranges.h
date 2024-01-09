@@ -3,6 +3,7 @@
 
 #include "compiler.h"
 #include "range_to.h"
+#include "utility.h"
 
 #include <functional>
 #include <iterator>
@@ -120,9 +121,14 @@ constexpr auto transform_to_value(W&& value) {
       [val = std::forward<W>(value)](auto) { return val; });
 }
 
-template <class T>
+template <class return_t>
 constexpr auto transform_cast() {
-  return std::views::transform([](auto val) { return static_cast<T>(val); });
+  return std::views::transform(::aoc::transform_cast<return_t>{});
+}
+
+template <class T>
+constexpr auto to_number() {
+  return std::views::transform(::aoc::number_converter<T>{});
 }
 
 // Not quite std::views::repeat, but close enough

@@ -197,14 +197,14 @@ template <bool deduce>
 int_t solve_case(const std::string& filename) {
   input_t input;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [signal_patterns_str, output_str] =
         aoc::split<std::array<std::string_view, 2>>(line, '|');
     input.emplace_back(
         aoc::split<typename input_line_t::signal_patterns_t>(
             signal_patterns_str, ' '),
         aoc::split<typename input_line_t::output_t>(output_str, ' '));
-  });
+  }
 
   int_t count = 0;
   if constexpr (!deduce) {

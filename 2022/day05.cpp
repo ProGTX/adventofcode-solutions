@@ -27,10 +27,9 @@ std::string solve_case(const std::string& filename) {
   // Actual number of stacks
   int num_stacks = 0;
 
-  const auto parser = [&](std::string_view line) {
-    if (line.empty()) {
-      return;
-    }
+  // Don't trim spaces, we need them in this example
+  for (std::string_view line :
+       aoc::views::read_lines(filename, aoc::keep_spaces{})) {
     if (line.at(0) != 'm') {
       // First parse the crates
       if (line.at(1) != '1') {
@@ -51,7 +50,7 @@ std::string solve_case(const std::string& filename) {
           std::ranges::reverse(crates[i]);
         }
       }
-      return;
+      continue;
     }
 
     // Start moving crates
@@ -80,10 +79,7 @@ std::string solve_case(const std::string& filename) {
       to_crate += crate_bunch;
       from_crate.resize(from_crate_new_size);
     }
-  };
-
-  // Don't trim spaces, we need them in this example
-  aoc::readfile_op<aoc::trimmer_keep_spaces<>>(filename, parser);
+  }
 
   std::cout << "Done parsing " << std::endl;
   std::string top_stacks(static_cast<size_t>(num_stacks), ' ');

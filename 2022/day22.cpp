@@ -305,23 +305,20 @@ int solve_case(std::string const& filename) {
 
   bool parsing_map = true;
   bool stop_parsing = false;
-  const auto parser = [&](std::string_view line, int linenum) {
-    if (stop_parsing) {
-      return;
-    }
+  for (int linenum = 1; std::string_view line : aoc::views::read_lines(
+                            filename, aoc::keep_empty{}, aoc::keep_spaces{})) {
     if (line.empty()) {
       parsing_map = false;
-      return;
+      ++linenum;
+      continue;
     }
-    if (parsing_map) {
-      parse_map_raw(line, linenum);
-    } else {
+    if (!parsing_map) {
       parse_directions(line);
-      stop_parsing = false;
+      break;
     }
+    parse_map_raw(line, linenum);
+    ++linenum;
   };
-
-  aoc::readfile_op<aoc::trimmer_keep_spaces<>>(filename, parser);
 
   grid_size.max_value += point{1, 1};
 

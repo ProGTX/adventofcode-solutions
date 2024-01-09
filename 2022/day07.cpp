@@ -100,14 +100,14 @@ int solve_case(const std::string& filename) {
   filesystem_t filesystem;
   filesystem_t* current_node = &filesystem;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [instruction, name, cd_to] =
         aoc::split<std::array<std::string_view, 3>>(line, ' ');
     if (instruction[0] == '$') {
       if (name == "cd") {
         if (cd_to == "/") {
           current_node = &filesystem;
-          return;
+          continue;
         }
         auto child_node = current_node->get_child(cd_to);
         if (child_node == nullptr) {
@@ -120,7 +120,7 @@ int solve_case(const std::string& filename) {
       } else {
         throw std::runtime_error("Unknown instruction " + std::string{name});
       }
-      return;
+      continue;
     }
     auto child_node = current_node->get_child(name);
     if (instruction == "dir") {
@@ -138,7 +138,7 @@ int solve_case(const std::string& filename) {
         // File already exists
       }
     }
-  });
+  }
 
   set_sizes(filesystem);
 

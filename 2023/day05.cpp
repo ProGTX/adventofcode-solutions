@@ -52,8 +52,6 @@ constexpr range_t map_single(const range_t& seed, const single_mapping_t& map) {
 constexpr seeds_t apply_mapping(seeds_t current_seeds,
                                 const std::vector<single_mapping_t>& mapping) {
   // We want all the ranges to be sorted to simplify the algorithm
-  AOC_ASSERT(std::ranges::is_sorted(current_seeds, std::less<>{}),
-             "current_seeds not presorted");
   AOC_ASSERT(
       std::ranges::is_sorted(mapping, std::less<>{}, &single_mapping_t::src),
       "mapping not presorted");
@@ -181,7 +179,11 @@ int_t solve_case(const std::string& filename) {
   seeds_t current_seeds;
   std::vector<single_mapping_t> mapping;
 
-  auto read_first_line = [&](std::string_view line) {
+  std::ifstream file{filename};
+
+  // read_first_line
+  [&]() {
+    auto line = aoc::read_line(file);
     const auto seeds_ints =
         aoc::split<std::vector<int_t>>(line.substr(sizeof("seeds:")), ' ');
     for (int i = 0; i < seeds_ints.size(); i += 2) {
@@ -192,25 +194,20 @@ int_t solve_case(const std::string& filename) {
         current_seeds.emplace_back(seeds_ints[i], seeds_ints[i + 1]);
       }
     }
-  };
+  }();
 
-  auto solver = [&](std::string_view line) {
-    if (line.empty()) {
-      return;
-    }
+  for (std::string_view line : aoc::views::read_lines(file)) {
     if (!aoc::is_number(line[0])) {
       std::ranges::sort(mapping, std::less<>{}, &single_mapping_t::src);
       current_seeds = apply_mapping(current_seeds, mapping);
       mapping.clear();
-      return;
+      continue;
     }
     auto [dest_start, source_start, range] =
         aoc::split<std::array<int_t, 3>>(line, ' ');
     mapping.emplace_back(range_t{source_start, range},
                          range_t{dest_start, range});
-  };
-
-  aoc::readfile_op_header(filename, read_first_line, solver);
+  }
 
   // Have to run this one last time
   std::ranges::sort(mapping, std::less<>{}, &single_mapping_t::src);

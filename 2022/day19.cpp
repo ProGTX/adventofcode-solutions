@@ -134,7 +134,7 @@ int solve_case(const std::string& filename) {
   std::vector<resource_pack> max_costs;
   std::vector<blueprint_t> blueprints;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [blueprint_id, costs] =
         aoc::split<std::array<std::string_view, 2>>(line, ':');
     auto [ore_robot, clay_robot, obsidian_robot, geode_robot] =
@@ -165,7 +165,7 @@ int solve_case(const std::string& filename) {
         std::ranges::max({bp[0][2], bp[1][2], bp[2][2], bp[3][2]}),
         2'000'000'000, // It's always worth building geode cracking robots
     });
-  });
+  }
 
   int quality_level = 0;
   for (int index = 0; index < blueprints.size(); ++index) {

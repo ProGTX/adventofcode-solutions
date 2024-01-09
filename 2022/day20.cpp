@@ -90,7 +90,7 @@ value_t sum_list(const list_t& original_list) {
 template <int num_mixings, value_t decription_key>
 value_t solve_case(const std::string& filename) {
   list_t original_list;
-  std::ranges::transform(aoc::readfile_numbers(filename),
+  std::ranges::transform(aoc::views::read_numbers<int>(filename),
                          std::back_inserter(original_list),
                          [](int value) { return value * decription_key; });
   value_t sum = sum_list<num_mixings>(original_list);

@@ -103,15 +103,14 @@ int solve_case(const std::string& filename) {
   steps_t steps;
   instructions_t instructions;
 
-  auto read_values = [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     steps = aoc::split<steps_t>(line, ',');
     if constexpr (lens_sort) {
       for (const auto& step : steps) {
         instructions.push_back(split_label(step));
       }
     }
-  };
-  aoc::readfile_op(filename, read_values);
+  }
 
   int sum = 0;
   if constexpr (!lens_sort) {

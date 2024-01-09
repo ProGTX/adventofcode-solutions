@@ -38,7 +38,7 @@ int solve_part1(const std::string& filename) {
       {'X', rock}, {'Y', paper}, {'Z', scissors},
   };
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [opponentStr, responseStr] =
         aoc::split<std::array<std::string_view, 2>>(line, ' ');
     auto opponent = hand_map.at(opponentStr.at(0));
@@ -47,7 +47,7 @@ int solve_part1(const std::string& filename) {
     score += response + 1;
     if (opponent == response) {
       score += draw;
-      return;
+      continue;
     }
     if (((response == rock) && (opponent == scissors)) ||
         ((response - opponent) == 1)) {
@@ -55,7 +55,7 @@ int solve_part1(const std::string& filename) {
     } else {
       score += lose;
     }
-  });
+  }
 
   std::cout << filename << " -> " << score << std::endl;
   return score;
@@ -69,7 +69,7 @@ int solve_part2(const std::string& filename) {
       {'X', lose}, {'Y', draw},  {'Z', win},
   };
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [opponentStr, outcomeStr] =
         aoc::split<std::array<std::string_view, 2>>(line, ' ');
     auto opponent = hand_map.at(opponentStr.at(0));
@@ -78,7 +78,7 @@ int solve_part2(const std::string& filename) {
     if (outcome == draw) {
       // Add 1 because values are lower
       score += opponent + 1;
-      return;
+      continue;
     }
     int response = 0;
     if (outcome == win) {
@@ -88,7 +88,7 @@ int solve_part2(const std::string& filename) {
     }
     // Add 1 because values are lower
     score += response + 1;
-  });
+  }
 
   std::cout << filename << " -> " << score << std::endl;
   return score;

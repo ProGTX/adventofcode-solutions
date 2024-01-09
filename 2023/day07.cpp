@@ -171,12 +171,11 @@ static_assert((765 * 2 + 12 * 1) ==
 template <bool joker>
 int solve_case(const std::string& filename) {
   bids_type<joker> bids;
-  auto read_values = [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [hand_str, bid_str] =
         aoc::split<std::array<std::string_view, 2>>(line, ' ');
     bids.emplace_back(hand_str, aoc::to_number<int>(bid_str));
-  };
-  aoc::readfile_op(filename, read_values);
+  }
 
   int sum = total_winnings<joker>(bids);
   std::cout << filename << " -> " << sum << std::endl;

@@ -130,7 +130,7 @@ int solve_case(const std::string& filename) {
     pipeline.front().clear();
   };
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [op, value] = aoc::split<std::array<std::string_view, 2>>(line, ' ');
 
     // Place new instruction into the pipeline
@@ -152,7 +152,7 @@ int solve_case(const std::string& filename) {
     }
 
     shift_pipeline();
-  });
+  }
 
   monitor.print_all();
 

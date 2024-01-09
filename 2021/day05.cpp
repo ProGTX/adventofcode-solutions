@@ -30,7 +30,7 @@ template <bool allow_diagonal>
 int solve_case(const std::string& filename) {
   lines_t lines;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [start_str, end_str] =
         aoc::split<std::array<std::string_view, 2>>(line, '-');
     auto start = aoc::split<point>(start_str, ',');
@@ -40,7 +40,7 @@ int solve_case(const std::string& filename) {
       std::swap(start, end);
     }
     lines.emplace_back(start, end);
-  });
+  }
 
   std::map<point, int> point_count;
   const auto increment_count = [&](point const& p) {

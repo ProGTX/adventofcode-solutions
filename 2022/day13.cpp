@@ -151,10 +151,7 @@ int solve_case(const std::string& filename) {
   };
 
   int index = 0;
-  aoc::readfile_op(filename, [&](std::string_view line) {
-    if (line.empty()) {
-      return;
-    }
+  for (std::string line : aoc::views::read_lines(filename)) {
     packet_pair[index] = parse_list(line);
     index = (index + 1) % 2;
     if (index == 0) {
@@ -165,7 +162,7 @@ int solve_case(const std::string& filename) {
         packets.insert(std::move(packet_pair[1]));
       }
     }
-  });
+  }
 
   int score = 0;
 

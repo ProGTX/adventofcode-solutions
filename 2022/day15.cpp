@@ -137,7 +137,7 @@ std::int64_t solve_case(const std::string& filename) {
 
   aoc::min_max_helper min_max;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [sensor_info, beacon_info] =
         aoc::split<std::array<std::string_view, 2>>(line, ':');
 
@@ -162,7 +162,7 @@ std::int64_t solve_case(const std::string& filename) {
       auto range = distance_manhattan(sensor, beacon);
       sensors.emplace_back(sensor, range);
     }
-  });
+  }
 
   // Result for part 2 is huge, store it into a std::int64_t
   std::int64_t score = 0;

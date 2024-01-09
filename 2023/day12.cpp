@@ -164,14 +164,13 @@ static_assert(
 template <int factor>
 int solve_case(const std::string& filename) {
   int sum = 0;
-  auto read_values = [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [springs, groups_str] =
         aoc::split<std::array<std::string, 2>>(line, ' ');
     auto spring_groups = aoc::split<std::vector<int>>(groups_str, ',');
     std::tie(springs, spring_groups) = unfold<factor>(springs, spring_groups);
     sum += num_arrangements(springs, spring_groups);
-  };
-  aoc::readfile_op(filename, read_values);
+  }
 
   std::cout << filename << " -> " << sum << std::endl;
   return sum;

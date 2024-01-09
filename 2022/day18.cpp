@@ -42,10 +42,10 @@ template <bool>
 int solve_case(const std::string& filename) {
   droplets_t droplets;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [x, y, z] = aoc::split<std::array<int, 3>>(line, ',');
     droplets.emplace(x, y, z);
-  });
+  }
 
   auto area = calc_surface_area(droplets);
   std::cout << filename << " -> " << area << std::endl;

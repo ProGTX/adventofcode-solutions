@@ -46,10 +46,7 @@ item_t solve_case(const std::string& filename) {
   monkey_t* current = nullptr;
   item_t divisible_max = 1;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
-    if (line.empty()) {
-      return;
-    }
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto items = aoc::split<std::vector<std::string>>(line, ',');
     auto instructions = aoc::split<std::vector<std::string>>(items[0], ' ');
     if (instructions[0] == "Monkey") {
@@ -86,7 +83,7 @@ item_t solve_case(const std::string& filename) {
     } else {
       throw std::runtime_error("Invalid instruction: " + instructions[0]);
     }
-  });
+  }
 
   std::vector<item_t> num_inspected(monkeys.size(), 0);
   for (int round = 0; round < num_rounds; ++round) {

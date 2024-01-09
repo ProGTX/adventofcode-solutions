@@ -172,10 +172,7 @@ int solve_case(const std::string& filename) {
   heightmap_t heightmap;
   row_t row;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
-    if (line.empty()) {
-      return;
-    }
+  for (std::string line : aoc::views::read_lines(filename)) {
     row.clear();
     row.reserve(line.size());
     int column = 0;
@@ -195,7 +192,7 @@ int solve_case(const std::string& filename) {
       }
     });
     heightmap.add_row(row);
-  });
+  }
 
   auto start = heightmap.begin_pos;
   auto end = heightmap.end_pos;

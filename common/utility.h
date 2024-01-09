@@ -5,6 +5,7 @@
 #include "compiler.h"
 
 #include <algorithm>
+#include <charconv>
 #include <exception>
 #include <functional>
 #include <iostream>
@@ -434,6 +435,34 @@ static_assert(std::ranges::equal(transpose(std::vector{
                                      std::array{3, 6, 9, 12},
                                  }));
 #endif
+
+template <class return_t>
+struct transform_cast {
+  template <class T>
+  constexpr return_t operator()(T&& val) {
+    return static_cast<return_t>(std::forward<T>(val));
+  }
+};
+
+template <class value_type>
+constexpr auto to_number(std::string_view str) {
+  auto first = str.data();
+  auto last = first + str.size();
+  value_type value;
+  auto result = std::from_chars(first, last, value);
+  if (result.ec != std::errc{}) [[unlikely]] {
+    throw std::runtime_error("to_number failed to parse " +
+                             std::string(result.ptr));
+  }
+  return value;
+}
+
+template <class T>
+struct number_converter {
+  constexpr T operator()(std::string_view str) const {
+    return to_number<T>(str);
+  }
+};
 
 } // namespace aoc
 

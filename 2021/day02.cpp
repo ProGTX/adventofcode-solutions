@@ -17,7 +17,7 @@ int solve_part1(const std::string& filename) {
   int horizontal = 0;
   int depth = 0;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto values = aoc::split<std::array<std::string_view, 2>>(line, ' ');
     auto command = values[0];
     auto number = aoc::to_number<int>(values[1]);
@@ -29,7 +29,7 @@ int solve_part1(const std::string& filename) {
     } else if (command == "up") {
       depth -= number;
     }
-  });
+  }
 
   std::cout << filename << " -> " << (horizontal * depth) << std::endl;
   return (horizontal * depth);
@@ -40,7 +40,7 @@ int solve_part2(const std::string& filename) {
   int depth = 0;
   int aim = 0;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto values = aoc::split<std::array<std::string_view, 2>>(line, ' ');
     auto command = values[0];
     auto number = aoc::to_number<int>(values[1]);
@@ -53,7 +53,7 @@ int solve_part2(const std::string& filename) {
     } else if (command == "up") {
       aim -= number;
     }
-  });
+  }
 
   std::cout << filename << " -> " << (horizontal * depth) << std::endl;
   return (horizontal * depth);

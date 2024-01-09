@@ -173,7 +173,7 @@ int solve_case(const std::string& filename) {
     }
   };
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [operation, value_str] =
         aoc::split<std::array<std::string_view, 2>>(line, ' ');
     auto value = aoc::to_number<int>(value_str);
@@ -193,7 +193,7 @@ int solve_case(const std::string& filename) {
       default:
         throw std::runtime_error("Invalid command " + std::string{operation});
     }
-  });
+  }
 
   std::cout << filename << " -> " << visited.size() << std::endl;
   return visited.size();

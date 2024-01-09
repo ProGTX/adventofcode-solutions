@@ -29,7 +29,7 @@ template <bool use_overlaps>
 int solve_case(const std::string& filename) {
   int score = 0;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [firstElfStr, secondElfStr] =
         aoc::split<std::array<std::string_view, 2>>(line, ',');
 
@@ -45,7 +45,7 @@ int solve_case(const std::string& filename) {
         score += 1;
       }
     }
-  });
+  }
 
   std::cout << filename << " -> " << score << std::endl;
   return score;

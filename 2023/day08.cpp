@@ -70,11 +70,10 @@ constexpr int_t num_steps(const std::vector<node_t>& directions,
 
 template <bool all_paths>
 int_t solve_case(const std::string& filename) {
-  std::vector<node_select_func_t> instructions;
-  auto read_instructions = [&](std::string_view line) {
-    std::ranges::transform(line, std::back_inserter(instructions),
-                           &get_direction);
-  };
+  std::ifstream file{filename};
+  auto instructions = aoc::read_line(file) |
+                      std::views::transform(get_direction) |
+                      aoc::ranges::to<std::vector<node_select_func_t>>();
 
   std::map<std::string, int> name_to_index;
   int current_index = 0;
@@ -104,11 +103,7 @@ int_t solve_case(const std::string& filename) {
     }
   }();
 
-  auto read_values = [&](std::string_view line) {
-    if (line.empty()) {
-      return;
-    }
-
+  for (std::string_view line : aoc::views::read_lines(file)) {
     // node = (left, right)
     auto [node, lr] =
         aoc::split<std::array<std::string, 2>>(line, '=', aoc::trimmer<>{});
@@ -130,9 +125,7 @@ int_t solve_case(const std::string& filename) {
       end_indexes.push_back(node_it->second);
     }
     directions[node_it->second] = node_t{left_it->second, right_it->second};
-  };
-
-  aoc::readfile_op_header(filename, read_instructions, read_values);
+  }
 
   int_t sum = num_steps(directions, instructions, start_indexes, end_indexes);
   std::cout << filename << " -> " << sum << std::endl;

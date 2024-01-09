@@ -36,13 +36,13 @@ int solve_part1(const std::string& filename) {
     occurrences[i] = {0, 0};
   }
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     for (int bitPos = 0; auto bit_char : line) {
       auto bit = static_cast<int>(bit_char - '0');
       ++occurrences[bitPos][bit];
       ++bitPos;
     }
-  });
+  }
 
   bits_array<bit_width> gamma;
   bits_array<bit_width> epsilon;
@@ -60,13 +60,13 @@ int solve_part1(const std::string& filename) {
 template <size_t bit_width>
 int solve_part2(const std::string& filename) {
   bits_lines_t<bit_width> bits_lines;
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     bits_array<bit_width> bits;
     std::ranges::transform(line, std::begin(bits), [&](unsigned char bit_char) {
       return static_cast<int>(bit_char - '0');
     });
     bits_lines.push_back(bits);
-  });
+  }
 
   bits_lines_t<bit_width> bits_lines_oxy{bits_lines};
   bits_lines_t<bit_width> bits_lines_co2{std::move(bits_lines)};

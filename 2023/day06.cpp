@@ -59,7 +59,8 @@ template <bool single_race>
 int_t solve_case(const std::string& filename) {
   std::vector<int_t> total_times;
   std::vector<int_t> record_distances;
-  auto read_values = [&](std::string_view line, int linenum) {
+  for (int linenum = 1;
+       std::string_view line : aoc::views::read_lines(filename)) {
     auto number_str =
         line.substr((linenum == 1) ? sizeof("Time:") : sizeof("Distance:"));
     using store_t = std::conditional_t<single_race, std::string_view, int_t>;
@@ -73,8 +74,8 @@ int_t solve_case(const std::string& filename) {
           std::views::join(tmp_container) | aoc::ranges::to<std::string>();
       container.push_back(aoc::to_number<int_t>(full_str));
     }
-  };
-  aoc::readfile_op(filename, read_values);
+    ++linenum;
+  }
 
   int_t error_margin = num_ways_to_win(total_times, record_distances);
   std::cout << filename << " -> " << error_margin << std::endl;

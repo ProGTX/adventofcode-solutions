@@ -1,10 +1,10 @@
 #ifndef AOC_STRING_H
 #define AOC_STRING_H
 
+#include "concepts.h"
 #include "utility.h"
 
 #include <array>
-#include <charconv>
 #include <concepts>
 #include <exception>
 #include <fstream>
@@ -72,84 +72,90 @@ using trimmer = trimmer_base<return_t, false>;
 template <class return_t = void>
 using trimmer_keep_spaces = trimmer_base<return_t, true>;
 
-template <class value_type>
-constexpr auto to_number(std::string_view str) {
-  auto first = str.data();
-  auto last = first + str.size();
-  value_type value;
-  auto result = std::from_chars(first, last, value);
-  if (result.ec != std::errc{}) [[unlikely]] {
-    throw std::runtime_error("to_number failed to parse " +
-                             std::string(result.ptr));
-  }
-  return value;
-}
+struct keep_empty {};
+struct keep_spaces {};
 
-template <class T>
-concept readfile_invocable_no_filenum =
-    std::invocable<T, std::string_view> || std::invocable<T, std::string>;
-template <class T>
-concept readfile_invocable_with_filenum =
-    std::invocable<T, std::string_view, int> ||
-    std::invocable<T, std::string, int>;
-template <class T>
-concept readfile_invocable =
-    readfile_invocable_no_filenum<T> || readfile_invocable_with_filenum<T>;
+namespace detail {
 
-template <class trim_op_t = trimmer<>, class OpT>
-  requires(readfile_invocable<OpT>)
-void readfile_op(const std::string& filename, OpT operation) {
-  std::ifstream file{filename};
-  if (!file.is_open()) {
-    throw std::runtime_error("Cannot open file " + filename);
-  }
+template <class trimmer_t, bool keep_empty_lines>
+std::string read_line(std::istream& stream) {
   std::string line;
-  for (int linenum = 1; std::getline(file, line); ++linenum) {
-    if constexpr (readfile_invocable_with_filenum<OpT>) {
-      operation(trim_op_t{}(line), linenum);
-    } else {
-      operation(trim_op_t{}(line));
-    }
-  }
-  file.close();
-}
-
-template <class trim_op_t = trimmer<>, class FirstLineOpT, class OpT>
-  requires(readfile_invocable_no_filenum<FirstLineOpT> &&
-           readfile_invocable<OpT>)
-void readfile_op_header(const std::string& filename,
-                        FirstLineOpT first_line_operation, OpT operation) {
-  using line_t = function_arg_n_t<0, OpT>;
-  readfile_op(filename, [&](line_t line, int linenum) {
-    if (linenum == 1) [[unlikely]] {
-      first_line_operation(trim_op_t{}(line));
-    } else [[likely]] {
-      if constexpr (readfile_invocable_with_filenum<OpT>) {
-        operation(trim_op_t{}(line), linenum);
-      } else {
-        operation(trim_op_t{}(line));
+  if constexpr (keep_empty_lines) {
+    std::getline(stream, line);
+  } else {
+    while (std::getline(stream, line)) {
+      if (!line.empty()) {
+        break;
       }
     }
-  });
+  }
+  return trimmer_t{}(line);
 }
 
-std::vector<std::string> readfile_lines(const std::string& filename) {
-  std::vector<std::string> lines;
-  readfile_op<trimmer_keep_spaces<>>(
-      filename, [&](std::string&& line) { lines.push_back(std::move(line)); });
-  return lines;
+template <class trimmer_t, bool keep_empty_lines>
+struct full_line {
+  constexpr operator std::string_view() const { return m_full_line; }
+  constexpr operator std::string&() { return m_full_line; }
+  constexpr operator const std::string&() const { return m_full_line; }
+
+  // https://stackoverflow.com/q/74846868
+  friend std::istream& operator>>(std::istream& stream, full_line& rhs) {
+    rhs.m_full_line = detail::read_line<trimmer_t, keep_empty_lines>(stream);
+    return stream;
+  }
+
+ private:
+  std::string m_full_line;
+};
+
+template <class... Args>
+constexpr auto read_lines_from_file(std::ifstream& file, Args...) {
+  using trimmer_t = std::conditional_t<contains_uncvref<keep_spaces, Args...>,
+                                       trimmer_keep_spaces<std::string>,
+                                       trimmer<std::string>>;
+  constexpr bool keep_empty_lines = contains_uncvref<keep_empty, Args...>;
+
+  return std::views::istream<full_line<trimmer_t, keep_empty_lines>>(file);
 }
 
-std::vector<int> readfile_numbers(const std::string& filename) {
-  std::vector<int> numbers;
-  readfile_op(filename, [&](std::string_view line) {
-    if (line.empty()) {
-      return;
-    }
-    int currentVal = to_number<int>(line);
-    numbers.push_back(currentVal);
-  });
-  return numbers;
+} // namespace detail
+
+namespace views {
+
+struct __read_lines {
+ public:
+  template <class... Args>
+  constexpr auto operator()(const std::string& filename, Args... args) {
+    m_file = std::ifstream{filename};
+    return detail::read_lines_from_file(m_file, std::forward<Args>(args)...);
+  }
+  template <class... Args>
+  constexpr auto operator()(std::ifstream& file, Args... args) const {
+    return detail::read_lines_from_file(file, std::forward<Args>(args)...);
+  }
+
+ private:
+  std::ifstream m_file;
+};
+
+inline __read_lines read_lines{};
+
+template <class T, class... Args>
+constexpr auto read_numbers(const std::string& filename, Args... args) {
+  return read_lines(filename, std::forward<Args>(args)...) |
+         views::to_number<T>();
+}
+template <class T, class... Args>
+constexpr auto read_numbers(std::ifstream& file, Args... args) {
+  return read_lines(file, std::forward<Args>(args)...) | views::to_number<T>();
+}
+
+} // namespace views
+
+template <class... Args>
+constexpr std::string read_line(std::ifstream& stream, Args... args) {
+  auto view = views::read_lines(stream, std::forward<Args>(args)...);
+  return *view.begin();
 }
 
 template <class output_t>
@@ -163,7 +169,7 @@ constexpr size_t max_container_elems() {
 
 template <class value_type, std::ranges::range R>
 constexpr value_type construct(R&& r) {
-  if constexpr (contains_type<value_type, std::string_view, std::string>) {
+  if constexpr (contains_uncvref<value_type, std::string_view, std::string>) {
     return construct_string<value_type>(std::forward<R>(r));
   } else if constexpr (std::is_arithmetic_v<value_type>) {
     auto view = construct_string<std::string_view>(std::forward<R>(r));

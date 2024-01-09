@@ -16,19 +16,18 @@ int solve_case(const std::string& filename, int numElvesAverage) {
   std::vector<int> caloriesPerElf;
   int singleElfCalories = 0;
 
-  auto elfSolver = [&](std::string_view line) {
+  for (std::string line : aoc::views::read_lines(filename, aoc::keep_empty{})) {
     if (line.empty()) {
       // New elf, add previous one
       caloriesPerElf.push_back(singleElfCalories);
       singleElfCalories = 0;
-      return;
+      continue;
     }
     // Same elf
     int currentCal = aoc::to_number<int>(line);
     singleElfCalories += currentCal;
-  };
+  }
 
-  aoc::readfile_op(filename, elfSolver);
   // Need to add last elf
   caloriesPerElf.push_back(singleElfCalories);
 

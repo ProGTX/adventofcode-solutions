@@ -28,7 +28,7 @@ int solve_case(const std::string& filename) {
 
   aoc::min_max_helper min_max;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     // Simplify "->" delimiter to a single char
     std::string transformed_line(line.size(), 0);
     std::ranges::transform(line, std::begin(transformed_line), [](char value) {
@@ -47,7 +47,7 @@ int solve_case(const std::string& filename) {
       rock_lines.push_back(rock_line_t{previous, current});
       previous = current;
     }
-  });
+  }
 
   using cave_map_t = aoc::grid<char>;
 

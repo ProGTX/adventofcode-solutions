@@ -227,14 +227,13 @@ int solve_case(const std::string& filename) {
   field_t field;
   int start_index = 0;
 
-  auto read_values = [&](std::string&& line) {
+  for (std::string& line : aoc::views::read_lines(filename)) {
     if (auto start_pos = line.find(tile_t::start);
         start_pos != std::string::npos) {
       start_index = field.size() + start_pos;
     }
     field.add_row(std::move(line));
-  };
-  aoc::readfile_op(filename, read_values);
+  }
 
   int sum = 0;
   if constexpr (!calc_area) {

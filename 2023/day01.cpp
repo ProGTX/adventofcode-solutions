@@ -69,15 +69,13 @@ template <bool words>
 int solve_case(const std::string& filename) {
   int sum = 0;
 
-  auto solver = [&](std::string_view line) {
+  for (std::string_view line : aoc::views::read_lines(filename)) {
     if constexpr (words) {
       sum += find_number_from_words(line);
     } else {
       sum += find_number(line);
     }
-  };
-
-  aoc::readfile_op(filename, solver);
+  }
 
   std::cout << filename << " -> " << sum << std::endl;
   return sum;

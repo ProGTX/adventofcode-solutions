@@ -124,9 +124,8 @@ constexpr std::string to_snafu(const int_t number) {
 
 template <int base, bool execute_long>
 std::string solve_case(std::string const& filename) {
-  input_t input = aoc::readfile_lines(filename);
-
-  auto snafu = sum_input_as_snafus<base>(input);
+  auto snafu = sum_input_as_snafus<base>(aoc::views::read_lines(filename) |
+                                         aoc::ranges::to<input_t>());
 
   std::cout << filename << " -> " << snafu << std::endl;
   return snafu;

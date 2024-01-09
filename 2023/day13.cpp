@@ -229,15 +229,15 @@ int solve_case(const std::string& filename) {
   pattern_t pattern;
 
   int sum = 0;
-  auto read_values = [&](std::string&& line) {
+  for (std::string& line :
+       aoc::views::read_lines(filename, aoc::keep_empty{})) {
     if (line.empty()) {
       sum += check_pattern<unsmudge>(pattern);
       pattern.clear();
     } else {
       pattern.push_back(std::move(line));
     }
-  };
-  aoc::readfile_op(filename, read_values);
+  }
   sum += check_pattern<unsmudge>(pattern);
 
   std::cout << "  -> " << sum << std::endl;

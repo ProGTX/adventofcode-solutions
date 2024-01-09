@@ -80,8 +80,7 @@ template <cube_config_t config>
 int solve_case(const std::string& filename) {
   int sum = 0;
 
-  auto solver = [&](std::string_view line, int linenum) {
-    const int id = linenum;
+  for (int id = 1; std::string_view line : aoc::views::read_lines(filename)) {
     auto [prefix, game_str] =
         aoc::split<std::array<std::string_view, 2>>(line, ':');
     auto games = aoc::split<std::vector<std::string_view>>(game_str, ';');
@@ -90,9 +89,8 @@ int solve_case(const std::string& filename) {
       power *= id;
     }
     sum += power;
-  };
-
-  aoc::readfile_op(filename, solver);
+    ++id;
+  }
 
   std::cout << filename << " -> " << sum << std::endl;
   return sum;

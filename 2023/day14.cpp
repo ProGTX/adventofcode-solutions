@@ -146,9 +146,9 @@ int solve_case(const std::string& filename) {
   std::cout << filename << std::endl;
 
   platform_t platform;
-
-  auto read_values = [&](std::string_view line) { platform.add_row(line); };
-  aoc::readfile_op(filename, read_values);
+  for (std::string_view line : aoc::views::read_lines(filename)) {
+    platform.add_row(line);
+  }
 
   auto sum = 0;
   if constexpr (!run_cycles) {

@@ -265,10 +265,7 @@ template <rock_index_t num_rocks>
 rock_index_t solve_case(const std::string& filename) {
   std::vector<int> pattern;
 
-  aoc::readfile_op(filename, [&](std::string_view line) {
-    if (line.empty()) {
-      return;
-    }
+  for (std::string line : aoc::views::read_lines(filename)) {
     std::ranges::transform(line, std::back_inserter(pattern), [](char value) {
       if (value == '<') {
         return -1;
@@ -276,7 +273,7 @@ rock_index_t solve_case(const std::string& filename) {
         return 1;
       }
     });
-  });
+  }
 
   rock_index_t final_height = get_final_height<num_rocks>(pattern);
   std::cout << filename << " -> " << final_height << std::endl;
