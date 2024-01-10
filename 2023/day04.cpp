@@ -62,8 +62,7 @@ int solve_case(const std::string& filename) {
   std::vector<int> num_scratchcards(1, 0);
   int sum = 0;
 
-  for (int linenum = 1;
-       std::string_view line : aoc::views::read_lines(filename)) {
+  for (int id = 0; std::string_view line : aoc::views::read_lines(filename)) {
     auto [card_id, numbers] =
         aoc::split<std::array<std::string_view, 2>>(line, ':');
     auto [winning_str, actual_str] =
@@ -77,21 +76,21 @@ int solve_case(const std::string& filename) {
       sum += card_value(current_card);
     } else {
       // Add the original card
-      ++num_scratchcards[linenum - 1];
-      int current_num = num_scratchcards[linenum - 1];
+      ++num_scratchcards[id];
+      int current_num = num_scratchcards[id];
       sum += current_num;
 
       int matching = num_matching(current_card);
       // Create copies of next cards
-      int required_scratchcards_size = linenum + matching;
+      int required_scratchcards_size = id + matching + 2;
       if (num_scratchcards.size() < required_scratchcards_size) {
         num_scratchcards.resize(required_scratchcards_size);
       }
-      for (int i = 0; i < matching; ++i) {
-        num_scratchcards[linenum + i] += current_num;
+      for (int i = 1; i <= matching; ++i) {
+        num_scratchcards[id + i] += current_num;
       }
     }
-    ++linenum;
+    ++id;
   };
 
   std::cout << filename << " -> " << sum << std::endl;
