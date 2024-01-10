@@ -65,6 +65,10 @@ function(copy_input_files target_basename year)
   )
 endfunction()
 
+add_custom_target(2021)
+add_custom_target(2022)
+add_custom_target(2023)
+
 function(add_sample sample_name year)
   set(target ${year}_${sample_name})
   add_executable(${target} "${sample_name}.cpp")
@@ -76,6 +80,8 @@ function(add_sample sample_name year)
   copy_input_files(${sample_name} ${year})
   set_target_properties(${target} PROPERTIES FOLDER ${year})
   
+  add_dependencies(${year} ${target})
+
   if (AOC_MODULE_SUPPORT)
     target_link_libraries(${target} aoc aoc.std)
   endif()
