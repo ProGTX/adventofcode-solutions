@@ -29,7 +29,7 @@ struct beam_t {
   constexpr bool operator==(const beam_t&) const noexcept = default;
 };
 
-constexpr int energize(const machine_t& machine) {
+constexpr int energize(const machine_t& machine, beam_t start) {
   machine_t energized_machine{machine};
 
   std::vector<beam_t> beams_tracker;
@@ -53,7 +53,7 @@ constexpr int energize(const machine_t& machine) {
     return point{};
   };
 
-  beams.emplace_back(point{}, aoc::get_diff(aoc::east));
+  beams.push_back(std::move(start));
   beams_tracker.push_back(beams.back());
 
   while (!beams.empty()) {
@@ -101,7 +101,7 @@ constexpr int energize(const machine_t& machine) {
   return std::ranges::count(energized_machine, energized);
 }
 
-template <bool>
+template <bool optimize>
 int solve_case(const std::string& filename) {
   std::cout << filename << std::endl;
 
@@ -111,7 +111,25 @@ int solve_case(const std::string& filename) {
     machine.add_row(std::move(line));
   }
 
-  int sum = energize(machine);
+  int sum = 0;
+  if constexpr (!optimize) {
+    sum = energize(machine, beam_t{point{}, aoc::get_diff(aoc::east)});
+  } else {
+    AOC_ASSERT(machine.num_rows() == machine.row_length(),
+               "We're assuming an n*n square grid for simplicity");
+    std::vector<beam_t> beams;
+    const auto n = static_cast<int>(machine.num_rows());
+    for (int i = 0; i < n; ++i) {
+      beams.emplace_back(point{0, i}, aoc::get_diff(aoc::east));
+      beams.emplace_back(point{n - 1, i}, aoc::get_diff(aoc::west));
+      beams.emplace_back(point{i, 0}, aoc::get_diff(aoc::south));
+      beams.emplace_back(point{i, n - 1}, aoc::get_diff(aoc::north));
+    }
+    sum =
+        std::ranges::max(beams | std::views::transform([&](const beam_t& beam) {
+                           return energize(machine, beam);
+                         }));
+  }
   std::cout << "  -> " << sum << std::endl;
   return sum;
 }
@@ -120,8 +138,8 @@ int main() {
   std::cout << "Part 1" << std::endl;
   AOC_EXPECT_RESULT(46, (solve_case<false>("day16.example")));
   AOC_EXPECT_RESULT(7798, (solve_case<false>("day16.input")));
-  // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(145, (solve_case<true>("day16.example")));
-  // AOC_EXPECT_RESULT(212449, (solve_case<true>("day16.input")));
+  std::cout << "Part 2" << std::endl;
+  AOC_EXPECT_RESULT(51, (solve_case<true>("day16.example")));
+  AOC_EXPECT_RESULT(8026, (solve_case<true>("day16.input")));
   AOC_RETURN_CHECK_RESULT();
 }
