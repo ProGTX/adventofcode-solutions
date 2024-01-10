@@ -103,14 +103,10 @@ constexpr int num_arrangements(std::string_view springs,
                                std::span<const int> spring_groups) {
   std::vector<state_t> arrangement_stack;
   arrangement_stack.emplace_back(std::string{springs}, 0, 0, 0);
-  auto pop_stack = [&]() {
-    auto arr_state = std::move(arrangement_stack.back());
-    arrangement_stack.resize(arrangement_stack.size() - 1);
-    return arr_state;
-  };
   int count = 0;
   while (!arrangement_stack.empty()) {
-    auto [arr_state, status] = advance_state(pop_stack(), spring_groups);
+    auto [arr_state, status] =
+        advance_state(aoc::pop_stack(arrangement_stack), spring_groups);
     if (status == operational) {
       // Valid arrangement
       ++count;

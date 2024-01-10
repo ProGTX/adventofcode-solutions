@@ -3,6 +3,7 @@
 
 #include "assert.h"
 #include "compiler.h"
+#include "concepts.h"
 
 #include <algorithm>
 #include <charconv>
@@ -15,6 +16,7 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 namespace aoc {
 
@@ -463,6 +465,12 @@ struct number_converter {
     return to_number<T>(str);
   }
 };
+
+auto pop_stack(specialization_of<std::vector> auto&& container) {
+  auto elem = std::move(container.back());
+  container.resize(container.size() - 1);
+  return elem;
+}
 
 } // namespace aoc
 
