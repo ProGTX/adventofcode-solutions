@@ -82,6 +82,24 @@ struct point_type {
 
 #undef AOC_POINTWISE_OP
 
+#define AOC_POINTWISE_OP(op, op_eq)                                            \
+  constexpr point_type& operator op_eq(value_type value) {                     \
+    return *this op_eq point_type{value, value};                               \
+  }                                                                            \
+  constexpr friend point_type operator op(point_type lhs, value_type value) {  \
+    return lhs op_eq value;                                                    \
+  }                                                                            \
+  constexpr friend point_type operator op(value_type value,                    \
+                                          const point_type& rhs) {             \
+    return point_type{value, value} op rhs;                                    \
+  }
+
+  AOC_POINTWISE_OP(*, *=)
+  AOC_POINTWISE_OP(/, /=)
+  AOC_POINTWISE_OP(%, %=)
+
+#undef AOC_POINTWISE_OP
+
   constexpr point_type operator-() const { return {-x, -y}; }
 
   friend std::ostream& operator<<(std::ostream& out, const point_type& p) {
