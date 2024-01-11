@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <compare>
 #include <iostream>
 #include <ostream>
 #include <ranges>
@@ -17,21 +18,18 @@ using namespace std::string_view_literals;
 using city_block_t = aoc::grid<int>;
 
 struct node_t {
+  int heat_loss;
   point pos;
   point direction;
   int consecutive;
-  int heat_loss;
-
-  constexpr bool equivalent(const node_t& other) const {
-    return std::tie(pos, direction, consecutive) ==
-           std::tie(other.pos, other.direction, other.consecutive);
-  }
 
   friend std::ostream& operator<<(std::ostream& out, const node_t& node) {
     out << "node_t{" << node.pos << "," << node.direction << ","
         << node.consecutive << "," << node.heat_loss << "}";
     return out;
   }
+
+  constexpr std::weak_ordering operator<=>(const node_t& other) const = default;
 };
 
 struct visited_node_comparator {
@@ -41,16 +39,18 @@ struct visited_node_comparator {
   }
 };
 
-int least_heat_loss(const city_block_t& city_block, const node_t start) {
+template <int min, int max>
+constexpr int least_heat_loss(const city_block_t& city_block,
+                              const node_t start) {
   std::set<node_t, visited_node_comparator> visited;
-  std::vector<node_t> unvisited;
+  std::set<node_t> unvisited;
   {
     // Push two options as the starting nodes
     node_t node = start;
     node.direction = aoc::get_diff(aoc::east);
-    unvisited.push_back(node);
+    unvisited.insert(node);
     node.direction = aoc::get_diff(aoc::south);
-    unvisited.push_back(node);
+    unvisited.insert(node);
   }
 
   const auto add_neighbor = [&](node_t node, point direction, int consecutive) {
@@ -60,16 +60,11 @@ int least_heat_loss(const city_block_t& city_block, const node_t start) {
     }
     node.direction = direction;
     node.consecutive = consecutive;
-    if (visited.contains(node)) {
-      return;
-    }
-    if (std::ranges::find_if(unvisited, [&](const node_t& unv) {
-          return node.equivalent(unv);
-        }) != unvisited.end()) {
-      return;
-    }
     node.heat_loss += city_block.at(node.pos.y, node.pos.x);
-    unvisited.push_back(std::move(node));
+    if (visited.contains(node) || unvisited.contains(node)) {
+      return;
+    }
+    unvisited.insert(node);
   };
 
   const auto end_pos =
@@ -78,37 +73,36 @@ int least_heat_loss(const city_block_t& city_block, const node_t start) {
   city_block_t visited_block{city_block};
 
   while (!unvisited.empty()) {
-    const auto current = aoc::pop_stack(unvisited);
+    auto current_it = unvisited.begin();
+    const auto current = *current_it;
+    unvisited.erase(current_it);
+    AOC_ASSERT(current.consecutive >= 1, "Invalid consecutive number");
     // aoc::println("current", current);
     // aoc::println("  visited, unvisited", visited.size(), unvisited.size());
-    if (current.pos == end_pos) {
+    if ((current.consecutive >= min) && (current.pos == end_pos)) {
       return current.heat_loss;
     }
     visited.insert(current);
     // visited_block.modify(0, current.pos.y, current.pos.x);
 
     auto direction = current.direction;
-    if (current.consecutive < 3) {
+    if (current.consecutive < max) {
       // Straight line
       add_neighbor(current, direction, current.consecutive + 1);
     }
-    // mirror_left
-    std::swap(direction.x, direction.y);
-    add_neighbor(current, direction, 1);
-    // mirror_right
-    direction = -direction;
-    add_neighbor(current, direction, 1);
-
-    std::ranges::sort(unvisited, [](const node_t& lhs, const node_t& rhs) {
-      // Nodes with the least heat loss are at the top of the stack,
-      // which is the end of the vector
-      return lhs.heat_loss > rhs.heat_loss;
-    });
+    if (current.consecutive >= min) {
+      // mirror_left
+      std::swap(direction.x, direction.y);
+      add_neighbor(current, direction, 1);
+      // mirror_right
+      direction = -direction;
+      add_neighbor(current, direction, 1);
+    }
   }
   return 0;
 }
 
-template <bool>
+template <int min, int max>
 int solve_case(const std::string& filename) {
   std::cout << filename << std::endl;
 
@@ -119,19 +113,20 @@ int solve_case(const std::string& filename) {
   }
 
   int sum = 0;
-  sum = least_heat_loss(
+  sum = least_heat_loss<min, max>(
       city_block,
-      node_t{.pos = {}, .direction = {}, .consecutive = 1, .heat_loss = 0});
+      node_t{.heat_loss = 0, .pos = {}, .direction = {}, .consecutive = 1});
   std::cout << "  -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  AOC_EXPECT_RESULT(102, (solve_case<false>("day17.example")));
-  AOC_EXPECT_RESULT(967, (solve_case<false>("day17.input")));
+  AOC_EXPECT_RESULT(102, (solve_case<1, 3>("day17.example")));
+  AOC_EXPECT_RESULT(967, (solve_case<1, 3>("day17.input")));
   // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(51, (solve_case<true>("day17.example")));
-  // AOC_EXPECT_RESULT(8026, (solve_case<true>("day17.input")));
+  AOC_EXPECT_RESULT(94, (solve_case<4, 10>("day17.example")));
+  AOC_EXPECT_RESULT(71, (solve_case<4, 10>("day17.example2")));
+  AOC_EXPECT_RESULT(-1105, (solve_case<4, 10>("day17.input")));
   AOC_RETURN_CHECK_RESULT();
 }
