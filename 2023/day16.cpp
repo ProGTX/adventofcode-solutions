@@ -20,7 +20,7 @@ constexpr inline char splitter_vertical = '|';
 constexpr inline char splitter_horizontal = '-';
 constexpr inline char energized = '#';
 
-using machine_t = aoc::grid<char, std::string, std::string>;
+using machine_t = aoc::char_grid<>;
 
 struct beam_t {
   point pos;

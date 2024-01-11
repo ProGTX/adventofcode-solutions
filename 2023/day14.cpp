@@ -17,7 +17,7 @@ inline constexpr char round_rock = 'O';
 inline constexpr char cube_rock = '#';
 inline constexpr char empty = '.';
 
-using platform_t = aoc::grid<char, std::string, std::string>;
+using platform_t = aoc::char_grid<>;
 
 constexpr int north_load(const platform_t& platform) {
   int total_load = 0;

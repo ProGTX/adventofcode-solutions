@@ -11,6 +11,7 @@
 #include <map>
 #include <optional>
 #include <ranges>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -65,7 +66,7 @@ class grid {
     requires requires(Row row) {
       std::ranges::copy_n(std::begin(row), 0, iterator{});
     }
-  constexpr iterator add_row(Row const& row) {
+  constexpr iterator add_row(Row&& row) {
     m_row_length = row.size();
     // Use m_num_rows instead of num_rows()
     // because we allow setting rows in a fixed size container
@@ -111,6 +112,7 @@ class grid {
       return this->row_length_dynamic();
     }
   }
+  constexpr size_t num_columns() const { return this->row_length(); }
 
   constexpr size_t num_rows_dynamic() const { return m_num_rows; }
   constexpr size_t num_rows() const {
@@ -224,6 +226,9 @@ class grid {
 template <class T, size_t row_length, size_t num_rows = row_length>
 using array_grid =
     grid<T, std::array<T, row_length>, std::array<T, row_length * num_rows>>;
+
+template <class row_storage_t = std::string, class Container = std::string>
+using char_grid = grid<char, row_storage_t, Container>;
 
 enum facing_t : int {
   east = 0,
@@ -574,6 +579,7 @@ concept is_grid = std::ranges::range<Grid> &&
 static_assert(is_grid<grid<int>>);
 static_assert(is_grid<array_grid<int, 7, 5>>);
 static_assert(is_grid<sparse_grid<int>>);
+static_assert(is_grid<char_grid<>>);
 
 } // namespace aoc
 
