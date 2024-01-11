@@ -464,6 +464,13 @@ struct number_converter {
   constexpr T operator()(std::string_view str) const {
     return to_number<T>(str);
   }
+  constexpr T operator()(char value) const {
+    return to_number<T>(std::string_view{&value, 1});
+  }
+  template <std::integral U = T>
+  constexpr U operator()(std::integral auto value) const {
+    return static_cast<U>(value);
+  }
 };
 
 auto pop_stack(specialization_of<std::vector> auto&& container) {
