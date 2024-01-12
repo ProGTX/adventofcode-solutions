@@ -42,6 +42,9 @@ using function_args_t = decltype(function_args_helper(std::declval<T>()));
 template <std::size_t I, class T>
 using function_arg_n_t = std::tuple_element_t<I, function_args_t<T>>;
 
+template <int V>
+using int_constant = std::integral_constant<int, V>;
+
 // https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp
 
 template <class T>
