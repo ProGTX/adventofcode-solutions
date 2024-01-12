@@ -280,4 +280,16 @@ static_assert(16.5f ==
 
 } // namespace aoc
 
+namespace std {
+template <class T>
+struct hash<aoc::point_type<T>> {
+  // https://stackoverflow.com/a/64151007
+  constexpr size_t operator()(const aoc::point_type<T>& value) const {
+    size_t x_hash = std::hash<T>{}(value.x);
+    size_t y_hash = std::hash<T>{}(value.y) << 1;
+    return x_hash ^ y_hash;
+  }
+};
+} // namespace std
+
 #endif // AOC_POINT_H
