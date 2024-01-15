@@ -40,8 +40,7 @@ struct visited_node_comparator {
 };
 
 template <int min, int max>
-constexpr int least_heat_loss(const city_block_t& city_block,
-                              const node_t start) {
+int least_heat_loss(const city_block_t& city_block, const node_t start) {
   std::set<node_t, visited_node_comparator> visited;
   std::set<node_t> unvisited;
   {
