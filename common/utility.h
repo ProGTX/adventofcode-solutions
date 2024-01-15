@@ -450,11 +450,11 @@ struct transform_cast {
 };
 
 template <class value_type>
-constexpr auto to_number(std::string_view str) {
+constexpr auto to_number(std::string_view str, int base = 10) {
   auto first = str.data();
   auto last = first + str.size();
   value_type value;
-  auto result = std::from_chars(first, last, value);
+  auto result = std::from_chars(first, last, value, base);
   if (result.ec != std::errc{}) [[unlikely]] {
     throw std::runtime_error("to_number failed to parse " +
                              std::string(result.ptr));
@@ -464,11 +464,16 @@ constexpr auto to_number(std::string_view str) {
 
 template <class T>
 struct number_converter {
+  int base = 10;
+
+  constexpr number_converter() = default;
+  constexpr number_converter(int base) : base{base} {}
+
   constexpr T operator()(std::string_view str) const {
-    return to_number<T>(str);
+    return to_number<T>(str, base);
   }
   constexpr T operator()(char value) const {
-    return to_number<T>(std::string_view{&value, 1});
+    return to_number<T>(std::string_view{&value, 1}, base);
   }
   template <std::integral U = T>
   constexpr U operator()(std::integral auto value) const {

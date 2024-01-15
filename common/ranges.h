@@ -127,8 +127,8 @@ constexpr auto transform_cast() {
 }
 
 template <class T>
-constexpr auto to_number() {
-  return std::views::transform(::aoc::number_converter<T>{});
+constexpr auto to_number(int base = 10) {
+  return std::views::transform(::aoc::number_converter<T>{base});
 }
 
 // Not quite std::views::repeat, but close enough
