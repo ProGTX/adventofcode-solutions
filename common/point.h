@@ -257,16 +257,19 @@ constexpr auto calculate_area(std::span<const point_type<T>> polygon) {
   }
   return abs(area) / actual_ret_t{2};
 }
-static_assert(16 ==
-              calculate_area(std::span{std::array<const point_type<int>, 5>{
-                  point_type<int>{1, 6}, point_type<int>{3, 1},
-                  point_type<int>{7, 2}, point_type<int>{4, 4},
-                  point_type<int>{8, 5}}}));
-static_assert(16.5f == calculate_area<float>(std::span{
-                           std::array<const point_type<int>, 5>{
-                               point_type<int>{1, 6}, point_type<int>{3, 1},
-                               point_type<int>{7, 2}, point_type<int>{4, 4},
-                               point_type<int>{8, 5}}}));
+template <class return_t = void, class T>
+constexpr auto calculate_area(std::span<point_type<T>> polygon) {
+  return calculate_area(std::span<const point_type<T>>{polygon});
+}
+static_assert(16 == calculate_area(std::span<const point_type<int>>{
+                        std::array{point_type<int>{1, 6}, point_type<int>{3, 1},
+                                   point_type<int>{7, 2}, point_type<int>{4, 4},
+                                   point_type<int>{8, 5}}}));
+static_assert(16.5f ==
+              calculate_area<float>(std::span<const point_type<int>>{
+                  std::array{point_type<int>{1, 6}, point_type<int>{3, 1},
+                             point_type<int>{7, 2}, point_type<int>{4, 4},
+                             point_type<int>{8, 5}}}));
 
 } // namespace aoc
 
