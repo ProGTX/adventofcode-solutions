@@ -109,6 +109,8 @@ struct point_type {
 
   constexpr point_type abs() const { return {aoc::abs(x), aoc::abs(y)}; }
 
+  constexpr point_type normal() const { return *this / this->abs(); }
+
   constexpr friend std::uint64_t distance_squared(const point_type& lhs,
                                                   const point_type& rhs) {
     auto diff = rhs - lhs;
