@@ -36,6 +36,13 @@ struct point_type {
     return lhs.y < rhs.y;
   };
 
+  template <class U>
+    requires(!std::same_as<std::remove_cvref_t<U>, std::remove_cvref_t<T>> &&
+             std::convertible_to<T, U>)
+  constexpr operator point_type<U>() const {
+    return {static_cast<U>(x), static_cast<U>(y)};
+  }
+
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
   constexpr point_type& operator op_eq(const point_type & other) {             \
     x op_eq other.x;                                                           \

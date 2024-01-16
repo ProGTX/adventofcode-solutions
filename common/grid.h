@@ -247,7 +247,8 @@ enum facing_t : int {
   NUM_FACING = 4,
 };
 
-constexpr point_type<int> get_diff(facing_t facing) {
+template <class T = int>
+constexpr point_type<T> get_diff(facing_t facing) {
   switch (facing) {
     case east:
       return {1, 0};
