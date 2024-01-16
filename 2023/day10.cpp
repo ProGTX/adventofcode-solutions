@@ -37,8 +37,8 @@ inline constexpr auto east_allowed =
 
 using field_t = aoc::grid<char, std::string, std::vector<char>>;
 
-constexpr std::pair<std::vector<int>, char> get_pipe_loop(
-    const field_t& field, const int start_index) {
+constexpr std::vector<int> get_pipe_loop(const field_t& field,
+                                         const int start_index) {
   std::vector<int> loop_indexes;
   loop_indexes.push_back(start_index);
   aoc::static_vector<point, 2> start_neighbor_diffs;
@@ -64,11 +64,10 @@ constexpr std::pair<std::vector<int>, char> get_pipe_loop(
   };
 
   auto pos_2d = field.position(start_index);
-  char start_tile = 0;
-  const auto south_diff = point{0, 1};
-  const auto north_diff = point{0, -1};
-  const auto west_diff = point{-1, 0};
-  const auto east_diff = point{1, 0};
+  const auto south_diff = aoc::get_diff(aoc::south);
+  const auto north_diff = aoc::get_diff(aoc::north);
+  const auto west_diff = aoc::get_diff(aoc::west);
+  const auto east_diff = aoc::get_diff(aoc::east);
   {
     using namespace tile_t;
 
@@ -85,48 +84,6 @@ constexpr std::pair<std::vector<int>, char> get_pipe_loop(
                               }) |
         aoc::ranges::to<aoc::static_vector<int, 2>>();
     loop_indexes.push_back(start_neighbor_indexes[0]);
-
-    // Figure out what the start tile actually is
-    char neigh1 = field.at_index(start_neighbor_indexes[0]);
-    char neigh2 = field.at_index(start_neighbor_indexes[1]);
-
-    auto neighbors_compare_strong =
-        [&](const std::array<char, 3>& first, point req_diff_first,
-            const std::array<char, 3>& second, point req_diff_second) {
-          return (start_neighbor_diffs[0] == req_diff_first) &&
-                 (start_neighbor_diffs[1] == req_diff_second) &&
-                 aoc::ranges::contains(first, neigh1) &&
-                 aoc::ranges::contains(second, neigh2);
-        };
-    auto neighbors_compare_weak =
-        [&](const std::array<char, 3>& first, point req_diff_first,
-            const std::array<char, 3>& second, point req_diff_second) {
-          return neighbors_compare_strong(first, req_diff_first, second,
-                                          req_diff_second) ||
-                 neighbors_compare_strong(second, req_diff_second, first,
-                                          req_diff_first);
-        };
-
-    if (neighbors_compare_weak(north_allowed, north_diff, south_allowed,
-                               south_diff)) {
-      start_tile = vertical_pipe;
-    } else if (neighbors_compare_weak(west_allowed, west_diff, east_allowed,
-                                      east_diff)) {
-      start_tile = horizontal_pipe;
-    } else if (neighbors_compare_weak(north_allowed, north_diff, east_allowed,
-                                      east_diff)) {
-      start_tile = north_east_L;
-    } else if (neighbors_compare_weak(north_allowed, north_diff, west_allowed,
-                                      west_diff)) {
-      start_tile = north_west_J;
-    } else if (neighbors_compare_weak(south_allowed, south_diff, east_allowed,
-                                      east_diff)) {
-      start_tile = south_east_F;
-    } else if (neighbors_compare_weak(south_allowed, south_diff, west_allowed,
-                                      west_diff)) {
-      start_tile = south_west_7;
-    }
-    AOC_ASSERT(start_tile != 0, "start_tile wasn't set");
   }
 
   auto get_neighbors_no_check =
@@ -169,11 +126,11 @@ constexpr std::pair<std::vector<int>, char> get_pipe_loop(
     loop_indexes.push_back(neighbor_index);
     current_index = neighbor_index;
   }
-  return {loop_indexes, start_tile};
+  return loop_indexes;
 }
 
 constexpr int get_num_steps(const field_t& field, const int start_index) {
-  return get_pipe_loop(field, start_index).first.size() / 2;
+  return get_pipe_loop(field, start_index).size() / 2;
 }
 
 constexpr auto test_field() {
@@ -188,35 +145,24 @@ constexpr auto test_field() {
 };
 
 static_assert(4 == get_num_steps(test_field(), 6));
-static_assert(tile_t::south_east_F == get_pipe_loop(test_field(), 6).second);
-static_assert(std::ranges::equal(get_pipe_loop(test_field(), 6).first,
+static_assert(std::ranges::equal(get_pipe_loop(test_field(), 6),
                                  std::array{6, 11, 16, 17, 18, 13, 8, 7}));
 
 // https://www.reddit.com/r/adventofcode/comments/18fgddy/2023_day_10_part_2_using_a_rendering_algorithm_to/
 // https://en.wikipedia.org/wiki/Point_in_polygon
 constexpr int num_inside(const field_t& field, const int start_index) {
-  const auto [pipe_loop, start_tile] = get_pipe_loop(field, start_index);
-  int count = 0;
-  for (int row = 0; row < field.num_rows(); ++row) {
-    bool inside = false;
-    auto index = field.linear_index(row, 0);
-    for (int col = 0; col < field.row_length(); ++col, ++index) {
-      const bool is_pipe = aoc::ranges::contains(pipe_loop, index);
-      if (is_pipe) {
-        auto value = field.at_index(index);
-        if (index == start_index) {
-          value = start_tile;
-        }
-        // Using south_allowed because they're all facing aoc::north
-        if (aoc::ranges::contains(tile_t::south_allowed, value)) {
-          inside = !inside;
-        }
-      } else if (inside) {
-        ++count;
-      }
+  const auto pipe_loop = get_pipe_loop(field, start_index);
+  std::vector<point> corners;
+  for (auto index : pipe_loop) {
+    const auto value = field.at_index(index);
+    if ((value == tile_t::vertical_pipe) ||
+        (value == tile_t::horizontal_pipe)) {
+      continue;
     }
+    corners.push_back(field.position(index));
   }
-  return count;
+  int area = aoc::calculate_area(std::span{corners});
+  return area - (pipe_loop.size() / 2) + 1;
 }
 
 static_assert(1 == num_inside(test_field(), 6));
