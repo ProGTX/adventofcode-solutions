@@ -449,7 +449,7 @@ struct transform_cast {
   }
 };
 
-template <class value_type>
+template <class value_type = int>
 constexpr auto to_number(std::string_view str, int base = 10) {
   auto first = str.data();
   auto last = first + str.size();
@@ -460,6 +460,14 @@ constexpr auto to_number(std::string_view str, int base = 10) {
                              std::string(result.ptr));
   }
   return value;
+}
+template <class value_type = int>
+constexpr auto to_number(char c) {
+  return static_cast<value_type>(c - '0');
+}
+template <class value_type = int>
+constexpr auto to_number(char c, int base) {
+  return to_number<value_type>(std::string_view{&c, 1}, base);
 }
 
 template <class T>
@@ -472,8 +480,9 @@ struct number_converter {
   constexpr T operator()(std::string_view str) const {
     return to_number<T>(str, base);
   }
-  constexpr T operator()(char value) const {
-    return to_number<T>(std::string_view{&value, 1}, base);
+  constexpr T operator()(char c) const {
+    //
+    return to_number<T>(c, base);
   }
   template <std::integral U = T>
   constexpr U operator()(std::integral auto value) const {
