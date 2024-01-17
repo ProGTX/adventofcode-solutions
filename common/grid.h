@@ -206,7 +206,6 @@ class grid {
  protected:
   constexpr void assert_linear_index(
       [[maybe_unused]] size_t linear_index) const {
-    AOC_ASSERT(linear_index >= 0, "Index must be non-negative");
     AOC_ASSERT(linear_index < this->size(), "Index cannot be out of bounds");
     AOC_ASSERT(this->num_rows() > 0, "Cannot get position without any rows");
   };

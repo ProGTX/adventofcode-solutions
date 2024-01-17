@@ -490,7 +490,7 @@ struct number_converter {
   }
 };
 
-auto pop_stack(specialization_of<std::vector> auto&& container) {
+constexpr auto pop_stack(specialization_of<std::vector> auto&& container) {
   auto elem = std::move(container.back());
   container.resize(container.size() - 1);
   return elem;
