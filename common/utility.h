@@ -450,7 +450,7 @@ struct transform_cast {
 };
 
 template <class value_type = int>
-constexpr auto to_number(std::string_view str, int base = 10) {
+constexpr auto to_number_with_rest(std::string_view str, int base = 10) {
   auto first = str.data();
   auto last = first + str.size();
   value_type value;
@@ -459,7 +459,13 @@ constexpr auto to_number(std::string_view str, int base = 10) {
     throw std::runtime_error("to_number failed to parse " +
                              std::string(result.ptr));
   }
-  return value;
+  return std::pair<value_type, std::string_view>{
+      value, str.substr(std::distance(&str[0], result.ptr))};
+}
+
+template <class value_type = int>
+constexpr auto to_number(std::string_view str, int base = 10) {
+  return to_number_with_rest<value_type>(str, base).first;
 }
 template <class value_type = int>
 constexpr auto to_number(char c) {
