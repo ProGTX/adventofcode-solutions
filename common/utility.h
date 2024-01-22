@@ -362,12 +362,67 @@ struct closed_range {
   T begin;
   T end;
 
-  constexpr bool contains(const closed_range& other) const {
+  constexpr bool contains(const closed_range& other) const
+    requires(arity_v<T> == 1)
+  {
     return (other.begin >= begin) && (other.end <= end);
+  }
+
+  // Given three collinear points p, q, r, the function checks if
+  // point q lies on line segment 'pr'
+  constexpr bool contains(const T& q) const
+    requires(arity_v<T> == 2)
+  {
+    return (get<0>(q) <= std::ranges::max(get<0>(begin), get<0>(end)) &&
+            get<0>(q) >= std::ranges::min(get<0>(begin), get<0>(end)) &&
+            get<1>(q) <= std::ranges::max(get<1>(begin), get<1>(end)) &&
+            get<1>(q) >= std::ranges::min(get<1>(begin), get<1>(end)));
   }
 
   constexpr bool overlaps_with(const closed_range& other) const {
     return (begin <= other.end) && (end >= other.begin);
+  }
+
+  // https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+  constexpr bool overlaps_with_2d(const closed_range& other) const
+    requires(arity_v<T> == 2)
+  {
+    const auto& p1 = begin;
+    const auto& q1 = end;
+    const auto& p2 = other.begin;
+    const auto& q2 = other.end;
+
+    // Find the four orientations needed for general and special cases
+    auto o1 = orientation(p1, q1, p2);
+    auto o2 = orientation(p1, q1, q2);
+    auto o3 = orientation(p2, q2, p1);
+    auto o4 = orientation(p2, q2, q1);
+
+    // General case
+    if ((o1 != o2) && (o3 != o4)) {
+      return true;
+    }
+
+    // Special Cases
+
+    // p1, q1 and p2 are collinear and p2 lies on segment p1q1
+    if ((o1 == 0) && contains(p2)) {
+      return true;
+    }
+    // p1, q1 and q2 are collinear and q2 lies on segment p1q1
+    if ((o2 == 0) && contains(q2)) {
+      return true;
+    }
+    // p2, q2 and p1 are collinear and p1 lies on segment p2q2
+    if ((o3 == 0) && other.contains(p1)) {
+      return true;
+    }
+    // p2, q2 and q1 are collinear and q1 lies on segment p2q2
+    if ((o4 == 0) && other.contains(q1)) {
+      return true;
+    }
+
+    return false; // Doesn't fall in any of the above cases
   }
 
   constexpr bool operator==(const closed_range&) const = default;

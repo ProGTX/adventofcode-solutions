@@ -363,6 +363,23 @@ template <class T, int dims>
 struct arity<nd_point_type<T, dims>>
     : public std::integral_constant<int, arity_v<T> * dims> {};
 
+// https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+// To find orientation of ordered triplet (p, q, r).
+// The function returns following values
+// 0 --> p, q and r are collinear
+// -1 --> Clockwise
+// 1 --> Counterclockwise
+template <class Point>
+  requires(arity_v<Point> == 2)
+constexpr int orientation(const Point& p, const Point& q, const Point& r) {
+  auto val = (get<1>(q) - get<1>(p)) * (get<0>(r) - get<0>(q)) -
+             (get<0>(q) - get<0>(p)) * (get<1>(r) - get<1>(q));
+  if (val == 0) {
+    return 0; // collinear
+  }
+  return (val > 0) ? -1 : 1; // clockwise or counterclockwise
+}
+
 struct min_max_helper {
   using point = point_type<int>;
 
