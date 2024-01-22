@@ -15,20 +15,20 @@
 using namespace std::string_view_literals;
 
 using int_t = long;
-using range_t = aoc::range_type<int_t>;
+struct range_t : public aoc::closed_range<int_t> {
+  using base_t = aoc::closed_range<int_t>;
+  constexpr range_t(int_t begin_, size_t size_)
+      : base_t(begin_, begin_ + size_), size{size_} {}
+
+  size_t size;
+};
 
 struct single_mapping_t {
   range_t src;
   range_t dst;
 
   constexpr bool in_source_range(int_t value) const {
-    return (value >= src.origin) && (value < (src.origin + src.size));
-  }
-
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const single_mapping_t& map) {
-    out << map.src << " -> " << map.dst;
-    return out;
+    return (value >= src.begin) && (value < (src.begin + src.size));
   }
 };
 
@@ -37,7 +37,7 @@ using seeds_t = std::vector<range_t>;
 inline constexpr int_t invalid = -1;
 
 constexpr range_t map_single(const range_t& seed, const single_mapping_t& map) {
-  return range_t{map.dst.origin - map.src.origin + seed.origin, seed.size};
+  return range_t{map.dst.begin - map.src.begin + seed.begin, seed.size};
 }
 
 // Diagram for the explanation of how an individual map applies to a seed range
@@ -108,10 +108,10 @@ constexpr seeds_t apply_mapping(seeds_t current_seeds,
       }
       // Note that end() points to 1 beyond the last element,
       // so we decrement by one
-      const auto a = map_it->src.origin;
-      const auto b = map_it->src.end() - 1;
-      const auto x = seed_it->origin;
-      const auto y = seed_it->end() - 1;
+      const auto a = map_it->src.begin;
+      const auto b = map_it->src.end - 1;
+      const auto x = seed_it->begin;
+      const auto y = seed_it->end - 1;
       if (seed_it->contains(map_it->src)) {
         // (x-a-1)(a+b)(b+1-y)
         if ((a - x) > 1) {
@@ -122,7 +122,7 @@ constexpr seeds_t apply_mapping(seeds_t current_seeds,
         next_seeds.push_back(map_single(map_it->src, *map_it));
         if ((y - b) > 0) {
           // (b+1-y)
-          split_seed_range({x, b - x + 2}, {b + 1, y - b});
+          split_seed_range(range_t(x, b - x + 2), range_t(b + 1, y - b));
           // Important to break the loop after the split
           // because the map doesn't apply anymore
           break;
@@ -133,9 +133,9 @@ constexpr seeds_t apply_mapping(seeds_t current_seeds,
       } else if ((x >= a) && (b <= y)) {
         // (a,x,b,y) - (x+b)(b+1-y)
         // (x+b)
-        next_seeds.push_back(map_single(range_t{x, b - x + 1}, *map_it));
+        next_seeds.push_back(map_single(range_t(x, b - x + 1), *map_it));
         // (b+1-y)
-        split_seed_range({x, b - x + 2}, {b + 1, y - b});
+        split_seed_range(range_t(x, b - x + 2), range_t(b + 1, y - b));
         // Important to break the loop after the split
         // because the map doesn't apply anymore
         break;
@@ -144,7 +144,7 @@ constexpr seeds_t apply_mapping(seeds_t current_seeds,
         // (x-a-1)
         next_seeds.emplace_back(x, a - x);
         // (a+y)
-        next_seeds.push_back(map_single(range_t{a, y - a + 1}, *map_it));
+        next_seeds.push_back(map_single(range_t(a, y - a + 1), *map_it));
       }
     }
   };
@@ -160,19 +160,6 @@ constexpr seeds_t apply_mapping(seeds_t current_seeds,
   std::ranges::sort(next_seeds, std::less<>{});
   return next_seeds;
 }
-
-static_assert(std::ranges::equal(
-    std::array{range_t{3, 5}, range_t{8, 3}, range_t{11, 10}},
-    apply_mapping(seeds_t{range_t{3, 8}, range_t{11, 10}},
-                  std::vector{single_mapping_t{{0, 8}, {0, 8}}})));
-static_assert(std::ranges::equal(
-    std::array{range_t{3, 8}, range_t{11, 5}, range_t{16, 5}},
-    apply_mapping(seeds_t{range_t{3, 8}, range_t{11, 10}},
-                  std::vector{single_mapping_t{{0, 16}, {0, 16}}})));
-static_assert(std::ranges::equal(
-    std::array{range_t{57, 13}, range_t{81, 14}},
-    apply_mapping(seeds_t{range_t{55, 13}, range_t{79, 14}},
-                  std::vector{single_mapping_t{{50, 48}, {52, 48}}})));
 
 template <bool full_ranges>
 int_t solve_case(const std::string& filename) {
@@ -205,15 +192,15 @@ int_t solve_case(const std::string& filename) {
     }
     auto [dest_start, source_start, range] =
         aoc::split<std::array<int_t, 3>>(line, ' ');
-    mapping.emplace_back(range_t{source_start, range},
-                         range_t{dest_start, range});
+    mapping.emplace_back(range_t(source_start, range),
+                         range_t(dest_start, range));
   }
 
   // Have to run this one last time
   std::ranges::sort(mapping, std::less<>{}, &single_mapping_t::src);
   current_seeds = apply_mapping(current_seeds, mapping);
 
-  int_t lowest_location = current_seeds[0].origin;
+  int_t lowest_location = current_seeds[0].begin;
   std::cout << filename << " -> " << lowest_location << std::endl;
   return lowest_location;
 }

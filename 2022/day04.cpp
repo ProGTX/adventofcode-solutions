@@ -17,12 +17,10 @@
 #include <utility>
 #include <vector>
 
-struct range : public aoc::range_type<int> {
-  using base_t = aoc::range_type<int>;
-  constexpr range(int begin_ = 1, int end_ = 1)
-      : base_t{begin_, end_ - begin_ + 1} {}
+struct range : public aoc::closed_range<int> {
+  using base_t = aoc::closed_range<int>;
   constexpr range(std::array<int, 2> range_array)
-      : range{range_array[0], range_array[1]} {}
+      : base_t{range_array[0], range_array[1]} {}
 };
 
 template <bool use_overlaps>

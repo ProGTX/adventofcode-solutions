@@ -346,30 +346,24 @@ struct custom_divides {
   }
 };
 
-template <class T, class SizeT = T>
-struct range_type {
-  T origin;
-  SizeT size;
+template <class T>
+struct closed_range {
+  T begin;
+  T end;
 
-  constexpr T end() const { return origin + size; }
-
-  constexpr bool contains(const range_type& other) const {
-    return (other.origin >= origin) && (other.end() <= end());
+  constexpr bool contains(const closed_range& other) const {
+    return (other.begin >= begin) && (other.end <= end);
   }
 
-  constexpr bool overlaps_with(const range_type& other) const {
-    return (origin < other.end()) && (end() > other.origin);
+  constexpr bool overlaps_with(const closed_range& other) const {
+    return (begin <= other.end) && (end >= other.begin);
   }
 
-  bool operator==(const range_type&) const = default;
+  constexpr bool operator==(const closed_range&) const = default;
+  constexpr auto operator<=>(const closed_range&) const = default;
 
-  friend constexpr bool operator<(const range_type& lhs,
-                                  const range_type& rhs) {
-    return lhs.origin < rhs.origin;
-  }
-
-  friend std::ostream& operator<<(std::ostream& out, const range_type& range) {
-    out << '[' << range.origin << ',' << (range.end() - 1) << ']';
+  friend std::ostream& operator<<(std::ostream& out, const closed_range& range) {
+    out << '[' << range.begin << ',' << range.end << ']';
     return out;
   }
 };
