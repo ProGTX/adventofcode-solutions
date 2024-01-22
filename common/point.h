@@ -135,6 +135,10 @@ struct point_type {
   constexpr const_iterator end() const noexcept { return (&y) + 1; }
 };
 
+template <class T>
+struct arity<point_type<T>>
+    : public std::integral_constant<int, arity_v<T> * 2> {};
+
 template <class T, int dims>
 class nd_point_type {
  public:
@@ -337,6 +341,10 @@ class nd_point_type {
  private:
   data_t m_data;
 };
+
+template <class T, int dims>
+struct arity<nd_point_type<T, dims>>
+    : public std::integral_constant<int, arity_v<T> * dims> {};
 
 struct min_max_helper {
   using point = point_type<int>;

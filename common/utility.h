@@ -352,6 +352,12 @@ struct custom_divides {
 };
 
 template <class T>
+struct arity : public std::integral_constant<int, 1> {};
+
+template <class T>
+constexpr inline auto arity_v = arity<T>::value;
+
+template <class T>
 struct closed_range {
   T begin;
   T end;
