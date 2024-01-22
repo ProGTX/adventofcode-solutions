@@ -133,6 +133,17 @@ struct point_type {
 
   constexpr iterator end() noexcept { return (&y) + 1; }
   constexpr const_iterator end() const noexcept { return (&y) + 1; }
+
+  template <size_t I>
+  constexpr friend value_type get(const point_type& p) {
+    if constexpr (I == 0) {
+      return p.x;
+    } else if constexpr (I == 1) {
+      return p.y;
+    } else {
+      static_assert(false);
+    }
+  }
 };
 
 template <class T>
@@ -336,6 +347,12 @@ class nd_point_type {
     }
     out << np.m_data[dims - 1] << '}';
     return out;
+  }
+
+  template <size_t I>
+  constexpr friend value_type get(const nd_point_type& np) {
+    static_assert(I < dims);
+    return np[I];
   }
 
  private:
