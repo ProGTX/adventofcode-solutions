@@ -325,6 +325,15 @@ class nd_point_type {
   constexpr iterator end() noexcept { return m_data.end(); }
   constexpr const_iterator end() const noexcept { return m_data.end(); }
 
+  friend std::ostream& operator<<(std::ostream& out, const nd_point_type& np) {
+    out << '{';
+    for (int i = 0; i < dims - 1; ++i) {
+      out << np.m_data[i] << ',';
+    }
+    out << np.m_data[dims - 1] << '}';
+    return out;
+  }
+
  private:
   data_t m_data;
 };
