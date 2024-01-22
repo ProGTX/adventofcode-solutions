@@ -155,7 +155,7 @@ int solve_case(std::string const& filename) {
   int score = 0;
   if constexpr (!execute_long) {
     point field_size = aoc::min_max_helper::get(elves).grid_size();
-    int num_empty_tiles = field_size.reduce<std::multiplies<>>() - elves.size();
+    int num_empty_tiles = (field_size.x * field_size.y) - elves.size();
     score = num_empty_tiles;
   } else {
     score = round_when_none_moved;

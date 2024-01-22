@@ -6,15 +6,19 @@
 #include "utility.h"
 
 #include <array>
+#include <compare>
 #include <concepts>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
 #include <ostream>
+#include <ranges>
 #include <span>
 #include <type_traits>
 
 namespace aoc {
+
+struct fill_tag {};
 
 template <class T>
 struct point_type {
@@ -118,16 +122,6 @@ struct point_type {
 
   constexpr point_type normal() const { return *this / this->abs(); }
 
-  constexpr friend std::uint64_t distance_squared(const point_type& lhs,
-                                                  const point_type& rhs) {
-    auto diff = rhs - lhs;
-    // TODO: Handle sizes better
-    return static_cast<std::uint64_t>(static_cast<std::int64_t>(diff.x) *
-                                      diff.x) +
-           static_cast<std::uint64_t>(static_cast<std::int64_t>(diff.y) *
-                                      diff.y);
-  }
-
   constexpr friend value_type distance_manhattan(const point_type& lhs,
                                                  const point_type& rhs) {
     auto diff = (rhs - lhs).abs();
@@ -139,30 +133,119 @@ struct point_type {
 
   constexpr iterator end() noexcept { return (&y) + 1; }
   constexpr const_iterator end() const noexcept { return (&y) + 1; }
-
-  template <binary_op_r<value_type, value_type, value_type> Op = std::plus<>>
-  constexpr value_type reduce(Op op = {}) const {
-    return op(x, y);
-  }
 };
 
-template <class T>
-struct cube_type {
-  using value_type = T;
+template <class T, int dims>
+class nd_point_type {
+ public:
+  static_assert(dims > 0);
 
-  T x{0};
-  T y{0};
-  T z{0};
+  using value_type = T;
+  using data_t = std::array<value_type, dims>;
+  static constexpr auto dimensions = dims;
+  using reference = typename data_t::reference;
+  using const_reference = typename data_t::const_reference;
+  using iterator = typename data_t::iterator;
+  using const_iterator = typename data_t::const_iterator;
+  using size_type = typename data_t::size_type;
+
+  constexpr nd_point_type() = default;
+  constexpr nd_point_type(const data_t& data) : m_data{data} {}
+
+  template <std::convertible_to<value_type>... Us>
+    requires(sizeof...(Us) == dims)
+  constexpr nd_point_type(Us... values)
+      : m_data{static_cast<value_type>(values)...} {}
+
+  constexpr nd_point_type(fill_tag,
+                          std::convertible_to<value_type> auto value) {
+    std::ranges::fill(m_data, static_cast<value_type>(value));
+  }
+
+  constexpr bool operator==(const nd_point_type&) const = default;
+
+  constexpr std::strong_ordering operator<=>(const nd_point_type& other) const {
+    // Inverse the order
+    for (int i = dims - 1; i >= 0; --i) {
+      auto order = (m_data[i] <=> other[i]);
+      if (order != std::strong_ordering::equal) {
+        return order;
+      }
+    }
+    return std::strong_ordering::equal;
+  }
+
+  constexpr reference operator[](size_type pos) { return m_data[pos]; }
+  constexpr const_reference operator[](size_type pos) const {
+    return m_data[pos];
+  }
+
+  template <class F>
+    requires(std::invocable<F, value_type> ||
+             std::invocable<F, value_type, int>)
+  constexpr void transform(F&& f) {
+    for (int i = 0; i < dims; ++i) {
+      if constexpr (std::invocable<F, value_type, int>) {
+        m_data[i] = f(m_data[i], i);
+      } else {
+        m_data[i] = f(m_data[i]);
+      }
+    }
+  }
+
+  template <class U>
+    requires(!std::same_as<std::remove_cvref_t<U>, std::remove_cvref_t<T>> &&
+             std::convertible_to<T, U>)
+  constexpr operator nd_point_type<U, dims>() const {
+    nd_point_type<U, dims> other;
+    other.transform(
+        [this](value_type, int i) { return static_cast<U>(m_data[i]); });
+    return other;
+  }
+
+  constexpr reference x() { return m_data[0]; }
+  constexpr const_reference x() const { return m_data[0]; }
+
+  template <int = dims>
+    requires(dims > 1)
+  constexpr reference y() {
+    return m_data[1];
+  }
+  template <int = dims>
+    requires(dims > 1)
+  constexpr const_reference y() const {
+    return m_data[1];
+  }
+
+  template <int = dims>
+    requires(dims > 2)
+  constexpr reference z() {
+    return m_data[2];
+  }
+  template <int = dims>
+    requires(dims > 2)
+  constexpr const_reference z() const {
+    return m_data[2];
+  }
+
+  template <int = dims>
+    requires(dims > 3)
+  constexpr reference w() {
+    return m_data[3];
+  }
+  template <int = dims>
+    requires(dims > 3)
+  constexpr const_reference w() const {
+    return m_data[3];
+  }
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
-  constexpr cube_type& operator op_eq(const cube_type & other) {               \
-    x op_eq other.x;                                                           \
-    y op_eq other.y;                                                           \
-    z op_eq other.z;                                                           \
+  constexpr nd_point_type& operator op_eq(const nd_point_type & other) {       \
+    transform([&](value_type val, int i) { return val op other[i]; });         \
     return *this;                                                              \
   }                                                                            \
-  constexpr friend cube_type operator op(cube_type lhs,                        \
-                                         const cube_type& rhs) {               \
+  constexpr friend nd_point_type operator op(nd_point_type lhs,                \
+                                             const nd_point_type& rhs) {       \
     lhs op_eq rhs;                                                             \
     return lhs;                                                                \
   }
@@ -173,18 +256,77 @@ struct cube_type {
 
 #undef AOC_POINTWISE_OP
 
-  constexpr friend bool operator==(const cube_type&,
-                                   const cube_type&) = default;
+  // Note that this operator allows division by zero
+  // by setting the element to zero
 
-  constexpr friend bool operator<(const cube_type& lhs, const cube_type& rhs) {
-    if (lhs.z == rhs.z) {
-      if (lhs.y == rhs.y) {
-        return lhs.x < rhs.x;
-      }
-      return lhs.y < rhs.y;
-    }
-    return lhs.z < rhs.z;
+#define AOC_POINTWISE_OP(op, op_eq)                                            \
+  constexpr nd_point_type& operator op_eq(const nd_point_type & other) {       \
+    transform([&](value_type val, int i) {                                     \
+      return (other[i] == 0) ? 0 : (val op other[i]);                          \
+    });                                                                        \
+    return *this;                                                              \
+  }                                                                            \
+  constexpr friend nd_point_type operator op(nd_point_type lhs,                \
+                                             const nd_point_type& rhs) {       \
+    lhs op_eq rhs;                                                             \
+    return lhs;                                                                \
   }
+
+  AOC_POINTWISE_OP(/, /=)
+  AOC_POINTWISE_OP(%, %=)
+
+#undef AOC_POINTWISE_OP
+
+#define AOC_POINTWISE_OP(op, op_eq)                                            \
+  constexpr nd_point_type& operator op_eq(value_type value) {                  \
+    return *this op_eq nd_point_type{fill_tag{}, value};                       \
+  }                                                                            \
+  constexpr friend nd_point_type operator op(nd_point_type lhs,                \
+                                             value_type value) {               \
+    return lhs op_eq value;                                                    \
+  }                                                                            \
+  constexpr friend nd_point_type operator op(value_type value,                 \
+                                             const nd_point_type& rhs) {       \
+    return nd_point_type{fill_tag{}, value} op rhs;                            \
+  }
+
+  AOC_POINTWISE_OP(*, *=)
+  AOC_POINTWISE_OP(/, /=)
+  AOC_POINTWISE_OP(%, %=)
+
+#undef AOC_POINTWISE_OP
+
+  constexpr nd_point_type operator-() const {
+    nd_point_type other;
+    other.transform([this](value_type, int i) { return -m_data[i]; });
+    return other;
+  }
+
+  constexpr nd_point_type abs() const {
+    nd_point_type other;
+    other.transform([this](value_type, int i) { return aoc::abs(m_data[i]); });
+    return other;
+  }
+
+  constexpr nd_point_type normal() const { return *this / this->abs(); }
+
+  constexpr friend value_type distance_manhattan(const nd_point_type& lhs,
+                                                 const nd_point_type& rhs) {
+    auto diff = (rhs - lhs).abs();
+    return diff.x + diff.y;
+  }
+
+  constexpr value_type* data() noexcept { m_data.data(); }
+  constexpr const value_type* data() const noexcept { return m_data.data(); }
+
+  constexpr iterator begin() noexcept { return m_data.begin(); }
+  constexpr const_iterator begin() const noexcept { return m_data.begin(); }
+
+  constexpr iterator end() noexcept { return m_data.end(); }
+  constexpr const_iterator end() const noexcept { return m_data.end(); }
+
+ private:
+  data_t m_data;
 };
 
 struct min_max_helper {

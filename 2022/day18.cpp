@@ -15,7 +15,7 @@
 #include <string_view>
 #include <vector>
 
-using droplet_t = aoc::cube_type<int>;
+using droplet_t = aoc::nd_point_type<int, 3>;
 using droplets_t = std::set<droplet_t>;
 
 int calc_surface_area(const droplets_t& droplets) {
