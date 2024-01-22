@@ -45,6 +45,11 @@ using function_arg_n_t = std::tuple_element_t<I, function_args_t<T>>;
 template <int V>
 using int_constant = std::integral_constant<int, V>;
 
+struct sorted_unique_t {
+  explicit constexpr sorted_unique_t() = default;
+};
+inline constexpr sorted_unique_t sorted_unique{};
+
 // https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp
 
 template <class T>
