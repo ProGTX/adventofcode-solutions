@@ -210,36 +210,36 @@ class nd_point_type {
   constexpr reference x() { return m_data[0]; }
   constexpr const_reference x() const { return m_data[0]; }
 
-  template <int = dims>
+  constexpr reference y()
     requires(dims > 1)
-  constexpr reference y() {
+  {
     return m_data[1];
   }
-  template <int = dims>
+  constexpr const_reference y() const
     requires(dims > 1)
-  constexpr const_reference y() const {
+  {
     return m_data[1];
   }
 
-  template <int = dims>
+  constexpr reference z()
     requires(dims > 2)
-  constexpr reference z() {
+  {
     return m_data[2];
   }
-  template <int = dims>
+  constexpr const_reference z() const
     requires(dims > 2)
-  constexpr const_reference z() const {
+  {
     return m_data[2];
   }
 
-  template <int = dims>
+  constexpr reference w()
     requires(dims > 3)
-  constexpr reference w() {
+  {
     return m_data[3];
   }
-  template <int = dims>
+  constexpr const_reference w() const
     requires(dims > 3)
-  constexpr const_reference w() const {
+  {
     return m_data[3];
   }
 
