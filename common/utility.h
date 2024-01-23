@@ -428,7 +428,8 @@ struct closed_range {
   constexpr bool operator==(const closed_range&) const = default;
   constexpr auto operator<=>(const closed_range&) const = default;
 
-  friend std::ostream& operator<<(std::ostream& out, const closed_range& range) {
+  friend std::ostream& operator<<(std::ostream& out,
+                                  const closed_range& range) {
     out << '[' << range.begin << ',' << range.end << ']';
     return out;
   }
