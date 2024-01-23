@@ -142,7 +142,7 @@ struct point_type {
     } else if constexpr (I == 1) {
       return p.y;
     } else {
-      static_assert(false);
+      static_assert(I < 2);
     }
   }
 };
