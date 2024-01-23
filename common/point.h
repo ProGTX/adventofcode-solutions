@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
+#include <optional>
 #include <ostream>
 #include <ranges>
 #include <span>
@@ -362,6 +363,26 @@ class nd_point_type {
 template <class T, int dims>
 struct arity<nd_point_type<T, dims>>
     : public std::integral_constant<int, arity_v<T> * dims> {};
+
+template <class T, int dims>
+  requires(dims > 1)
+constexpr std::optional<closed_range<point_type<T>>> to_2d(
+    const closed_range<nd_point_type<T, dims>>& range) {
+  // All the upper dimensions need to be the same
+  for (int i = dims - 1; i >= 2; --i) {
+    if (range.begin[i] != range.end[i]) {
+      return std::nullopt;
+    }
+  }
+
+  closed_range<point_type<T>> result;
+  result.begin.x = range.begin[0];
+  result.begin.y = range.begin[1];
+  result.end.x = range.end[0];
+  result.end.y = range.end[1];
+
+  return result;
+}
 
 // https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
 // To find orientation of ordered triplet (p, q, r).
