@@ -3,6 +3,7 @@
 
 #include "assert.h"
 #include "math.h"
+#include "ranges.h"
 #include "utility.h"
 
 #include <array>
@@ -128,6 +129,13 @@ struct point_type {
     auto diff = (rhs - lhs).abs();
     return diff.x + diff.y;
   }
+
+  constexpr value_type dot(const point_type& other) const {
+    auto mult = *this * other;
+    return mult.x + mult.y;
+  }
+
+  constexpr value_type sqr_magnitude() const { return dot(*this); }
 
   constexpr iterator begin() noexcept { return &x; }
   constexpr const_iterator begin() const noexcept { return &x; }
@@ -329,7 +337,22 @@ class nd_point_type {
   constexpr friend value_type distance_manhattan(const nd_point_type& lhs,
                                                  const nd_point_type& rhs) {
     auto diff = (rhs - lhs).abs();
-    return diff.x + diff.y;
+    return aoc::ranges::accumulate(diff.m_data, 0);
+  }
+
+  constexpr value_type dot(const nd_point_type& other) const {
+    auto mult = *this * other;
+    return aoc::ranges::accumulate(mult.m_data, 0);
+  }
+
+  constexpr value_type sqr_magnitude() const { return dot(*this); }
+
+  constexpr nd_point_type cross(const nd_point_type& other) const
+    requires(dims == 3)
+  {
+    return {(y() * other.z()) - (z() * other.y()),
+            (z() * other.x()) - (x() * other.z()),
+            (x() * other.y()) - (y() * other.x())};
   }
 
   constexpr value_type* data() noexcept { m_data.data(); }
