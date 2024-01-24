@@ -187,6 +187,11 @@ class grid {
     return this->begin_row(row) + this->row_length();
   }
 
+  constexpr void clear() {
+    m_data.clear();
+    m_data.resize(this->num_rows() * this->num_columns());
+  }
+
   constexpr bool in_bounds(size_t row, size_t column) const {
     return (row < this->num_rows()) && (column < this->row_length());
   }
@@ -521,6 +526,8 @@ class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
     }
   }
 
+  constexpr void clear() { base_t::m_data.clear(); }
+
   template <class print_single_ft = std::identity>
   void print_all(print_single_ft print_single_f = {},
                  std::ostream& out = std::cout) const {
@@ -574,6 +581,7 @@ concept is_grid = std::ranges::range<Grid> &&
                     g.at(0, 0);
                     g.modify(value, 0, 0);
                     g.print_all();
+                    g.clear();
                   };
 
 static_assert(is_grid<grid<int>>);
