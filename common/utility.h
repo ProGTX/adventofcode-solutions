@@ -390,7 +390,14 @@ struct closed_range {
   }
 
   constexpr bool overlaps_with(const closed_range& other) const {
-    return (begin <= other.end) && (end >= other.begin);
+    const bool overlaps = (begin <= other.end) && (end >= other.begin);
+    if constexpr (arity_v<T> == 2) {
+      return overlaps && overlaps_with_2d(other);
+    } else if constexpr (arity_v<T> == 3) {
+      return overlaps && overlaps_with_3d(other);
+    } else {
+      return overlaps;
+    }
   }
 
   // https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
@@ -433,6 +440,30 @@ struct closed_range {
     }
 
     return false; // Doesn't fall in any of the above cases
+  }
+
+  // https://stackoverflow.com/a/63288956
+  // https://forum.unity.com/threads/line-intersection.17384/
+  constexpr bool overlaps_with_3d(const closed_range& other) const
+    requires(arity_v<T> == 3)
+  {
+    const auto begin_diff = other.begin - begin;
+    const auto directions_cross = direction().cross(other.direction());
+    const auto planar_factor = begin_diff.dot(directions_cross);
+    const auto dirs_cross_sqr_magnitude = directions_cross.sqr_magnitude();
+
+    const bool coplanar = (abs(planar_factor) == 0);
+    const bool parallel = (dirs_cross_sqr_magnitude == 0);
+    const bool lines_intersect = coplanar && !parallel;
+    if (!lines_intersect) {
+      return false;
+    }
+
+    const auto begin_cross_dir_other = begin_diff.cross(other.direction());
+    const auto crossing_point_factor =
+        begin_cross_dir_other.dot(directions_cross) /
+        static_cast<float>(dirs_cross_sqr_magnitude);
+    return (crossing_point_factor >= 0) && (crossing_point_factor <= 1);
   }
 
   constexpr bool operator==(const closed_range&) const = default;
