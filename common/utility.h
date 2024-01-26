@@ -381,12 +381,18 @@ struct closed_range {
   // Given three collinear points p, q, r, the function checks if
   // point q lies on line segment 'pr'
   constexpr bool contains(const T& q) const
-    requires(arity_v<T> == 2)
+    requires(arity_v<T> >= 2)
   {
-    return (get<0>(q) <= std::ranges::max(get<0>(begin), get<0>(end)) &&
-            get<0>(q) >= std::ranges::min(get<0>(begin), get<0>(end)) &&
-            get<1>(q) <= std::ranges::max(get<1>(begin), get<1>(end)) &&
-            get<1>(q) >= std::ranges::min(get<1>(begin), get<1>(end)));
+    bool contains = get<0>(q) <= std::ranges::max(get<0>(begin), get<0>(end)) &&
+                    get<0>(q) >= std::ranges::min(get<0>(begin), get<0>(end)) &&
+                    get<1>(q) <= std::ranges::max(get<1>(begin), get<1>(end)) &&
+                    get<1>(q) >= std::ranges::min(get<1>(begin), get<1>(end));
+    if constexpr (arity_v<T> > 2) {
+      contains = contains &&
+                 get<2>(q) <= std::ranges::max(get<2>(begin), get<2>(end)) &&
+                 get<2>(q) >= std::ranges::min(get<2>(begin), get<2>(end));
+    }
+    return contains;
   }
 
   constexpr bool overlaps_with(const closed_range& other) const {
@@ -447,8 +453,18 @@ struct closed_range {
   constexpr bool overlaps_with_3d(const closed_range& other) const
     requires(arity_v<T> == 3)
   {
+    const auto dir = direction();
+    const auto other_dir = other.direction();
+
+    // Handle single points
+    if (dir == T{}) {
+      return other.contains(begin);
+    } else if (other_dir == T{}) {
+      return contains(other.begin);
+    }
+
     const auto begin_diff = other.begin - begin;
-    const auto directions_cross = direction().cross(other.direction());
+    const auto directions_cross = dir.cross(other_dir);
     const auto planar_factor = begin_diff.dot(directions_cross);
     const auto dirs_cross_sqr_magnitude = directions_cross.sqr_magnitude();
 
@@ -459,7 +475,7 @@ struct closed_range {
       return false;
     }
 
-    const auto begin_cross_dir_other = begin_diff.cross(other.direction());
+    const auto begin_cross_dir_other = begin_diff.cross(other_dir);
     const auto crossing_point_factor =
         begin_cross_dir_other.dot(directions_cross) /
         static_cast<float>(dirs_cross_sqr_magnitude);
