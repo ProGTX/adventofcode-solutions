@@ -362,6 +362,16 @@ struct closed_range {
   T begin;
   T end;
 
+  constexpr closed_range(T first_, T last_)
+      : begin{std::move(first_)}, end{std::move(last_)} {
+    if (end < begin) {
+      // Ensure the range is ordered
+      std::swap(begin, end);
+    }
+  }
+
+  constexpr T direction() const { return end - begin; }
+
   constexpr bool contains(const closed_range& other) const
     requires(arity_v<T> == 1)
   {
