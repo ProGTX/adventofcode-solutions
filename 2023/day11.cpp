@@ -3,6 +3,7 @@
 #include "../common/common.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <iostream>
 #include <ostream>
 #include <ranges>

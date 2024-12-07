@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <iterator>
@@ -34,8 +35,7 @@ struct monkey_t {
     out << indent << aoc::print_range(items) << std::endl;
     out << indent << "operation(7) = " << operation(7) << std::endl;
     out << indent << "test{" << test.divisible_by << ",true(" << test.on_true
-        << "),"
-        << "false(" << test.on_false << ")}" << std::endl;
+        << ")," << "false(" << test.on_false << ")}" << std::endl;
     return out;
   }
 };

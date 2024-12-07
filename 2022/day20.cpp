@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <numeric>
