@@ -20,19 +20,42 @@ using positions_t = std::vector<point>;
 constexpr inline auto plot = '.';
 constexpr inline auto rock = '#';
 
+/**
+ * This function performs a single step of movement for the pots in the garden.
+ *
+ * @tparam infinite If true, the garden is considered infinite, meaning that if
+ * a pot moves off the edge of the garden, it wraps around to the other side.
+ * @param garden    The garden containing the pots.
+ * @param starting   The starting positions of the pots.
+ * @return           The final positions of the pots after the movement step.
+ */
 template <bool infinite>
 positions_t move_one(const garden_t& garden, const positions_t& starting) {
+  // Create a vector to store the final positions of the pots.
   positions_t ending;
+
+  // Get the dimensions of the garden.
   const auto bounds = point(garden.num_columns(), garden.num_rows());
+
+  // Loop over each starting pot.
   for (auto start : starting) {
+    // Loop over each direction a pot can move.
     for (auto diff : aoc::basic_neighbor_diffs) {
+      // Calculate the position of the neighboring pot.
       point neighbor = start + diff;
+
+      // Check if the garden is not infinite.
       if constexpr (!infinite) {
+        // If the garden is not infinite, check if the neighboring pot is in
+        // bounds and is a plot. If so, add it to the final positions.
         if (garden.in_bounds(neighbor.y, neighbor.x) &&
             (garden.at(neighbor.y, neighbor.x) == plot)) {
           ending.push_back(neighbor);
         }
       } else {
+        // If the garden is infinite, calculate the position of the neighboring
+        // pot taking into account wrapping around the edges. Then check if the
+        // neighboring pot is a plot. If so, add it to the final positions.
         auto neighbor_in_bounds = ((neighbor % bounds) + bounds) % bounds;
         if (garden.at(neighbor_in_bounds.y, neighbor_in_bounds.x) == plot) {
           ending.push_back(neighbor);
@@ -40,9 +63,15 @@ positions_t move_one(const garden_t& garden, const positions_t& starting) {
       }
     }
   }
+
+  // Sort the final positions in ascending order.
   std::ranges::sort(ending, std::less<>{});
+
+  // Remove any duplicate positions.
   auto [non_unique_begin, non_unique_end] = std::ranges::unique(ending);
   ending.resize(std::distance(std::begin(ending), non_unique_begin));
+
+  // Return the final positions of the pots.
   return ending;
 }
 
