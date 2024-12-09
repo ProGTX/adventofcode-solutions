@@ -567,6 +567,20 @@ struct transform_cast {
   }
 };
 
+// Very simple parser for valid base 10 positive integers
+// Should not be needed in C++23 because from_chars will finally be constexpr
+template <class value_type = int>
+constexpr value_type to_int_naive(std::string_view str) {
+  value_type result = 0;
+  value_type multiplier = 1;
+  for (auto c : str | std::views::reverse) {
+    AOC_ASSERT((c >= '0') && (c <= '9'), "Invalid character in integer");
+    result += multiplier * static_cast<value_type>(c - '0');
+    multiplier *= 10;
+  }
+  return result;
+}
+
 template <class value_type = int>
 constexpr auto to_number_with_rest(std::string_view str, int base = 10) {
   auto first = str.data();
