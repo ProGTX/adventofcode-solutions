@@ -133,8 +133,8 @@ class static_vector {
     AOC_ASSERT(m_size > 0, "No elements for back");
     return &m_data[m_size - 1];
   }
-  constexpr T* data() noexcept { return &m_data; }
-  constexpr const T* data() const noexcept { return &m_data; }
+  constexpr T* data() noexcept { return m_data.data(); }
+  constexpr const T* data() const noexcept { return m_data.data(); }
 
   // Add elements
   template <class... Args>
