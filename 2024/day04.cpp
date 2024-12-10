@@ -19,11 +19,8 @@ static constexpr auto xmas_rstr = "SAMX"sv;
 constexpr int count_xmas(std::ranges::input_range auto&& range) {
   // Much faster if we convert the range to a string first
   auto range_str = range | aoc::ranges::to<std::string>();
-  int count = std::ranges::distance(range_str | std::views::split(xmas_str)) +
-              std::ranges::distance(range_str | std::views::split(xmas_rstr)) -
-              2;
-  // In some cases the distance returned is 0
-  return std::ranges::max(0, count);
+  return aoc::count_substrings(range_str, xmas_str) +
+         aoc::count_substrings(range_str, xmas_rstr);
 }
 
 static_assert(1 == count_xmas("MMMSXXMASM"sv));
