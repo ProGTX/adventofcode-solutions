@@ -139,7 +139,7 @@ constexpr auto repeat(W&& value) {
 }
 template <class W, std::integral Bound>
 constexpr auto repeat(W&& value, Bound&& bound) {
-  return std::views::iota(0, std::forward<Bound>(bound)) |
+  return std::views::iota(static_cast<Bound>(0), std::forward<Bound>(bound)) |
          transform_to_value(std::forward<W>(value));
 }
 static_assert(std::ranges::equal(std::array{7, 7, 7}, repeat(7, 3)));
