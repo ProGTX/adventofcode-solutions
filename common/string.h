@@ -2,6 +2,7 @@
 #define AOC_STRING_H
 
 #include "concepts.h"
+#include "range_to.h"
 #include "utility.h"
 
 #include <array>
@@ -227,6 +228,30 @@ static_assert(2 == binary_to_number<'1'>("01"));
 static_assert(13 == binary_to_number<'1'>("1011"));
 static_assert(205 == binary_to_number<'#'>("#.##..##."));
 static_assert(6757 == binary_to_number<'#'>("#.#..##..#.##"));
+
+constexpr int count_substrings(std::string_view haystack,
+                               std::string_view needle) {
+  const int count =
+      std::ranges::distance(haystack | std::views::split(needle)) - 1;
+  // In some cases the distance returned is 0
+  return std::ranges::max(0, count);
+}
+constexpr int count_substrings(const std::string& haystack,
+                               std::string_view needle) {
+  return count_substrings(std::string_view{haystack}, needle);
+}
+constexpr int count_substrings(std::ranges::input_range auto&& haystack,
+                               std::string_view needle) {
+  // Much faster if we convert the haystack to a string first
+  auto haystack_str = haystack | ranges::to<std::string>();
+  return count_substrings(std::string_view{haystack_str}, needle);
+}
+
+static_assert(1 == count_substrings("abc", "abc"));
+static_assert(2 == count_substrings("abcabc", "abc"));
+static_assert(2 == count_substrings("abcyabc", "abc"));
+static_assert(2 == count_substrings("abcyacabc", "abc"));
+static_assert(2 == count_substrings("cbacba" | std::views::reverse, "abc"));
 
 } // namespace aoc
 
