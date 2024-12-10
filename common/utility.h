@@ -502,6 +502,16 @@ struct equal_to_value {
   }
 };
 
+template <class T>
+struct not_equal_to_value {
+  T value;
+
+  template <std::equality_comparable_with<T> U>
+  constexpr bool operator()(U&& other) const {
+    return value != other;
+  }
+};
+
 template <std::ranges::common_range Container>
 constexpr Container transpose(const Container& container) {
   Container transposed_container;
