@@ -104,6 +104,15 @@ class grid {
     }
   }
 
+  [[nodiscard]] constexpr auto empty_dynamic() const { return m_data.empty(); }
+  [[nodiscard]] constexpr bool empty() const {
+    if constexpr (static_data_size > 0) {
+      return false;
+    } else {
+      return this->empty_dynamic();
+    }
+  }
+
   constexpr size_t row_length_dynamic() const { return m_row_length; }
   constexpr size_t row_length() const {
     if constexpr (static_row_length > 0) {
@@ -464,6 +473,9 @@ class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
   using base_t::size;
   using base_t::size_dynamic;
 
+  using base_t::empty;
+  using base_t::empty_dynamic;
+
   using base_t::row_length;
   using base_t::row_length_dynamic;
 
@@ -574,6 +586,7 @@ concept is_grid = std::ranges::range<Grid> &&
                            typename Grid::row_t row) {
                     g.data();
                     g.size();
+                    g.empty();
                     g.row_length();
                     g.num_rows();
                     g.add_row(row);
