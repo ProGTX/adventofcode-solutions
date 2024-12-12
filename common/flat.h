@@ -143,11 +143,6 @@ class flat_set {
   using reverse_iterator = std::reverse_iterator<iterator>;
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
- private:
-  template <class flat_set_t>
-  using select_it_t =
-      std::conditional_t<std::is_const_v<flat_set_t>, const_iterator, iterator>;
-
  public:
   ///////////////
   // Constructors
@@ -184,15 +179,24 @@ class flat_set {
 
   // insert()
   constexpr std::pair<iterator, bool> insert(const value_type& value) { // 1
-    return this->insert_generic(value);
+    return this->insert_generic(cend(), value);
   }
   constexpr std::pair<iterator, bool> insert(value_type&& value) { // 2
-    return this->insert_generic(std::move(value));
+    return this->insert_generic(cend(), std::move(value));
+  }
+  iterator insert(const_iterator pos, const value_type& value) { // 3
+    auto [it, inserted] = this->insert_generic(pos, value);
+    return it;
+  }
+  iterator insert(const_iterator pos, value_type&& value) { // 4
+    auto [it, inserted] = this->insert_generic(pos, std::move(value));
+    return it;
   }
 
   template <class... Args>
   constexpr std::pair<iterator, bool> emplace(Args&&... args) {
-    return this->insert_generic(value_type(std::forward<Args>(args)...));
+    return this->insert_generic(cend(),
+                                value_type(std::forward<Args>(args)...));
   }
 
   // erase()
@@ -219,10 +223,20 @@ class flat_set {
 
   // find()
   constexpr iterator find(const Key& key) { // 1
-    return find_generic(*this, key);
+    auto it = this->lower_bound(key);
+    if ((it == end()) || (*it == key)) {
+      return it;
+    } else {
+      return end();
+    }
   }
   constexpr const_iterator find(const Key& key) const { // 2
-    return find_generic(*this, key);
+    auto it = this->lower_bound(key);
+    if ((it == end()) || (*it == key)) {
+      return it;
+    } else {
+      return end();
+    }
   }
 
   constexpr bool contains(const Key& key) const {
@@ -230,23 +244,21 @@ class flat_set {
   }
 
  private:
-  template <class flat_set_t>
-  constexpr friend select_it_t<flat_set_t> find_generic(flat_set_t&& set,
-                                                        const Key& key) {
-    auto it = std::ranges::lower_bound(set.key_container, key, set.compare);
-    if ((it == set.end()) || (*it == key)) {
-      return it;
-    } else {
-      return set.end();
-    }
+  constexpr iterator lower_bound(const Key& key) {
+    return std::ranges::lower_bound(key_container, key, compare);
+  }
+  constexpr const_iterator lower_bound(const Key& key) const {
+    return std::ranges::lower_bound(key_container, key, compare);
   }
 
   template <class V = value_type>
-  constexpr std::pair<iterator, bool> insert_generic(V&& value) {
-    auto existing_it = this->find(value);
-    if (existing_it == this->end()) {
+  constexpr std::pair<iterator, bool> insert_generic(
+      [[maybe_unused]] const_iterator pos, V&& key) {
+    // NOTE: pos is just a hint, we ignore it for now
+    auto existing_it = this->lower_bound(key);
+    if ((existing_it == cend()) || (*existing_it != key)) {
       // NOTE: This could potentially be made faster if using another container
-      auto it = key_container.insert(existing_it, std::forward<V>(value));
+      auto it = key_container.insert(existing_it, std::forward<V>(key));
       return {it, true};
     } else {
       return {existing_it, false};
