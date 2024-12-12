@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -28,17 +29,17 @@ constexpr std::conditional_t<interfere, bool, int> follow_guard(
   const auto start_direction = aoc::get_diff(aoc::north);
   auto pos = start_pos;
   auto direction = start_direction;
-  std::vector<std::pair<point, point>> visited;
+  std::conditional_t<interfere, std::set<std::pair<point, point>>, int> visited;
   while (true) {
     if constexpr (!interfere) {
       lab_map.at(pos.y, pos.x) = visited_space;
     } else {
       auto new_node = std::pair{pos, direction};
-      if (aoc::ranges::contains(visited, new_node)) {
+      const auto [it, inserted] = visited.insert(new_node);
+      if (!inserted) {
         // Detected a loop
         return true;
       }
-      visited.push_back(new_node);
     }
     auto new_pos = pos;
     char next_step = empty_space;
@@ -158,8 +159,8 @@ int main() {
   AOC_EXPECT_RESULT(5030, solve_case<false>("day06.input"));
   std::cout << "Part 2" << std::endl;
   AOC_EXPECT_RESULT(6, solve_case<true>("day06.example"));
-  // NOTE: Even though we get the right answer, it takes very long to run -
-  // 96 seconds on a Ryzen 5950X.
+  // NOTE: Even though we get the right answer, it takes some time to run -
+  // 6 seconds on a Ryzen 5950X, down from 96 when inserting into a vector
   AOC_EXPECT_RESULT(1928, solve_case<true>("day06.input"));
   AOC_RETURN_CHECK_RESULT();
 }
