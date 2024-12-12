@@ -31,16 +31,14 @@ struct point_type {
   value_type x = 0;
   value_type y = 0;
 
-  constexpr friend bool operator==(const point_type&,
-                                   const point_type&) = default;
+  constexpr bool operator==(const point_type& other) const noexcept = default;
 
-  constexpr friend bool operator<(const point_type& lhs,
-                                  const point_type& rhs) {
-    if (lhs.y == rhs.y) {
-      return lhs.x < rhs.x;
+  constexpr std::strong_ordering operator<=>(const point_type& other) const {
+    if (y == other.y) {
+      return x <=> other.x;
     }
-    return lhs.y < rhs.y;
-  };
+    return y <=> other.y;
+  }
 
   template <class U>
     requires(!std::same_as<std::remove_cvref_t<U>, std::remove_cvref_t<T>> &&
