@@ -16,7 +16,7 @@
 #include <vector>
 
 using droplet_t = aoc::nd_point_type<int, 3>;
-using droplets_t = std::set<droplet_t>;
+using droplets_t = aoc::flat_set<droplet_t>;
 
 int calc_surface_area(const droplets_t& droplets) {
   int area = 0;

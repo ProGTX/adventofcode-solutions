@@ -15,34 +15,7 @@
 #include <string_view>
 #include <vector>
 
-template <class T>
-class unique_vector {
- public:
-  using data_t = std::vector<T>;
-  using value_type = typename data_t::value_type;
-  using iterator = typename data_t::iterator;
-  using const_iterator = typename data_t::const_iterator;
-
-  constexpr iterator push_back(const T& value) {
-    auto it = std::ranges::find(m_data, value);
-    if (it != std::end(m_data)) {
-      return it;
-    }
-    m_data.push_back(value);
-    return std::begin(m_data) + m_data.size() - 1;
-  }
-
-  constexpr auto begin() { return m_data.begin(); }
-  constexpr auto begin() const { return m_data.begin(); }
-  constexpr auto end() { return m_data.end(); }
-  constexpr auto end() const { return m_data.end(); }
-
-  constexpr auto size() { return m_data.size(); }
-
- private:
-  data_t m_data;
-};
-
+using visited_t = aoc::flat_set<point>;
 using rope_bridge_t = aoc::grid<char>;
 
 std::tuple<rope_bridge_t, point, point> get_rope_bridge(
@@ -76,7 +49,7 @@ std::tuple<rope_bridge_t, point, point> get_rope_bridge(
   return {rope_bridge, size_positive, size_negative};
 }
 
-void print_visited(const unique_vector<point>& visited) {
+void print_visited(const visited_t& visited) {
   auto [rope_bridge, size_positive, size_negative] = get_rope_bridge(visited);
 
   for (const auto& p : visited) {
@@ -128,8 +101,8 @@ int solve_case(const std::string& filename) {
   auto& tail = rope.back();
   print_rope(rope);
 
-  unique_vector<point> visited;
-  visited.push_back(tail);
+  visited_t visited;
+  visited.insert(tail);
 
   const auto move_tail = [&]() {
     for (int i = 1; i < num_knots; ++i) {
@@ -150,7 +123,7 @@ int solve_case(const std::string& filename) {
         }
       }
     }
-    visited.push_back(tail);
+    visited.insert(tail);
   };
 
   const auto move = [&](point diff) {

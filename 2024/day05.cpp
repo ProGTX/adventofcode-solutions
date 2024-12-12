@@ -2,12 +2,15 @@
 
 #include "../common/common.h"
 
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <iterator>
 #include <set>
+#include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 // The input (pages) is limited to numbers below 100
 // For each page we store a list of pages that must come before it and after it
@@ -52,7 +55,7 @@ int order_update(const std::vector<ordering_rule_t>& rules,
   const auto comparator = [&](int lhs, int rhs) {
     return aoc::ranges::contains(rules[rhs].before, lhs);
   };
-  std::set<int, decltype(comparator)> ordered_update{comparator};
+  aoc::flat_set<int, decltype(comparator)> ordered_update{comparator};
   std::ranges::copy(update,
                     std::inserter(ordered_update, ordered_update.end()));
   auto it = std::begin(ordered_update);
