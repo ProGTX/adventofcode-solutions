@@ -82,13 +82,11 @@ class static_vector {
   constexpr const_reverse_iterator rend() const noexcept {
     return m_data.rend();
   }
-  constexpr const_iterator cbegin() noexcept { return m_data.cbegin(); }
-  constexpr const_iterator cend() const noexcept { return m_data.cend(); }
-  constexpr const_reverse_iterator crbegin() noexcept {
-    return m_data.crbegin() + (N - m_size);
-  }
+  constexpr const_iterator cbegin() noexcept { return this->begin(); }
+  constexpr const_iterator cend() const noexcept { return this->end(); }
+  constexpr const_reverse_iterator crbegin() noexcept { return this->rbegin(); }
   constexpr const_reverse_iterator crend() const noexcept {
-    return m_data.crend();
+    return this->rend();
   }
 
   // Size/capacity:
@@ -160,6 +158,17 @@ class static_vector {
   }
   constexpr void clear() noexcept { m_size = 0; }
 
+  constexpr iterator insert(const_iterator pos, const T& value) {
+    auto non_const_pos = begin() + std::distance(cbegin(), pos);
+    this->push_back(value);
+    std::ranges::rotate(non_const_pos + 1, end(), end() - 1);
+    return non_const_pos;
+  }
+  constexpr iterator insert(const_iterator pos, T&& value) {
+    // TODO
+    return insert(pos, value);
+  }
+
  protected:
   constexpr void assert_size(size_type n) const {
     AOC_ASSERT(
@@ -171,6 +180,16 @@ class static_vector {
   container_type m_data;
   size_t m_size = 0;
 };
+
+constexpr auto impl_test_insert(int pos) {
+  auto vec = static_vector<int, 4>{2, 4, 6};
+  vec.insert(vec.begin() + pos, 42);
+  return vec;
+}
+static_assert(std::ranges::equal(std::array{42, 2, 4, 6}, impl_test_insert(0)));
+static_assert(std::ranges::equal(std::array{2, 42, 4, 6}, impl_test_insert(1)));
+static_assert(std::ranges::equal(std::array{2, 4, 42, 6}, impl_test_insert(2)));
+static_assert(std::ranges::equal(std::array{2, 4, 6, 42}, impl_test_insert(3)));
 
 } // namespace aoc
 

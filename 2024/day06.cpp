@@ -29,7 +29,13 @@ constexpr std::conditional_t<interfere, bool, int> follow_guard(
   const auto start_direction = aoc::get_diff(aoc::north);
   auto pos = start_pos;
   auto direction = start_direction;
-  std::conditional_t<interfere, std::set<std::pair<point, point>>, int> visited;
+  // 11k was selected to be large enough based on trial and error
+  std::conditional_t<
+      interfere,
+      aoc::flat_set<std::pair<point, point>, std::less<>,
+                    aoc::static_vector<std::pair<point, point>, 11 * 1024>>,
+      int>
+      visited;
   while (true) {
     if constexpr (!interfere) {
       lab_map.at(pos.y, pos.x) = visited_space;
@@ -159,8 +165,11 @@ int main() {
   AOC_EXPECT_RESULT(5030, solve_case<false>("day06.input"));
   std::cout << "Part 2" << std::endl;
   AOC_EXPECT_RESULT(6, solve_case<true>("day06.example"));
-  // NOTE: Even though we get the right answer, it takes some time to run -
-  // 6 seconds on a Ryzen 5950X, down from 96 when inserting into a vector
+  // NOTE: Time required with different containers (on Ryzen 5950X):
+  //    std::vector                       = 96    s
+  //    std::set                          =  6    s
+  //    aoc::flat_set<std::vector>        =  1.95 s
+  //    aoc::flat_set<aoc::static_vector> =  1.78 s
   AOC_EXPECT_RESULT(1928, solve_case<true>("day06.input"));
   AOC_RETURN_CHECK_RESULT();
 }
