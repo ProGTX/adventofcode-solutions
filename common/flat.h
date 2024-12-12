@@ -1,9 +1,12 @@
 #ifndef AOC_FLAT_H
 #define AOC_FLAT_H
 
+#include "concepts.h"
+
 #include <algorithm>
 #include <concepts>
 #include <functional>
+#include <iterator>
 #include <ranges>
 #include <utility>
 #include <vector>
@@ -114,6 +117,117 @@ class sorted_flat_set {
  private:
   container_type m_data;
   Compare m_comparator;
+};
+
+// Barebones implementation of
+// https://en.cppreference.com/w/cpp/container/flat_set, but with constexpr
+template <class Key, class Compare = std::less<Key>,
+          class KeyContainer = std::vector<Key>>
+class flat_set {
+ private:
+  // NOTE: This container was designed with support for std::vector only,
+  // though I'd expect static_vector to work as well
+
+ public:
+  using container_type = KeyContainer;
+  using key_type = Key;
+  using value_type = Key;
+  using key_compare = Compare;
+  using value_compare = Compare;
+  using reference = value_type&;
+  using const_reference = const value_type&;
+  using size_type = typename container_type::size_type;
+  using difference_type = typename container_type::difference_type;
+  using iterator = typename container_type::iterator;
+  using const_iterator = typename container_type::const_iterator;
+  using reverse_iterator = std::reverse_iterator<iterator>;
+  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+ private:
+  template <class flat_set_t>
+  using select_it_t =
+      std::conditional_t<std::is_const_v<flat_set_t>, const_iterator, iterator>;
+
+ public:
+  ///////////////
+  // Constructors
+
+  constexpr flat_set() : flat_set(key_compare()) {} // 1
+  constexpr explicit flat_set(const key_compare& comp)
+      : key_container(), compare(comp) {} // 10
+
+  ////////////
+  // Iterators
+
+  constexpr iterator begin() noexcept { return key_container.begin(); }
+  constexpr const_iterator begin() const noexcept {
+    return key_container.begin();
+  }
+  constexpr const_iterator cbegin() const noexcept {
+    return key_container.begin();
+  }
+
+  constexpr iterator end() noexcept { return key_container.end(); }
+  constexpr const_iterator end() const noexcept { return key_container.end(); }
+  constexpr const_iterator cend() const noexcept { return key_container.end(); }
+
+  ///////////
+  // Capacity
+
+  [[nodiscard]] constexpr bool empty() const noexcept {
+    return key_container.empty();
+  }
+  constexpr size_type size() const noexcept { return key_container.size(); }
+
+  ////////////
+  // Modifiers
+
+  // insert()
+  constexpr std::pair<iterator, bool> insert(const value_type& value) { // 1
+    return this->insert_generic(value);
+  }
+  constexpr std::pair<iterator, bool> insert(value_type&& value) { // 2
+    return this->insert_generic(std::move(value));
+  }
+
+  /////////
+  // Lookup
+
+  // find()
+  constexpr iterator find(const Key& key) { // 1
+    return find_generic(*this, key);
+  }
+  constexpr const_iterator find(const Key& key) const { // 2
+    return find_generic(*this, key);
+  }
+
+ private:
+  template <class flat_set_t>
+  constexpr friend select_it_t<flat_set_t> find_generic(flat_set_t&& set,
+                                                        const Key& key) {
+    auto it = std::ranges::lower_bound(set.key_container, key, set.compare);
+    if ((it == set.end()) || (*it == key)) {
+      return it;
+    } else {
+      return set.end();
+    }
+  }
+
+  template <class V = value_type>
+  constexpr std::pair<iterator, bool> insert_generic(V&& value) {
+    auto existing_it = this->find(value);
+    if (existing_it == this->end()) {
+      // NOTE: This could potentially be made faster if using another container
+      auto it = key_container.insert(existing_it, std::forward<V>(value));
+      return {it, true};
+    } else {
+      return {existing_it, false};
+    }
+  }
+
+ private:
+  container_type key_container; // AKA c
+  key_compare compare;
 };
 
 } // namespace aoc
