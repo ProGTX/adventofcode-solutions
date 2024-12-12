@@ -190,6 +190,30 @@ class flat_set {
     return this->insert_generic(std::move(value));
   }
 
+  template <class... Args>
+  constexpr std::pair<iterator, bool> emplace(Args&&... args) {
+    return this->insert_generic(value_type(std::forward<Args>(args)...));
+  }
+
+  // erase()
+  constexpr iterator erase(iterator pos) // 1
+    requires(!std::same_as<iterator, const_iterator>)
+  {
+    return this->erase(static_cast<const_iterator>(pos));
+  }
+  constexpr iterator erase(const_iterator pos) { // 2
+    return key_container.erase(pos);
+  }
+  constexpr size_type erase(const Key& key) { // 4
+    auto it = this->find(key);
+    if (it != end()) {
+      this->erase(it);
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
   /////////
   // Lookup
 
@@ -199,6 +223,10 @@ class flat_set {
   }
   constexpr const_iterator find(const Key& key) const { // 2
     return find_generic(*this, key);
+  }
+
+  constexpr bool contains(const Key& key) const {
+    return this->find(key) != end();
   }
 
  private:
