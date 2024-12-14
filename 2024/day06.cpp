@@ -29,12 +29,7 @@ constexpr std::conditional_t<interfere, bool, int> follow_guard(
   const auto start_direction = aoc::get_diff(aoc::north);
   auto pos = start_pos;
   auto direction = start_direction;
-  // 11k was selected to be large enough based on trial and error
-  std::conditional_t<
-      interfere,
-      aoc::flat_set<std::pair<point, point>, std::less<>,
-                    aoc::static_vector<std::pair<point, point>, 11 * 1024>>,
-      int>
+  std::conditional_t<interfere, aoc::flat_set<std::pair<point, point>>, int>
       visited;
   while (true) {
     if constexpr (!interfere) {
@@ -170,6 +165,9 @@ int main() {
   //    std::set                          =  6    s
   //    aoc::flat_set<std::vector>        =  1.95 s
   //    aoc::flat_set<aoc::static_vector> =  1.78 s
+  // NOTE: Running this on the same machine, but a different drive,
+  //    the flat_set numbers are not so good: 24s for the vector version,
+  //    and 100s for the static_vector.
   AOC_EXPECT_RESULT(1928, solve_case<true>("day06.input"));
   AOC_RETURN_CHECK_RESULT();
 }
