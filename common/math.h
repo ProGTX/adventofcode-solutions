@@ -57,6 +57,26 @@ constexpr T pown(T x, unsigned p) {
   return result;
 }
 
+static_assert(1024 == pown(2, 10));
+static_assert(100 == pown(10, 2));
+
+template <std::integral auto Base, std::unsigned_integral T>
+constexpr T next_power_of(const T& x) {
+  static_assert(Base > 1);
+  if constexpr (Base == 2) {
+    return std::bit_ceil(x);
+  } else {
+    T result = 1;
+    while (result < x) {
+      result *= Base;
+    }
+    return result;
+  }
+}
+
+static_assert(8 == next_power_of<2>(7u));
+static_assert(100 == next_power_of<10>(16u));
+
 constexpr bool is_number(char c) { return (c >= '0') && (c <= '9'); }
 
 constexpr unsigned flip_bit(unsigned number, unsigned index) {
