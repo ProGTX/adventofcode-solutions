@@ -117,19 +117,19 @@ class static_vector {
   }
   constexpr reference front() {
     AOC_ASSERT(m_size > 0, "No elements for front");
-    return &m_data[0];
+    return m_data[0];
   }
   constexpr const_reference front() const {
     AOC_ASSERT(m_size > 0, "No elements for front");
-    return &m_data[0];
+    return m_data[0];
   }
   constexpr reference back() {
     AOC_ASSERT(m_size > 0, "No elements for back");
-    return &m_data[m_size - 1];
+    return m_data[m_size - 1];
   }
   constexpr const_reference back() const {
     AOC_ASSERT(m_size > 0, "No elements for back");
-    return &m_data[m_size - 1];
+    return m_data[m_size - 1];
   }
   constexpr T* data() noexcept { return m_data.data(); }
   constexpr const T* data() const noexcept { return m_data.data(); }
