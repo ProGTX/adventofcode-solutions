@@ -77,6 +77,16 @@ constexpr T next_power_of(const T& x) {
 static_assert(8 == next_power_of<2>(7u));
 static_assert(100 == next_power_of<10>(16u));
 
+constexpr std::unsigned_integral auto concat_numbers(
+    std::unsigned_integral auto a, std::unsigned_integral auto b) {
+  // The plus one is important
+  return a * next_power_of<10>(b + 1) + b;
+}
+static_assert(1019 == concat_numbers(10u, 19u));
+static_assert(156 == concat_numbers(15u, 6u));
+static_assert(841 == concat_numbers(84u, 1u));
+static_assert(56310 == concat_numbers(563u, 10u));
+
 constexpr bool is_number(char c) { return (c >= '0') && (c <= '9'); }
 
 constexpr unsigned flip_bit(unsigned number, unsigned index) {

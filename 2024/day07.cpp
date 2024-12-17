@@ -16,15 +16,6 @@ using int_t = std::uint64_t;
 // The individual operands can be 32-bit ints
 using operands_t = aoc::static_vector<int, 12>;
 
-constexpr int_t concat_numbers(int_t a, int_t b) {
-  // The plus one is important
-  return a * aoc::next_power_of<10>(b + 1) + b;
-}
-static_assert(1019 == concat_numbers(10, 19));
-static_assert(156 == concat_numbers(15, 6));
-static_assert(841 == concat_numbers(84, 1));
-static_assert(56310 == concat_numbers(563, 10));
-
 template <bool concat>
 constexpr int get_operation_id(unsigned evaluation_id, int bit_pos) {
   return (evaluation_id >> ((concat ? 2 : 1) * bit_pos)) & (concat ? 3 : 1);
@@ -68,7 +59,7 @@ constexpr int_t evaluate_equation(const int_t test_value,
         sum *= current_num;
       } else if constexpr (concat) {
         if (operation_id == 2) {
-          sum = concat_numbers(sum, current_num);
+          sum = aoc::concat_numbers(sum, static_cast<unsigned>(current_num));
         } else {
           AOC_ASSERT(false, "Invalid operation ID");
         }
