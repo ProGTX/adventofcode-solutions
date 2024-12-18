@@ -137,9 +137,11 @@ template <class W>
 constexpr auto repeat(W&& value) {
   return std::views::iota(0) | transform_to_value(std::forward<W>(value));
 }
-template <class W, std::integral Bound>
+template <class W, class Bound>
+  requires(std::integral<std::remove_cvref_t<Bound>>)
 constexpr auto repeat(W&& value, Bound&& bound) {
-  return std::views::iota(static_cast<Bound>(0), std::forward<Bound>(bound)) |
+  using bound_t = std::remove_cvref_t<Bound>;
+  return std::views::iota(static_cast<bound_t>(0), std::forward<Bound>(bound)) |
          transform_to_value(std::forward<W>(value));
 }
 static_assert(std::ranges::equal(std::array{7, 7, 7}, repeat(7, 3)));
