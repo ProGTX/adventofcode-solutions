@@ -482,8 +482,40 @@ class flat_map {
   ///////////////
   // Constructors
 
+  constexpr flat_map() // 1
+      : flat_map(key_compare()) {}
+
+  constexpr explicit flat_map(const key_compare& comp) // 10
+      : compare(comp) {}
+
+  template <class InputIter>
+  constexpr flat_map(InputIter first, InputIter last,
+                     const key_compare& comp = key_compare()) // 13
+      : compare(comp) {
+    this->insert(first, last);
+  }
+
+  constexpr flat_map(std::initializer_list<value_type> init,
+                     const key_compare& comp = key_compare()) // 23
+      : flat_map(init.begin(), init.end(), comp) {}
+
   /////////////////
   // Element access
+
+  constexpr T& at(const Key& key) {
+    auto it = this->find(key);
+    if (it == end()) {
+      throw std::out_of_range("flat_map::at");
+    }
+    return it->second;
+  }
+  constexpr const T& at(const Key& key) const {
+    auto it = this->find(key);
+    if (it == end()) {
+      throw std::out_of_range("flat_map::at");
+    }
+    return it->second;
+  }
 
   constexpr T& operator[](const Key& key) {
     return this->try_emplace(key).first->second;
@@ -521,6 +553,21 @@ class flat_map {
   ////////////
   // Modifiers
 
+  template <class... Args>
+  constexpr std::pair<iterator, bool> emplace(Args&&... args) {
+    return this->insert_generic(storage.keys.cend(),
+                                value_type(std::forward<Args>(args)...));
+  }
+
+  template <class... Args>
+  constexpr iterator emplace_hint([[maybe_unused]] const_iterator hint,
+                                  Args&&... args) {
+    return this
+        ->insert_generic(storage.keys.cend(),
+                         value_type(std::forward<Args>(args)...))
+        .first;
+  }
+
   // try_emplace
   template <class... Args>
   constexpr std::pair<iterator, bool> try_emplace(const key_type& key,
@@ -546,8 +593,56 @@ class flat_map {
                                 std::forward<Args>(args)...);
   }
 
+  // insert
+  constexpr std::pair<iterator, bool> insert(const value_type& value) { // 1
+    return this->emplace(value);
+  }
+  constexpr std::pair<iterator, bool> insert(value_type&& value) { // 2
+    return this->emplace(std::move(value));
+  }
+  constexpr iterator insert(const_iterator pos, const value_type& value) { // 3
+    return this->emplace_hint(pos, value);
+  }
+  constexpr iterator insert(const_iterator pos, value_type&& value) { // 4
+    return this->emplace_hint(pos, std::move(value));
+  }
+  template <class InputIt>
+  constexpr void insert(InputIt first, InputIt last) { // 7
+    for (auto&& elem : std::ranges::subrange(first, last)) {
+      this->emplace(std::move(elem));
+    }
+  }
+  constexpr void insert(std::initializer_list<key_type> ilist) { // 9
+    this->insert(ilist.begin(), ilist.end());
+  }
+
   /////////
   // Lookup
+
+  constexpr iterator find(const Key& key) {
+    auto key_it = this->lower_bound_key(key);
+    if ((key_it == storage.keys.end()) || (*key_it == key)) {
+      return this->make_iterator(key_it);
+    } else {
+      return end();
+    }
+  }
+  constexpr const_iterator find(const Key& key) const {
+    auto key_it = this->lower_bound_key(key);
+    if ((key_it == storage.keys.end()) || (*key_it == key)) {
+      return this->make_iterator(key_it);
+    } else {
+      return end();
+    }
+  }
+
+  constexpr size_type count(const Key& key) const {
+    return static_cast<size_type>(this->contains(key));
+  }
+
+  constexpr bool contains(const Key& key) const {
+    return this->find(key) != end();
+  }
 
   constexpr iterator lower_bound(const Key& key) {
     return this->make_iterator(this->lower_bound_key(key));
@@ -556,7 +651,28 @@ class flat_map {
     return this->make_iterator(this->lower_bound_key(key));
   }
 
+  ////////////
+  // Observers
+
+  constexpr const key_container_type& keys() const noexcept {
+    return storage.keys;
+  }
+
+  constexpr const mapped_container_type& values() const noexcept {
+    return storage.values;
+  }
+
  private:
+  constexpr std::pair<iterator, bool> insert_generic(const_key_iterator hint,
+                                                     const value_type& value) {
+    return this->insert_generic(hint, value.first,
+                                std::forward<mapped_type>(value.second));
+  }
+  constexpr std::pair<iterator, bool> insert_generic(const_key_iterator hint,
+                                                     value_type&& value) {
+    return this->insert_generic(hint, value.first, std::move(value.second));
+  }
+
   template <class K = key_type, class... Args>
   constexpr std::pair<iterator, bool> insert_generic(
       [[maybe_unused]] const_key_iterator hint, K&& key, Args&&... args) {
