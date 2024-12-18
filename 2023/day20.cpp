@@ -102,7 +102,7 @@ struct signal_transit_t {
   }
 };
 
-using module_map_t = std::map<std::string, std::unique_ptr<module_t>>;
+using module_map_t = aoc::flat_map<std::string, std::unique_ptr<module_t>>;
 
 std::array<int, 2> push_button(module_map_t& module_map) {
   // aoc::println("push_button");
@@ -145,7 +145,7 @@ int_t solve_case(const std::string& filename) {
 
   // Need to track the inputs
   // so that we can set the inputs correctly for the conjunctions
-  std::map<std::string, std::vector<std::string>> input_map;
+  aoc::flat_map<std::string, std::vector<std::string>> input_map;
 
   // Need to track outputs to find out which ones should be output_t
   std::vector<std::string> output_list;

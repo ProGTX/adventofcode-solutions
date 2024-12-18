@@ -85,7 +85,7 @@ std::vector<point> find_positions(const std::vector<sensor_t>& sensors,
 
 beacon_t find_distress_beacon(const std::vector<sensor_t>& sensors,
                               const bounds_t& bounds) {
-  std::map<int, std::set<bounds_t>> row_exclusions;
+  std::map<int, aoc::flat_set<bounds_t>> row_exclusions;
 
   const auto add_exclusion = [&](int row, const sensor_t& sensor, int width) {
     if ((row < bounds.min) || (row > bounds.max)) {

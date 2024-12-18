@@ -33,7 +33,7 @@ enum outcome {
 int solve_part1(const std::string& filename) {
   int score = 0;
 
-  std::map<char, int> hand_map = {
+  aoc::flat_map<char, int> hand_map = {
       {'A', rock}, {'B', paper}, {'C', scissors},
       {'X', rock}, {'Y', paper}, {'Z', scissors},
   };
@@ -64,7 +64,7 @@ int solve_part1(const std::string& filename) {
 int solve_part2(const std::string& filename) {
   int score = 0;
 
-  std::map<char, int> hand_map = {
+  aoc::flat_map<char, int> hand_map = {
       {'A', rock}, {'B', paper}, {'C', scissors},
       {'X', lose}, {'Y', draw},  {'Z', win},
   };

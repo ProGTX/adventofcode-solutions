@@ -42,7 +42,7 @@ int solve_case(const std::string& filename) {
     lines.emplace_back(start, end);
   }
 
-  std::map<point, int> point_count;
+  aoc::flat_map<point, int> point_count;
   const auto increment_count = [&](point const& p) {
     auto it = point_count.find(p);
     if (it == std::end(point_count)) {

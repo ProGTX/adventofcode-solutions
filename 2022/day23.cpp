@@ -96,7 +96,7 @@ int simulate(elves_t& elves) {
     }
   };
   auto execute = [&]() {
-    std::map<point, int> counts;
+    aoc::flat_map<point, int> counts;
     for (auto& [current, proposed] : elf_simulation) {
       if (current != proposed.pos) {
         if (counts.contains(proposed.pos)) {
