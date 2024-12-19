@@ -14,41 +14,51 @@
 
 using int_t = std::uint64_t;
 using stones_t = std::vector<int_t>;
+using blink_key_t = aoc::point_type<int_t>;
+using blink_cache_t = aoc::flat_map<blink_key_t, int_t>;
 
-constexpr stones_t blink(const stones_t& stones) {
-  auto stones_copy = stones;
-  for (int copy_i = 0; const int_t stone : stones) {
+constexpr int_t blink(int_t stone, int_t blink_counter,
+                      blink_cache_t& blink_cache) {
+  if (blink_counter == 0) {
+    return 1;
+  }
+  const auto cache_key = blink_key_t{stone, blink_counter};
+  if (auto it = blink_cache.find(cache_key); it != blink_cache.end()) {
+    return it->second;
+  } else {
     if (stone == 0) {
-      stones_copy[copy_i] = 1;
+      auto num_stones = blink(1, blink_counter - 1, blink_cache);
+      blink_cache.try_emplace(cache_key, num_stones);
+      return num_stones;
     } else if (int digits = aoc::num_digits(stone); (digits % 2) == 0) {
       // The stone is replaced by two stones
-      stones_copy.resize(stones_copy.size() + 1);
       const auto divider = aoc::pown(10, digits / 2);
       // The left half of the digits are engraved on the new left stone
-      stones_copy[copy_i] = stone / divider;
       // The right half of the digits are engraved on the new right stone
-      ++copy_i;
-      stones_copy[copy_i] = stone % divider;
+      auto num_stones = blink(stone / divider, blink_counter - 1, blink_cache) +
+                        blink(stone % divider, blink_counter - 1, blink_cache);
+      blink_cache.try_emplace(cache_key, num_stones);
+      return num_stones;
     } else {
-      stones_copy[copy_i] = stone * 2024;
+      auto num_stones = blink(stone * 2024, blink_counter - 1, blink_cache);
+      blink_cache.try_emplace(cache_key, num_stones);
+      return num_stones;
     }
-    ++copy_i;
   }
-  return stones_copy;
 }
-
-static_assert(std::ranges::equal(std::array{1, 2024, 1, 0, 9, 9, 2021976},
-                                 blink({0, 1, 10, 99, 999})));
 
 template <int times>
-constexpr int_t change_stones(stones_t stones) {
-  for (int i = 0; i < times; ++i) {
-    stones = blink(stones);
+constexpr int_t change_stones(const stones_t& stones) {
+  // We need to use dynamic programming to speed up the calculation
+  blink_cache_t blink_cache;
+  int_t num_stones = 0;
+  for (const int_t stone : stones) {
+    num_stones += blink(stone, times, blink_cache);
   }
-  return stones.size();
+  return num_stones;
 }
 
-template <bool words>
+template <int blink_times>
 int_t solve_case(const std::string& filename) {
   stones_t stones;
 
@@ -57,7 +67,7 @@ int_t solve_case(const std::string& filename) {
   }
 
   int_t sum = 0;
-  sum = change_stones<25>(stones);
+  sum = change_stones<blink_times>(stones);
 
   std::cout << filename << " -> " << sum << std::endl;
   return sum;
@@ -65,10 +75,10 @@ int_t solve_case(const std::string& filename) {
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  AOC_EXPECT_RESULT(55312, solve_case<false>("day11.example"));
-  AOC_EXPECT_RESULT(191690, solve_case<false>("day11.input"));
-  // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(281, solve_case<true>("day11.example"));
-  // AOC_EXPECT_RESULT(53515, solve_case<true>("day11.input"));
+  AOC_EXPECT_RESULT(55312, solve_case<25>("day11.example"));
+  AOC_EXPECT_RESULT(191690, solve_case<25>("day11.input"));
+  std::cout << "Part 2" << std::endl;
+  AOC_EXPECT_RESULT(65601038650482, solve_case<75>("day11.example"));
+  AOC_EXPECT_RESULT(228651922369703, solve_case<75>("day11.input"));
   AOC_RETURN_CHECK_RESULT();
 }
