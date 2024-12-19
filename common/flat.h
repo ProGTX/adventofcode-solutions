@@ -185,11 +185,11 @@ class flat_set {
   constexpr std::pair<iterator, bool> insert(value_type&& value) { // 2
     return this->insert_generic(cend(), std::move(value));
   }
-  iterator insert(const_iterator pos, const value_type& value) { // 3
+  constexpr iterator insert(const_iterator pos, const value_type& value) { // 3
     auto [it, inserted] = this->insert_generic(pos, value);
     return it;
   }
-  iterator insert(const_iterator pos, value_type&& value) { // 4
+  constexpr iterator insert(const_iterator pos, value_type&& value) { // 4
     auto [it, inserted] = this->insert_generic(pos, std::move(value));
     return it;
   }
