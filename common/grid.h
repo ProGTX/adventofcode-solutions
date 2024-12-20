@@ -285,15 +285,14 @@ constexpr point_type<T> get_diff(facing_t facing) {
   }
 };
 
-constexpr inline auto basic_neighbor_diffs = std::invoke([] {
-  std::array<point_type<int>, NUM_FACING> positions;
+constexpr inline auto basic_sky_directions = std::invoke([] {
+  std::array<facing_t, NUM_FACING> directions;
   for (int f = 0; f < NUM_FACING; ++f) {
     auto facing = static_cast<facing_t>(f);
-    positions[f] = get_diff(facing);
+    directions[f] = facing;
   }
-  return positions;
+  return directions;
 });
-
 constexpr inline auto all_sky_directions = std::invoke([] {
   std::array<facing_t, NUM_SKY_DIRECTIONS> directions;
   for (int f = 0; f < NUM_SKY_DIRECTIONS; ++f) {
@@ -302,11 +301,16 @@ constexpr inline auto all_sky_directions = std::invoke([] {
   return directions;
 });
 
+constexpr inline auto basic_neighbor_diffs = std::invoke([] {
+  std::array<point_type<int>, NUM_FACING> positions;
+  std::ranges::transform(basic_sky_directions, std::begin(positions),
+                         &get_diff<int>);
+  return positions;
+});
 constexpr inline auto all_neighbor_diffs = std::invoke([] {
   std::array<point_type<int>, NUM_SKY_DIRECTIONS> positions;
-  for (int f = 0; f < NUM_SKY_DIRECTIONS; ++f) {
-    positions[f] = get_diff(all_sky_directions[f]);
-  }
+  std::ranges::transform(all_sky_directions, std::begin(positions),
+                         &get_diff<int>);
   return positions;
 });
 
