@@ -148,9 +148,18 @@ class flat_set {
   ///////////////
   // Constructors
 
-  constexpr flat_set() : flat_set(key_compare()) {} // 1
-  constexpr explicit flat_set(const key_compare& comp)
-      : key_container(), compare(comp) {} // 10
+  constexpr flat_set() : flat_set(key_compare()) {}    // 1
+  constexpr explicit flat_set(const key_compare& comp) // 10
+      : key_container(), compare(comp) {}
+  template <class InputIter>
+  constexpr flat_set(InputIter first, InputIter last,
+                     const key_compare& comp = key_compare()) // 13
+      : compare(comp) {
+    this->insert(first, last);
+  }
+  constexpr flat_set(std::initializer_list<value_type> init,
+                     const key_compare& comp = key_compare()) // 23
+      : flat_set(init.begin(), init.end(), comp) {}
 
   ////////////
   // Iterators
@@ -192,6 +201,12 @@ class flat_set {
   constexpr iterator insert(const_iterator pos, value_type&& value) { // 4
     auto [it, inserted] = this->insert_generic(pos, std::move(value));
     return it;
+  }
+  template <class InputIt>
+  constexpr void insert(InputIt first, InputIt last) { // 6
+    for (; first != last; ++first) {
+      this->insert(*first);
+    }
   }
 
   template <class... Args>
