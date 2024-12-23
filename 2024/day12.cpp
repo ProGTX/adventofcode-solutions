@@ -24,6 +24,8 @@ struct garden_plot_t {
       : name{name_}, interior{start} {}
 
   constexpr int price() const { return interior.size() * fence.size(); }
+
+  constexpr int reduced_price() const { return this->price(); }
 };
 
 using plots_t = std::vector<garden_plot_t>;
@@ -87,12 +89,19 @@ constexpr plots_t get_plots(const garden_t& garden) {
   return plots;
 }
 
+template <bool reduced>
 constexpr int get_price(const plots_t& plots) {
-  return aoc::ranges::accumulate(
-      plots | std::views::transform(&garden_plot_t::price), 0);
+  return aoc::ranges::accumulate(plots | std::views::transform([]() {
+                                   if constexpr (!reduced) {
+                                     return &garden_plot_t::price;
+                                   } else {
+                                     return &garden_plot_t::reduced_price;
+                                   }
+                                 }()),
+                                 0);
 }
 
-template <bool>
+template <bool reduced>
 int solve_case(const std::string& filename) {
   garden_t garden;
 
@@ -105,7 +114,7 @@ int solve_case(const std::string& filename) {
   garden.add_row(aoc::views::repeat(edge, garden.row_length()));
 
   int sum = 0;
-  sum = get_price(get_plots(garden));
+  sum = get_price<reduced>(get_plots(garden));
 
   std::cout << filename << " -> " << sum << std::endl;
   return sum;
@@ -117,8 +126,12 @@ int main() {
   AOC_EXPECT_RESULT(772, solve_case<false>("day12.example2"));
   AOC_EXPECT_RESULT(1930, solve_case<false>("day12.example3"));
   AOC_EXPECT_RESULT(1450422, solve_case<false>("day12.input"));
-  // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(281, solve_case<true>("day12.example"));
+  std::cout << "Part 2" << std::endl;
+  AOC_EXPECT_RESULT(80, solve_case<true>("day12.example"));
+  AOC_EXPECT_RESULT(436, solve_case<true>("day12.example2"));
+  AOC_EXPECT_RESULT(1206, solve_case<true>("day12.example3"));
+  AOC_EXPECT_RESULT(236, solve_case<true>("day12.example4"));
+  AOC_EXPECT_RESULT(368, solve_case<true>("day12.example5"));
   // AOC_EXPECT_RESULT(53515, solve_case<true>("day12.input"));
   AOC_RETURN_CHECK_RESULT();
 }
