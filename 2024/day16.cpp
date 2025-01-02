@@ -3,6 +3,7 @@
 #include "../common/common.h"
 
 #include <iostream>
+#include <ranges>
 #include <string>
 #include <utility>
 
@@ -14,8 +15,16 @@ using maze_t = aoc::char_grid<>;
 using arrow_t = aoc::arrow_type<int>;
 
 constexpr int lowest_score(const maze_t& maze, point start_pos, point end_pos) {
+  const auto end_arrows =
+      std::array{aoc::east, aoc::north} |
+      std::views::transform([&](const aoc::facing_t facing) {
+        return arrow_t{end_pos, facing};
+      }) |
+      aoc::ranges::to<aoc::static_vector<arrow_t, 2>>();
+
   auto distances = aoc::shortest_distances_dijkstra(
-      arrow_t{start_pos, aoc::east}, [&](const arrow_t current) {
+      arrow_t{start_pos, aoc::east}, std::span{end_arrows},
+      [&](const arrow_t current) {
         auto neighbors =
             aoc::static_vector<aoc::dijkstra_neighbor_t<arrow_t>, 3>{};
 
@@ -42,8 +51,8 @@ constexpr int lowest_score(const maze_t& maze, point start_pos, point end_pos) {
       });
 
   int lowest = 1 << 30;
-  for (auto direction : aoc::basic_sky_directions) {
-    auto it = distances.find(arrow_t{end_pos, direction});
+  for (auto end_arrow : end_arrows) {
+    auto it = distances.find(end_arrow);
     if (it != std::end(distances)) {
       lowest = std::min(lowest, it->second);
     }

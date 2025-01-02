@@ -3,6 +3,7 @@
 
 #include "flat.h"
 #include "point.h"
+#include "ranges.h"
 
 #include <array>
 #include <compare>
@@ -42,7 +43,8 @@ template <class Node, class NeighborsFn>
     } -> std::convertible_to<dijkstra_neighbor_t<Node>>;
   }
 constexpr flat_map<Node, int> shortest_distances_dijkstra(
-    std::span<const Node> start_nodes, NeighborsFn&& get_reachable_neighbors) {
+    std::span<const Node> start_nodes, std::span<const Node> end_nodes,
+    NeighborsFn&& get_reachable_neighbors) {
 
   // 2. Assign to every node a tentative distance value:
   // set it to zero for our initial node and to infinity for all other nodes.
@@ -72,6 +74,8 @@ constexpr flat_map<Node, int> shortest_distances_dijkstra(
     unvisited.emplace(node);
   }
 
+  auto visited_end_nodes = aoc::flat_set<Node>{};
+
   while (!unvisited.empty()) {
     // 3. From the unvisited set, select the current node to be the one
     // with the smallest (finite) distance
@@ -80,6 +84,15 @@ constexpr flat_map<Node, int> shortest_distances_dijkstra(
     --current_it;
     Node current = *current_it;
     auto distance = distances[current];
+
+    // 3. If the only concern is the path to a target node,
+    // the algorithm terminates once the current node is the target node.
+    if (aoc::ranges::contains(end_nodes, current)) {
+      visited_end_nodes.insert(current);
+      if (visited_end_nodes.size() == end_nodes.size()) {
+        break;
+      }
+    }
 
     // 5. After considering all of the current node's unvisited neighbors,
     // the current node is removed from the unvisited set
@@ -116,6 +129,35 @@ constexpr auto shortest_distances_dijkstra(
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
       std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
+      std::span<const node_t>{},
+      std::forward<NeighborsFn>(get_reachable_neighbors));
+}
+template <class Node, class NeighborsFn>
+constexpr auto shortest_distances_dijkstra(
+    Node&& start_node, Node&& end_node, NeighborsFn&& get_reachable_neighbors) {
+  using node_t = std::remove_cvref_t<Node>;
+  return shortest_distances_dijkstra(
+      std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
+      std::span<const node_t>{std::array{std::forward<Node>(end_node)}},
+      std::forward<NeighborsFn>(get_reachable_neighbors));
+}
+template <class Node, class NeighborsFn>
+constexpr auto shortest_distances_dijkstra(
+    Node&& start_node, std::span<const Node> end_nodes,
+    NeighborsFn&& get_reachable_neighbors) {
+  using node_t = std::remove_cvref_t<Node>;
+  return shortest_distances_dijkstra(
+      std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
+      end_nodes, std::forward<NeighborsFn>(get_reachable_neighbors));
+}
+template <class Node, class NeighborsFn>
+constexpr auto shortest_distances_dijkstra(
+    std::span<const Node> start_nodes, Node&& end_node,
+    NeighborsFn&& get_reachable_neighbors) {
+  using node_t = std::remove_cvref_t<Node>;
+  return shortest_distances_dijkstra(
+      start_nodes,
+      std::span<const node_t>{std::array{std::forward<Node>(end_node)}},
       std::forward<NeighborsFn>(get_reachable_neighbors));
 }
 
