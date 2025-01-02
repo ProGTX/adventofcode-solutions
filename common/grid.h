@@ -260,6 +260,38 @@ enum facing_t : int {
   NUM_FACING = 4,
 };
 
+std::ostream& operator<<(std::ostream& out, const facing_t& facing) {
+  switch (facing) {
+    case east:
+      out << "east";
+      break;
+    case south:
+      out << "south";
+      break;
+    case west:
+      out << "west";
+      break;
+    case north:
+      out << "north";
+      break;
+    case southeast:
+      out << "southeast";
+      break;
+    case southwest:
+      out << "southwest";
+      break;
+    case northwest:
+      out << "northwest";
+      break;
+    case northeast:
+      out << "northeast";
+      break;
+    default:
+      AOC_ASSERT(false, "Invalid sky direction");
+  }
+  return out;
+}
+
 template <class T = int>
 constexpr point_type<T> get_diff(facing_t facing) {
   switch (facing) {
@@ -300,6 +332,19 @@ constexpr inline auto all_sky_directions = std::invoke([] {
   }
   return directions;
 });
+
+constexpr facing_t clockwise_basic(facing_t current) {
+  AOC_ASSERT(current >= 0, "Invalid sky direction");
+  AOC_ASSERT(current < NUM_FACING, "Not a basic sky direction");
+  return static_cast<facing_t>((static_cast<int>(current) + 1) % NUM_FACING);
+}
+
+constexpr facing_t anticlockwise_basic(facing_t current) {
+  AOC_ASSERT(current >= 0, "Invalid sky direction");
+  AOC_ASSERT(current < NUM_FACING, "Not a basic sky direction");
+  return static_cast<facing_t>((static_cast<int>(current) + NUM_FACING - 1) %
+                               NUM_FACING);
+}
 
 constexpr inline auto basic_neighbor_diffs = std::invoke([] {
   std::array<point_type<int>, NUM_FACING> positions;
