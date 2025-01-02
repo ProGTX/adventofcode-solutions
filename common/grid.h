@@ -651,6 +651,28 @@ static_assert(is_grid<array_grid<int, 7, 5>>);
 static_assert(is_grid<sparse_grid<int>>);
 static_assert(is_grid<char_grid<>>);
 
+// An "arrow" has a position and direction
+// Often used in search algorithms (see Dijkstra)
+template <class T>
+struct arrow_type {
+  point_type<T> position;
+  facing_t direction;
+
+  constexpr bool operator==(const arrow_type&) const = default;
+  constexpr std::weak_ordering operator<=>(const arrow_type& other) const {
+    if (position == other.position) {
+      return direction <=> other.direction;
+    } else {
+      return position <=> other.position;
+    }
+  }
+
+  friend std::ostream& operator<<(std::ostream& out, const arrow_type& arrow) {
+    out << "(" << arrow.position << "," << arrow.direction << ")";
+    return out;
+  }
+};
+
 } // namespace aoc
 
 #endif // AOC_GRID_H
