@@ -47,6 +47,7 @@ export {
 // hence the need for the workaround above.
 // WORKAROUND: MSVC doesn't support CRTP with modules,
 // add graph.h once that's fixed
+#include "algorithm.h"
 #include "assert.h"
 #include "compiler.h"
 #include "concepts.h"

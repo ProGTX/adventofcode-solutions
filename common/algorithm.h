@@ -1,0 +1,124 @@
+#ifndef AOC_ALGORITHM_H
+#define AOC_ALGORITHM_H
+
+#include "flat.h"
+#include "point.h"
+
+#include <array>
+#include <compare>
+#include <concepts>
+#include <span>
+#include <utility>
+
+namespace aoc {
+
+// Specifies a neighbor of the current node
+// along with the cost (distance) of reaching it from the current node
+template <class Node>
+struct dijkstra_neighbor_t {
+  Node node;
+  int distance;
+
+  constexpr bool operator==(const dijkstra_neighbor_t&) const = default;
+
+  constexpr std::weak_ordering operator<=>(
+      const dijkstra_neighbor_t& other) const {
+    if (distance == other.distance) {
+      return node <=> other.node;
+    } else {
+      return distance <=> other.distance;
+    }
+  }
+};
+
+// https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Algorithm
+// NOTE: We basically use a priority queue, but use the flat_set for that,
+//       because std::priority_queue is still not constexpr in C++23.
+//       That's also why we sort by std::greater instead of std::less.
+template <class Node, class NeighborsFn>
+  requires std::totally_ordered<Node> && requires(Node node) {
+    {
+      *std::begin(std::declval<NeighborsFn>()(node))
+    } -> std::convertible_to<dijkstra_neighbor_t<Node>>;
+  }
+constexpr flat_map<Node, int> shortest_distances_dijkstra(
+    std::span<const Node> start_nodes, NeighborsFn&& get_reachable_neighbors) {
+
+  // 2. Assign to every node a tentative distance value:
+  // set it to zero for our initial node and to infinity for all other nodes.
+  // During the run of the algorithm,
+  // the tentative distance of a node v is the length of the shortest path
+  // discovered so far between the node v and the starting node.
+  // NOTE: This also serves as the set of visited nodes.
+  //       If it hasn't been visited yet, it has an infinite distance.
+  // NOTE: The actual sorting direction doesn't matter here, it's just a map.
+  // NOTE: The order of steps is reversed because the set of unvisited
+  //       relies on distances.
+  flat_map<Node, int> distances;
+  for (const auto& node : start_nodes) {
+    distances.emplace(node, 0);
+  }
+
+  // 1. Create a set of all unvisited nodes
+  // NOTE: std::greater because it's a priority queue
+  //       and we want to store the smallest value at the end
+  // TODO: Find a better data structure for this job
+  const auto unvisited_compare = [&](const Node& lhs, const Node& rhs) {
+    return distances[lhs] > distances[rhs];
+  };
+  auto unvisited =
+      flat_set<Node, decltype(unvisited_compare)>{unvisited_compare};
+  for (const auto& node : start_nodes) {
+    unvisited.emplace(node);
+  }
+
+  while (!unvisited.empty()) {
+    // 3. From the unvisited set, select the current node to be the one
+    // with the smallest (finite) distance
+    // NOTE: We use a priority queue, so we take from the end
+    auto current_it = std::end(unvisited);
+    --current_it;
+    Node current = *current_it;
+    auto distance = distances[current];
+
+    // 5. After considering all of the current node's unvisited neighbors,
+    // the current node is removed from the unvisited set
+    // NOTE: We want to remove this early because of the priority queue
+    unvisited.erase(current_it);
+
+    // 4. For the current node, consider all of its unvisited neighbors
+    // and update their distances through the current node
+    auto neighbors = get_reachable_neighbors(current);
+    for (const auto& neighbor : neighbors) {
+      const auto new_neighbor_dist = distance + neighbor.distance;
+      auto existing_it = distances.find(neighbor.node);
+      if (existing_it != std::end(distances)) {
+        // Neighbor already visited, update the distance
+        const auto neighbor_dist = existing_it->second;
+        if (new_neighbor_dist < neighbor_dist) {
+          distances.erase(existing_it);
+          distances.try_emplace(neighbor.node, new_neighbor_dist);
+        }
+      } else {
+        // Neighbor hasn't been visited yet
+        distances.try_emplace(neighbor.node, new_neighbor_dist);
+        unvisited.emplace(neighbor.node);
+      }
+    }
+  }
+
+  return distances;
+}
+
+template <class Node, class NeighborsFn>
+constexpr auto shortest_distances_dijkstra(
+    Node&& start_node, NeighborsFn&& get_reachable_neighbors) {
+  using node_t = std::remove_cvref_t<Node>;
+  return shortest_distances_dijkstra(
+      std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
+      std::forward<NeighborsFn>(get_reachable_neighbors));
+}
+
+} // namespace aoc
+
+#endif // AOC_ALGORITHM_H

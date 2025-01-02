@@ -14,6 +14,7 @@ import aoc;
 #else
 
 // WORKAROUND: Include the same headers as the module does
+#include "algorithm.h"
 #include "assert.h"
 #include "compiler.h"
 #include "concepts.h"
