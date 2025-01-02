@@ -631,6 +631,25 @@ class flat_map {
     this->insert(ilist.begin(), ilist.end());
   }
 
+  // erase
+  constexpr iterator erase(iterator position) { // 1
+    return this->erase(static_cast<const_iterator>(position));
+  }
+  constexpr iterator erase(const_iterator pos) { // 2
+    auto key_it = storage.keys.erase(pos.private_impl_getkey());
+    auto value_it = storage.values.erase(pos.private_impl_getmapped());
+    return this->make_iterator(key_it, value_it);
+  }
+  constexpr size_type erase(const Key& key) { // 4
+    auto pos = this->find(key);
+    if (pos != end()) {
+      this->erase(pos);
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
   /////////
   // Lookup
 
