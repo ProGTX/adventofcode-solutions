@@ -458,6 +458,11 @@ class flat_map {
 
   ///////////
   // Capacity
+  
+  [[nodiscard]] constexpr bool empty() const noexcept {
+    return storage.keys.empty();
+  }
+  constexpr size_type size() const noexcept { return storage.keys.size(); }
 
   ////////////
   // Modifiers
