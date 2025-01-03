@@ -143,7 +143,7 @@ constexpr auto shortest_distances_dijkstra(
 }
 template <class Node, class NeighborsFn>
 constexpr auto shortest_distances_dijkstra(
-    Node&& start_node, std::span<const Node> end_nodes,
+    Node&& start_node, std::span<const std::remove_cvref_t<Node>> end_nodes,
     NeighborsFn&& get_reachable_neighbors) {
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
@@ -152,7 +152,7 @@ constexpr auto shortest_distances_dijkstra(
 }
 template <class Node, class NeighborsFn>
 constexpr auto shortest_distances_dijkstra(
-    std::span<const Node> start_nodes, Node&& end_node,
+    std::span<const std::remove_cvref_t<Node>> start_nodes, Node&& end_node,
     NeighborsFn&& get_reachable_neighbors) {
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
