@@ -8,6 +8,7 @@
 #include <array>
 #include <compare>
 #include <concepts>
+#include <iostream>
 #include <span>
 #include <utility>
 
@@ -29,6 +30,12 @@ struct dijkstra_neighbor_t {
     } else {
       return distance <=> other.distance;
     }
+  }
+
+  friend std::ostream& operator<<(std::ostream& out,
+                                  const dijkstra_neighbor_t& neighbor) {
+    out << neighbor.node << " (" << neighbor.distance << ")";
+    return out;
   }
 };
 
