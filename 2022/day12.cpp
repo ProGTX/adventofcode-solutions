@@ -30,26 +30,32 @@ struct heightmap_t : public aoc::grid<int> {
   point end_pos;
 };
 
-using neighbors_t = std::vector<point>;
-using path_t = std::vector<point>;
-
 template <bool reverse>
-neighbors_t find_neighbors(const heightmap_t& heightmap, const point current,
-                           const auto& unvisited) {
-  neighbors_t neighbors;
-  const auto current_height = heightmap.at(current.y, current.x);
-  for (int dy = -1; dy <= 1; dy += 1) {
-    for (int dx = -1; dx <= 1; dx += 1) {
-      if ((dy * dy * dx * dx) == 1) {
-        // Cannot move diagonally
+constexpr int get_fewest_steps(const heightmap_t& heightmap) {
+  const point start_node = reverse ? heightmap.end_pos : heightmap.begin_pos;
+
+  std::vector<point> end_nodes;
+  if constexpr (!reverse) {
+    end_nodes.push_back(heightmap.end_pos);
+  } else {
+    for (int row = 0; row < heightmap.num_rows(); ++row) {
+      for (int col = 0; col < heightmap.num_columns(); ++col) {
+        if (heightmap.at(row, col) == 0) {
+          end_nodes.push_back(point{col, row});
+        }
+      }
+    }
+  }
+
+  const auto find_neighbors = [&](const point current_pos) {
+    auto neighbors = aoc::static_vector<aoc::dijkstra_neighbor_t<point>, 4>{};
+    const auto current_height = heightmap.at(current_pos.y, current_pos.x);
+    for (const auto direction : aoc::basic_sky_directions) {
+      const auto neighbor = current_pos + aoc::get_diff(direction);
+      if (!heightmap.in_bounds(neighbor.y, neighbor.x)) {
         continue;
       }
-      point neighbor = current + point{dx, dy};
-      if ((neighbor.y < 0) || (neighbor.y >= heightmap.num_rows()) ||
-          (neighbor.x < 0) || (neighbor.x >= heightmap.row_length())) {
-        // Invalid index
-        continue;
-      }
+
       auto height_diff = heightmap.at(neighbor.y, neighbor.x) - current_height;
       // Cannot climb very high, but can drop a lot
       if constexpr (reverse) {
@@ -61,109 +67,22 @@ neighbors_t find_neighbors(const heightmap_t& heightmap, const point current,
           continue;
         }
       }
-      if (unvisited.contains(neighbor)) {
-        neighbors.push_back(neighbor);
-      }
+      neighbors.emplace_back(neighbor, 1);
     }
-  }
-  return neighbors;
-}
-
-// https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Algorithm
-template <bool reverse>
-int shortest_path_length_dijkstra(const heightmap_t& heightmap,
-                                  const point& start, const point& end,
-                                  const int search_value = 0) {
-  // 2. Assign to every node a tentative distance value:
-  // set it to zero for our initial node and to infinity for all other nodes.
-  // During the run of the algorithm,
-  // the tentative distance of a node v is the length of the shortest path
-  // discovered so far between the node v and the starting node.
-  using distances_t = aoc::grid<int>;
-  distances_t distances;
-
-  // 1. Mark all nodes unvisited. Create a set of all the unvisited nodes called
-  // the unvisited set.
-  const auto compare_points = [&](const point& lhs, const point& rhs) {
-    return distances.at(lhs.y, lhs.x) < distances.at(rhs.y, rhs.x);
-  };
-  using unvisited_t = aoc::sorted_flat_set<point, decltype(compare_points)>;
-  unvisited_t unvisited{compare_points};
-
-  // 2. Since initially no path is known to any other vertex than the source
-  // itself (which is a path of length zero), all other tentative distances are
-  // initially set to infinity.
-  typename distances_t::row_t distances_row(heightmap.row_length(),
-                                            heightmap.size());
-
-  for (int row = 0; row < heightmap.num_rows(); ++row) {
-    distances.add_row(distances_row);
-    for (int column = 0; column < heightmap.row_length(); ++column) {
-      unvisited.emplace(column, row);
-    }
-  }
-
-  const auto modify_distance = [&](const point& p, int new_distance) {
-    distances.modify(new_distance, p.y, p.x);
-    unvisited.update(p);
+    return neighbors;
   };
 
-  // 2. Set the initial node as current.
-  auto current = start;
-  modify_distance(current, 0);
+  const auto distances =
+      aoc::shortest_distances_dijkstra(start_node, end_nodes, find_neighbors);
 
-  while (true) {
-    // 5. If the destination node has been marked visited
-    // (when planning a route between two specific nodes)
-    // or if the smallest tentative distance among the nodes
-    // in the unvisited set is infinity
-    // (when planning a complete traversal;
-    // occurs when there is no connection between the initial node
-    // and remaining unvisited nodes),
-    // then stop. The algorithm has finished.
-    if constexpr (reverse) {
-      if (heightmap.at(current.y, current.x) == search_value) {
-        break;
-      }
-    } else {
-      if (current == end) {
-        break;
-      }
+  int shortest_path = 1 << 30;
+  for (const auto end_node : end_nodes) {
+    auto it = distances.find(end_node);
+    if (it != std::end(distances)) {
+      shortest_path = std::min(shortest_path, it->second);
     }
-
-    // 3. For the current node, consider all of its unvisited neighbors
-    // and calculate their tentative distances through the current node.
-    auto neighbors = find_neighbors<reverse>(heightmap, current, unvisited);
-    auto current_distance = distances.at(current.y, current.x);
-    for (const auto& neighbor : neighbors) {
-      auto neighbor_distance = distances.at(neighbor.y, neighbor.x);
-      // 3. Compare the newly calculated tentative distance to the one
-      // currently assigned to the neighbor and assign it the smaller one.
-      modify_distance(neighbor,
-                      std::min(neighbor_distance, (current_distance + 1)));
-    }
-
-    // 4. When we are done considering all of the unvisited neighbors
-    // of the current node, mark the current node as visited
-    // and remove it from the unvisited set.
-    // A visited node will never be checked again
-    // (this is valid and optimal in connection with the behavior in step 6.:
-    // that the next nodes to visit will always be in the order of
-    // 'smallest distance from initial node first'
-    // so any visits after would have a greater distance).
-    unvisited.erase(current);
-
-    if (unvisited.empty()) {
-      break;
-    }
-
-    // 6. Otherwise, select the unvisited node
-    // that is marked with the smallest tentative distance,
-    // set it as the new current node, and go back to step 3.
-    current = *unvisited.begin();
   }
-
-  return distances.at(current.y, current.x);
+  return shortest_path;
 }
 
 template <bool reverse>
@@ -194,16 +113,7 @@ int solve_case(const std::string& filename) {
     heightmap.add_row(row);
   }
 
-  auto start = heightmap.begin_pos;
-  auto end = heightmap.end_pos;
-  int search_value = static_cast<int>('z' - 'a');
-  if constexpr (reverse) {
-    std::swap(start, end);
-    search_value = static_cast<int>('a' - 'a');
-  }
-  auto fewest_steps = shortest_path_length_dijkstra<reverse>(heightmap, start,
-                                                             end, search_value);
-
+  auto fewest_steps = get_fewest_steps<reverse>(heightmap);
   std::cout << filename << " -> " << fewest_steps << std::endl;
   return fewest_steps;
 }
