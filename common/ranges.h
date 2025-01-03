@@ -191,6 +191,40 @@ constexpr auto enumerate(R&& r) {
   return r | enumerate();
 }
 
+// Very rough approximation of std::views::join_with_view
+// https://en.cppreference.com/w/cpp/ranges/join_with_view
+template <std::ranges::viewable_range R, class Pattern>
+constexpr std::string join_with(R&& r, Pattern&& pattern) {
+  std::string result;
+  int num_elems = 0;
+  for (auto&& value : r | std::views::join) {
+    result.push_back(static_cast<char>(value));
+    if constexpr (std::same_as<Pattern, char>) {
+      result.push_back(pattern);
+    } else {
+      for (auto&& p : pattern) {
+        result.push_back(p);
+      }
+    }
+    ++num_elems;
+  }
+  if (num_elems > 0) {
+    const int pattern_size = [&]() -> std::size_t {
+      if constexpr (std::same_as<Pattern, char>) {
+        return 1;
+      } else {
+        return std::size(pattern);
+      }
+    }();
+    result.resize(result.size() - pattern_size);
+  }
+  return result;
+}
+template <std::ranges::viewable_range R>
+constexpr std::string join_with(R&& r, const char* pattern) {
+  return join_with(std::forward<R>(r), std::string_view(pattern));
+}
+
 } // namespace views
 
 } // namespace aoc
