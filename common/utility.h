@@ -644,6 +644,21 @@ constexpr auto pop_stack(specialization_of<std::vector> auto&& container) {
   return elem;
 }
 
+template <class T>
+struct constant_value {
+  using value_type = T;
+  value_type value;
+
+  template <class... Args>
+  constexpr value_type& operator()(Args&&...) {
+    return value;
+  }
+  template <class... Args>
+  constexpr const value_type& operator()(Args&&...) const {
+    return value;
+  }
+};
+
 } // namespace aoc
 
 #endif // AOC_UTILITY_H

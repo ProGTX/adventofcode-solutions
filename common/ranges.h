@@ -118,7 +118,7 @@ namespace views {
 template <class W>
 constexpr auto transform_to_value(W&& value) {
   return std::views::transform(
-      [val = std::forward<W>(value)](auto) { return val; });
+      ::aoc::constant_value<W>{std::forward<W>(value)});
 }
 
 template <class return_t>
