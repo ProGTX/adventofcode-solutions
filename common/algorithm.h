@@ -39,6 +39,9 @@ struct dijkstra_neighbor_t {
   }
 };
 
+template <class Node>
+using predecessor_map = flat_map<Node, Node>;
+
 // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Algorithm
 // NOTE: We basically use a priority queue, but use the flat_set for that,
 //       because std::priority_queue is still not constexpr in C++23.
@@ -51,7 +54,9 @@ template <class Node, class NeighborsFn>
   }
 constexpr flat_map<Node, int> shortest_distances_dijkstra(
     std::span<const Node> start_nodes, std::span<const Node> end_nodes,
-    NeighborsFn&& get_reachable_neighbors) {
+    NeighborsFn&& get_reachable_neighbors,
+    predecessor_map<Node>* predecessors_out = nullptr) {
+  const bool use_predecessors = (predecessors_out != nullptr);
 
   // 2. Assign to every node a tentative distance value:
   // set it to zero for our initial node and to infinity for all other nodes.
@@ -118,11 +123,17 @@ constexpr flat_map<Node, int> shortest_distances_dijkstra(
         if (new_neighbor_dist < neighbor_dist) {
           distances.erase(existing_it);
           distances.try_emplace(neighbor.node, new_neighbor_dist);
+          if (use_predecessors) {
+            (*predecessors_out)[neighbor.node] = current;
+          }
         }
       } else {
         // Neighbor hasn't been visited yet
         distances.try_emplace(neighbor.node, new_neighbor_dist);
         unvisited.emplace(neighbor.node);
+        if (use_predecessors) {
+          (*predecessors_out)[neighbor.node] = current;
+        }
       }
     }
   }
@@ -132,40 +143,45 @@ constexpr flat_map<Node, int> shortest_distances_dijkstra(
 
 template <class Node, class NeighborsFn>
 constexpr auto shortest_distances_dijkstra(
-    Node&& start_node, NeighborsFn&& get_reachable_neighbors) {
+    Node&& start_node, NeighborsFn&& get_reachable_neighbors,
+    predecessor_map<std::remove_cvref_t<Node>>* predecessors_out = nullptr) {
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
       std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
       std::span<const node_t>{},
-      std::forward<NeighborsFn>(get_reachable_neighbors));
+      std::forward<NeighborsFn>(get_reachable_neighbors), predecessors_out);
 }
 template <class Node, class NeighborsFn>
 constexpr auto shortest_distances_dijkstra(
-    Node&& start_node, Node&& end_node, NeighborsFn&& get_reachable_neighbors) {
+    Node&& start_node, Node&& end_node, NeighborsFn&& get_reachable_neighbors,
+    predecessor_map<std::remove_cvref_t<Node>>* predecessors_out = nullptr) {
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
       std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
       std::span<const node_t>{std::array{std::forward<Node>(end_node)}},
-      std::forward<NeighborsFn>(get_reachable_neighbors));
+      std::forward<NeighborsFn>(get_reachable_neighbors), predecessors_out);
 }
 template <class Node, class NeighborsFn>
 constexpr auto shortest_distances_dijkstra(
     Node&& start_node, std::span<const std::remove_cvref_t<Node>> end_nodes,
-    NeighborsFn&& get_reachable_neighbors) {
+    NeighborsFn&& get_reachable_neighbors,
+    predecessor_map<std::remove_cvref_t<Node>>* predecessors_out = nullptr) {
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
       std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
-      end_nodes, std::forward<NeighborsFn>(get_reachable_neighbors));
+      end_nodes, std::forward<NeighborsFn>(get_reachable_neighbors),
+      predecessors_out);
 }
 template <class Node, class NeighborsFn>
 constexpr auto shortest_distances_dijkstra(
     std::span<const std::remove_cvref_t<Node>> start_nodes, Node&& end_node,
-    NeighborsFn&& get_reachable_neighbors) {
+    NeighborsFn&& get_reachable_neighbors,
+    predecessor_map<std::remove_cvref_t<Node>>* predecessors_out = nullptr) {
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
       start_nodes,
       std::span<const node_t>{std::array{std::forward<Node>(end_node)}},
-      std::forward<NeighborsFn>(get_reachable_neighbors));
+      std::forward<NeighborsFn>(get_reachable_neighbors), predecessors_out);
 }
 
 } // namespace aoc
