@@ -3,6 +3,7 @@
 #include "../common/common.h"
 
 #include <iostream>
+#include <optional>
 #include <ranges>
 #include <string>
 #include <utility>
@@ -16,10 +17,10 @@ using arrow_t = aoc::arrow_type<int>;
 using predecessors_t = aoc::predecessor_map<arrow_t>;
 
 constexpr auto get_distances(const maze_t& maze, point start_pos,
-                             std::span<const arrow_t> end_arrows,
+                             std::optional<point> end_pos,
                              predecessors_t* predecessors) {
   auto distances = aoc::shortest_distances_dijkstra(
-      arrow_t{start_pos, aoc::east}, end_arrows,
+      arrow_t{start_pos, aoc::east},
       [&](const arrow_t current) {
         auto neighbors =
             aoc::static_vector<aoc::dijkstra_neighbor_t<arrow_t>, 3>{};
@@ -45,6 +46,12 @@ constexpr auto get_distances(const maze_t& maze, point start_pos,
 
         return neighbors;
       },
+      [&](const arrow_t current) {
+        if (!end_pos.has_value()) {
+          return false;
+        }
+        return current.position == *end_pos;
+      },
       predecessors);
 
   return distances;
@@ -59,11 +66,10 @@ constexpr auto get_end_arrows(point end_pos) {
 }
 
 constexpr int lowest_score(const maze_t& maze, point start_pos, point end_pos) {
-  const auto end_arrows = get_end_arrows(end_pos);
-  auto distances = get_distances(maze, start_pos, end_arrows, nullptr);
+  auto distances = get_distances(maze, start_pos, end_pos, nullptr);
 
   int lowest = 1 << 30;
-  for (auto end_arrow : end_arrows) {
+  for (auto end_arrow : get_end_arrows(end_pos)) {
     auto it = distances.find(end_arrow);
     if (it != std::end(distances)) {
       lowest = std::min(lowest, it->second);
@@ -125,10 +131,8 @@ constexpr int tiles_on_best_paths(const maze_t& maze, point start_pos,
                                   point end_pos) {
   // In this case we don't want to terminate the search
   // when finding the best path, so we don't pass any end arrows
-  std::array<arrow_t, 0> fake_end_arrows;
   predecessors_t predecessors;
-  auto distances =
-      get_distances(maze, start_pos, fake_end_arrows, &predecessors);
+  auto distances = get_distances(maze, start_pos, std::nullopt, &predecessors);
 
   aoc::flat_set<point> tiles;
   for (const auto end_arrow : get_end_arrows(end_pos)) {

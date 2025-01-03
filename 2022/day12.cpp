@@ -72,8 +72,8 @@ constexpr int get_fewest_steps(const heightmap_t& heightmap) {
     return neighbors;
   };
 
-  const auto distances =
-      aoc::shortest_distances_dijkstra(start_node, end_nodes, find_neighbors);
+  const auto distances = aoc::shortest_distances_dijkstra(
+      start_node, find_neighbors, std::span{end_nodes});
 
   int shortest_path = 1 << 30;
   for (const auto end_node : end_nodes) {
