@@ -50,12 +50,7 @@ constexpr int get_fewest_steps(const heightmap_t& heightmap) {
   const auto find_neighbors = [&](const point current_pos) {
     auto neighbors = aoc::static_vector<aoc::dijkstra_neighbor_t<point>, 4>{};
     const auto current_height = heightmap.at(current_pos.y, current_pos.x);
-    for (const auto direction : aoc::basic_sky_directions) {
-      const auto neighbor = current_pos + aoc::get_diff(direction);
-      if (!heightmap.in_bounds(neighbor.y, neighbor.x)) {
-        continue;
-      }
-
+    for (const auto neighbor : heightmap.basic_neighbors(current_pos)) {
       auto height_diff = heightmap.at(neighbor.y, neighbor.x) - current_height;
       // Cannot climb very high, but can drop a lot
       if constexpr (reverse) {

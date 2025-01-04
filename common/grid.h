@@ -3,6 +3,7 @@
 
 #include "assert.h"
 #include "point.h"
+#include "static_vector.h"
 
 #include <algorithm>
 #include <array>
@@ -347,6 +348,17 @@ class grid {
 
   constexpr bool in_bounds(size_t row, size_t column) const {
     return (row < this->num_rows()) && (column < this->row_length());
+  }
+
+  constexpr auto basic_neighbors(point pos) const {
+    aoc::static_vector<point, 4> neighbors;
+    for (const auto neighbor_diff : basic_neighbor_diffs) {
+      const auto neighbor_pos = pos + neighbor_diff;
+      if (this->in_bounds(neighbor_pos.y, neighbor_pos.x)) {
+        neighbors.push_back(neighbor_pos);
+      }
+    }
+    return neighbors;
   }
 
  private:
