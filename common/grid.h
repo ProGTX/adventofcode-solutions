@@ -18,6 +18,150 @@
 
 namespace aoc {
 
+////////////////////////////////////////////////////////////////////////////////
+// Directions
+
+enum facing_t : int {
+  east = 0,
+  south = 1,
+  west = 2,
+  north = 3,
+  southeast = 4,
+  southwest = 5,
+  northwest = 6,
+  northeast = 7,
+  NUM_SKY_DIRECTIONS = 8,
+  right = east,
+  down = south,
+  left = west,
+  up = north,
+  NUM_FACING = 4,
+};
+
+std::ostream& operator<<(std::ostream& out, const facing_t& facing) {
+  switch (facing) {
+    case east:
+      out << "east";
+      break;
+    case south:
+      out << "south";
+      break;
+    case west:
+      out << "west";
+      break;
+    case north:
+      out << "north";
+      break;
+    case southeast:
+      out << "southeast";
+      break;
+    case southwest:
+      out << "southwest";
+      break;
+    case northwest:
+      out << "northwest";
+      break;
+    case northeast:
+      out << "northeast";
+      break;
+    default:
+      AOC_ASSERT(false, "Invalid sky direction");
+  }
+  return out;
+}
+
+template <class T = int>
+constexpr point_type<T> get_diff(facing_t facing) {
+  switch (facing) {
+    case east:
+      return {1, 0};
+    case south:
+      return {0, 1};
+    case west:
+      return {-1, 0};
+    case north:
+      return {0, -1};
+    case southeast:
+      return {1, 1};
+    case southwest:
+      return {-1, 1};
+    case northwest:
+      return {-1, -1};
+    case northeast:
+      return {1, -1};
+    default:
+      AOC_ASSERT(false, "Facing into an invalid direction");
+      return {};
+  }
+};
+
+constexpr inline auto basic_sky_directions = std::invoke([] {
+  std::array<facing_t, NUM_FACING> directions;
+  for (int f = 0; f < NUM_FACING; ++f) {
+    auto facing = static_cast<facing_t>(f);
+    directions[f] = facing;
+  }
+  return directions;
+});
+constexpr inline auto all_sky_directions = std::invoke([] {
+  std::array<facing_t, NUM_SKY_DIRECTIONS> directions;
+  for (int f = 0; f < NUM_SKY_DIRECTIONS; ++f) {
+    directions[f] = static_cast<facing_t>(f);
+  }
+  return directions;
+});
+
+constexpr facing_t clockwise_basic(facing_t current) {
+  AOC_ASSERT(current >= 0, "Invalid sky direction");
+  AOC_ASSERT(current < NUM_FACING, "Not a basic sky direction");
+  return static_cast<facing_t>((static_cast<int>(current) + 1) % NUM_FACING);
+}
+
+constexpr facing_t anticlockwise_basic(facing_t current) {
+  AOC_ASSERT(current >= 0, "Invalid sky direction");
+  AOC_ASSERT(current < NUM_FACING, "Not a basic sky direction");
+  return static_cast<facing_t>((static_cast<int>(current) + NUM_FACING - 1) %
+                               NUM_FACING);
+}
+
+constexpr inline auto basic_neighbor_diffs = std::invoke([] {
+  std::array<point_type<int>, NUM_FACING> positions;
+  std::ranges::transform(basic_sky_directions, std::begin(positions),
+                         &get_diff<int>);
+  return positions;
+});
+constexpr inline auto all_neighbor_diffs = std::invoke([] {
+  std::array<point_type<int>, NUM_SKY_DIRECTIONS> positions;
+  std::ranges::transform(all_sky_directions, std::begin(positions),
+                         &get_diff<int>);
+  return positions;
+});
+
+// An "arrow" has a position and direction
+// Often used in search algorithms (see Dijkstra)
+template <class T>
+struct arrow_type {
+  point_type<T> position;
+  facing_t direction;
+
+  constexpr bool operator==(const arrow_type&) const = default;
+  constexpr std::weak_ordering operator<=>(const arrow_type& other) const {
+    if (position == other.position) {
+      return direction <=> other.direction;
+    } else {
+      return position <=> other.position;
+    }
+  }
+
+  friend std::ostream& operator<<(std::ostream& out, const arrow_type& arrow) {
+    out << "(" << arrow.position << "," << arrow.direction << ")";
+    return out;
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Main grid
+
 template <class T, class row_storage_t = std::vector<T>,
           class Container = row_storage_t>
 class grid {
@@ -243,121 +387,9 @@ using array_grid =
 template <class row_storage_t = std::string, class Container = std::string>
 using char_grid = grid<char, row_storage_t, Container>;
 
-enum facing_t : int {
-  east = 0,
-  south = 1,
-  west = 2,
-  north = 3,
-  southeast = 4,
-  southwest = 5,
-  northwest = 6,
-  northeast = 7,
-  NUM_SKY_DIRECTIONS = 8,
-  right = east,
-  down = south,
-  left = west,
-  up = north,
-  NUM_FACING = 4,
-};
-
-std::ostream& operator<<(std::ostream& out, const facing_t& facing) {
-  switch (facing) {
-    case east:
-      out << "east";
-      break;
-    case south:
-      out << "south";
-      break;
-    case west:
-      out << "west";
-      break;
-    case north:
-      out << "north";
-      break;
-    case southeast:
-      out << "southeast";
-      break;
-    case southwest:
-      out << "southwest";
-      break;
-    case northwest:
-      out << "northwest";
-      break;
-    case northeast:
-      out << "northeast";
-      break;
-    default:
-      AOC_ASSERT(false, "Invalid sky direction");
-  }
-  return out;
-}
-
-template <class T = int>
-constexpr point_type<T> get_diff(facing_t facing) {
-  switch (facing) {
-    case east:
-      return {1, 0};
-    case south:
-      return {0, 1};
-    case west:
-      return {-1, 0};
-    case north:
-      return {0, -1};
-    case southeast:
-      return {1, 1};
-    case southwest:
-      return {-1, 1};
-    case northwest:
-      return {-1, -1};
-    case northeast:
-      return {1, -1};
-    default:
-      AOC_ASSERT(false, "Facing into an invalid direction");
-      return {};
-  }
-};
-
-constexpr inline auto basic_sky_directions = std::invoke([] {
-  std::array<facing_t, NUM_FACING> directions;
-  for (int f = 0; f < NUM_FACING; ++f) {
-    auto facing = static_cast<facing_t>(f);
-    directions[f] = facing;
-  }
-  return directions;
-});
-constexpr inline auto all_sky_directions = std::invoke([] {
-  std::array<facing_t, NUM_SKY_DIRECTIONS> directions;
-  for (int f = 0; f < NUM_SKY_DIRECTIONS; ++f) {
-    directions[f] = static_cast<facing_t>(f);
-  }
-  return directions;
-});
-
-constexpr facing_t clockwise_basic(facing_t current) {
-  AOC_ASSERT(current >= 0, "Invalid sky direction");
-  AOC_ASSERT(current < NUM_FACING, "Not a basic sky direction");
-  return static_cast<facing_t>((static_cast<int>(current) + 1) % NUM_FACING);
-}
-
-constexpr facing_t anticlockwise_basic(facing_t current) {
-  AOC_ASSERT(current >= 0, "Invalid sky direction");
-  AOC_ASSERT(current < NUM_FACING, "Not a basic sky direction");
-  return static_cast<facing_t>((static_cast<int>(current) + NUM_FACING - 1) %
-                               NUM_FACING);
-}
-
-constexpr inline auto basic_neighbor_diffs = std::invoke([] {
-  std::array<point_type<int>, NUM_FACING> positions;
-  std::ranges::transform(basic_sky_directions, std::begin(positions),
-                         &get_diff<int>);
-  return positions;
-});
-constexpr inline auto all_neighbor_diffs = std::invoke([] {
-  std::array<point_type<int>, NUM_SKY_DIRECTIONS> positions;
-  std::ranges::transform(all_sky_directions, std::begin(positions),
-                         &get_diff<int>);
-  return positions;
-});
+////////////////////////////////////////////////////////////////////////////////
+// grid_neighbors
+// TODO: Remove
 
 template <class CRTP, bool enable_diagonal = false>
 struct grid_neighbors {
@@ -496,6 +528,9 @@ constexpr void set_standard_neighbors(grid<T, row_storage_t, Container>& grid,
                        corner_diagonal_diff(northwest, north)});
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// sparse_grid
+
 template <class T, T empty_value_param = T{},
           class point_class = point_type<int>,
           class row_storage_t = std::vector<T>>
@@ -629,6 +664,9 @@ class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Helpers
+
 template <class Grid>
 concept is_grid = std::ranges::range<Grid> &&
                   requires(Grid g, typename Grid::value_type value,
@@ -650,28 +688,6 @@ static_assert(is_grid<grid<int>>);
 static_assert(is_grid<array_grid<int, 7, 5>>);
 static_assert(is_grid<sparse_grid<int>>);
 static_assert(is_grid<char_grid<>>);
-
-// An "arrow" has a position and direction
-// Often used in search algorithms (see Dijkstra)
-template <class T>
-struct arrow_type {
-  point_type<T> position;
-  facing_t direction;
-
-  constexpr bool operator==(const arrow_type&) const = default;
-  constexpr std::weak_ordering operator<=>(const arrow_type& other) const {
-    if (position == other.position) {
-      return direction <=> other.direction;
-    } else {
-      return position <=> other.position;
-    }
-  }
-
-  friend std::ostream& operator<<(std::ostream& out, const arrow_type& arrow) {
-    out << "(" << arrow.position << "," << arrow.direction << ")";
-    return out;
-  }
-};
 
 } // namespace aoc
 
