@@ -11,6 +11,7 @@
 #include <compare>
 #include <concepts>
 #include <iostream>
+#include <ranges>
 #include <span>
 #include <utility>
 #include <vector>
@@ -41,6 +42,28 @@ struct dijkstra_neighbor_t {
     return out;
   }
 };
+
+constexpr auto dijkstra_uniform_neighbors_view() {
+  return std::views::transform([](auto&& neighbor) {
+    return dijkstra_neighbor_t{std::forward<decltype(neighbor)>(neighbor), 1};
+  });
+}
+
+template <template <class...> class Primary, class T, class... Args>
+constexpr auto dijkstra_uniform_neighbors(Primary<T, Args...>&& neighbors) {
+  using Return = reuse_primary_t<Primary, dijkstra_neighbor_t<T>>;
+  return neighbors | dijkstra_uniform_neighbors_view() |
+         aoc::ranges::to<Return>();
+}
+template <template <class, auto, class...> class Primary, class T, auto Size,
+          class... Args>
+constexpr auto dijkstra_uniform_neighbors(
+    Primary<T, Size, Args...>&& neighbors) {
+  using Return =
+      reuse_primary_with_size_t<Primary, dijkstra_neighbor_t<T>, Size>;
+  return neighbors | dijkstra_uniform_neighbors_view() |
+         aoc::ranges::to<Return>();
+}
 
 template <class Node>
 using predecessor_map = flat_map<Node, Node>;
