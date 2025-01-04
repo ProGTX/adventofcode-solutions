@@ -24,6 +24,12 @@ template <class T, template <class...> class Primary>
 inline constexpr bool is_specialization_of_v =
     is_specialization_of<std::remove_cvref_t<T>, Primary>::value;
 
+template <template <class...> class Primary, class... Args>
+using reuse_primary_t = Primary<Args...>;
+template <template <class, auto, class...> class Primary, class T, auto Size,
+          class... Args>
+using reuse_primary_with_size_t = Primary<T, Size, Args...>;
+
 template <class T, template <class...> class Primary>
 concept specialization_of = is_specialization_of_v<T, Primary>;
 
