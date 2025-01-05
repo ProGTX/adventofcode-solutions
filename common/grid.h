@@ -2,7 +2,9 @@
 #define AOC_GRID_H
 
 #include "assert.h"
+#include "concepts.h"
 #include "point.h"
+#include "ranges.h"
 #include "static_vector.h"
 
 #include <algorithm>
@@ -216,10 +218,12 @@ class grid {
     // Use m_num_rows instead of num_rows()
     // because we allow setting rows in a fixed size container
     auto old_size = (this->row_length() * m_num_rows);
-    auto it = inserter_it(m_data);
-    if constexpr (is_specialization_of_v<container_type, std::vector>) {
+    if constexpr (reservable<container_type>) {
       m_data.reserve(old_size + this->row_length());
-    } else if constexpr (is_array_class_v<container_type>) {
+    }
+
+    auto it = inserter_it(m_data);
+    if constexpr (is_array_class_v<container_type>) {
       it += old_size;
     }
     std::ranges::copy_n(std::begin(row), this->row_length(), it);
@@ -605,7 +609,7 @@ class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
 
   constexpr row_t get_row(size_t row) const {
     row_t return_row;
-    if constexpr (is_specialization_of_v<row_t, std::vector>) {
+    if constexpr (reservable<row_t>) {
       return_row.reserve(this->row_length());
     }
     auto it = inserter_it(return_row);

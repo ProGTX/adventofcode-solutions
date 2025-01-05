@@ -1,6 +1,9 @@
 #ifndef AOC_CONCEPTS_H
 #define AOC_CONCEPTS_H
 
+// Contains some useful concepts
+#include "range_to.h"
+
 #include <array>
 #include <iterator>
 #include <string_view>
@@ -34,12 +37,7 @@ template <class T, template <class...> class Primary>
 concept specialization_of = is_specialization_of_v<T, Primary>;
 
 template <class Container>
-concept insertable =
-    requires(Container c, typename Container::value_type value) {
-      c.begin();
-      c.end();
-      c.insert(value);
-    };
+concept insertable = ranges::detail::insertable_container<Container>;
 
 template <class Container>
 concept back_insertable =
@@ -52,6 +50,9 @@ concept back_insertable =
 template <class Container>
 concept has_value_type =
     requires(Container c) { typename Container::value_type; };
+
+template <class Container>
+concept reservable = ranges::detail::reservable_container<Container>;
 
 template <class T>
 struct is_array_class : std::false_type {};
