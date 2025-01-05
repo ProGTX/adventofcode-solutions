@@ -232,14 +232,7 @@ class grid {
   }
 
   constexpr row_t get_row(size_t row) const {
-    row_t return_row;
-    if constexpr (is_specialization_of_v<row_t, std::vector>) {
-      return_row.reserve(this->row_length());
-    }
-    auto index = this->linear_index(row, 0);
-    std::ranges::copy_n(std::begin(m_data) + index, this->row_length(),
-                        inserter_it(return_row));
-    return return_row;
+    return this->row_view_detail<row_t>(this->begin_row(row));
   }
 
   constexpr const container_type& data() const { return m_data; }
@@ -345,6 +338,24 @@ class grid {
     return this->begin_row(row) + this->row_length();
   }
 
+  template <class Return = void>
+  constexpr auto row_view(size_t row) {
+    return this->row_view_detail<Return>(this->begin_row(row));
+  }
+  template <class Return = void>
+  constexpr auto row_view(size_t row) const {
+    return this->row_view_detail<Return>(this->begin_row(row));
+  }
+
+  template <class Return = void>
+  constexpr auto column_view(size_t column) {
+    return this->column_view_detail<Return>(begin(), column);
+  }
+  template <class Return = void>
+  constexpr auto column_view(size_t column) const {
+    return this->column_view_detail<Return>(begin(), column);
+  }
+
   constexpr void clear() {
     m_data.clear();
     m_data.resize(this->num_rows() * this->num_columns());
@@ -374,6 +385,40 @@ class grid {
       };
     } else {
       return print_single_f;
+    }
+  }
+
+  template <class Return, class Begin>
+  constexpr auto row_view_detail(Begin start) const {
+    auto view = std::ranges::subrange(start, start + this->row_length());
+    if constexpr (std::same_as<Return, void>) {
+      return view;
+    } else if constexpr (is_array_class_v<Return>) {
+      Return row;
+      std::ranges::copy(view, std::begin(row));
+      return row;
+    } else {
+      return view | aoc::ranges::to<Return>();
+    }
+  }
+
+  template <class Return, class Begin>
+  constexpr auto column_view_detail(Begin begin_zero, int column) const {
+    const auto tmp_end =
+        this->begin_row(this->num_rows() - 1) + column + this->row_length();
+    auto start = begin_zero + column;
+    auto view =
+        std::ranges::subrange(start, start + std::distance(start, tmp_end)) |
+        aoc::views::stride(this->row_length());
+    if constexpr (std::same_as<Return, void>) {
+      return view;
+    } else {
+      Return return_column;
+      if constexpr (reservable<Return>) {
+        return_column.reserve(this->num_columns());
+      }
+      std::ranges::copy(view, inserter_it(return_column));
+      return return_column;
     }
   }
 

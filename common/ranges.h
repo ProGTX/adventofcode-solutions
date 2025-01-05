@@ -152,6 +152,13 @@ static_assert(std::ranges::equal(std::array{"ha", "ha"},
 
 // Approximate implementation of std::views::stride
 // https://en.cppreference.com/w/cpp/ranges/stride_view
+// NOTE: The returned view is actually an input range,
+//       but the compiler just assumes it's the same category
+//       as the underlying range
+//       This becomes problematic when iterating multiple times
+//       when the view was obtained from e.g. a random access range
+// NOTE: Because of the above,
+//       DO NOT PASS THIS VIEW TO A NEW RANGE IN A PIPELINE
 template <class DifferenceType>
 constexpr auto stride(DifferenceType&& n) {
   return std::views::filter(
