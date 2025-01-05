@@ -26,9 +26,8 @@ class ratio {
       : m_numerator(numerator_), m_denominator(1) {}
 
   constexpr ratio(value_type numerator_, value_type denominator_)
-      : m_numerator(aoc::sign(numerator_) * aoc::sign(denominator_) *
-                    aoc::abs(numerator_)),
-        m_denominator(aoc::abs(denominator_)) {
+      : m_numerator(sign(numerator_) * sign(denominator_) * abs(numerator_)),
+        m_denominator(abs(denominator_)) {
     if (m_denominator == 0) {
       throw std::runtime_error("Ratio denominator cannot be zero");
     }

@@ -7,8 +7,10 @@
 #include <compare>
 #include <concepts>
 #include <functional>
+#include <initializer_list>
 #include <iterator>
 #include <ranges>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -458,7 +460,7 @@ class flat_map {
 
   ///////////
   // Capacity
-  
+
   [[nodiscard]] constexpr bool empty() const noexcept {
     return storage.keys.empty();
   }

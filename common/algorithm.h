@@ -4,6 +4,7 @@
 #include "concepts.h"
 #include "flat.h"
 #include "point.h"
+#include "range_to.h"
 #include "ranges.h"
 #include "utility.h"
 
@@ -52,8 +53,7 @@ constexpr auto dijkstra_uniform_neighbors_view() {
 template <template <class...> class Primary, class T, class... Args>
 constexpr auto dijkstra_uniform_neighbors(Primary<T, Args...>&& neighbors) {
   using Return = reuse_primary_t<Primary, dijkstra_neighbor_t<T>>;
-  return neighbors | dijkstra_uniform_neighbors_view() |
-         aoc::ranges::to<Return>();
+  return neighbors | dijkstra_uniform_neighbors_view() | ranges::to<Return>();
 }
 template <template <class, auto, class...> class Primary, class T, auto Size,
           class... Args>
@@ -61,8 +61,7 @@ constexpr auto dijkstra_uniform_neighbors(
     Primary<T, Size, Args...>&& neighbors) {
   using Return =
       reuse_primary_with_size_t<Primary, dijkstra_neighbor_t<T>, Size>;
-  return neighbors | dijkstra_uniform_neighbors_view() |
-         aoc::ranges::to<Return>();
+  return neighbors | dijkstra_uniform_neighbors_view() | ranges::to<Return>();
 }
 
 template <class Node>
@@ -170,10 +169,10 @@ class all_nodes_encountered {
   constexpr all_nodes_encountered(std::span<Node> nodes)
       : all_nodes_encountered{std::span<const Node>(nodes)} {}
   constexpr all_nodes_encountered(std::span<const Node> nodes)
-      : m_searched_nodes{nodes | aoc::ranges::to<std::vector<Node>>()} {}
+      : m_searched_nodes{nodes | ranges::to<std::vector<Node>>()} {}
 
   constexpr bool operator()(Node node) {
-    if (aoc::ranges::contains(m_searched_nodes, node)) {
+    if (ranges::contains(m_searched_nodes, node)) {
       m_visited.insert(std::move(node));
       return m_visited.size() == m_searched_nodes.size();
     }

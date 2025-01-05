@@ -4,6 +4,7 @@
 #include "assert.h"
 #include "concepts.h"
 #include "point.h"
+#include "range_to.h"
 #include "ranges.h"
 #include "static_vector.h"
 
@@ -366,7 +367,7 @@ class grid {
   }
 
   constexpr auto basic_neighbors(point pos) const {
-    aoc::static_vector<point, 4> neighbors;
+    static_vector<point, 4> neighbors;
     for (const auto neighbor_diff : basic_neighbor_diffs) {
       const auto neighbor_pos = pos + neighbor_diff;
       if (this->in_bounds(neighbor_pos.y, neighbor_pos.x)) {
@@ -398,7 +399,7 @@ class grid {
       std::ranges::copy(view, std::begin(row));
       return row;
     } else {
-      return view | aoc::ranges::to<Return>();
+      return view | ranges::to<Return>();
     }
   }
 
@@ -409,7 +410,7 @@ class grid {
     auto start = begin_zero + column;
     auto view =
         std::ranges::subrange(start, start + std::distance(start, tmp_end)) |
-        aoc::views::stride(this->row_length());
+        views::stride(this->row_length());
     if constexpr (std::same_as<Return, void>) {
       return view;
     } else {

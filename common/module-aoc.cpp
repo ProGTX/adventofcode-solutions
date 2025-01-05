@@ -17,6 +17,7 @@ module;
 #include <exception>
 #include <fstream>
 #include <functional>
+#include <initializer_list>
 #include <iostream>
 #include <iterator>
 #include <map>
@@ -28,6 +29,7 @@ module;
 #include <set>
 #include <span>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <system_error>
