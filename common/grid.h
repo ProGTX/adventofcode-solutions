@@ -7,6 +7,7 @@
 #include "range_to.h"
 #include "ranges.h"
 #include "static_vector.h"
+#include "string.h"
 
 #include <algorithm>
 #include <array>
@@ -584,6 +585,62 @@ class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
     }
   }
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// Read from file
+
+struct char_grid_config_input {
+  std::optional<char> padding;
+  std::optional<char> start_char;
+  std::optional<char> end_char;
+};
+struct char_grid_config_output {
+  using point = point_type<int>;
+  std::optional<point> start_pos;
+  std::optional<point> end_pos;
+};
+
+constexpr std::pair<char_grid<>, char_grid_config_output> read_char_grid(
+    const std::string& filename,
+    const char_grid_config_input config_input = {}) {
+  char_grid<> return_grid;
+  char_grid_config_output config_output{};
+  using point = char_grid_config_output::point;
+  const bool padding = config_input.padding.has_value();
+  for (std::string line : views::read_lines(filename)) {
+    if (padding && return_grid.empty()) {
+      return_grid.add_row(
+          views::repeat(*config_input.padding, line.size() + 2));
+    }
+    if (config_input.start_char) {
+      const auto pos = line.find(*config_input.start_char);
+      if (pos != std::string::npos) {
+        config_output.start_pos =
+            point(pos + static_cast<int>(padding),
+                  return_grid.num_rows() + static_cast<int>(padding));
+      }
+    }
+    if (config_input.end_char) {
+      const auto pos = line.find(*config_input.end_char);
+      if (pos != std::string::npos) {
+        config_output.end_pos =
+            point(pos + static_cast<int>(padding),
+                  return_grid.num_rows() + static_cast<int>(padding));
+      }
+    }
+    if (padding) {
+      return_grid.add_row(*config_input.padding + std::move(line) +
+                          *config_input.padding);
+    } else {
+      return_grid.add_row(std::move(line));
+    }
+  }
+  if (padding) {
+    return_grid.add_row(
+        views::repeat(*config_input.padding, return_grid.row_length()));
+  }
+  return std::pair{return_grid, config_output};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helpers

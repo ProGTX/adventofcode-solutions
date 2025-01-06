@@ -115,22 +115,13 @@ static_assert(41 == follow_guard<false, true>(test_map(), {5, 7}));
 
 template <bool interfere>
 int solve_case(const std::string& filename) {
-  lab_map_t lab_map;
-  point starting_guard_pos;
-
-  for (std::string line : aoc::views::read_lines(filename)) {
-    if (lab_map.empty()) {
-      // Add top edge
-      lab_map.add_row(aoc::views::repeat(edge, line.size() + 2));
-    }
-    if (auto pos = line.find(starting_guard); pos != std::string::npos) {
-      starting_guard_pos = point(pos + 1, lab_map.num_rows());
-    }
-    // Add left and right edges
-    lab_map.add_row(edge + std::move(line) + edge);
-  }
-  // Add bottom edge
-  lab_map.add_row(aoc::views::repeat(edge, lab_map.row_length()));
+  auto [lab_map, config] =
+      aoc::read_char_grid(filename, aoc::char_grid_config_input{
+                                        .padding = edge,
+                                        .start_char = starting_guard,
+                                        .end_char = {},
+                                    });
+  point starting_guard_pos = *config.start_pos;
 
   int sum = 0;
   if constexpr (!interfere) {
