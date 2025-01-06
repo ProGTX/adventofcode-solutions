@@ -270,6 +270,18 @@ constexpr auto shortest_distances_dijkstra(
       std::forward<EndReachedFn>(end_reached), predecessors_out);
 }
 
+template <class Node>
+std::vector<Node> get_path(const predecessor_map<Node>& predecessors,
+                           const Node& end_pos) {
+  std::vector<Node> path;
+  auto it = predecessors.find(end_pos);
+  while (it != std::end(predecessors)) {
+    path.push_back(it->first);
+    it = predecessors.find(it->second);
+  }
+  return path;
+}
+
 } // namespace aoc
 
 #endif // AOC_ALGORITHM_H
