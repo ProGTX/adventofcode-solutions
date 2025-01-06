@@ -146,12 +146,15 @@ constexpr flat_map<Node, int> shortest_distances_dijkstra(
         if (new_neighbor_dist < neighbor_dist) {
           distances.erase(existing_it);
           distances.try_emplace(neighbor.node, new_neighbor_dist);
-          if (use_predecessors) {
-            if constexpr (all_predecessors) {
-              (*predecessors_out)[neighbor.node].emplace(current);
-            } else {
+          if constexpr (!all_predecessors) {
+            if (use_predecessors) {
               (*predecessors_out)[neighbor.node] = current;
             }
+          }
+        }
+        if constexpr (all_predecessors) {
+          if (use_predecessors && (new_neighbor_dist <= neighbor_dist)) {
+            (*predecessors_out)[neighbor.node].emplace(current);
           }
         }
       } else {
