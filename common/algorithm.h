@@ -27,15 +27,7 @@ struct dijkstra_neighbor_t {
   int distance;
 
   constexpr bool operator==(const dijkstra_neighbor_t&) const = default;
-
-  constexpr std::weak_ordering operator<=>(
-      const dijkstra_neighbor_t& other) const {
-    if (distance == other.distance) {
-      return node <=> other.node;
-    } else {
-      return distance <=> other.distance;
-    }
-  }
+  constexpr auto operator<=>(const dijkstra_neighbor_t&) const = default;
 
   friend std::ostream& operator<<(std::ostream& out,
                                   const dijkstra_neighbor_t& neighbor) {
