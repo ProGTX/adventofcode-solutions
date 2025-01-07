@@ -237,7 +237,7 @@ class flat_map {
    */
   template <class Reference>
   struct arrow_proxy {
-    Reference* operator->() { return std::addressof(data_); }
+    constexpr Reference* operator->() { return std::addressof(data_); }
 
     template <class, class>
     friend class iterator_detail;
