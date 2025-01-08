@@ -130,6 +130,8 @@ class flat_set {
     }
   }
 
+  constexpr void clear() noexcept { key_container.clear(); }
+
   /////////
   // Lookup
 
@@ -482,6 +484,11 @@ class flat_map {
         ->insert_generic(storage.keys.cend(),
                          value_type(std::forward<Args>(args)...))
         .first;
+  }
+
+  constexpr void clear() noexcept {
+    storage.keys.clear();
+    storage.values.clear();
   }
 
   // try_emplace
