@@ -111,6 +111,15 @@ class flat_set {
                                 value_type(std::forward<Args>(args)...));
   }
 
+  constexpr container_type extract() && { return std::move(key_container); }
+
+  /// Preconditions:
+  /// 1. The elements of cont must be sorted with respect to compare
+  /// 2. cont must not contain equal elements
+  constexpr void replace(container_type&& cont) {
+    key_container = std::move(cont);
+  }
+
   // erase()
   constexpr iterator erase(iterator pos) // 1
     requires(!std::same_as<iterator, const_iterator>)
@@ -486,6 +495,20 @@ class flat_map {
         .first;
   }
 
+  constexpr containers extract() && { return std::move(storage); }
+
+  /// Preconditions:
+  /// 1. The expression key_cont.size() == mapped_cont.size() is true
+  /// 2. The elements of key_cont are sorted with respect to compare
+  /// 3. key_cont does not contain equal elements
+  constexpr void replace(key_container_type&& key_cont,
+                         mapped_container_type&& mapped_cont) {
+    AOC_ASSERT(key_cont.size() == mapped_cont.size(),
+               "1. Key and value containers must be same size");
+    storage.keys = std::move(key_cont);
+    storage.values = std::move(mapped_cont);
+  }
+
   constexpr void clear() noexcept {
     storage.keys.clear();
     storage.values.clear();
@@ -657,6 +680,21 @@ class flat_map {
  private:
   containers storage; // AKA c
   key_compare compare;
+};
+
+// https://stackoverflow.com/a/79004379
+template <class FlatMap>
+void reserve_map(FlatMap& map, typename FlatMap::size_type new_cap) {
+  auto containers = map.extract();
+  containers.keys.reserve(new_cap);
+  containers.values.reserve(new_cap);
+  map.replace(std::move(containers.keys), std::move(containers.values));
+};
+template <class FlatSet>
+void reserve_set(FlatSet& set, typename FlatSet::size_type new_cap) {
+  auto key_container = set.extract();
+  key_container.reserve(new_cap);
+  set.replace(std::move(key_container));
 };
 
 } // namespace aoc
