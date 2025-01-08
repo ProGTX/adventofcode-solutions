@@ -27,7 +27,7 @@ int_t simulate_fish(school<production_length>& fish) {
 
   for (int day = 0; day < num_days; ++day) {
     int_t num_new_brood = fish.front();
-    std::ranges::rotate(fish, fish.begin() + 1);
+    aoc::ranges::rotate_left(fish);
 
     int_t num_new_matures = brood.front();
     std::shift_left(brood.begin(), brood.end(), 1);

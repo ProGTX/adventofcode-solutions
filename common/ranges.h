@@ -111,6 +111,26 @@ constexpr auto sorted(R&& r, Comp comp = {}, Proj proj = {}) {
   return r_copy;
 }
 
+template <std::permutable I, std::sentinel_for<I> S>
+constexpr auto rotate_left(I first, S last) {
+  return std::ranges::rotate(first, first + 1, last);
+}
+template <std::ranges::forward_range R>
+  requires std::permutable<std::ranges::iterator_t<R>>
+constexpr auto rotate_left(R&& r) {
+  return rotate_left(std::ranges::begin(r), std::ranges::end(r));
+}
+
+template <std::permutable I, std::sentinel_for<I> S>
+constexpr auto rotate_right(I first, S last) {
+  return std::ranges::rotate(first, last - 1, last);
+}
+template <std::ranges::forward_range R>
+  requires std::permutable<std::ranges::iterator_t<R>>
+constexpr auto rotate_right(R&& r) {
+  return rotate_right(std::ranges::begin(r), std::ranges::end(r));
+}
+
 } // namespace ranges
 
 namespace views {

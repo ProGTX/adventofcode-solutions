@@ -161,6 +161,7 @@ class static_vector {
   constexpr iterator insert(const_iterator pos, const T& value) {
     auto non_const_pos = begin() + std::distance(cbegin(), pos);
     this->push_back(value);
+    // rotate_right
     std::ranges::rotate(non_const_pos + 1, end(), end() - 1);
     return non_const_pos;
   }

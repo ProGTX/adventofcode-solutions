@@ -129,7 +129,7 @@ int simulate(elves_t& elves) {
       break;
     }
     execute();
-    std::ranges::rotate(possible_proposals, std::begin(possible_proposals) + 1);
+    aoc::ranges::rotate_left(possible_proposals);
   }
   update_elves();
   return (round + 1);
