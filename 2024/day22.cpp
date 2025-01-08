@@ -14,6 +14,9 @@
 
 using int_t = std::int64_t;
 constexpr const int num_repeat = 2000;
+constexpr const int pattern_size = 4;
+constexpr const int max_diff_abs = 9;
+constexpr const int diff_opts = 2 * max_diff_abs + 1;
 
 constexpr int_t mix(int_t lhs, int_t rhs) { return lhs ^ rhs; }
 constexpr int prune(int_t secret) {
@@ -55,98 +58,47 @@ constexpr int_t sum_secrets(std::span<const int> secrets) {
       secrets | std::views::transform(&next_secret_repeat), int_t{0});
 }
 
-struct buyer_t {
-  std::vector<int> values;
-  std::string diffs;
-};
-
-// -9 is the minimum diff, we normalize it to 0
-// The largest diff can now be 18
-// We store it into a char because it's easy to perform string search
-constexpr char diff_to_char(const int diff) {
-  return static_cast<char>('a' + 9 + diff);
+constexpr int get_pattern(const std::array<int, 4>& diffs) {
+  return (diffs[0] + max_diff_abs) * (diff_opts * diff_opts * diff_opts) +
+         (diffs[1] + max_diff_abs) * (diff_opts * diff_opts) +
+         (diffs[2] + max_diff_abs) * diff_opts + //
+         (diffs[3] + max_diff_abs);
 }
 
-constexpr auto get_buyers(std::span<const int> secrets) {
-  std::vector<buyer_t> buyers;
-  buyers.reserve(secrets.size());
+constexpr auto get_value_total() {
+  constexpr const int max_pattern = get_pattern({9, 9, 9, 9});
+  std::vector<int> value_total(max_pattern + 1, 0);
+  return value_total;
+}
+
+// See https://www.reddit.com/r/adventofcode/comments/1hk15et/comment/m3asuqa/
+// for inspiration
+constexpr int most_bananas(std::span<const int> secrets) {
+  aoc::flat_set<int> buyer_has_pattern;
+  auto value_total = get_value_total();
+
   for (int s = 0; s < secrets.size(); ++s) {
-    buyers.emplace_back();
-    auto& buyer = buyers.back();
-    buyer.values.reserve(num_repeat);
-    buyer.diffs.reserve(num_repeat);
-    auto secret = next_secret(secrets[s]);
+    buyer_has_pattern.clear();
+    std::array<int, pattern_size> diffs;
+    auto secret = secrets[s];
     int previous = secret % 10;
-    for (int i = 1; i < num_repeat; ++i) {
+    for (int i = 0; i < num_repeat; ++i) {
       secret = next_secret(secret);
       const int current = secret % 10;
-      buyer.values.push_back(current);
-      const int diff = current - previous;
-      buyer.diffs.push_back(diff_to_char(diff));
+      diffs[pattern_size - 1] = current - previous;
+      if (i >= (pattern_size - 1)) {
+        const auto pattern = get_pattern(diffs);
+        auto it = buyer_has_pattern.find(pattern);
+        if (it == std::end(buyer_has_pattern)) {
+          buyer_has_pattern.emplace(pattern);
+          value_total[pattern] += current;
+        }
+      }
+      aoc::ranges::rotate_left(diffs);
       previous = current;
     }
   }
-  return buyers;
-}
-
-constexpr const int pattern_size = 4;
-constexpr const int patterns_per_buyer = num_repeat - pattern_size;
-
-constexpr int max_pattern_value(const buyer_t& buyer,
-                                std::string_view pattern) {
-  const auto pos = buyer.diffs.find(pattern);
-  if (pos != std::string::npos) {
-    return buyer.values[pos + pattern_size - 1];
-  }
-  return 0;
-}
-
-constexpr std::string get_pattern(const std::array<int, 4>& diffs) {
-  return diffs | std::views::transform(&diff_to_char) |
-         aoc::ranges::to<std::string>();
-}
-
-static_assert(7 == max_pattern_value(get_buyers(std::array{1})[0],
-                                     get_pattern({-2, 1, -1, 3})));
-static_assert(7 == max_pattern_value(get_buyers(std::array{2})[0],
-                                     get_pattern({-2, 1, -1, 3})));
-static_assert(0 == max_pattern_value(get_buyers(std::array{3})[0],
-                                     get_pattern({-2, 1, -1, 3})));
-static_assert(9 == max_pattern_value(get_buyers(std::array{2024})[0],
-                                     get_pattern({-2, 1, -1, 3})));
-
-using cache_t = aoc::flat_map<std::string_view, int>;
-
-constexpr int max_pattern_value(cache_t& cache, std::span<const buyer_t> buyers,
-                                std::string_view pattern) {
-  auto it = cache.find(pattern);
-  if (it != std::end(cache)) {
-    return it->second;
-  }
-  const auto value = aoc::ranges::accumulate(
-      buyers | std::views::transform([pattern](const buyer_t& buyer) {
-        return max_pattern_value(buyer, pattern);
-      }),
-      0);
-  cache[pattern] = value;
-  return value;
-}
-
-constexpr int most_bananas(std::span<const int> secrets) {
-  const auto buyers = get_buyers(secrets);
-  int max_bananas = 0;
-  cache_t cache;
-  for (const buyer_t& buyer : buyers) {
-    AOC_ASSERT((patterns_per_buyer == (buyer.values.size() - pattern_size + 1)),
-               "Wrong calculation for patterns_per_buyer");
-    for (int i = 0; i < patterns_per_buyer; ++i) {
-      const auto pattern =
-          std::string_view{buyer.diffs.data() + i, pattern_size};
-      const auto value = max_pattern_value(cache, buyers, pattern);
-      max_bananas = std::ranges::max(value, max_bananas);
-    }
-  }
-  return max_bananas;
+  return std::ranges::max(value_total);
 }
 
 template <bool change_sequence>
@@ -169,10 +121,10 @@ int main() {
   AOC_EXPECT_RESULT(37327623, solve_case<false>("day22.example"));
   AOC_EXPECT_RESULT(20215960478, solve_case<false>("day22.input"));
   std::cout << "Part 2" << std::endl;
-  // The following call can't be static_assert because of compiler limits
+  // The following two calls can't be static_assert because of compiler limits
+  AOC_EXPECT_RESULT(9, most_bananas(std::array{123}));
   AOC_EXPECT_RESULT(23, most_bananas(std::array{1, 2, 3, 2024}));
   AOC_EXPECT_RESULT(24, solve_case<true>("day22.example"));
-  // Takes over 90s on a LNL laptop
   AOC_EXPECT_RESULT(2221, solve_case<true>("day22.input"));
   AOC_RETURN_CHECK_RESULT();
 }
