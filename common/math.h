@@ -56,9 +56,37 @@ constexpr T pown(T x, unsigned p) {
 
   return result;
 }
-
 static_assert(1024 == pown(2, 10));
 static_assert(100 == pown(10, 2));
+
+// (n, k) = n! / (k! * (n-k)!)
+// (n, k) = (n - 1, k - 1) * n / k
+// https://en.wikipedia.org/wiki/Binomial_coefficient#Identities_involving_binomial_coefficients
+template <std::integral T>
+constexpr T binomial_coefficient(const T n, const T k) {
+  AOC_ASSERT((n >= k) && (k >= 0), "Invalid starting values");
+  if ((k == 0) || (n == k)) {
+    return 1;
+  }
+
+  auto previous = n - k + 1;
+  for (int ki = 1; ki < static_cast<int>(k); ++ki) {
+    auto current = previous * (n - k + 1 + ki) / (ki + 1);
+    previous = current;
+  }
+  return previous;
+}
+static_assert(1 == binomial_coefficient(0, 0));
+static_assert(1 == binomial_coefficient(1, 1));
+static_assert(1 == binomial_coefficient(1, 0));
+static_assert(1 == binomial_coefficient(2, 2));
+static_assert(1 == binomial_coefficient(3, 3));
+static_assert(4 == binomial_coefficient(4, 3));
+static_assert(6 == binomial_coefficient(4, 2));
+static_assert(10 == binomial_coefficient(5, 3));
+static_assert(924 == binomial_coefficient(12, 6));
+static_assert(1716 == binomial_coefficient(13, 7));
+static_assert(1716 == binomial_coefficient(13, 6));
 
 template <std::integral auto Base, std::unsigned_integral T>
 constexpr T next_power_of(const T& x) {
