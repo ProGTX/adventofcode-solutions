@@ -600,7 +600,7 @@ struct char_grid_config_output {
   std::optional<point> end_pos;
 };
 
-constexpr std::pair<char_grid<>, char_grid_config_output> read_char_grid(
+std::pair<char_grid<>, char_grid_config_output> read_char_grid(
     const std::string& filename,
     const char_grid_config_input config_input = {}) {
   char_grid<> return_grid;

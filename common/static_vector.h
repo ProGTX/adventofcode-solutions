@@ -187,10 +187,12 @@ constexpr auto impl_test_insert(int pos) {
   vec.insert(vec.begin() + pos, 42);
   return vec;
 }
+#ifndef AOC_COMPILER_MSVC
 static_assert(std::ranges::equal(std::array{42, 2, 4, 6}, impl_test_insert(0)));
 static_assert(std::ranges::equal(std::array{2, 42, 4, 6}, impl_test_insert(1)));
 static_assert(std::ranges::equal(std::array{2, 4, 42, 6}, impl_test_insert(2)));
 static_assert(std::ranges::equal(std::array{2, 4, 6, 42}, impl_test_insert(3)));
+#endif
 
 } // namespace aoc
 
