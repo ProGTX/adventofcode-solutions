@@ -145,10 +145,7 @@ template <bool run_cycles>
 int solve_case(const std::string& filename) {
   std::cout << filename << std::endl;
 
-  platform_t platform;
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    platform.add_row(line);
-  }
+  platform_t platform = aoc::read_char_grid(filename);
 
   auto sum = 0;
   if constexpr (!run_cycles) {

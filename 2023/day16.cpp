@@ -105,11 +105,7 @@ template <bool optimize>
 int solve_case(const std::string& filename) {
   std::cout << filename << std::endl;
 
-  machine_t machine;
-
-  for (std::string& line : aoc::views::read_lines(filename)) {
-    machine.add_row(std::move(line));
-  }
+  machine_t machine = aoc::read_char_grid(filename);
 
   int sum = 0;
   if constexpr (!optimize) {

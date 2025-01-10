@@ -115,12 +115,9 @@ static_assert(41 == follow_guard<false, true>(test_map(), {5, 7}));
 
 template <bool interfere>
 int solve_case(const std::string& filename) {
-  auto [lab_map, config] =
-      aoc::read_char_grid(filename, aoc::char_grid_config_input{
-                                        .padding = edge,
-                                        .start_char = starting_guard,
-                                        .end_char = {},
-                                    });
+  auto [lab_map, config] = aoc::read_char_grid(
+      filename,
+      {.padding = edge, .start_char = starting_guard, .end_char = {}});
   point starting_guard_pos = *config.start_pos;
 
   int sum = 0;

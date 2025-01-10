@@ -143,24 +143,14 @@ constexpr int tiles_on_best_paths(const maze_t& maze, point start_pos,
 
 template <bool tiles>
 int solve_case(const std::string& filename) {
-  maze_t maze;
-  point start_pos;
-  point end_pos;
-
-  for (std::string line : aoc::views::read_lines(filename)) {
-    if (auto pos = line.find(start); pos != std::string::npos) {
-      start_pos = point(pos, maze.num_rows());
-    } else if (auto pos = line.find(end); pos != std::string::npos) {
-      end_pos = point(pos, maze.num_rows());
-    }
-    maze.add_row(std::move(line));
-  }
+  auto [maze, config] = aoc::read_char_grid(
+      filename, {.padding = {}, .start_char = start, .end_char = end});
 
   int sum = 0;
   if constexpr (!tiles) {
-    sum = lowest_score(maze, start_pos, end_pos);
+    sum = lowest_score(maze, *config.start_pos, *config.end_pos);
   } else {
-    sum = tiles_on_best_paths(maze, start_pos, end_pos);
+    sum = tiles_on_best_paths(maze, *config.start_pos, *config.end_pos);
   }
   std::cout << filename << " -> " << sum << std::endl;
   return sum;

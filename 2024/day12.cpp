@@ -103,12 +103,8 @@ constexpr int get_price(const plots_t& plots) {
 
 template <bool reduced>
 int solve_case(const std::string& filename) {
-  auto [garden, config] =
-      aoc::read_char_grid(filename, aoc::char_grid_config_input{
-                                        .padding = edge,
-                                        .start_char = {},
-                                        .end_char = {},
-                                    });
+  auto [garden, config] = aoc::read_char_grid(
+      filename, {.padding = edge, .start_char = {}, .end_char = {}});
 
   int sum = 0;
   sum = get_price<reduced>(get_plots(garden));

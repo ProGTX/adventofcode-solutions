@@ -147,12 +147,8 @@ constexpr int count_cheats(const racetrack_t& track, const point start_pos,
 
 template <int max_cheat_length>
 int solve_case(const std::string& filename) {
-  auto [track, config] =
-      aoc::read_char_grid(filename, aoc::char_grid_config_input{
-                                        .padding = {},
-                                        .start_char = start,
-                                        .end_char = end,
-                                    });
+  auto [track, config] = aoc::read_char_grid(
+      filename, {.padding = {}, .start_char = start, .end_char = end});
 
   int sum = 0;
   sum =
