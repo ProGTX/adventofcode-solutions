@@ -601,8 +601,7 @@ struct char_grid_config_output {
 };
 
 std::pair<char_grid<>, char_grid_config_output> read_char_grid(
-    const std::string& filename,
-    const char_grid_config_input config_input = {}) {
+    const std::string& filename, const char_grid_config_input config_input) {
   char_grid<> return_grid;
   char_grid_config_output config_output{};
   using point = char_grid_config_output::point;
@@ -640,6 +639,11 @@ std::pair<char_grid<>, char_grid_config_output> read_char_grid(
         views::repeat(*config_input.padding, return_grid.row_length()));
   }
   return std::pair{return_grid, config_output};
+}
+
+auto read_char_grid(const std::string& filename) {
+  auto [grid, config_ignore] = read_char_grid(filename, {});
+  return grid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
