@@ -4,7 +4,7 @@
 
 #include <algorithm>
 #include <array>
-#include <functional>
+#include <cstdint>
 #include <iostream>
 #include <ranges>
 #include <span>
@@ -12,11 +12,13 @@
 #include <string_view>
 #include <vector>
 
+using int_t = std::int64_t;
 constexpr const std::string opening_braces = "([{<";
 constexpr const std::string closing_braces = ")]}>";
 constexpr const std::array illegal_scores = {3, 57, 1197, 25137};
 
-constexpr int syntax_err_score(std::string_view navigation_line) {
+template <bool autocomplete>
+constexpr int_t get_score(std::string_view navigation_line) {
   AOC_ASSERT(navigation_line.size() > 0, "Not handling empty strings");
   AOC_ASSERT(closing_braces.find(navigation_line[0]) == std::string::npos,
              "Shouldn't start with a closing brace");
@@ -26,7 +28,11 @@ constexpr int syntax_err_score(std::string_view navigation_line) {
       if (c == closing_braces_stack.back()) {
         aoc::pop_stack(closing_braces_stack);
       } else {
-        return illegal_scores[pos];
+        if constexpr (!autocomplete) {
+          return illegal_scores[pos];
+        } else {
+          return 0;
+        }
       }
     } else {
       pos = opening_braces.find(c);
@@ -34,17 +40,36 @@ constexpr int syntax_err_score(std::string_view navigation_line) {
       closing_braces_stack.push_back(closing_braces[pos]);
     }
   }
-  return 0;
+  int_t score = 0;
+  if constexpr (autocomplete) {
+    for (const char brace : closing_braces_stack | std::views::reverse) {
+      score *= 5;
+      score += closing_braces.find(brace) + 1;
+    }
+  }
+  return score;
 }
 
-template <bool>
-int solve_case(const std::string& filename) {
+static_assert(294 == get_score<true>("<{([{{}}[<[[[<>{}]]]>[]]"));
+
+template <bool autocomplete>
+int_t solve_case(const std::string& filename) {
   auto navigation_lines = aoc::views::read_lines(filename) |
                           aoc::ranges::to<std::vector<std::string>>();
 
-  int sum = 0;
-  sum = aoc::ranges::accumulate(
-      navigation_lines | std::views::transform(&syntax_err_score), 0);
+  int_t sum = 0;
+  auto scores = navigation_lines |
+                std::views::transform(&get_score<autocomplete>) |
+                aoc::ranges::to<std::vector<int_t>>();
+  if constexpr (!autocomplete) {
+    sum = aoc::ranges::accumulate(scores, 0);
+  } else {
+    std::ranges::sort(scores);
+    const auto non_zero_it =
+        std::ranges::find_if(scores, aoc::not_equal_to_value{0});
+    const auto offset = std::distance(std::begin(scores), non_zero_it);
+    sum = scores[offset + (scores.size() - offset) / 2];
+  }
   std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
@@ -53,8 +78,8 @@ int main() {
   std::cout << "Part 1" << std::endl;
   AOC_EXPECT_RESULT(26397, solve_case<false>("day10.example"));
   AOC_EXPECT_RESULT(319233, solve_case<false>("day10.input"));
-  // std::cout << "Part 2" << std::endl;
-  // AOC_EXPECT_RESULT(1134, solve_case<true>("day10.example"));
-  // AOC_EXPECT_RESULT(856716, solve_case<true>("day10.input"));
+  std::cout << "Part 2" << std::endl;
+  AOC_EXPECT_RESULT(288957, solve_case<true>("day10.example"));
+  AOC_EXPECT_RESULT(1118976874, solve_case<true>("day10.input"));
   AOC_RETURN_CHECK_RESULT();
 }
