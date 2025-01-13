@@ -368,14 +368,10 @@ class grid {
   }
 
   constexpr auto basic_neighbors(point pos) const {
-    static_vector<point, 4> neighbors;
-    for (const auto neighbor_diff : basic_neighbor_diffs) {
-      const auto neighbor_pos = pos + neighbor_diff;
-      if (this->in_bounds(neighbor_pos.y, neighbor_pos.x)) {
-        neighbors.push_back(neighbor_pos);
-      }
-    }
-    return neighbors;
+    return this->get_neighbors(pos, basic_neighbor_diffs);
+  }
+  constexpr auto all_neighbors(point pos) const {
+    return this->get_neighbors(pos, all_neighbor_diffs);
   }
 
  private:
@@ -422,6 +418,19 @@ class grid {
       std::ranges::copy(view, inserter_it(return_column));
       return return_column;
     }
+  }
+
+  template <size_t size>
+  constexpr auto get_neighbors(
+      point pos, const std::array<point, size>& neighbor_diffs) const {
+    static_vector<point, size> neighbors;
+    for (const auto neighbor_diff : neighbor_diffs) {
+      const auto neighbor_pos = pos + neighbor_diff;
+      if (this->in_bounds(neighbor_pos.y, neighbor_pos.x)) {
+        neighbors.push_back(neighbor_pos);
+      }
+    }
+    return neighbors;
   }
 
  protected:
