@@ -366,6 +366,12 @@ class grid {
   constexpr bool in_bounds(size_t row, size_t column) const {
     return (row < this->num_rows()) && (column < this->row_length());
   }
+  constexpr bool in_bounds(std::signed_integral auto row,
+                           std::signed_integral auto column) const {
+    return (row >= 0) && (column >= 0) &&
+           this->in_bounds(static_cast<size_t>(row),
+                           static_cast<size_t>(column));
+  }
 
   constexpr auto basic_neighbors(point pos) const {
     return this->get_neighbors(pos, basic_neighbor_diffs);
