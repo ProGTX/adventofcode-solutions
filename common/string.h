@@ -16,6 +16,7 @@
 #include <string_view>
 #include <system_error>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace aoc {
@@ -199,14 +200,26 @@ constexpr output_t split(R&& r, Pattern&& delimiter, Proj proj = {}) {
   using value_type = typename output_t::value_type;
   auto split_view = r | std::views::split(delimiter);
   output_t out;
+
+  constexpr const auto fixed_capacity = max_container_elems<output_t>();
+
+  int count = 0;
   for (auto out_it = inserter_it(out); auto&& v : split_view) {
     if constexpr (skip_empty) {
       if (std::ranges::empty(v)) {
         continue;
       }
     }
+    if constexpr (fixed_capacity != std::string::npos) {
+      if (count >= fixed_capacity) {
+        break;
+      }
+    }
     *out_it = construct<value_type>(proj(v));
     ++out_it;
+    if constexpr (fixed_capacity != std::string::npos) {
+      ++count;
+    }
   }
   return out;
 }
