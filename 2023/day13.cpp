@@ -128,8 +128,10 @@ constexpr int reflection_point(const num_pattern_t& pattern) {
   // In that case select the one that's closer to the center
   if (refl_map[0].second == refl_map[1].second) {
     const auto center = number_size / 2;
-    const auto dist_lhs = aoc::abs(refl_map[0].first - center);
-    const auto dist_rhs = aoc::abs(refl_map[1].first - center);
+    const auto dist_lhs = aoc::abs(static_cast<int>(refl_map[0].first) -
+                                   static_cast<int>(center));
+    const auto dist_rhs = aoc::abs(static_cast<int>(refl_map[1].first) -
+                                   static_cast<int>(center));
     return (dist_lhs < dist_rhs) ? refl_map[0].first : refl_map[1].first;
   }
   return refl_map[0].first;

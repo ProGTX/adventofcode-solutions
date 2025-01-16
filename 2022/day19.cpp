@@ -141,13 +141,13 @@ int solve_case(const std::string& filename) {
         aoc::split<std::array<std::string_view, 4>>(costs, '.');
 
     auto ore_robot_costs = aoc::split<std::array<std::string_view, 1>>(
-        ore_robot.substr(sizeof("Each ore robot costs")), ' ');
+        ore_robot.substr(sizeof("Each ore robot costs ")), ' ');
     auto clay_robot_costs = aoc::split<std::array<std::string_view, 1>>(
-        clay_robot.substr(sizeof("Each clay robot costs")), ' ');
+        clay_robot.substr(sizeof("Each clay robot costs ")), ' ');
     auto obsidian_robot_costs = aoc::split<std::array<std::string_view, 4>>(
-        obsidian_robot.substr(sizeof("Each obsidian robot costs")), ' ');
+        obsidian_robot.substr(sizeof("Each obsidian robot costs ")), ' ');
     auto geode_robot_costs = aoc::split<std::array<std::string_view, 4>>(
-        geode_robot.substr(sizeof("Each geode robot costs")), ' ');
+        geode_robot.substr(sizeof("Each geode robot costs ")), ' ');
 
     blueprints.push_back({
         resource_pack{aoc::to_number<int>(ore_robot_costs[0]), 0, 0, 0},

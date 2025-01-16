@@ -159,7 +159,8 @@ int_value_t solve_case(const std::string& filename) {
   parsed_monkeys_t parsed_monkeys;
   for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [name, full_op] = aoc::split<std::array<std::string, 2>>(line, ':');
-    auto [lhs, op, rhs] = aoc::split<std::array<std::string, 3>>(full_op, ' ');
+    auto [lhs, op, rhs] =
+        aoc::split<std::array<std::string, 3>>(full_op.substr(1), ' ');
 
     if (op.empty()) {
       value_t value = aoc::to_number<int>(lhs);

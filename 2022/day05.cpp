@@ -45,7 +45,10 @@ std::string solve_case(const std::string& filename) {
         // Done parsing crate stacks, put them in correct order
         auto stack_numbers =
             aoc::split<std::vector<std::string_view>>(line, ' ');
-        num_stacks = static_cast<int>(stack_numbers.back().at(0) - '0');
+        // -2 because there are multiple spaces between numbers,
+        // and there's always a space after the last number
+        num_stacks =
+            aoc::to_number<int>(stack_numbers[stack_numbers.size() - 2].at(0));
         for (int i = 0; i < num_stacks; ++i) {
           std::ranges::reverse(crates[i]);
         }
@@ -85,8 +88,10 @@ std::string solve_case(const std::string& filename) {
   std::string top_stacks(static_cast<size_t>(num_stacks), ' ');
 
   for (int pos = 0; const auto& stack : crates) {
-    top_stacks[pos] = stack.back();
-    ++pos;
+    if (!stack.empty()) {
+      top_stacks[pos] = stack.back();
+      ++pos;
+    }
   }
 
   std::cout << filename << " -> " << top_stacks << std::endl;
