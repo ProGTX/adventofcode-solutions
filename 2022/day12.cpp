@@ -10,25 +10,22 @@
 #include "../common/common.h"
 
 #include <algorithm>
-#include <array>
-#include <cmath>
 #include <iostream>
 #include <iterator>
-#include <memory>
-#include <numeric>
-#include <ostream>
 #include <ranges>
-#include <set>
-#include <sstream>
+#include <span>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
+
+#define BROKEN_COMPILATION
 
 struct heightmap_t : public aoc::grid<int> {
   point begin_pos;
   point end_pos;
 };
+
+#ifndef BROKEN_COMPILATION
 
 template <bool reverse>
 constexpr int get_fewest_steps(const heightmap_t& heightmap) {
@@ -80,6 +77,8 @@ constexpr int get_fewest_steps(const heightmap_t& heightmap) {
   return shortest_path;
 }
 
+#endif // BROKEN_COMPILATION
+
 template <bool reverse>
 int solve_case(const std::string& filename) {
   using row_t = typename heightmap_t::row_t;
@@ -108,7 +107,10 @@ int solve_case(const std::string& filename) {
     heightmap.add_row(row);
   }
 
-  auto fewest_steps = get_fewest_steps<reverse>(heightmap);
+  int fewest_steps = 0;
+#ifndef BROKEN_COMPILATION
+  fewest_steps = get_fewest_steps<reverse>(heightmap);
+#endif
   std::cout << filename << " -> " << fewest_steps << std::endl;
   return fewest_steps;
 }

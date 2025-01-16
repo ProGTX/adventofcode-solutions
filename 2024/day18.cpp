@@ -9,7 +9,7 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <utility>
+#include <type_traits>
 #include <vector>
 
 using memspace_t = aoc::char_grid<>;

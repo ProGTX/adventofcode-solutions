@@ -6,7 +6,7 @@
 #include <optional>
 #include <ranges>
 #include <string>
-#include <utility>
+#include <type_traits>
 
 constexpr const char empty = '.';
 constexpr const char start = 'S';

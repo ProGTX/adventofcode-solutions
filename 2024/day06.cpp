@@ -7,7 +7,7 @@
 #include <set>
 #include <string>
 #include <string_view>
-#include <utility>
+#include <type_traits>
 
 constexpr char empty_space = '.';
 constexpr char obstacle = '#';

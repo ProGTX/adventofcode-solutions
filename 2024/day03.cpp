@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
-#include <utility>
+#include <type_traits>
 
 static constexpr int max_digits = 3;
 

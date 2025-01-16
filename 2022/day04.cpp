@@ -2,20 +2,10 @@
 
 #include "../common/common.h"
 
-#include <algorithm>
 #include <array>
-#include <exception>
-#include <functional>
 #include <iostream>
-#include <iterator>
-#include <map>
-#include <numeric>
-#include <ostream>
-#include <ranges>
 #include <string>
 #include <string_view>
-#include <utility>
-#include <vector>
 
 struct range : public aoc::closed_range<int> {
   using base_t = aoc::closed_range<int>;
