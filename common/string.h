@@ -35,10 +35,23 @@ constexpr std::string_view ltrim(std::string_view str,
   str.remove_prefix(std::min(pos, str.length()));
   return str;
 }
+namespace detail {
+// The simple way of using std::min triggers the UB sanitizer
+// and there's no way to suppress it (even though it's safe),
+// so we have a separate function to get the size of the suffix to remove
+constexpr auto min_suffix_trim_removal(std::string_view str, std::size_t pos) {
+  if (pos != std::string::npos) {
+    return str.length() - pos - 1;
+  } else {
+    return str.length();
+  }
+}
+} // namespace detail
+
 constexpr std::string_view rtrim(std::string_view str,
                                  std::string_view whitespace) {
   const auto pos(str.find_last_not_of(whitespace));
-  str.remove_suffix(std::min(str.length() - pos - 1, str.length()));
+  str.remove_suffix(detail::min_suffix_trim_removal(str, pos));
   return str;
 }
 constexpr std::string_view trim(std::string_view str,
