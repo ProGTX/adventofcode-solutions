@@ -57,10 +57,12 @@ constexpr auto dijkstra_uniform_neighbors(
 }
 
 template <class Node>
-using predecessor_map = flat_map<Node, Node>;
+using predecessor_map =
+    flat_map<std::remove_cvref_t<Node>, std::remove_cvref_t<Node>>;
 
 template <class Node>
-using predecessor_map_all = flat_map<Node, flat_set<Node>>;
+using predecessor_map_all =
+    flat_map<std::remove_cvref_t<Node>, flat_set<std::remove_cvref_t<Node>>>;
 
 // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Algorithm
 // NOTE: We basically use a priority queue, but use the flat_set for that,
