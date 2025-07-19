@@ -2,6 +2,7 @@
 #define AOC_MATH_H
 
 #include "assert.h"
+#include "compiler.h"
 
 #ifndef AOC_MODULE_SUPPORT
 #include <bit>
@@ -14,7 +15,7 @@ AOC_EXPORT namespace aoc {
 
 template <class T>
 constexpr T abs(T value) {
-#ifndef __cpp_lib_constexpr_cmath
+#if !defined(__cpp_lib_constexpr_cmath) && !defined(AOC_COMPILER_GCC)
   return (value < 0) ? -value : value;
 #else
   if constexpr (std::is_integral_v<T>) {
@@ -38,7 +39,7 @@ constexpr T sign(T value) {
 }
 template <std::floating_point T>
 constexpr T sign(T value) {
-#ifndef __cpp_lib_constexpr_cmath
+#if !defined(__cpp_lib_constexpr_cmath) && !defined(AOC_COMPILER_GCC)
   return (value < T{0}) ? T{-1} : T{1};
 #else
   return std::copysign(T{1.0}, value);
