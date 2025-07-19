@@ -82,15 +82,16 @@ int solve_case(const std::string& filename) {
     }
     std::vector<int> row;
     row.push_back(edge);
-    std::ranges::copy(line | aoc::views::enumerate() |
-                          std::views::transform([&](auto&& current) {
-                            auto [col_id, c] = current;
-                            if (c == trailhead_char) {
-                              trailheads.push_back({col_id + 1, row_id});
-                            }
-                            return aoc::to_number<int>(c);
-                          }),
-                      std::back_inserter(row));
+    std::ranges::copy(
+        line | std::views::enumerate |
+            std::views::transform([&](auto&& current) {
+              auto [col_id, c] = current;
+              if (c == trailhead_char) {
+                trailheads.push_back({static_cast<int>(col_id) + 1, row_id});
+              }
+              return aoc::to_number<int>(c);
+            }),
+        std::back_inserter(row));
     row.push_back(edge);
     top_map.add_row(std::move(row));
     ++row_id;

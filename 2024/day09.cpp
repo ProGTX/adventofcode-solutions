@@ -124,15 +124,16 @@ constexpr filesystem_t compact_nonfragment(filesystem_t filesystem) {
 }
 
 constexpr int_t checksum(std::span<const int> filesystem) {
-  return aoc::ranges::accumulate(filesystem | aoc::views::enumerate() |
-                                     std::views::transform([](auto&& current) {
-                                       auto [position, id] = current;
-                                       if (id == empty_space) {
-                                         return 0;
-                                       }
-                                       return position * id;
-                                     }),
-                                 int_t{0});
+  return aoc::ranges::accumulate(
+      filesystem | std::views::enumerate |
+          std::views::transform([](auto&& current) -> int_t {
+            auto [position, id] = current;
+            if (id == empty_space) {
+              return 0;
+            }
+            return position * id;
+          }),
+      int_t{0});
 }
 
 static_assert(60 ==

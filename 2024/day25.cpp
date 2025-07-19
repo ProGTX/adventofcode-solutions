@@ -21,12 +21,11 @@ constexpr const std::string_view all_filled = "#####";
 
 constexpr bool overlaps(const keyhole_storage_t& key,
                         const keyhole_storage_t& lock) {
-  return std::ranges::any_of(key | aoc::views::enumerate(),
-                             [&](auto&& current) {
-                               const auto [i, key_value] = current;
-                               const auto lock_value = lock[i];
-                               return (key_value + lock_value) > max_height;
-                             });
+  return std::ranges::any_of(key | std::views::enumerate, [&](auto&& current) {
+    const auto [i, key_value] = current;
+    const auto lock_value = lock[i];
+    return (key_value + lock_value) > max_height;
+  });
 }
 
 constexpr int count_fitting(const std::span<const keyhole_storage_t> keys,
@@ -62,7 +61,7 @@ int solve_case(const std::string& filename) {
       row = 1;
       continue;
     }
-    for (const auto [i, c] : line | aoc::views::enumerate()) {
+    for (const auto [i, c] : line | std::views::enumerate) {
       if (parsing_lock) {
         if (c == active) {
           ++current_keyhole_ptr->at(i);
