@@ -14,13 +14,15 @@ AOC_EXPORT namespace aoc {
 
 template <class T>
 constexpr T abs(T value) {
-  if constexpr (not_constant_before<23>()) {
-    return (value < 0) ? -value : value;
-  } else if constexpr (std::is_integral_v<T>) {
+#ifndef __cpp_lib_constexpr_cmath
+  return (value < 0) ? -value : value;
+#else
+  if constexpr (std::is_integral_v<T>) {
     return std::abs(value);
   } else {
     return (value < 0) ? -value : value;
   }
+#endif
 }
 
 template <std::integral T>
@@ -36,11 +38,11 @@ constexpr T sign(T value) {
 }
 template <std::floating_point T>
 constexpr T sign(T value) {
-  if constexpr (not_constant_before<23>()) {
-    return (value < T{0}) ? T{-1} : T{1};
-  } else {
-    return std::copysign(T{1.0}, value);
-  }
+#ifndef __cpp_lib_constexpr_cmath
+  return (value < T{0}) ? T{-1} : T{1};
+#else
+  return std::copysign(T{1.0}, value);
+#endif
 }
 
 // https://stackoverflow.com/a/59420788/793006

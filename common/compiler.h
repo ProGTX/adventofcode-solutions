@@ -20,11 +20,4 @@
     statement;                                                                 \
   }
 
-namespace aoc {
-template <int cpp_version>
-constexpr bool not_constant_before() noexcept {
-  return AOC_CXX_STANDARD < cpp_version;
-}
-} // namespace aoc
-
 #endif // AOC_COMPILER_H
