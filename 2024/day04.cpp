@@ -43,7 +43,7 @@ constexpr int count_xmas_vertical(const word_board_t& board) {
   int sum = 0;
   for (int column = 0; column < num_columns; ++column) {
     sum += count_xmas(
-        board | std::views::drop(column) | aoc::views::stride(num_columns) |
+        board | std::views::drop(column) | std::views::stride(num_columns) |
         std::views::take_while(aoc::not_equal_to_value{empty_char}));
   }
   return sum;
@@ -79,10 +79,10 @@ constexpr int count_xmas_diagonal(const word_board_t& board) {
                  (board.at(num_rows - 1, num_columns / 2) == empty_char),
              "Board requires terminators at the bottom");
   const auto right_diag_view = [&]() {
-    return aoc::views::stride(num_columns + 1);
+    return std::views::stride(num_columns + 1);
   };
   const auto left_diag_view = [&]() {
-    return aoc::views::stride(num_columns - 1);
+    return std::views::stride(num_columns - 1);
   };
   const auto stop_at_terminator = [&]() {
     return std::views::take_while(aoc::not_equal_to_value{empty_char});

@@ -153,40 +153,6 @@ constexpr auto to_number(int base = 10) {
   return std::views::transform(::aoc::number_converter<T>{base});
 }
 
-// Approximate implementation of std::views::stride
-// https://en.cppreference.com/w/cpp/ranges/stride_view
-// NOTE: The returned view is actually an input range,
-//       but the compiler just assumes it's the same category
-//       as the underlying range
-//       This becomes problematic when iterating multiple times
-//       when the view was obtained from e.g. a random access range
-// NOTE: Because of the above,
-//       DO NOT PASS THIS VIEW TO A NEW RANGE IN A PIPELINE
-template <class DifferenceType>
-constexpr auto stride(DifferenceType&& n) {
-  return std::views::filter(
-      [index = DifferenceType{0},
-       n = std::forward<DifferenceType>(n)](auto) mutable {
-        if (index == 0) {
-          ++index;
-          return true;
-        }
-        ++index;
-        if (index == n) {
-          index = 0;
-        }
-        return false;
-      });
-}
-static_assert(std::ranges::equal(std::array{1, 4, 7, 10},
-                                 std::views::iota(1, 13) | stride(3)));
-static_assert(std::ranges::equal(std::array{10, 7, 4, 1},
-                                 std::views::iota(1, 13) | stride(3) |
-                                     std::views::reverse));
-static_assert(std::ranges::equal(std::array{12, 9, 6, 3},
-                                 std::views::iota(1, 13) | std::views::reverse |
-                                     stride(3)));
-
 // Very rough approximation of std::views::join_with_view
 // https://en.cppreference.com/w/cpp/ranges/join_with_view
 template <std::ranges::viewable_range R, class Pattern>

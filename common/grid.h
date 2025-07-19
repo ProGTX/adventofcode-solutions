@@ -416,7 +416,7 @@ class grid {
     auto start = begin_zero + column;
     auto view =
         std::ranges::subrange(start, start + std::distance(start, tmp_end)) |
-        views::stride(this->row_length());
+        std::views::stride(this->row_length());
     if constexpr (std::same_as<Return, void>) {
       return view;
     } else {
