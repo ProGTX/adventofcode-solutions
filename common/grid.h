@@ -627,7 +627,7 @@ std::pair<char_grid<>, char_grid_config_output> read_char_grid(
   for (std::string line : views::read_lines(filename)) {
     if (padding && return_grid.empty()) {
       return_grid.add_row(
-          views::repeat(*config_input.padding, line.size() + 2));
+          std::views::repeat(*config_input.padding, line.size() + 2));
     }
     if (config_input.start_char) {
       const auto pos = line.find(*config_input.start_char);
@@ -654,7 +654,7 @@ std::pair<char_grid<>, char_grid_config_output> read_char_grid(
   }
   if (padding) {
     return_grid.add_row(
-        views::repeat(*config_input.padding, return_grid.row_length()));
+        std::views::repeat(*config_input.padding, return_grid.row_length()));
   }
   return std::pair{return_grid, config_output};
 }

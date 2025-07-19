@@ -153,25 +153,6 @@ constexpr auto to_number(int base = 10) {
   return std::views::transform(::aoc::number_converter<T>{base});
 }
 
-// Not quite std::views::repeat, but close enough
-// https://en.cppreference.com/w/cpp/ranges/repeat_view
-template <class W>
-constexpr auto repeat(W&& value) {
-  return std::views::iota(0) | transform_to_value(std::forward<W>(value));
-}
-template <class W, class Bound>
-  requires(std::integral<std::remove_cvref_t<Bound>>)
-constexpr auto repeat(W&& value, Bound&& bound) {
-  using bound_t = std::remove_cvref_t<Bound>;
-  return std::views::iota(static_cast<bound_t>(0), std::forward<Bound>(bound)) |
-         transform_to_value(std::forward<W>(value));
-}
-static_assert(std::ranges::equal(std::array{7, 7, 7}, repeat(7, 3)));
-#if !defined(AOC_COMPILER_CLANG)
-static_assert(std::ranges::equal(std::array{"ha", "ha"},
-                                 repeat("ha") | std::views::take(2)));
-#endif
-
 // Approximate implementation of std::views::stride
 // https://en.cppreference.com/w/cpp/ranges/stride_view
 // NOTE: The returned view is actually an input range,

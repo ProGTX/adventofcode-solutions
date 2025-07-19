@@ -29,7 +29,7 @@ constexpr filesystem_t expand(std::string_view disk_map) {
       ++id;
     }
     auto repeated =
-        aoc::views::repeat(current, num) | aoc::ranges::to<filesystem_t>();
+        std::views::repeat(current, num) | aoc::ranges::to<filesystem_t>();
     filesystem.insert(filesystem.end(), repeated.begin(), repeated.end());
     is_empty = !is_empty;
   }

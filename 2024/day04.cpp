@@ -220,7 +220,7 @@ int solve_case(const std::string& filename) {
   for (std::string line : aoc::views::read_lines(filename)) {
     board.add_row(empty_char + std::move(line) + empty_char);
   }
-  board.add_row(aoc::views::repeat(empty_char, board.row_length()));
+  board.add_row(std::views::repeat(empty_char, board.row_length()));
 
   int sum = 0;
   if constexpr (x_mas) {

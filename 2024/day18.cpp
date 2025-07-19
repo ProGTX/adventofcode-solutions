@@ -77,7 +77,7 @@ auto solve_case(const std::string& filename) {
     falling_bytes.push_back(aoc::split<point>(line, ','));
   }
 
-  memspace_t memspace{aoc::views::repeat(empty, grid_size.y * grid_size.x) |
+  memspace_t memspace{std::views::repeat(empty, grid_size.y * grid_size.x) |
                           aoc::ranges::to<std::string>(),
                       grid_size.y, grid_size.x};
 

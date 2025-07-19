@@ -78,7 +78,7 @@ int solve_case(const std::string& filename) {
   for (int row_id = 1;
        std::string_view line : aoc::views::read_lines(filename)) {
     if (top_map.empty()) {
-      top_map.add_row(aoc::views::repeat(edge, line.size() + 2));
+      top_map.add_row(std::views::repeat(edge, line.size() + 2));
     }
     std::vector<int> row;
     row.push_back(edge);
@@ -96,7 +96,7 @@ int solve_case(const std::string& filename) {
     top_map.add_row(std::move(row));
     ++row_id;
   }
-  top_map.add_row(aoc::views::repeat(edge, top_map.row_length()));
+  top_map.add_row(std::views::repeat(edge, top_map.row_length()));
 
   int sum = 0;
   sum = score_trailheads(top_map, trailheads);
