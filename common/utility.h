@@ -22,12 +22,6 @@
 
 AOC_EXPORT namespace aoc {
 
-// https://en.cppreference.com/w/cpp/utility/to_underlying
-template <class Enum>
-constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept {
-  return static_cast<std::underlying_type_t<Enum>>(e);
-}
-
 // https://stackoverflow.com/a/35348334
 template <class ReturnT, class... Args>
 std::tuple<Args...> function_args_helper(ReturnT (*)(Args...));
