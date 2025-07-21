@@ -42,7 +42,7 @@ constexpr int_t num_steps(const std::vector<node_t>& directions,
   int_t steps = 0;
   int inst_index = 0;
   while (true) {
-    if (aoc::ranges::contains(end_indexes, start_index)) {
+    if (std::ranges::contains(end_indexes, start_index)) {
       break;
     }
     auto inst = instructions[inst_index];

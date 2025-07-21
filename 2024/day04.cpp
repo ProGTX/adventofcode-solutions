@@ -204,7 +204,7 @@ static constexpr int count_x_mas_crosses(const word_board_t& board) {
                                            get_substr(row, col - 1),
                                            get_substr(row + 1, col - 1));
       count += static_cast<int>(
-          aoc::ranges::contains(x_mas_strings, std::string_view{area_str}));
+          std::ranges::contains(x_mas_strings, std::string_view{area_str}));
     }
   }
   return count;

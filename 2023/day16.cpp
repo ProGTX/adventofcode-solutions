@@ -40,13 +40,13 @@ constexpr int energize(const machine_t& machine, beam_t start) {
     std::swap(direction.x, direction.y);
     // Create a new beam as-if mirror_right
     beam_t beam2{pos - direction, -direction};
-    if (!aoc::ranges::contains(beams_tracker, beam2)) {
+    if (!std::ranges::contains(beams_tracker, beam2)) {
       beams_tracker.push_back(beam2);
       beams.push_back(std::move(beam2));
     }
     // Modify current beam as-if mirror_left
     beam_t beam1{pos + direction, direction};
-    if (!aoc::ranges::contains(beams_tracker, beam1)) {
+    if (!std::ranges::contains(beams_tracker, beam1)) {
       beams_tracker.push_back(std::move(beam1));
       return direction;
     }

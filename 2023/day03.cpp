@@ -72,7 +72,7 @@ int solve_case(const std::string& filename) {
     auto it = std::ranges::find(all_numbers, *number, &number_pair_t::first);
     if (it != std::end(all_numbers)) {
       if constexpr (check_gears) {
-        if (!aoc::ranges::contains(current_numbers, it->first,
+        if (!std::ranges::contains(current_numbers, it->first,
                                    &number_pair_t::first)) {
           current_numbers.emplace_back(it->first, it->second);
         }
@@ -83,7 +83,7 @@ int solve_case(const std::string& filename) {
         aoc::to_number<int>(line.substr(number->column, number->size));
     all_numbers.emplace_back(*number, number_value);
     if constexpr (check_gears) {
-      if (!aoc::ranges::contains(current_numbers, *number,
+      if (!std::ranges::contains(current_numbers, *number,
                                  &number_pair_t::first)) {
         current_numbers.emplace_back(*number, number_value);
       }

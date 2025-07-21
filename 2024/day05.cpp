@@ -32,13 +32,13 @@ constexpr int index_of_correct_update(const std::vector<ordering_rule_t>& rules,
     const int page = update[u];
     // Check that pages before are not in the rules list of pages after
     for (int ub = 0; ub < u; ++ub) {
-      if (aoc::ranges::contains(rules[page].after, update[ub])) {
+      if (std::ranges::contains(rules[page].after, update[ub])) {
         return -1;
       }
     }
     // Check that pages after are not in the rules list of pages before
     for (int ua = u + 1; ua < update.size(); ++ua) {
-      if (aoc::ranges::contains(rules[page].before, update[ua])) {
+      if (std::ranges::contains(rules[page].before, update[ua])) {
         return -1;
       }
     }
@@ -53,7 +53,7 @@ int order_update(const std::vector<ordering_rule_t>& rules,
              "Vector of rules used as a hashmap, "
              "so it needs to have enough space to store all pages");
   const auto comparator = [&](int lhs, int rhs) {
-    return aoc::ranges::contains(rules[rhs].before, lhs);
+    return std::ranges::contains(rules[rhs].before, lhs);
   };
   aoc::flat_set<int, decltype(comparator)> ordered_update{comparator};
   std::ranges::copy(update,

@@ -14,7 +14,6 @@
 #include <compare>
 #include <concepts>
 #include <iostream>
-#include <ranges>
 #include <span>
 #include <utility>
 #include <vector>
@@ -189,7 +188,7 @@ class all_nodes_encountered {
       : m_searched_nodes{nodes | ranges::to<std::vector<Node>>()} {}
 
   constexpr bool operator()(Node node) {
-    if (ranges::contains(m_searched_nodes, node)) {
+    if (std::ranges::contains(m_searched_nodes, node)) {
       m_visited.insert(std::move(node));
       return m_visited.size() == m_searched_nodes.size();
     }
