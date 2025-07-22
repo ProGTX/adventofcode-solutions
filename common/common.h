@@ -3,6 +3,7 @@
 
 // These two files need to be included here because the macros they define
 // are not exported by the module
+#define AOC_INCLUDE_FROM_COMMON
 #include "assert.h"
 #include "compiler.h"
 
@@ -13,12 +14,13 @@ import aoc;
 
 #else
 
-// WORKAROUND: Include the same headers as the module does
+// Include same headers as the module
 #include "algorithm.h"
 #include "assert.h"
 #include "compiler.h"
 #include "concepts.h"
 #include "flat.h"
+#include "graph.h"
 #include "grid.h"
 #include "math.h"
 #include "point.h"

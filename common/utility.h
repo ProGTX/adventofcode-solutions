@@ -5,6 +5,7 @@
 #include "compiler.h"
 #include "concepts.h"
 
+#ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
 #include <charconv>
 #include <exception>
@@ -17,8 +18,9 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 // https://en.cppreference.com/w/cpp/utility/to_underlying
 template <class Enum>

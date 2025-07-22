@@ -1,8 +1,10 @@
 #ifndef AOC_FLAT_H
 #define AOC_FLAT_H
 
+#include "compiler.h"
 #include "concepts.h"
 
+#ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
 #include <compare>
 #include <concepts>
@@ -13,8 +15,9 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 // Barebones implementation of
 // https://en.cppreference.com/w/cpp/container/flat_set, but with constexpr

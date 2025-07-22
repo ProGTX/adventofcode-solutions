@@ -10,13 +10,17 @@ https://github.com/cor3ntin/ranges/blob/master/include/cor3ntin/ranges/to.hpp
 
 */
 
+#include "compiler.h"
+
+#ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
 #include <iterator>
 #include <ranges>
 #include <tuple>
 #include <utility>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 namespace ranges {
 

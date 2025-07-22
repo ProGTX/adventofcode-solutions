@@ -1,5 +1,7 @@
 module;
 
+// TODO: This only seems to work with Clang, not with MSVC or GCC
+
 // WORKAROUND: Our header files being exported also include these headers,
 // leading to duplicate symbols -
 // module linkage is not the same as global linkage.
@@ -42,18 +44,12 @@ module;
 
 export module aoc;
 
-export {
-
-// Export all of our headers.
-// This exports all the standard headers that are included transitively,
-// hence the need for the workaround above.
-// WORKAROUND: MSVC doesn't support CRTP with modules,
-// add graph.h once that's fixed
 #include "algorithm.h"
 #include "assert.h"
 #include "compiler.h"
 #include "concepts.h"
 #include "flat.h"
+#include "graph.h"
 #include "grid.h"
 #include "math.h"
 #include "point.h"
@@ -65,4 +61,3 @@ export {
 #include "string.h"
 #include "timer.h"
 #include "utility.h"
-}

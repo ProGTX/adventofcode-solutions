@@ -2,10 +2,12 @@
 #define AOC_POINT_H
 
 #include "assert.h"
+#include "compiler.h"
 #include "math.h"
 #include "ranges.h"
 #include "utility.h"
 
+#ifndef AOC_MODULE_SUPPORT
 #include <array>
 #include <compare>
 #include <concepts>
@@ -17,8 +19,9 @@
 #include <ranges>
 #include <span>
 #include <type_traits>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 struct fill_tag {};
 

@@ -1,6 +1,9 @@
 #ifndef AOC_GRAPH_H
 #define AOC_GRAPH_H
 
+#include "compiler.h"
+
+#ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
 #include <concepts>
 #include <exception>
@@ -10,13 +13,11 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
-// WORKAROUND: MSVC has issues with default template parameters
-// if compiled with modules.
-// Otherwise String should default to std::string.
-template <class T, class CRTP, class String>
+template <class T, class CRTP, class String = std::string>
 class graph {
  public:
   using child_ptr_t = std::unique_ptr<CRTP>;

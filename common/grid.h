@@ -2,6 +2,7 @@
 #define AOC_GRID_H
 
 #include "assert.h"
+#include "compiler.h"
 #include "concepts.h"
 #include "point.h"
 #include "range_to.h"
@@ -9,6 +10,7 @@
 #include "static_vector.h"
 #include "string.h"
 
+#ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
 #include <array>
 #include <functional>
@@ -20,8 +22,9 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Directions

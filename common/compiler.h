@@ -1,6 +1,10 @@
 #ifndef AOC_COMPILER_H
 #define AOC_COMPILER_H
 
+#ifndef AOC_EXPORT
+#define AOC_EXPORT
+#endif
+
 #if defined(_MSC_VER)
 #define AOC_COMPILER_MSVC _MSC_VER
 #elif defined(__GNUC__)

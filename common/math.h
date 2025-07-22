@@ -3,12 +3,14 @@
 
 #include "assert.h"
 
+#ifndef AOC_MODULE_SUPPORT
 #include <bit>
 #include <cmath>
 #include <concepts>
 #include <type_traits>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 template <class T>
 constexpr T abs(T value) {

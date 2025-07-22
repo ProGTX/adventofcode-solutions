@@ -6,14 +6,16 @@
 #include "ratio.h"
 #include "utility.h"
 
+#ifndef AOC_MODULE_SUPPORT
 #include <concepts>
 #include <iostream>
 #include <ranges>
 #include <string_view>
 #include <tuple>
 #include <utility>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 template <class R>
 struct print_range {

@@ -29,6 +29,7 @@ if (((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND
   endif()
   set(AOC_MODULE_SUPPORT ON)
   add_compile_definitions(AOC_MODULE_SUPPORT)
+  add_compile_definitions(AOC_EXPORT=export)
 else()
   set(AOC_MODULE_SUPPORT OFF)
 endif()

@@ -2,15 +2,18 @@
 #define AOC_STATIC_VECTOR_H
 
 #include "assert.h"
+#include "compiler.h"
 #include "ranges.h"
 
+#ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
 #include <array>
 #include <iterator>
 #include <type_traits>
 #include <utility>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 // https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0843r2.html
 template <class T, size_t N>

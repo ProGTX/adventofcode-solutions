@@ -3,10 +3,14 @@
 
 // https://github.com/biggysmith/advent_of_code_2022/blob/master/src/util/timer.hpp
 
+#include "compiler.h"
+
+#ifndef AOC_MODULE_SUPPORT
 #include <chrono>
 #include <iostream>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 class timer {
  public:

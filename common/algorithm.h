@@ -1,6 +1,7 @@
 #ifndef AOC_ALGORITHM_H
 #define AOC_ALGORITHM_H
 
+#include "compiler.h"
 #include "concepts.h"
 #include "flat.h"
 #include "point.h"
@@ -8,6 +9,7 @@
 #include "ranges.h"
 #include "utility.h"
 
+#ifndef AOC_MODULE_SUPPORT
 #include <array>
 #include <compare>
 #include <concepts>
@@ -16,8 +18,9 @@
 #include <span>
 #include <utility>
 #include <vector>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 // Specifies a neighbor of the current node
 // along with the cost (distance) of reaching it from the current node

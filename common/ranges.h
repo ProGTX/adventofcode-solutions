@@ -5,12 +5,14 @@
 #include "range_to.h"
 #include "utility.h"
 
+#ifndef AOC_MODULE_SUPPORT
 #include <functional>
 #include <iterator>
 #include <numeric>
 #include <ranges>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 namespace ranges {
 

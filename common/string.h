@@ -1,10 +1,12 @@
 #ifndef AOC_STRING_H
 #define AOC_STRING_H
 
+#include "compiler.h"
 #include "concepts.h"
 #include "range_to.h"
 #include "utility.h"
 
+#ifndef AOC_MODULE_SUPPORT
 #include <array>
 #include <concepts>
 #include <exception>
@@ -18,8 +20,9 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#endif
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 using namespace std::string_view_literals;
 

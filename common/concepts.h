@@ -1,13 +1,15 @@
 #ifndef AOC_CONCEPTS_H
 #define AOC_CONCEPTS_H
 
-// Contains some useful concepts
+#include "compiler.h"
 #include "range_to.h"
 
+#ifndef AOC_MODULE_SUPPORT
 #include <array>
 #include <iterator>
 #include <string_view>
 #include <type_traits>
+#endif
 
 template <class T>
 struct inspect_t;
@@ -15,7 +17,7 @@ struct inspect_t;
 template <auto V>
 struct inspect_v;
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 // https://stackoverflow.com/a/51032862
 // https://open-std.org/JTC1/SC22/WG21/docs/papers/2020/p2098r1.pdf

@@ -16,7 +16,9 @@
 #define AOC_ASSERT_HELPER(condition, message) ((void)0)
 #endif // __assume  || _MSC_VER
 #else
+#ifdef AOC_INCLUDE_FROM_COMMON
 #include <cassert>
+#endif
 #define AOC_ASSERT_HELPER(condition, message) assert((condition) && (message))
 #endif // NDEBUG
 

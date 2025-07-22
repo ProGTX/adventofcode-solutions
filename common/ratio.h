@@ -1,17 +1,20 @@
 #ifndef AOC_RATIO_H
 #define AOC_RATIO_H
 
+#include "compiler.h"
 #include "math.h"
 
+#ifndef AOC_MODULE_SUPPORT
 #include <compare>
 #include <concepts>
 #include <numeric>
 #include <system_error>
+#endif
 
 // Runtime ratio class to replace std::ratio
 // https://en.cppreference.com/w/cpp/header/ratio
 
-namespace aoc {
+AOC_EXPORT namespace aoc {
 
 template <std::integral T>
 class ratio {
