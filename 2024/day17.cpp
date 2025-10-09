@@ -129,12 +129,10 @@ std::string solve_case(const std::string& filename) {
   }
 
   auto [results, new_registers] = run_program(program, registers);
-  auto result_str = aoc::views::join_with(
-      results | std::views::transform([](int value) {
-        return std::string(1, '0' + static_cast<char>(value));
-      }),
-      ',');
-
+  auto result_str = results | std::views::transform([](int value) {
+                      return std::string(1, '0' + static_cast<char>(value));
+                    }) |
+                    std::views::join_with(',') | aoc::ranges::to<std::string>();
   std::cout << filename << " -> " << result_str << std::endl;
   return result_str;
 }
