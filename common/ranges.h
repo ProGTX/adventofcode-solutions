@@ -6,6 +6,7 @@
 #include "utility.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#include <algorithm>
 #include <functional>
 #include <iterator>
 #include <numeric>
@@ -16,34 +17,10 @@ AOC_EXPORT namespace aoc {
 
 namespace ranges {
 
-// https://en.cppreference.com/w/cpp/algorithm/ranges/fold_left
-struct __fold_left_fn {
-  template <std::input_iterator I, std::sentinel_for<I> S, class T, class F>
-  constexpr auto operator()(I first, S last, T init, F f) const {
-    using U =
-        std::decay_t<std::invoke_result_t<F&, T, std::iter_reference_t<I>>>;
-    if (first == last) {
-      return U(std::move(init));
-    }
-    U accum = std::invoke(f, std::move(init), *first);
-    for (++first; first != last; ++first) {
-      accum = std::invoke(f, std::move(accum), *first);
-    }
-    return std::move(accum);
-  }
-
-  template <std::ranges::input_range R, class T, class F>
-  constexpr auto operator()(R&& r, T init, F f) const {
-    return (*this)(std::ranges::begin(r), std::ranges::end(r), std::move(init),
-                   std::ref(f));
-  }
-};
-inline constexpr __fold_left_fn fold_left;
-
 struct __accumulate_fn {
   template <std::input_iterator I, std::sentinel_for<I> S, class T>
   constexpr auto operator()(I first, S last, T init) const {
-    return fold_left(first, last, std::move(init), std::plus<>{});
+    return std::ranges::fold_left(first, last, std::move(init), std::plus<>{});
   }
 
   template <std::ranges::input_range R, class T>
@@ -57,8 +34,9 @@ struct __lcm_fn {
   template <std::input_iterator I, std::sentinel_for<I> S>
   constexpr auto operator()(I first, S last) const {
     using T = std::iter_value_t<I>;
-    return fold_left(first, last, T(1),
-                     [](T first, T second) { return std::lcm(first, second); });
+    return std::ranges::fold_left(first, last, T(1), [](T first, T second) {
+      return std::lcm(first, second);
+    });
   }
 
   template <std::ranges::input_range R>
@@ -72,8 +50,9 @@ struct gcd_fn {
   template <std::input_iterator I, std::sentinel_for<I> S>
   constexpr auto operator()(I first, S last) const {
     using T = std::iter_value_t<I>;
-    return fold_left(first, last, T(1),
-                     [](T first, T second) { return std::gcd(first, second); });
+    return std::ranges::fold_left(first, last, T(1), [](T first, T second) {
+      return std::gcd(first, second);
+    });
   }
 
   template <std::ranges::input_range R>
