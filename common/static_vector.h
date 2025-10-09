@@ -16,6 +16,8 @@
 AOC_EXPORT namespace aoc {
 
 // https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0843r2.html
+// Can be replaced by std::inplace_vector in C++26
+// https://en.cppreference.com/w/cpp/container/inplace_vector.html
 template <class T, size_t N>
 class static_vector {
  private:

@@ -17,6 +17,8 @@
 
 AOC_EXPORT namespace aoc {
 
+// TODO: Should be replaced by C++23 std::format
+
 template <class R>
 struct print_range {
   R range;
