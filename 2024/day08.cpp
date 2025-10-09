@@ -24,7 +24,7 @@ constexpr int calculate_antinodes(const antennas_t& antennas,
   aoc::flat_set<point> antinodes;
   for (const auto& [antenna, locations] : antennas) {
     // Check every pair of locations
-    for (const auto [loc_id, location1] : aoc::views::enumerate(locations)) {
+    for (const auto [loc_id, location1] : std::views::enumerate(locations)) {
       point anode;
       if constexpr (harmonics) {
         if (locations.size() > 1) {
@@ -71,9 +71,9 @@ int solve_case(const std::string& filename) {
     if (grid_size.x == 0) {
       grid_size.x = line.size();
     }
-    for (auto [column, value] : aoc::views::enumerate(line)) {
+    for (auto [column, value] : std::views::enumerate(line)) {
       if (value != empty_space) {
-        antennas[value].push_back({column, row});
+        antennas[value].push_back({static_cast<int>(column), row});
       }
     }
     ++row;

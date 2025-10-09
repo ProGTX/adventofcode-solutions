@@ -120,7 +120,7 @@ std::string get_mapping(input_line_t::signal_patterns_t const& patterns) {
       for (auto digit : combination) {
         auto digit_wire = digit_wires[digit];
         const auto& intersecting_set =
-            aoc::ranges::contains(digit_wire, static_cast<char>(w + 'a'))
+            std::ranges::contains(digit_wire, static_cast<char>(w + 'a'))
                 ? valid_set
                 : invalid_set;
 

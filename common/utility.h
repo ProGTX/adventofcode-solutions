@@ -22,12 +22,6 @@
 
 AOC_EXPORT namespace aoc {
 
-// https://en.cppreference.com/w/cpp/utility/to_underlying
-template <class Enum>
-constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept {
-  return static_cast<std::underlying_type_t<Enum>>(e);
-}
-
 // https://stackoverflow.com/a/35348334
 template <class ReturnT, class... Args>
 std::tuple<Args...> function_args_helper(ReturnT (*)(Args...));
@@ -578,20 +572,6 @@ struct transform_cast {
     return static_cast<return_t>(std::forward<T>(val));
   }
 };
-
-// Very simple parser for valid base 10 positive integers
-// Should not be needed in C++23 because from_chars will finally be constexpr
-template <class value_type = int>
-constexpr value_type to_int_naive(std::string_view str) {
-  value_type result = 0;
-  value_type multiplier = 1;
-  for (auto c : str | std::views::reverse) {
-    AOC_ASSERT((c >= '0') && (c <= '9'), "Invalid character in integer");
-    result += multiplier * static_cast<value_type>(c - '0');
-    multiplier *= 10;
-  }
-  return result;
-}
 
 template <class value_type = int>
 constexpr auto to_number_with_rest(std::string_view str, int base = 10) {

@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#include <algorithm>
 #include <array>
 #include <functional>
 #include <iostream>
@@ -47,7 +48,7 @@ constexpr int safety_factor(std::span<const robot_t> robots) {
     }();
     ++quadrants[quadrant_id];
   }
-  return aoc::ranges::fold_left(std::span{quadrants}.subspan(0, 4), 1,
+  return std::ranges::fold_left(std::span{quadrants}.subspan(0, 4), 1,
                                 std::multiplies{});
 }
 

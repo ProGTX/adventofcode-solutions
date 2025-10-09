@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <ostream>
@@ -18,7 +19,7 @@ using namespace std::string_view_literals;
 // Set the current value to itself multiplied by 17.
 // Set the current value to the remainder of dividing itself by 256.
 constexpr int hash_alg(std::string_view str) {
-  return aoc::ranges::fold_left(str | aoc::views::transform_cast<int>(), 0,
+  return std::ranges::fold_left(str | aoc::views::transform_cast<int>(), 0,
                                 [](int current_value, int ascii) {
                                   current_value += ascii;
                                   current_value *= 17;
@@ -80,7 +81,7 @@ constexpr boxes_t sort_boxes(const instructions_t& instructions) {
 
 constexpr int focusing_power(const box_t& box) {
   int multiplier = 1;
-  return aoc::ranges::fold_left(box, 0, [&](int power, const lens_t& lens) {
+  return std::ranges::fold_left(box, 0, [&](int power, const lens_t& lens) {
     power += multiplier * lens.second;
     ++multiplier;
     return power;
@@ -89,7 +90,7 @@ constexpr int focusing_power(const box_t& box) {
 
 constexpr int sum_boxes(const boxes_t& boxes) {
   int multiplier = 1;
-  return aoc::ranges::fold_left(boxes, 0, [&](int sum, const box_t& box) {
+  return std::ranges::fold_left(boxes, 0, [&](int sum, const box_t& box) {
     sum += multiplier * focusing_power(box);
     ++multiplier;
     return sum;

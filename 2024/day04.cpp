@@ -43,7 +43,7 @@ constexpr int count_xmas_vertical(const word_board_t& board) {
   int sum = 0;
   for (int column = 0; column < num_columns; ++column) {
     sum += count_xmas(
-        board | std::views::drop(column) | aoc::views::stride(num_columns) |
+        board | std::views::drop(column) | std::views::stride(num_columns) |
         std::views::take_while(aoc::not_equal_to_value{empty_char}));
   }
   return sum;
@@ -79,10 +79,10 @@ constexpr int count_xmas_diagonal(const word_board_t& board) {
                  (board.at(num_rows - 1, num_columns / 2) == empty_char),
              "Board requires terminators at the bottom");
   const auto right_diag_view = [&]() {
-    return aoc::views::stride(num_columns + 1);
+    return std::views::stride(num_columns + 1);
   };
   const auto left_diag_view = [&]() {
-    return aoc::views::stride(num_columns - 1);
+    return std::views::stride(num_columns - 1);
   };
   const auto stop_at_terminator = [&]() {
     return std::views::take_while(aoc::not_equal_to_value{empty_char});
@@ -204,7 +204,7 @@ static constexpr int count_x_mas_crosses(const word_board_t& board) {
                                            get_substr(row, col - 1),
                                            get_substr(row + 1, col - 1));
       count += static_cast<int>(
-          aoc::ranges::contains(x_mas_strings, std::string_view{area_str}));
+          std::ranges::contains(x_mas_strings, std::string_view{area_str}));
     }
   }
   return count;
@@ -220,7 +220,7 @@ int solve_case(const std::string& filename) {
   for (std::string line : aoc::views::read_lines(filename)) {
     board.add_row(empty_char + std::move(line) + empty_char);
   }
-  board.add_row(aoc::views::repeat(empty_char, board.row_length()));
+  board.add_row(std::views::repeat(empty_char, board.row_length()));
 
   int sum = 0;
   if constexpr (x_mas) {

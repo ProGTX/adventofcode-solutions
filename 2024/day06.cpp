@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <ranges>
 #include <set>
 #include <string>
 #include <string_view>
@@ -135,7 +136,7 @@ void test_interference(point extra_obstacle) {
   constexpr point start_pos{5, 7};
   auto lab_map = test_map();
   aoc::println("TESTING",
-               aoc::views::repeat('~', 64) | aoc::ranges::to<std::string>());
+               std::views::repeat('~', 64) | aoc::ranges::to<std::string>());
   lab_map.at(extra_obstacle.y, extra_obstacle.x) = obstacle;
   aoc::println("Check", follow_guard<true>(lab_map, start_pos));
   lab_map.at(extra_obstacle.y, extra_obstacle.x) = 'O';

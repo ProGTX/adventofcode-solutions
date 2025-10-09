@@ -78,24 +78,25 @@ int solve_case(const std::string& filename) {
   for (int row_id = 1;
        std::string_view line : aoc::views::read_lines(filename)) {
     if (top_map.empty()) {
-      top_map.add_row(aoc::views::repeat(edge, line.size() + 2));
+      top_map.add_row(std::views::repeat(edge, line.size() + 2));
     }
     std::vector<int> row;
     row.push_back(edge);
-    std::ranges::copy(line | aoc::views::enumerate() |
-                          std::views::transform([&](auto&& current) {
-                            auto [col_id, c] = current;
-                            if (c == trailhead_char) {
-                              trailheads.push_back({col_id + 1, row_id});
-                            }
-                            return aoc::to_number<int>(c);
-                          }),
-                      std::back_inserter(row));
+    std::ranges::copy(
+        line | std::views::enumerate |
+            std::views::transform([&](auto&& current) {
+              auto [col_id, c] = current;
+              if (c == trailhead_char) {
+                trailheads.push_back({static_cast<int>(col_id) + 1, row_id});
+              }
+              return aoc::to_number<int>(c);
+            }),
+        std::back_inserter(row));
     row.push_back(edge);
     top_map.add_row(std::move(row));
     ++row_id;
   }
-  top_map.add_row(aoc::views::repeat(edge, top_map.row_length()));
+  top_map.add_row(std::views::repeat(edge, top_map.row_length()));
 
   int sum = 0;
   sum = score_trailheads(top_map, trailheads);

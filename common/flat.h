@@ -21,6 +21,7 @@ AOC_EXPORT namespace aoc {
 
 // Barebones implementation of
 // https://en.cppreference.com/w/cpp/container/flat_set, but with constexpr
+// NOTE: Can be replaced by std::flat_set in C++26
 template <class Key, class Compare = std::less<Key>,
           class KeyContainer = std::vector<Key>>
 class flat_set {
@@ -198,6 +199,7 @@ class flat_set {
 
 // Barebones implementation of
 // https://en.cppreference.com/w/cpp/container/flat_map, but with constexpr
+// NOTE: Can be replaced by std::flat_map in C++26
 template <class Key, class T, class Compare = std::less<Key>,
           class KeyContainer = std::vector<Key>,
           class MappedContainer = std::vector<T>>

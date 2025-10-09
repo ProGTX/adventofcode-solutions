@@ -8,6 +8,9 @@ Licenced under Boost Software License license. See LICENSE.md for details.
 
 https://github.com/cor3ntin/ranges/blob/master/include/cor3ntin/ranges/to.hpp
 
+NOTE: This can be replaced by std::ranges::to in C++23,
+but only when all compilers support it (basically only GCC 15 is missing).
+
 */
 
 #include "compiler.h"

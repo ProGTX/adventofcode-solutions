@@ -68,7 +68,7 @@ constexpr int largest_basins(const heightmap_t& heightmap) {
       low_points, aoc::inserter_it(basins),
       [&](const point lp) { return find_basin(heightmap, lp); });
   std::ranges::partial_sort(basins, std::begin(basins) + 3, std::greater{});
-  return aoc::ranges::fold_left(std::span{basins}.subspan(0, 3), 1,
+  return std::ranges::fold_left(std::span{basins}.subspan(0, 3), 1,
                                 std::multiplies{});
 }
 

@@ -121,7 +121,7 @@ int solve_case(const std::string& filename) {
     if (line.empty()) {
       continue;
     }
-    if (aoc::ranges::contains(std::array{up, down, left, right}, line[0])) {
+    if (std::ranges::contains(std::array{up, down, left, right}, line[0])) {
       std::ranges::copy(parse_directions(line), std::back_inserter(directions));
     } else {
       auto robot_x = line.find(robot);

@@ -38,14 +38,14 @@ constexpr parsed_map_t parse_map(std::span<std::string> raw_map,
   parsed_map_t parsed_map{};
   for (std::string& line : raw_map) {
     if (parsed_map.empty()) {
-      parsed_map.add_row(aoc::views::repeat(empty_char, map_size.x));
+      parsed_map.add_row(std::views::repeat(empty_char, map_size.x));
     }
     auto empty_suffix =
-        aoc::views::repeat(empty_char, map_size.x - line.size() - 1) |
+        std::views::repeat(empty_char, map_size.x - line.size() - 1) |
         aoc::ranges::to<std::string>();
     parsed_map.add_row(empty_char + std::move(line) + std::move(empty_suffix));
   }
-  parsed_map.add_row(aoc::views::repeat(empty_char, map_size.x));
+  parsed_map.add_row(std::views::repeat(empty_char, map_size.x));
   return parsed_map;
 }
 

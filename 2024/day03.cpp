@@ -35,7 +35,7 @@ constexpr int parse_multiplications(std::string_view line) {
       } else if (elem == ',') {
         if (number_buffer.size() > 0) {
           // Parse the number
-          left = aoc::to_int_naive<int>(
+          left = aoc::to_number<int>(
               std::string_view(number_buffer.data(), number_buffer.size()));
           number_buffer.clear();
           continue;
@@ -54,7 +54,7 @@ constexpr int parse_multiplications(std::string_view line) {
       } else if (elem == ')') {
         if (number_buffer.size() > 0) {
           // Parse the number
-          right = aoc::to_int_naive<int>(
+          right = aoc::to_number<int>(
               std::string_view(number_buffer.data(), number_buffer.size()));
 
           // Great success

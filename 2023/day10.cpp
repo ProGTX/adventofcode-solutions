@@ -57,7 +57,7 @@ constexpr std::vector<int> get_pipe_loop(const field_t& field,
     AOC_ASSERT(
         value != tile_t::start,
         "Something went wrong, cannot use start as neighbor at this point");
-    if (!aoc::ranges::contains(valid_values, value)) {
+    if (!std::ranges::contains(valid_values, value)) {
       return;
     }
     start_neighbor_diffs.push_back(diff);
