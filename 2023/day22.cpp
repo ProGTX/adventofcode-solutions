@@ -297,7 +297,8 @@ int_t solve_case(const std::string& filename) {
   brick_list_t bricks;
   std::string name = "AA";
 
-  for (int id = 0; std::string_view line : aoc::views::read_lines(filename)) {
+  for ([[maybe_unused]] int id = 0;
+       std::string_view line : aoc::views::read_lines(filename)) {
     auto [first, last] = aoc::split<std::array<std::string_view, 2>>(line, '~');
     {
 #if DEBUG_PRINT

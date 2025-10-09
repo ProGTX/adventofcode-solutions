@@ -17,7 +17,6 @@ using keyhole_storage_t = std::array<int, keyhole_size.x>;
 
 constexpr const char active = '#';
 constexpr const char inactive = '.';
-constexpr const std::string_view all_empty = ".....";
 constexpr const std::string_view all_filled = "#####";
 
 constexpr bool overlaps(const keyhole_storage_t& key,

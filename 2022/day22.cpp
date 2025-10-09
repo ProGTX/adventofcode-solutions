@@ -151,7 +151,6 @@ constexpr arrow_t walk_through(const jungle_t& jungle,
     return arrow_t{point(std::ranges::distance(jungle.begin_row(1), it), 1),
                    aoc::east};
   }();
-  int i = 0;
   for (int step : steps) {
     if (step == turn_clockwise) {
       current.direction = aoc::clockwise_basic(current.direction);
