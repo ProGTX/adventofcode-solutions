@@ -66,6 +66,7 @@ function(copy_input_files target_basename year)
   )
 endfunction()
 
+add_custom_target(year_2015)
 add_custom_target(year_2021)
 add_custom_target(year_2022)
 add_custom_target(year_2023)
@@ -91,6 +92,9 @@ function(add_sample sample_name year)
   add_test(NAME ${target} COMMAND ${target})
 endfunction()
 
+add_subdirectory(rust)
+
+add_subdirectory(2015)
 add_subdirectory(2021)
 add_subdirectory(2022)
 add_subdirectory(2023)

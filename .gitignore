@@ -3,3 +3,5 @@
 inputs
 build
 *.input
+rust/target
+*.lock
