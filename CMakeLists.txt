@@ -92,7 +92,12 @@ function(add_sample sample_name year)
   add_test(NAME ${target} COMMAND ${target})
 endfunction()
 
-add_subdirectory(rust)
+find_program(CARGO_EXECUTABLE cargo)
+if(NOT CARGO_EXECUTABLE)
+  message(WARNING "Cargo not found; skipping Rust build")
+else()
+  add_subdirectory(rust)
+endif()
 
 add_subdirectory(2015)
 add_subdirectory(2021)

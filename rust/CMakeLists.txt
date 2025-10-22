@@ -4,7 +4,7 @@ set(RUST_RELEASE_DIR "${RUST_TARGET_DIR}/release")
 
 add_custom_command(
     OUTPUT "${RUST_RELEASE_DIR}/.stamp"
-    COMMAND cargo build --release
+    COMMAND "${CARGO_EXECUTABLE}" build --release
     COMMAND ${CMAKE_COMMAND} -E touch "${RUST_RELEASE_DIR}/.stamp"
     WORKING_DIRECTORY "${RUST_DIR}"
     DEPENDS "${RUST_DIR}/Cargo.toml"
