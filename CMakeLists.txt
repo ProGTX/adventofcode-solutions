@@ -5,9 +5,6 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(AOC_INPUTS_DIR "${CMAKE_SOURCE_DIR}/inputs"
-    CACHE PATH "Directory containing input files")
-
 enable_testing()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -64,8 +61,8 @@ function(copy_input_files target_basename year)
   add_custom_command(
     TARGET ${year}_${target_basename} PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-      ${AOC_INPUTS_DIR}/${year}/${target_basename}.input
-      ${CMAKE_CURRENT_BINARY_DIR}/${target_basename}.input
+      "${PROJECT_SOURCE_DIR}/${year}/${target_basename}.input"
+      "${CMAKE_CURRENT_BINARY_DIR}/${target_basename}.input"
   )
 endfunction()
 

@@ -25,9 +25,9 @@ done | xargs -n2 -P8 bash -c '
   day="$1"
 
   # Make sure output folder exists
-  mkdir -p "inputs/$year"
+  mkdir -p "$year"
 
-  outfile="inputs/$year/day${day}.input"
+  outfile="$year/day${day}.input"
 
   # Skip if file already exists
   if [[ -f "$outfile" ]]; then

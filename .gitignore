@@ -2,3 +2,4 @@
 .vs
 inputs
 build
+*.input
