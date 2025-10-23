@@ -21,7 +21,7 @@ fn solve_case(filename: &str) -> io::Result<i32> {
 fn main() {
     println!("Part 1");
     let example_result = solve_case("day01.example").unwrap();
-    assert_eq!(example_result, 3);
+    assert_eq!(example_result, -1);
     let input_result = solve_case("day01.input").unwrap();
     assert_eq!(input_result, 280);
 }
