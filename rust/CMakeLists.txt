@@ -17,8 +17,9 @@ add_custom_target(rust_build ALL
 
 function(add_rust_test sample_name year)
     add_test(NAME ${year}_${sample_name}_rust
-        COMMAND ${RUST_RELEASE_DIR}/${sample_name}
+        COMMAND "${RUST_RELEASE_DIR}/${sample_name}"
         DEPENDS rust_build
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/${year}"
     )
 endfunction()
 
