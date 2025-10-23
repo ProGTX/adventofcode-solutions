@@ -1,8 +1,24 @@
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 
-fn solve_case<const CHECK_POSITION: bool>(filename: &str) -> io::Result<i32> {
-    Ok(0)
+fn solve_case<const PART2: bool>(filename: &str) -> io::Result<i32> {
+    let file = File::open(filename)?;
+    let reader = BufReader::new(file);
+    let mut sum = 0;
+    for line in reader.lines() {
+        let boxdims: Vec<i32> = line?
+            .split('x')
+            .map(|s| s.parse::<i32>().unwrap())
+            .collect();
+        let sides = [
+            boxdims[0] * boxdims[1],
+            boxdims[0] * boxdims[2],
+            boxdims[1] * boxdims[2],
+        ];
+        sum += sides.iter().map(|s| s * 2).sum::<i32>();
+        sum += sides.iter().min().unwrap();
+    }
+    Ok(sum)
 }
 
 fn main() {
