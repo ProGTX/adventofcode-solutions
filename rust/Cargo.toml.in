@@ -1,0 +1,8 @@
+# @GENERATED@
+
+[package]
+name = "year@YEAR@"
+version = "0.1.0"
+edition = "2024"
+
+@CARGO_BIN_SECTIONS@

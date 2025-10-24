@@ -5,3 +5,4 @@ build
 *.input
 rust/target
 *.lock
+rust/2*/Cargo.toml
