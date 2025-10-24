@@ -1,0 +1,43 @@
+// https://adventofcode.com/2015/day/2
+
+#include "../common/common.h"
+
+#include <algorithm>
+#include <array>
+#include <fstream>
+#include <iostream>
+#include <print>
+#include <string>
+#include <string_view>
+
+using dims_t = aoc::nd_point_type<int, 3>;
+
+int solve_case1(const std::string& filename) {
+  int sum = 0;
+  for (std::string_view line : aoc::views::read_lines(filename)) {
+    auto box = aoc::split<dims_t>(line, 'x');
+    auto sides = dims_t{box[0] * box[1], box[0] * box[2], box[1] * box[2]};
+    sum += sides.dot(dims_t{2, 2, 2}) + std::ranges::min(sides);
+  }
+  return sum;
+}
+
+int solve_case2(const std::string& filename) {
+  int ribbon = 0;
+  for (std::string_view line : aoc::views::read_lines(filename)) {
+    auto box = aoc::split<std::array<int, 3>>(line, 'x');
+    std::ranges::sort(box);
+    ribbon += 2 * (box[0] + box[1]) + box[0] * box[1] * box[2];
+  }
+  return ribbon;
+}
+
+int main() {
+  std::println("Part 1");
+  AOC_EXPECT_RESULT((58 + 43), solve_case1("day02.example"));
+  AOC_EXPECT_RESULT(1606483, solve_case1("day02.input"));
+  std::println("Part 2");
+  AOC_EXPECT_RESULT((34 + 14), solve_case2("day02.example"));
+  AOC_EXPECT_RESULT(3842356, solve_case2("day02.input"));
+  AOC_RETURN_CHECK_RESULT();
+}

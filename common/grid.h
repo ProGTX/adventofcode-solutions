@@ -46,6 +46,21 @@ enum facing_t : int {
   NUM_FACING = 4,
 };
 
+constexpr auto to_facing(char c) {
+  switch (c) {
+    case '^':
+      return aoc::north;
+    case 'v':
+      return aoc::south;
+    case '<':
+      return aoc::west;
+    case '>':
+      return aoc::east;
+    default:
+      AOC_ASSERT(false, "Error parsing directions");
+  }
+}
+
 std::ostream& operator<<(std::ostream& out, const facing_t& facing) {
   switch (facing) {
     case east:

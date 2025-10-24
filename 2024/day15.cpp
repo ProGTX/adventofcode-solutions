@@ -77,20 +77,7 @@ constexpr map_t move_robot(map_t map, point robot_pos,
 }
 
 constexpr directions_storage parse_directions(std::string_view directions) {
-  return directions | std::views::transform([](char c) {
-           switch (c) {
-             case up:
-               return aoc::north;
-             case down:
-               return aoc::south;
-             case left:
-               return aoc::west;
-             case right:
-               return aoc::east;
-             default:
-               AOC_ASSERT(false, "Error parsing directions");
-           }
-         }) |
+  return directions | std::views::transform(&aoc::to_facing) |
          aoc::ranges::to<directions_storage>();
 }
 
