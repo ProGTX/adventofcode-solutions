@@ -20,7 +20,8 @@ namespace ranges {
 struct __accumulate_fn {
   template <std::input_iterator I, std::sentinel_for<I> S, class T>
   constexpr auto operator()(I first, S last, T init) const {
-    return std::ranges::fold_left(first, last, std::move(init), std::plus<>{});
+    return std::ranges::fold_left(std::move(first), std::move(last),
+                                  std::move(init), std::plus<>{});
   }
 
   template <std::ranges::input_range R, class T>
@@ -34,9 +35,9 @@ struct __lcm_fn {
   template <std::input_iterator I, std::sentinel_for<I> S>
   constexpr auto operator()(I first, S last) const {
     using T = std::iter_value_t<I>;
-    return std::ranges::fold_left(first, last, T(1), [](T first, T second) {
-      return std::lcm(first, second);
-    });
+    return std::ranges::fold_left(
+        std::move(first), std::move(last), T(1),
+        [](T&& first, T&& second) { return std::lcm(first, second); });
   }
 
   template <std::ranges::input_range R>
@@ -50,9 +51,9 @@ struct gcd_fn {
   template <std::input_iterator I, std::sentinel_for<I> S>
   constexpr auto operator()(I first, S last) const {
     using T = std::iter_value_t<I>;
-    return std::ranges::fold_left(first, last, T(1), [](T first, T second) {
-      return std::gcd(first, second);
-    });
+    return std::ranges::fold_left(
+        std::move(first), std::move(last), T(1),
+        [](T&& first, T&& second) { return std::gcd(first, second); });
   }
 
   template <std::ranges::input_range R>
@@ -82,7 +83,7 @@ constexpr auto rotate_left(R&& r) {
 
 template <std::permutable I, std::sentinel_for<I> S>
 constexpr auto rotate_right(I first, S last) {
-  return std::ranges::rotate(first, last - 1, last);
+  return std::ranges::rotate(std::move(first), std::move(last) - 1, last);
 }
 template <std::ranges::forward_range R>
   requires std::permutable<std::ranges::iterator_t<R>>
