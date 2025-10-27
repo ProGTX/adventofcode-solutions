@@ -40,7 +40,9 @@ static_assert(5 == num_control_chars(R"("\x27")"));
 static_assert(4 == num_control_chars(R"("\\\\zkisyjpbzandqikqjqvee")"));
 
 constexpr int num_encode_chars(std::string_view str) {
-  return std::ranges::count(str, '"') + std::ranges::count(str, '\\') + 2;
+  return std::ranges::count_if(
+             str, [](char c) { return (c == '"') || (c == '\\'); }) +
+         2;
 }
 static_assert(4 == num_encode_chars(R"("")"));
 static_assert(4 == num_encode_chars(R"("abc")"));
