@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <format>
 #include <iostream>
 #include <map>
 #include <print>
@@ -18,6 +19,11 @@ using str = std::string_view;
 struct link_t {
   int to_id;
   int distance;
+
+  friend std::ostream& operator<<(std::ostream& out, const link_t& link) {
+    out << std::format("({}, {})", link.to_id, link.distance);
+    return out;
+  }
 };
 
 using connections_t = std::vector<std::vector<link_t>>;
@@ -44,6 +50,9 @@ connections_t parse(const std::string& filename) {
     let distance = aoc::to_number<int>(value);
     connections[from_id].emplace_back(to_id, distance);
     connections[to_id].emplace_back(from_id, distance);
+  }
+  for (auto& con : connections) {
+    std::ranges::sort(con, std::ranges::less{}, &link_t::distance);
   }
   return connections;
 }
@@ -118,13 +127,17 @@ constexpr int shortest_distance(const connections_t& connections) {
 
 int solve_case1(const std::string& filename) {
   let connections = parse(filename);
-  return shortest_distance(connections);
+  for (let& [ index, connection ] : connections | std::views::enumerate) {
+    std::cout << index << ": " << aoc::print_range(connection) << std::endl;
+  }
+  return 0;
+  // return shortest_distance(connections);
 }
 
 int main() {
   std::println("Part 1");
   AOC_EXPECT_RESULT(605, solve_case1("day09.example"));
-  // AOC_EXPECT_RESULT(1333, solve_case1("day09.input"));
+  AOC_EXPECT_RESULT(1333, solve_case1("day09.input"));
   // std::println("Part 2");
   // AOC_EXPECT_RESULT(19, solve_case2("day09.example"));
   // AOC_EXPECT_RESULT(2046, solve_case2("day09.input"));
