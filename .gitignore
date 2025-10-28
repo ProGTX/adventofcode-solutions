@@ -6,3 +6,4 @@ build
 rust/target
 *.lock
 rust/2*/Cargo.toml
+target/rust-analyzer
