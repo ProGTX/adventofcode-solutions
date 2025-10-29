@@ -1,13 +1,13 @@
 set(RUST_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(RUST_TARGET_DIR "${RUST_DIR}/target")
-set(RUST_RELEASE_DIR "${RUST_TARGET_DIR}/release")
-set(RUST_BUILD_STAMP "${RUST_RELEASE_DIR}/.stamp")
+set(RUST_BUILD_DIR_EXPR "${RUST_TARGET_DIR}/$<IF:${AOC_RELEASE_CHECK_EXPR},release,debug>")
+set(RUST_BUILD_STAMP "${RUST_BUILD_DIR_EXPR}/.stamp")
 define_property(GLOBAL PROPERTY RUST_SOURCES BRIEF_DOCS "List of all Rust source files")
 
 # Create a dummy target that the tests can depend on
 # Tests cannot depend on this stamp directly (for some CMake reason)
 add_custom_target(rust_build ALL
-    DEPENDS "${RUST_BUILD_STAMP}"
+    DEPENDS ${RUST_BUILD_STAMP}
 )
 
 function(add_rust_test sample_name year)
@@ -16,7 +16,7 @@ function(add_rust_test sample_name year)
     )
 
     add_test(NAME ${year}_${sample_name}_rust
-        COMMAND "${RUST_RELEASE_DIR}/${sample_name}"
+        COMMAND ${RUST_BUILD_DIR_EXPR}/${sample_name}
         DEPENDS rust_build
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/${year}"
     )
@@ -55,9 +55,10 @@ add_subdirectory(2015)
 # CMake just needs to know about dependencies
 get_property(rust_sources GLOBAL PROPERTY RUST_SOURCES)
 add_custom_command(
-    OUTPUT "${RUST_BUILD_STAMP}"
-    COMMAND "${CARGO_EXECUTABLE}" build --release
-    COMMAND ${CMAKE_COMMAND} -E touch "${RUST_BUILD_STAMP}"
+    OUTPUT ${RUST_BUILD_STAMP}
+    COMMAND "${CARGO_EXECUTABLE}" build
+        $<${AOC_RELEASE_CHECK_EXPR}:--release>
+    COMMAND ${CMAKE_COMMAND} -E touch ${RUST_BUILD_STAMP}
     WORKING_DIRECTORY "${RUST_DIR}"
     DEPENDS "${RUST_DIR}/Cargo.toml" "${rust_sources}"
     COMMENT "Building all Rust workspaces"

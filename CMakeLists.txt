@@ -9,6 +9,9 @@ enable_testing()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_compile_definitions(AOC_CXX_STANDARD=${CMAKE_CXX_STANDARD})
+set(AOC_RELEASE_CHECK_EXPR
+  $<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>
+)
 
 if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
     (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
