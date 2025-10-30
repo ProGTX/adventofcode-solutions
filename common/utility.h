@@ -204,8 +204,10 @@ struct cyclic_iterator {
 
   constexpr friend bool operator==(const cyclic_iterator& lhs,
                                    const cyclic_iterator& rhs) {
-    return (lhs.m_it == rhs.m_it) && (lhs.m_begin == rhs.m_begin) &&
-           (lhs.m_end == rhs.m_end) && (lhs.m_size == rhs.m_size);
+    return (lhs.m_it == rhs.m_it) &&
+           (lhs.m_begin == rhs.m_begin) &&
+           (lhs.m_end == rhs.m_end) &&
+           (lhs.m_size == rhs.m_size);
   };
 
   constexpr iterator to_underlying() const { return m_it; }

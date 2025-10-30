@@ -14,7 +14,9 @@ constexpr const char empty_space = '.';
 using antennas_t = aoc::flat_map<char, aoc::static_vector<point, 4>>;
 
 constexpr bool within_bounds(point check, const point& grid_size) {
-  return (check.x >= 0) && (check.y >= 0) && (check.x < grid_size.x) &&
+  return (check.x >= 0) &&
+         (check.y >= 0) &&
+         (check.x < grid_size.x) &&
          (check.y < grid_size.y);
 }
 

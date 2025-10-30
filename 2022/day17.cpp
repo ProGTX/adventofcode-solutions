@@ -145,7 +145,8 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
     }
 
     { // Place falling rock into the chamber
-      auto missing_rows = current_height + current_rock_height -
+      auto missing_rows = current_height +
+                          current_rock_height -
                           static_cast<rock_index_t>(chamber.num_rows());
       for (int r = 0; r < missing_rows; ++r) {
         chamber.add_row(empty_new_row);

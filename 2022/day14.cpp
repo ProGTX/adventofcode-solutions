@@ -99,7 +99,9 @@ int solve_case(const std::string& filename) {
   cave_map.print_all();
 
   const auto is_valid_index = [&](int row, int column) {
-    return (row >= 0) && (row < cave_map.num_rows()) && (column >= 0) &&
+    return (row >= 0) &&
+           (row < cave_map.num_rows()) &&
+           (column >= 0) &&
            (column < cave_map.row_length());
   };
 

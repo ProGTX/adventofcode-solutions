@@ -83,7 +83,8 @@ int solve_case(const std::string& filename) {
     std::vector<int> row;
     row.push_back(edge);
     std::ranges::copy(
-        line | std::views::enumerate |
+        line |
+            std::views::enumerate |
             std::views::transform([&](auto&& current) {
               auto [col_id, c] = current;
               if (c == trailhead_char) {

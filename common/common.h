@@ -7,7 +7,8 @@
 #include "assert.h"
 #include "compiler.h"
 
-#if !defined(AOC_DISABLE_MODULES) && defined(AOC_MODULE_SUPPORT) &&            \
+#if !defined(AOC_DISABLE_MODULES) &&                                           \
+    defined(AOC_MODULE_SUPPORT) &&                                             \
     !defined(__INTELLISENSE__)
 
 import aoc;

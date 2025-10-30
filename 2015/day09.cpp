@@ -61,7 +61,7 @@ constexpr int best_distance(const connections_t& connections) {
   }();
   auto current_path = aoc::flat_set<int>{};
   let on_path = [&](const int id) { return current_path.contains(id); };
-  for (let & [ from_id, place ] : connections | std::views::enumerate) {
+  for (let& [ from_id, place ] : connections | std::views::enumerate) {
     AOC_ASSERT(std::ranges::is_sorted(place, compare, &link_t::distance),
                "Destinations must be sorted by distance");
     auto current_link = place;

@@ -49,7 +49,8 @@ template <int base>
 constexpr int_t to_decimal(std::string_view snafu) {
   int_t sum = 0;
   for (int_t multiplier = 1;
-       int_t value : snafu | std::views::reverse |
+       int_t value : snafu |
+                         std::views::reverse |
                          std::views::transform(&snafu_char_to_int)) {
     sum += value * multiplier;
     multiplier *= base;

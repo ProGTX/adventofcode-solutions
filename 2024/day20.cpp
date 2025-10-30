@@ -74,7 +74,8 @@ constexpr auto shortest_path(const racetrack_t& track, const point start_pos,
             return true;
           }
         } else {
-          if (node.cheated && (node.length > 1) &&
+          if (node.cheated &&
+              (node.length > 1) &&
               (track.at(node.pos.y, node.pos.x) != wall)) {
             end_nodes.emplace(node);
           }
@@ -133,7 +134,8 @@ constexpr int count_cheats(const racetrack_t& track, const point start_pos,
         shortest_path<max_cheat_length, true>(track, node.pos, {});
     for (const node_t& cheat_end_node : cheat_points) {
       const auto cheat_length =
-          path_length + distance_manhattan(node.pos, cheat_end_node.pos) +
+          path_length +
+          distance_manhattan(node.pos, cheat_end_node.pos) +
           normal_shortest_length(cache, track, cheat_end_node.pos, end_pos);
       const auto time_diff = standard_length - cheat_length;
       if (time_diff >= time_limit) {

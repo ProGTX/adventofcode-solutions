@@ -91,7 +91,8 @@ using container_value_t = typename container_value<C>::type;
 
 template <class C, class R>
 concept container_convertible =
-    !r::view<C> && r::input_range<R> &&
+    !r::view<C> &&
+    r::input_range<R> &&
     std::convertible_to<r::range_reference_t<R>, container_value_t<C>>;
 
 template <class C, class R>

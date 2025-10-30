@@ -386,7 +386,8 @@ class grid {
   }
   constexpr bool in_bounds(std::signed_integral auto row,
                            std::signed_integral auto column) const {
-    return (row >= 0) && (column >= 0) &&
+    return (row >= 0) &&
+           (column >= 0) &&
            this->in_bounds(static_cast<size_t>(row),
                            static_cast<size_t>(column));
   }
@@ -661,8 +662,8 @@ std::pair<char_grid<>, char_grid_config_output> read_char_grid(
       }
     }
     if (padding) {
-      return_grid.add_row(*config_input.padding + std::move(line) +
-                          *config_input.padding);
+      return_grid.add_row(
+          *config_input.padding + std::move(line) + *config_input.padding);
     } else {
       return_grid.add_row(std::move(line));
     }

@@ -4,6 +4,7 @@ AccessModifierOffset: -1
 AlignAfterOpenBracket: Align
 AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: Yes
+BreakBinaryOperations: RespectPrecedence
 BreakStringLiterals: true
 ColumnLimit: 80
 ConstructorInitializerAllOnOneLineOrOnePerLine: true

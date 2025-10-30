@@ -42,9 +42,11 @@ constexpr int count_xmas_vertical(const word_board_t& board) {
   const auto num_columns = board.num_columns();
   int sum = 0;
   for (int column = 0; column < num_columns; ++column) {
-    sum += count_xmas(
-        board | std::views::drop(column) | std::views::stride(num_columns) |
-        std::views::take_while(aoc::not_equal_to_value{empty_char}));
+    sum +=
+        count_xmas(board |
+                   std::views::drop(column) |
+                   std::views::stride(num_columns) |
+                   std::views::take_while(aoc::not_equal_to_value{empty_char}));
   }
   return sum;
 }
@@ -91,33 +93,41 @@ constexpr int count_xmas_diagonal(const word_board_t& board) {
   // Count diagonals along the top
   // Skip first and last column because they contain empty terminators
   for (int column = 1; column < num_columns - 1; ++column) {
-    sum += count_xmas(board | std::views::drop(column) | right_diag_view() |
+    sum += count_xmas(board |
+                      std::views::drop(column) |
+                      right_diag_view() |
                       stop_at_terminator());
-    sum += count_xmas(board | std::views::drop(column) | left_diag_view() |
+    sum += count_xmas(board |
+                      std::views::drop(column) |
+                      left_diag_view() |
                       stop_at_terminator());
   }
   // Count right diagonals along the left edge
   // Skip the first row because it was already counted in the first loop
   // Skip last row because it contais empty terminators
   for (int row = 1; row < num_rows - 1; ++row) {
-    sum += count_xmas(board | std::views::drop(board.linear_index(row, 1)) |
-                      right_diag_view() | stop_at_terminator());
+    sum += count_xmas(board |
+                      std::views::drop(board.linear_index(row, 1)) |
+                      right_diag_view() |
+                      stop_at_terminator());
   }
   // Count left diagonals along the right edge
   // Skip the first row because it was already counted in the first loop
   // Skip last row because it contais empty terminators
   for (int column = board.num_columns() - 2, row = 1; row < num_rows - 1;
        ++row) {
-    sum +=
-        count_xmas(board | std::views::drop(board.linear_index(row, column)) |
-                   left_diag_view() | stop_at_terminator());
+    sum += count_xmas(board |
+                      std::views::drop(board.linear_index(row, column)) |
+                      left_diag_view() |
+                      stop_at_terminator());
   }
 
   return sum;
 }
 
 constexpr int count_xmas_board(const word_board_t& board) {
-  return count_xmas(board) + count_xmas_vertical(board) +
+  return count_xmas(board) +
+         count_xmas_vertical(board) +
          count_xmas_diagonal(board);
 }
 

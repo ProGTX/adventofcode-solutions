@@ -71,7 +71,8 @@ unsigned solve_case(const std::string& filename) {
     const auto begin = aoc::split<point>(boundaries[0], ',');
     const auto end = aoc::split<point>(boundaries[1], ',');
     for (int row = begin.y; row <= end.y; ++row) {
-      for (cell_t& c : lights.row_view(row) | std::views::drop(begin.x) |
+      for (cell_t& c : lights.row_view(row) |
+                           std::views::drop(begin.x) |
                            std::views::take(end.x - begin.x + 1)) {
         c = operation(c);
       }
