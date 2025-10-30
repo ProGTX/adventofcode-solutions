@@ -19,7 +19,7 @@
 #include <vector>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 // Specifies a neighbor of the current node
 // along with the cost (distance) of reaching it from the current node
@@ -286,6 +286,6 @@ std::vector<Node> get_path(const predecessor_map<Node>& predecessors,
   return path;
 }
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_ALGORITHM_H

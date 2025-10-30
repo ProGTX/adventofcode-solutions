@@ -15,7 +15,7 @@
 #include <vector>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 template <class T, class CRTP, class String = std::string>
 class graph {
@@ -106,6 +106,6 @@ class graph {
   bool m_is_leaf{false};
 };
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_GRAPH_H

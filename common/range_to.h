@@ -23,7 +23,7 @@ but only when all compilers support it (basically only GCC 15 is missing).
 #include <utility>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 namespace ranges {
 
@@ -279,6 +279,6 @@ constexpr auto to(Rng&& rng, Args&&... args) -> Cont {
 
 } // namespace ranges
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_RANGE_TO_H

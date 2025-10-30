@@ -17,7 +17,7 @@
 #include <vector>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 // Barebones implementation of
 // https://en.cppreference.com/w/cpp/container/flat_set, but with constexpr
@@ -702,6 +702,6 @@ void reserve_set(FlatSet& set, typename FlatSet::size_type new_cap) {
   set.replace(std::move(key_container));
 };
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_FLAT_H

@@ -5,6 +5,10 @@
 #define AOC_EXPORT
 #endif
 
+#ifndef AOC_EXPORT_NAMESPACE
+#define AOC_EXPORT_NAMESPACE(name) AOC_EXPORT namespace name
+#endif
+
 #if defined(_MSC_VER)
 #define AOC_COMPILER_MSVC _MSC_VER
 #elif defined(__GNUC__)

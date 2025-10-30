@@ -15,7 +15,7 @@
 #include <utility>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 // TODO: Should be replaced by C++23 std::format
 
@@ -114,6 +114,6 @@ constexpr void println(std::string_view str, FirstT first, Args&&... args) {
   });
 }
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_PRINT_H

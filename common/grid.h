@@ -24,7 +24,7 @@
 #include <vector>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Directions
@@ -704,6 +704,6 @@ static_assert(is_grid<array_grid<int, 7, 5>>);
 static_assert(is_grid<sparse_grid<int>>);
 static_assert(is_grid<char_grid<>>);
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_GRID_H

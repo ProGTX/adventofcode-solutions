@@ -11,7 +11,7 @@
 #include <type_traits>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 template <class T>
 constexpr T abs(T value) {
@@ -129,6 +129,6 @@ constexpr unsigned flip_bit(unsigned number, unsigned index) {
 static_assert(3 == flip_bit(2, 0));
 static_assert(2 == flip_bit(3, 0));
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_MATH_H

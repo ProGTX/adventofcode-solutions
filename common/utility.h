@@ -20,7 +20,7 @@
 #include <vector>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 // https://stackoverflow.com/a/35348334
 template <class ReturnT, class... Args>
@@ -641,6 +641,6 @@ struct constant_value {
   }
 };
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_UTILITY_H

@@ -13,7 +13,7 @@
 #include <utility>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 // https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0843r2.html
 // Can be replaced by std::inplace_vector in C++26
@@ -199,6 +199,6 @@ static_assert(std::ranges::equal(std::array{2, 4, 42, 6}, impl_test_insert(2)));
 static_assert(std::ranges::equal(std::array{2, 4, 6, 42}, impl_test_insert(3)));
 #endif
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_STATIC_VECTOR_H

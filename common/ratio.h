@@ -14,7 +14,7 @@
 // Runtime ratio class to replace std::ratio
 // https://en.cppreference.com/w/cpp/header/ratio
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 template <std::integral T>
 class ratio {
@@ -141,6 +141,6 @@ static_assert(ratio{6, 2} != 2);
 static_assert(2 <= ratio{4, 2});
 static_assert(2 < ratio{5, 2});
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_RATIO_H

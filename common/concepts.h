@@ -17,7 +17,7 @@ struct inspect_t;
 template <auto V>
 struct inspect_v;
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 // https://stackoverflow.com/a/51032862
 // https://open-std.org/JTC1/SC22/WG21/docs/papers/2020/p2098r1.pdf
@@ -89,6 +89,6 @@ concept contains_uncvref = (std::same_as<std::remove_cvref_t<T>, U> || ...);
 static_assert(contains_type<std::string_view, std::string_view>);
 static_assert(contains_type<std::string_view, int, std::string_view>);
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_CONCEPTS_H

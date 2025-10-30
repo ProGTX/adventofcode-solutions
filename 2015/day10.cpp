@@ -39,7 +39,7 @@ int solve_case(const std::string& filename) {
   auto input = aoc::read_line(file) | aoc::views::to_number<u32>() |
                aoc::ranges::to<std::vector<u32>>();
   auto output = decltype(input){};
-  for (auto index : std::views::iota(0, iterations)) {
+  for ([[maybe_unused]] auto index : std::views::iota(0, iterations)) {
     look_and_say(input, output);
     std::swap(input, output);
   }

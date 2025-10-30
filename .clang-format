@@ -10,6 +10,7 @@ ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ContinuationIndentWidth: 4
 DerivePointerAlignment: false
 IndentCaseLabels: true
+NamespaceMacros: ['AOC_EXPORT_NAMESPACE']
 PenaltyBreakBeforeFirstCallParameter: 1
 PenaltyReturnTypeOnItsOwnLine: 200
 PointerAlignment: Left

@@ -21,7 +21,7 @@
 #include <type_traits>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 struct fill_tag {};
 
@@ -516,7 +516,7 @@ static_assert(16.5f ==
                              point_type<int>{7, 2}, point_type<int>{4, 4},
                              point_type<int>{8, 5}}}));
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 namespace std {
 template <class T>

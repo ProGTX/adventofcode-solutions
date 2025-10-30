@@ -13,7 +13,7 @@
 #include <ranges>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 namespace ranges {
 
@@ -113,6 +113,6 @@ constexpr auto to_number(int base = 10) {
 
 } // namespace views
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_RANGES_H

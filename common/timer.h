@@ -10,7 +10,7 @@
 #include <iostream>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 class timer {
  public:
@@ -59,6 +59,6 @@ class scoped_timer {
   timer timer_;
 };
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_TIMER_H

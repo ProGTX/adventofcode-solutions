@@ -22,7 +22,7 @@
 #include <vector>
 #endif
 
-AOC_EXPORT namespace aoc {
+AOC_EXPORT_NAMESPACE(aoc) {
 
 using namespace std::string_view_literals;
 
@@ -282,6 +282,6 @@ static_assert(2 == count_substrings("abcyabc", "abc"));
 static_assert(2 == count_substrings("abcyacabc", "abc"));
 static_assert(2 == count_substrings("cbacba" | std::views::reverse, "abc"));
 
-} // namespace aoc
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_STRING_H
