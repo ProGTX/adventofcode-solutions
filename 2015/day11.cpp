@@ -1,29 +1,13 @@
 // https://adventofcode.com/2015/day/11
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <array>
-#include <cstdint>
-#include <format>
 #include <iostream>
-#include <map>
 #include <print>
 #include <ranges>
-#include <string>
-#include <string_view>
-
-// Carcinization
-#define let const auto
-#define fn constexpr auto
-using u32 = std::uint32_t;
-template <class T>
-using Vec = std::vector<T>;
-template <class T>
-using Option = std::optional<T>;
-using String = std::string;
-using str = std::string_view;
-using usize = std::size_t;
 
 fn to_numbers(str const& s) -> Vec<u32> {
   return s |

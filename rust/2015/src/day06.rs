@@ -27,6 +27,7 @@ type OpFnT = fn(u32) -> u32;
 
 struct Grid {
     data: Vec<u32>,
+    #[allow(dead_code)]
     num_rows: usize,
     num_columns: usize,
 }

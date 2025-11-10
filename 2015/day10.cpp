@@ -1,23 +1,12 @@
 // https://adventofcode.com/2015/day/10
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
-#include <array>
-#include <cstdint>
-#include <format>
 #include <iostream>
-#include <map>
 #include <print>
 #include <ranges>
-#include <string>
-#include <string_view>
-
-// Carcinization
-#define let const auto
-using u32 = std::uint32_t;
-template <class T>
-using Vec = std::vector<T>;
 
 void look_and_say(Vec<u32> const& input, Vec<u32>& output) {
   output.clear();

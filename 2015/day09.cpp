@@ -1,20 +1,14 @@
 // https://adventofcode.com/2015/day/9
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <array>
-#include <format>
 #include <iostream>
 #include <map>
 #include <print>
 #include <ranges>
-#include <string>
-#include <string_view>
-
-// Carcinization
-#define let const auto
-using str = std::string_view;
 
 struct link_t {
   int to_id;
