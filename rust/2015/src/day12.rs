@@ -27,16 +27,76 @@ fn sum(s: &str) -> i32 {
     value
 }
 
-fn solve_case(filename: &str) -> i32 {
+#[derive(PartialEq)]
+enum ScopeType {
+    Object(bool), // bool indicates whether it's red or not
+    Array,
+}
+
+fn sum_non_red(s: &str) -> i32 {
+    let mut scope_stack = Vec::<ScopeType>::new();
+    let mut value_stack = Vec::<i32>::new();
+    value_stack.push(0);
+    let mut value_str = String::new();
+    for c in s.chars() {
+        if ((c == '-') || c.is_ascii_alphanumeric()) {
+            value_str.push(c);
+        } else if (!value_str.is_empty()) {
+            let first = value_str.chars().next().unwrap();
+            if ((first == '-') || first.is_ascii_digit()) {
+                let value = value_str.parse::<i32>().unwrap();
+                let top = value_stack.last_mut().unwrap();
+                *top += value;
+            } else if (value_str == "red") {
+                *scope_stack.last_mut().unwrap() = ScopeType::Object(true);
+            }
+            value_str.clear();
+        }
+
+        let red =
+            !scope_stack.is_empty() && (scope_stack.last().unwrap() == &ScopeType::Object(true));
+        match c {
+            '{' => {
+                value_stack.push(0);
+                scope_stack.push(ScopeType::Object(false));
+            }
+            '}' => {
+                let top = value_stack.pop().unwrap();
+                if (!red) {
+                    *value_stack.last_mut().unwrap() += top;
+                }
+                scope_stack.pop();
+            }
+            '[' => {
+                value_stack.push(0);
+                scope_stack.push(ScopeType::Array);
+            }
+            ']' => {
+                let top = value_stack.pop().unwrap();
+                *value_stack.last_mut().unwrap() += top;
+                scope_stack.pop();
+            }
+            _ => {}
+        }
+    }
+    *value_stack.last().unwrap()
+}
+
+fn solve_case1(filename: &str) -> i32 {
     let input = std::fs::read_to_string(filename).unwrap();
     sum(input.trim())
 }
 
+fn solve_case2(filename: &str) -> i32 {
+    let input = std::fs::read_to_string(filename).unwrap();
+    sum_non_red(input.trim())
+}
+
 fn main() {
     println!("Part 1");
-    assert_eq!(3, solve_case("day12.example"));
-    assert_eq!(156366, solve_case("day12.input"));
-    //println!("Part 2");
-    //assert_eq!(3369156, solve_case::<50>("day12.example"));
-    //assert_eq!(5103798, solve_case::<50>("day12.input"));
+    assert_eq!(6, solve_case1("day12.example"));
+    assert_eq!(156366, solve_case1("day12.input"));
+    println!("Part 2");
+    assert_eq!(4, solve_case2("day12.example"));
+    assert_eq!(96852, solve_case2("day12.input"));
 }
