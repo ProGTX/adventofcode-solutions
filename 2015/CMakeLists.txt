@@ -10,3 +10,5 @@ add_sample(day09 2015)
 add_sample(day10 2015)
 add_sample(day11 2015)
 add_sample(day12 2015)
+# day13 is pretty much the same as day09
+add_sample(day14 2015)
