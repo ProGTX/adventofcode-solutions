@@ -16,7 +16,6 @@
 #include <string_view>
 #include <vector>
 
-using namespace std::string_view_literals;
 using int_t = std::uint64_t;
 using signal_t = bool;
 using inputs_t = std::map<std::string, signal_t>;
@@ -151,9 +150,9 @@ int_t solve_case(const std::string& filename) {
   std::vector<std::string> output_list;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [from, to] = aoc::split_once<std::string>(line, " -> "sv);
+    auto [from, to] = aoc::split_once<std::string>(line, " -> ");
     auto name = ((from[0] == '%') || (from[0] == '&')) ? from.substr(1) : from;
-    auto outputs = aoc::split<outputs_t>(to, ", "sv);
+    auto outputs = aoc::split<outputs_t>(to, ", ");
     std::ranges::copy(outputs, std::back_inserter(output_list));
     for (const auto& out : outputs) {
       input_map[out].push_back(name);

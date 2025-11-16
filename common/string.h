@@ -201,7 +201,13 @@ template <class output_t, bool skip_empty = false, std::ranges::range R,
           class Pattern, class Proj = std::identity>
 constexpr output_t split(R&& r, Pattern&& delimiter, Proj proj = {}) {
   using value_type = typename output_t::value_type;
-  auto split_view = r | std::views::split(delimiter);
+  auto split_view = [&]() {
+    if constexpr (std::same_as<std::decay_t<Pattern>, const char*>) {
+      return r | std::views::split(std::string_view{delimiter});
+    } else {
+      return r | std::views::split(delimiter);
+    }
+  }();
   output_t out;
 
   constexpr const auto fixed_capacity = max_container_elems<output_t>();

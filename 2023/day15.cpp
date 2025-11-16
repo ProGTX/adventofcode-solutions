@@ -12,8 +12,6 @@
 #include <type_traits>
 #include <vector>
 
-using namespace std::string_view_literals;
-
 // Determine the ASCII code for the current character of the string.
 // Increase the current value by the ASCII code you just determined.
 // Set the current value to itself multiplied by 17.
@@ -49,7 +47,7 @@ lens_t split_label(std::string_view str) {
   if (str.back() == '-') {
     return {std::string(str.substr(0, str.size() - 1)), -1};
   }
-  auto [name, number] = aoc::split_once(str, "="sv);
+  auto [name, number] = aoc::split_once(str, '=');
   return {std::string(name), aoc::to_number<int>(number)};
 }
 
