@@ -87,8 +87,8 @@ int_t solve_case(const std::string& filename) {
   std::vector<std::string> patterns;
   for (int row = 0; std::string line : aoc::views::read_lines(filename)) {
     if (row < 1) {
-      patterns = aoc::split<std::vector<std::string>>(
-          line, ',', aoc::trimmer<std::string>());
+      patterns = aoc::split_to_vec<std::string>(line, ',',
+                                                aoc::trimmer<std::string>());
     } else {
       designs.push_back(std::move(line));
     }

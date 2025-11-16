@@ -103,7 +103,7 @@ int_t solve_case(const std::string& filename) {
   crabs_t crabs;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto crabs_pos = aoc::split<std::vector<int>>(line, ',');
+    auto crabs_pos = aoc::split_to_vec<int>(line, ',');
     for (const int pos : crabs_pos) {
       auto crab_it = crabs.find(pos);
       if (crab_it == std::end(crabs)) {

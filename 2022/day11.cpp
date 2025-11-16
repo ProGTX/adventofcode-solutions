@@ -48,8 +48,8 @@ item_t solve_case(const std::string& filename) {
   item_t divisible_max = 1;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto items = aoc::split<std::vector<std::string>>(line, ',');
-    auto instructions = aoc::split<std::vector<std::string>>(items[0], ' ');
+    auto items = aoc::split_to_vec<std::string>(line, ',');
+    auto instructions = aoc::split_to_vec<std::string>(items[0], ' ');
     if (instructions[0] == "Monkey") {
       current = &monkeys.emplace_back();
     } else if (instructions[0] == "Starting") {

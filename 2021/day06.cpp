@@ -49,7 +49,7 @@ int_t solve_case(const std::string& filename) {
   std::ranges::fill(fish, 0);
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto stages = aoc::split<std::vector<int>>(line, ',');
+    auto stages = aoc::split_to_vec<int>(line, ',');
     for (const int fish_stage : stages) {
       ++fish[fish_stage];
     }

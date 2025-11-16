@@ -65,8 +65,7 @@ int_t solve_case(const std::string& filename) {
     auto number_str =
         line.substr((linenum == 1) ? sizeof("Time:") : sizeof("Distance:"));
     using store_t = std::conditional_t<single_race, std::string_view, int_t>;
-    auto tmp_container =
-        aoc::split<std::vector<store_t>, true>(number_str, ' ');
+    auto tmp_container = aoc::split_to_vec<store_t, true>(number_str, ' ');
     auto& container = (linenum == 1) ? total_times : record_distances;
     if constexpr (!single_race) {
       container = std::move(tmp_container);

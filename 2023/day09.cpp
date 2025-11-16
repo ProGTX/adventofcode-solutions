@@ -66,7 +66,7 @@ template <int multiplier>
 int solve_case(const std::string& filename) {
   std::vector<std::vector<int>> values;
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    values.push_back(aoc::split<std::vector<int>>(line, ' '));
+    values.push_back(aoc::split_to_vec<int>(line, ' '));
   }
 
   int sum = sum_predictions<multiplier>(values);

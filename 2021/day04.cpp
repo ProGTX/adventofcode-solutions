@@ -116,7 +116,7 @@ int solve_case(const std::string& filename, int game_rounds) {
   board* current_board_ptr = nullptr;
 
   std::ifstream file{filename};
-  auto bingo_numbers = aoc::split<std::vector<int>>(aoc::read_line(file), ',');
+  auto bingo_numbers = aoc::split_to_vec<int>(aoc::read_line(file), ',');
 
   for (std::string_view line :
        aoc::views::read_lines(file, aoc::keep_empty{})) {

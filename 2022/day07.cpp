@@ -100,7 +100,7 @@ int solve_case(const std::string& filename) {
   filesystem_t* current_node = &filesystem;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [instruction, name, cd_to] = aoc::split_fixed<3>(line, ' ');
+    auto [instruction, name, cd_to] = aoc::split_to_array<3>(line, ' ');
     if (instruction[0] == '$') {
       if (name == "cd") {
         if (cd_to == "/") {

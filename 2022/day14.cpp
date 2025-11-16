@@ -37,8 +37,7 @@ int solve_case(const std::string& filename) {
       }
       return value;
     });
-    auto rock_pairs =
-        aoc::split<std::vector<std::string_view>>(transformed_line, '-');
+    auto rock_pairs = aoc::split_to_vec(transformed_line, '-');
     auto previous = aoc::split<point>(rock_pairs[0], ',');
     min_max.update(previous);
     for (const auto& rock_pair_str : rock_pairs | std::views::drop(1)) {

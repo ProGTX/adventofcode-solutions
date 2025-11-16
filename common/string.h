@@ -234,9 +234,15 @@ static_assert(std::ranges::equal(
 template <std::size_t N, class output_inner_t = std::string_view,
           bool skip_empty = false, std::ranges::range R, class Pattern,
           class Proj = std::identity>
-constexpr std::array<output_inner_t, N> split_fixed(R&& r, Pattern&& delimiter,
-                                                    Proj proj = {}) {
+constexpr auto split_to_array(R&& r, Pattern&& delimiter, Proj proj = {}) {
   return split<std::array<output_inner_t, N>, skip_empty>(
+      std::forward<R>(r), std::forward<Pattern>(delimiter), std::move(proj));
+}
+
+template <class output_inner_t = std::string_view, bool skip_empty = false,
+          std::ranges::range R, class Pattern, class Proj = std::identity>
+constexpr auto split_to_vec(R&& r, Pattern&& delimiter, Proj proj = {}) {
+  return split<std::vector<output_inner_t>, skip_empty>(
       std::forward<R>(r), std::forward<Pattern>(delimiter), std::move(proj));
 }
 

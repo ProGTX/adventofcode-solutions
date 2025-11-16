@@ -172,7 +172,7 @@ int_t solve_case(const std::string& filename) {
   [&]() {
     auto line = aoc::read_line(file);
     const auto seeds_ints =
-        aoc::split<std::vector<int_t>>(line.substr(sizeof("seeds:")), ' ');
+        aoc::split_to_vec<int_t>(line.substr(sizeof("seeds:")), ' ');
     for (int i = 0; i < seeds_ints.size(); i += 2) {
       if constexpr (!full_ranges) {
         current_seeds.emplace_back(seeds_ints[i], 1);

@@ -88,7 +88,7 @@ std::tuple<std::vector<gate_t>, signal_t, signal_t> parse(
       }
       gate.lhs = get_signal(gate_str);
     } else {
-      const auto [lhs, op, rhs] = aoc::split_fixed<3>(gate_str, ' ');
+      const auto [lhs, op, rhs] = aoc::split_to_array<3>(gate_str, ' ');
       gate.lhs = get_signal(lhs);
       gate.op = [&]() {
         if (op == and_str) {

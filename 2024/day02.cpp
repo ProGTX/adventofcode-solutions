@@ -40,7 +40,7 @@ int solve_case(const std::string& filename) {
   int sum = 0;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto reports = aoc::split<std::vector<int>>(line, ' ');
+    auto reports = aoc::split_to_vec<int>(line, ' ');
     sum += static_cast<int>(is_report_safe(reports));
   }
 

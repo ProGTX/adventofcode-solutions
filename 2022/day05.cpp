@@ -43,8 +43,7 @@ std::string solve_case(const std::string& filename) {
         }
       } else {
         // Done parsing crate stacks, put them in correct order
-        auto stack_numbers =
-            aoc::split<std::vector<std::string_view>>(line, ' ');
+        auto stack_numbers = aoc::split_to_vec(line, ' ');
         // -2 because there are multiple spaces between numbers,
         // and there's always a space after the last number
         num_stacks =
@@ -60,7 +59,7 @@ std::string solve_case(const std::string& filename) {
 
     // move N from A to B
     auto [move_str, n_str, from_str, from_pos_str, to_str, to_pos_str] =
-        aoc::split_fixed<6>(line, ' ');
+        aoc::split_to_array<6>(line, ' ');
 
     auto move_num_crates = aoc::to_number<int>(n_str);
 

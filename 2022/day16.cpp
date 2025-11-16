@@ -90,8 +90,8 @@ int solve_case(const std::string& filename) {
 
     auto rate = aoc::to_number<int>(rate_str.substr(sizeof("rate")));
     tunnel_info = tunnel_info.substr(sizeof("tunnels lead to valves"));
-    auto tunnels = aoc::split<std::vector<std::string>>(
-        tunnel_info, ',', aoc::trimmer<std::string>());
+    auto tunnels = aoc::split_to_vec<std::string>(tunnel_info, ',',
+                                                  aoc::trimmer<std::string>());
 
     named_valves.emplace_back(std::move(name), rate, std::move(tunnels));
   }
