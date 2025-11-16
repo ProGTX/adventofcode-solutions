@@ -170,6 +170,19 @@ constexpr auto read_numbers(std::ifstream& file, Args... args) {
 
 } // namespace views
 
+constexpr std::size_t pattern_size(std::string_view str) { return str.size(); }
+constexpr std::size_t pattern_size(const std::string& str) {
+  return str.size();
+}
+constexpr std::size_t pattern_size(char c) { return 1; }
+constexpr std::size_t pattern_size(const char* str) {
+  return pattern_size(std::string_view{str});
+}
+template <std::size_t N>
+constexpr std::size_t pattern_size(const char[N]) {
+  return N;
+}
+
 template <class... Args>
 constexpr std::string read_line(std::ifstream& stream, Args... args) {
   auto view = views::read_lines(stream, std::forward<Args>(args)...);
@@ -197,6 +210,47 @@ constexpr value_type construct(R&& r) {
   }
 }
 
+/**
+ * Splits a char range r based on the delimiter.
+ *
+ * The output type controls a lot of the behavior of the function.
+ * It must be a container-like type that can be iterated over
+ * and has value_type defined.
+ *
+ * skip_empty and the projection control what happens to the intermediate
+ * elements. If skip_empty is true, empty element won't be stored.
+ * The projection is applied to the element before storing.
+ *
+ * @code
+ * auto result = aoc::split<std::vector<std::string>>("hello world", ' ');
+ * static_assert(std::same_as<decltype(result), std::vector<std::string>>);
+ * assert(result[0] == "hello");
+ * assert(result[1] == "world");
+ * @endcode
+ *
+ * @code
+ * // A container of numbers instead of string/string_view
+ * // actually parses the intermediate string_view.
+ * auto result = aoc::split<std::array<int, 3>>("1 2 3", ' ');
+ * static_assert(std::same_as<decltype(result), std::array<int, 3>);
+ * assert(result[0] == 1);
+ * assert(result[1] == 2);
+ * assert(result[2] == 3);
+ * @endcode
+ *
+ * @code
+ * // Note that when the output is an array, the last element doesn't contain
+ * // the rest of the string, it's just discarded.
+ * auto result = aoc::split<std::array<std::string_view, 2>>(
+ *                  "hello world today", ' ');
+ * static_assert(std::same_as<
+ *                 decltype(result),
+ *                 std::array<std::string_view, 2>>);
+ * assert(result[0] == "hello");
+ * assert(result[1] == "world");
+ * // "today" is not included in result
+ * @endcode
+ */
 template <class output_t, bool skip_empty = false, std::ranges::range R,
           class Pattern, class Proj = std::identity>
 constexpr output_t split(R&& r, Pattern&& delimiter, Proj proj = {}) {
@@ -237,28 +291,74 @@ static_assert(std::ranges::equal(
     split<std::array<std::string_view, 5>, true>(
         "adsf-+qwret-+nvfkbdsj-+orthdfjgh-+-+dfjrleih"sv, "-+"sv)));
 
-template <std::size_t N, class output_inner_t = std::string_view,
+/**
+ * Simplified version of split that stores output to std::array<value_type, N>.
+ * 
+ * If the string splits into more than N elements,
+ * everything after the Nth element is discarded.
+ */
+template <std::size_t N, class value_type = std::string_view,
           bool skip_empty = false, std::ranges::range R, class Pattern,
           class Proj = std::identity>
 constexpr auto split_to_array(R&& r, Pattern&& delimiter, Proj proj = {}) {
-  return split<std::array<output_inner_t, N>, skip_empty>(
+  return split<std::array<value_type, N>, skip_empty>(
       std::forward<R>(r), std::forward<Pattern>(delimiter), std::move(proj));
 }
+static_assert("world" == split_to_array<2>("hello world today", " ")[1]);
 
-template <class output_inner_t = std::string_view, bool skip_empty = false,
+/// Simplified version of split that stores output to std::vector<value_type>
+template <class value_type = std::string_view, bool skip_empty = false,
           std::ranges::range R, class Pattern, class Proj = std::identity>
 constexpr auto split_to_vec(R&& r, Pattern&& delimiter, Proj proj = {}) {
-  return split<std::vector<output_inner_t>, skip_empty>(
+  return split<std::vector<value_type>, skip_empty>(
       std::forward<R>(r), std::forward<Pattern>(delimiter), std::move(proj));
 }
 
-template <class output_inner_t = std::string_view, bool skip_empty = false,
-          std::ranges::range R, class Pattern, class Proj = std::identity>
-constexpr std::array<output_inner_t, 2> split_once(R&& r, Pattern&& delimiter,
-                                                   Proj proj = {}) {
-  return split<std::array<output_inner_t, 2>, skip_empty>(
-      std::forward<R>(r), std::forward<Pattern>(delimiter), std::move(proj));
+/**
+ * Splits a string view into exactly two parts.
+ *
+ * The first part contains everything before the delimiter,
+ * and the second part everything after.
+ * If the delimiter is not found, then the second part is an empty string.
+ *
+ * Works similar to split<std::array<value_type, 2>>,
+ * but in case of more than 2 elements doesn't split the rest of the string.
+ *
+ * @code
+ * auto result = aoc::split_once("hello world today", ' ');
+ * static_assert(std::same_as<
+ *                 decltype(result),
+ *                 std::array<std::string_view, 2>>);
+ * assert(result[0] == "hello");
+ * assert(result[1] == "world today");
+ * @endcode
+ *
+ * @code
+ * auto result = aoc::split_once<int>("1 2", ' ');
+ * static_assert(std::same_as<
+ *                 decltype(result),
+ *                 std::array<int, 2>>);
+ * assert(result[0] == 1);
+ * assert(result[1] == 2);
+ * // Note that if we passed "1 2 3", the second part would be "2 3",
+ * // which would fail to parse as an int.
+ * @endcode
+ */
+template <class value_type = std::string_view, class Pattern,
+          class Proj = std::identity>
+constexpr auto split_once(std::string_view str, Pattern&& delimiter,
+                          Proj proj = {}) {
+  const auto pos = str.find(delimiter);
+  return std::array<value_type, 2>{
+      construct<value_type>(proj(str.substr(0, pos))),
+      construct<value_type>(
+          proj((pos == std::string::npos)
+                   ? ""
+                   : str.substr(pos + pattern_size(delimiter)))),
+  };
 }
+static_assert("world today" == split_once("hello world today", ' ')[1]);
+static_assert(2 == aoc::split_once<int>("1 2", ' ')[1]);
 
 template <char one = '1', class return_t = unsigned, std::ranges::range R>
 constexpr return_t binary_to_number(R&& str) {
