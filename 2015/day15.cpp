@@ -9,7 +9,7 @@
 #include <ranges>
 #include <span>
 
-struct Cookie {
+struct Ingredient {
   std::array<i32, 4> properties;
   u32 calories;
 };
@@ -18,11 +18,11 @@ fn parse_property(str property) -> i32 {
   return aoc::to_number<i32>(aoc::split_once(property, ' ')[1]);
 }
 
-fn parse(String const& filename) -> Vec<Cookie> {
+fn parse(String const& filename) -> Vec<Ingredient> {
   return aoc::views::read_lines(filename) |
          std::views::transform([](str line) {
            let properties = aoc::split_to_array<5>(line, ", ");
-           return Cookie{
+           return Ingredient{
                .properties =
                    {
                        parse_property(aoc::split_once(properties[0], ": ")[1]),
@@ -33,21 +33,21 @@ fn parse(String const& filename) -> Vec<Cookie> {
                .calories = static_cast<u32>(parse_property(properties[4])),
            };
          }) |
-         aoc::ranges::to<Vec<Cookie>>();
+         aoc::ranges::to<Vec<Ingredient>>();
 }
 
 template <bool KCAL_500>
-fn score_cookie(std::span<const Cookie> cookies,
+fn score_cookie(std::span<const Ingredient> ingredients,
                 std::span<const u32> teaspoon_stack) -> u32 {
-  auto result = Cookie{};
+  auto result = Ingredient{};
   for (let[index, teaspoon_u32] : teaspoon_stack | std::views::enumerate) {
     let teaspoon = static_cast<i32>(teaspoon_u32);
     for (auto&& [res_prop, cookie_prop] :
-         std::views::zip(result.properties, cookies[index].properties)) {
+         std::views::zip(result.properties, ingredients[index].properties)) {
       res_prop += cookie_prop * teaspoon;
     }
     if constexpr (KCAL_500) {
-      result.calories += cookies[index].calories * teaspoon_u32;
+      result.calories += ingredients[index].calories * teaspoon_u32;
     }
   }
   if constexpr (KCAL_500) {
@@ -65,7 +65,7 @@ fn score_cookie(std::span<const Cookie> cookies,
 template <bool KCAL_500>
 fn solve_case(String const& filename) -> u32 {
   constexpr let LIMIT = 100u;
-  let cookies = parse(filename);
+  let ingredients = parse(filename);
   auto max_score = 0u;
   auto teaspoon_stack = Vec<u32>{};
   teaspoon_stack.push_back(0u);
@@ -86,9 +86,9 @@ fn solve_case(String const& filename) -> u32 {
         break;
       }
     }
-    if (teaspoon_stack.size() == (cookies.size() - 1)) {
+    if (teaspoon_stack.size() == (ingredients.size() - 1)) {
       teaspoon_stack.push_back(LIMIT - teaspoons);
-      let score = score_cookie<KCAL_500>(cookies, teaspoon_stack);
+      let score = score_cookie<KCAL_500>(ingredients, teaspoon_stack);
       max_score = std::max(max_score, score);
       teaspoon_stack.pop_back();
       teaspoon_stack.back() += 1;

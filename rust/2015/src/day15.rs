@@ -1,5 +1,5 @@
 #[derive(Default, Debug)]
-struct Cookie {
+struct Ingredient {
     capacity: i32,
     durability: i32,
     flavor: i32,
@@ -11,13 +11,13 @@ fn parse_property(property: &str) -> i32 {
     property.split_once(' ').unwrap().1.parse::<i32>().unwrap()
 }
 
-fn parse(filename: &str) -> Vec<Cookie> {
+fn parse(filename: &str) -> Vec<Ingredient> {
     std::fs::read_to_string(filename)
         .unwrap()
         .lines()
         .map(|line| {
             let properties = line.split(", ").collect::<Vec<&str>>();
-            Cookie {
+            Ingredient {
                 capacity: parse_property(properties[0].split_once(": ").unwrap().1),
                 durability: parse_property(properties[1]),
                 flavor: parse_property(properties[2]),
@@ -28,16 +28,16 @@ fn parse(filename: &str) -> Vec<Cookie> {
         .collect()
 }
 
-fn score_cookie<const KCAL_500: bool>(cookies: &[Cookie], teaspoon_stack: &[u32]) -> u32 {
-    let mut result = Cookie::default();
+fn score_cookie<const KCAL_500: bool>(ingredients: &[Ingredient], teaspoon_stack: &[u32]) -> u32 {
+    let mut result = Ingredient::default();
     for (index, teaspoon_u32) in teaspoon_stack.iter().enumerate() {
         let teaspoon = *teaspoon_u32 as i32;
-        result.capacity += cookies[index].capacity * teaspoon;
-        result.durability += cookies[index].durability * teaspoon;
-        result.flavor += cookies[index].flavor * teaspoon;
-        result.texture += cookies[index].texture * teaspoon;
+        result.capacity += ingredients[index].capacity * teaspoon;
+        result.durability += ingredients[index].durability * teaspoon;
+        result.flavor += ingredients[index].flavor * teaspoon;
+        result.texture += ingredients[index].texture * teaspoon;
         if (KCAL_500) {
-            result.calories += cookies[index].calories * teaspoon_u32;
+            result.calories += ingredients[index].calories * teaspoon_u32;
         }
     }
     if (KCAL_500) {
@@ -57,7 +57,7 @@ fn score_cookie<const KCAL_500: bool>(cookies: &[Cookie], teaspoon_stack: &[u32]
 
 fn solve_case<const KCAL_500: bool>(filename: &str) -> u32 {
     const LIMIT: u32 = 100;
-    let cookies = parse(filename);
+    let ingredients = parse(filename);
     let mut max_score = 0;
     let mut teaspoon_stack = Vec::<u32>::new();
     teaspoon_stack.push(0);
@@ -77,9 +77,9 @@ fn solve_case<const KCAL_500: bool>(filename: &str) -> u32 {
                 }
             }
         }
-        if (teaspoon_stack.len() == (cookies.len() - 1)) {
+        if (teaspoon_stack.len() == (ingredients.len() - 1)) {
             teaspoon_stack.push(LIMIT - teaspoons);
-            let score = score_cookie::<KCAL_500>(&cookies, &teaspoon_stack);
+            let score = score_cookie::<KCAL_500>(&ingredients, &teaspoon_stack);
             max_score = max_score.max(score);
             teaspoon_stack.pop();
             *teaspoon_stack.last_mut().unwrap() += 1;
