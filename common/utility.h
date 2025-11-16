@@ -582,8 +582,7 @@ constexpr auto to_number_with_rest(std::string_view str, int base = 10) {
   value_type value;
   auto result = std::from_chars(first, last, value, base);
   if (result.ec != std::errc{}) [[unlikely]] {
-    throw std::runtime_error("to_number failed to parse " +
-                             std::string(result.ptr));
+    throw std::runtime_error("to_number failed to parse " + std::string(str));
   }
   return std::pair<value_type, std::string_view>{
       value, str.substr(std::distance(&str[0], result.ptr))};
