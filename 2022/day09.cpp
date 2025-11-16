@@ -147,8 +147,7 @@ int solve_case(const std::string& filename) {
   };
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [operation, value_str] =
-        aoc::split<std::array<std::string_view, 2>>(line, ' ');
+    auto [operation, value_str] = aoc::split_once(line, ' ');
     auto value = aoc::to_number<int>(value_str);
     switch (operation[0]) {
       case 'R':

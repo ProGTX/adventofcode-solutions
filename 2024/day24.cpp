@@ -116,8 +116,7 @@ int_t solve_case(const std::string& filename) {
       wires.push_back(aoc::to_number<int>(line.substr(wire_prefix.size() + 2)));
       ++wire_id;
     } else {
-      const auto [input_str, output_str] =
-          aoc::split<std::array<std::string_view, 2>>(line, '-');
+      const auto [input_str, output_str] = aoc::split_once(line, '-');
       const auto output_name = std::string{output_str.substr(2)};
       try_insert_wire(output_name);
 

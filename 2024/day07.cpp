@@ -100,8 +100,7 @@ int_t solve_case(const std::string& filename) {
   int_t sum = 0;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [test_value_str, operands_str] =
-        aoc::split<std::array<std::string_view, 2>>(line, ':');
+    auto [test_value_str, operands_str] = aoc::split_once(line, ':');
     auto test_value = aoc::to_number<int_t>(test_value_str);
     auto operands = aoc::split<operands_t>(operands_str.substr(1), ' ');
     sum += evaluate_equation<concat>(test_value, operands);

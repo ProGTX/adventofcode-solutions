@@ -107,11 +107,10 @@ int_t solve_case(const std::string& filename) {
 
   for (std::string_view line : aoc::views::read_lines(file)) {
     // node = (left, right)
-    auto [node, lr] =
-        aoc::split<std::array<std::string, 2>>(line, '=', aoc::trimmer<>{});
+    auto [node, lr] = aoc::split_once<std::string>(line, '=', aoc::trimmer<>{});
     lr = aoc::trim(lr, " ())");
     auto [left, right] =
-        aoc::split<std::array<std::string, 2>>(lr, ',', aoc::trimmer<>{});
+        aoc::split_once<std::string>(lr, ',', aoc::trimmer<>{});
 
     auto node_it = add_name_index(node);
     auto left_it = add_name_index(left);

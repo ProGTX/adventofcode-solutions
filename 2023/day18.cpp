@@ -33,8 +33,7 @@ int_t solve_case(const std::string& filename) {
   const auto parse_input_p1 =
       [&](std::string_view line) -> std::pair<point_t, int_t> {
     const char direction = line[0];
-    auto [num_cubes_str, color_str] =
-        aoc::split<std::array<std::string_view, 2>>(line.substr(2), ' ');
+    auto [num_cubes_str, color_str] = aoc::split_once(line.substr(2), ' ');
     const auto num_cubes = aoc::to_number<int_t>(num_cubes_str);
     const auto diff = aoc::get_diff<int_t>([direction]() {
       switch (direction) {
@@ -63,8 +62,7 @@ int_t solve_case(const std::string& filename) {
   };
   const auto parse_input_p2 =
       [&](std::string_view line) -> std::pair<point_t, int_t> {
-    auto [num_cubes_str, hex_str] =
-        aoc::split<std::array<std::string_view, 2>>(line.substr(2), ' ');
+    auto [num_cubes_str, hex_str] = aoc::split_once(line.substr(2), ' ');
     const auto diff =
         aoc::get_diff(hex_direction_mapping[aoc::to_number(hex_str[7])]);
     auto num_cubes = aoc::to_number<int_t>(hex_str.substr(2, 5), hex_base);

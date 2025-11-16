@@ -39,8 +39,7 @@ int solve_part1(const std::string& filename) {
   };
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [opponentStr, responseStr] =
-        aoc::split<std::array<std::string_view, 2>>(line, ' ');
+    auto [opponentStr, responseStr] = aoc::split_once(line, ' ');
     auto opponent = hand_map.at(opponentStr.at(0));
     auto response = hand_map.at(responseStr.at(0));
     // Add 1 because values are lower
@@ -70,8 +69,7 @@ int solve_part2(const std::string& filename) {
   };
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [opponentStr, outcomeStr] =
-        aoc::split<std::array<std::string_view, 2>>(line, ' ');
+    auto [opponentStr, outcomeStr] = aoc::split_once(line, ' ');
     auto opponent = hand_map.at(opponentStr.at(0));
     auto outcome = hand_map.at(outcomeStr.at(0));
     score += outcome;

@@ -151,7 +151,7 @@ int_t solve_case(const std::string& filename) {
   std::vector<std::string> output_list;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [from, to] = aoc::split<std::array<std::string, 2>>(line, " -> "sv);
+    auto [from, to] = aoc::split_once<std::string>(line, " -> "sv);
     auto name = ((from[0] == '%') || (from[0] == '&')) ? from.substr(1) : from;
     auto outputs = aoc::split<outputs_t>(to, ", "sv);
     std::ranges::copy(outputs, std::back_inserter(output_list));

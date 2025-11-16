@@ -199,8 +199,7 @@ int_t solve_case(const std::string& filename) {
   input_t input;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [signal_patterns_str, output_str] =
-        aoc::split<std::array<std::string_view, 2>>(line, '|');
+    auto [signal_patterns_str, output_str] = aoc::split_once(line, '|');
     input.emplace_back(
         aoc::split<typename input_line_t::signal_patterns_t>(
             signal_patterns_str, ' '),

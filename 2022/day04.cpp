@@ -18,11 +18,10 @@ int solve_case(const std::string& filename) {
   int score = 0;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [firstElfStr, secondElfStr] =
-        aoc::split<std::array<std::string_view, 2>>(line, ',');
+    auto [firstElfStr, secondElfStr] = aoc::split_once(line, ',');
 
-    auto firstElf = range{aoc::split<std::array<int, 2>>(firstElfStr, '-')};
-    auto secondElf = range{aoc::split<std::array<int, 2>>(secondElfStr, '-')};
+    auto firstElf = range{aoc::split_once<int>(firstElfStr, '-')};
+    auto secondElf = range{aoc::split_once<int>(secondElfStr, '-')};
 
     if constexpr (use_overlaps) {
       if (firstElf.overlaps_with(secondElf)) {

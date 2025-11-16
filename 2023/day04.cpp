@@ -63,10 +63,8 @@ int solve_case(const std::string& filename) {
   int sum = 0;
 
   for (int id = 0; std::string_view line : aoc::views::read_lines(filename)) {
-    auto [card_id, numbers] =
-        aoc::split<std::array<std::string_view, 2>>(line, ':');
-    auto [winning_str, actual_str] =
-        aoc::split<std::array<std::string_view, 2>>(numbers, '|');
+    auto [card_id, numbers] = aoc::split_once(line, ':');
+    auto [winning_str, actual_str] = aoc::split_once(numbers, '|');
     using card_t = card_type<num_winning, num_actual>;
     card_t current_card{
         aoc::split<typename card_t::winning_t, true>(winning_str, ' '),

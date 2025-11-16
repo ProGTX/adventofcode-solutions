@@ -31,8 +31,7 @@ int solve_case(const std::string& filename) {
   lines_t lines;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [start_str, end_str] =
-        aoc::split<std::array<std::string_view, 2>>(line, '-');
+    auto [start_str, end_str] = aoc::split_once(line, '-');
     auto start = aoc::split<point>(start_str, ',');
     auto end =
         aoc::split<point>(std::string_view{end_str}.substr(sizeof(">")), ',');

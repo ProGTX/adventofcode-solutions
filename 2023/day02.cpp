@@ -46,14 +46,13 @@ int cube_power(std::span<const std::string_view, Extent> games) {
   static constexpr bool part2 = (config == config2);
   cube_config_t max_config{1, 1, 1};
   for (auto game_str : games) {
-    auto cubes_str = aoc::split<std::array<std::string_view, 3>>(game_str, ',');
+    auto cubes_str = aoc::split_fixed<3>(game_str, ',');
     cube_config_t current_config;
     for (auto cube_config : cubes_str) {
       if (cube_config.empty()) {
         continue;
       }
-      auto [number_str, color] = aoc::split<std::array<std::string_view, 2>>(
-          aoc::trim(cube_config), ' ');
+      auto [number_str, color] = aoc::split_once(aoc::trim(cube_config), ' ');
       auto number = aoc::to_number<int>(number_str);
       if (color == "red") {
         current_config.red = number;
@@ -81,8 +80,7 @@ int solve_case(const std::string& filename) {
   int sum = 0;
 
   for (int id = 1; std::string_view line : aoc::views::read_lines(filename)) {
-    auto [prefix, game_str] =
-        aoc::split<std::array<std::string_view, 2>>(line, ':');
+    auto [prefix, game_str] = aoc::split_once(line, ':');
     auto games = aoc::split<std::vector<std::string_view>>(game_str, ';');
     int power = cube_power<config>(std::span<const std::string_view>{games});
     if constexpr (config != config2) {

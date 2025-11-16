@@ -80,7 +80,7 @@ int solve_case(const std::string& filename) {
       continue;
     }
     if (parsing_rules) {
-      auto [before, after] = aoc::split<std::array<int, 2>>(line, '|');
+      auto [before, after] = aoc::split_once<int>(line, '|');
       rules[before].after.push_back(after);
       rules[after].before.push_back(before);
     } else {

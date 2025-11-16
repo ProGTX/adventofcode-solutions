@@ -131,7 +131,7 @@ int solve_case(const std::string& filename) {
   };
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [op, value] = aoc::split<std::array<std::string_view, 2>>(line, ' ');
+    auto [op, value] = aoc::split_once(line, ' ');
 
     // Place new instruction into the pipeline
     if (op == "noop") {

@@ -57,7 +57,7 @@ int solve_case(const std::string& filename) {
   std::vector<robot_t> robots;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [pos, vel] = aoc::split<std::array<std::string_view, 2>>(line, ' ');
+    auto [pos, vel] = aoc::split_once(line, ' ');
     auto position = aoc::split<point>(pos.substr(2), ',');
     auto velocity = aoc::split<point>(vel.substr(2), ',');
     robots.push_back({position, velocity});

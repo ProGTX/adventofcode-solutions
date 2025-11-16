@@ -18,7 +18,7 @@ int solve_part1(const std::string& filename) {
   int depth = 0;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto values = aoc::split<std::array<std::string_view, 2>>(line, ' ');
+    auto values = aoc::split_once(line, ' ');
     auto command = values[0];
     auto number = aoc::to_number<int>(values[1]);
 
@@ -41,7 +41,7 @@ int solve_part2(const std::string& filename) {
   int aim = 0;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto values = aoc::split<std::array<std::string_view, 2>>(line, ' ');
+    auto values = aoc::split_once(line, ' ');
     auto command = values[0];
     auto number = aoc::to_number<int>(values[1]);
 

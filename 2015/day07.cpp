@@ -74,8 +74,7 @@ std::tuple<std::vector<gate_t>, signal_t, signal_t> parse(
   };
   std::vector<gate_t> inputs;
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    const auto [gate_str, wire_name] =
-        aoc::split<std::array<std::string_view, 2>>(line, arrow_str);
+    const auto [gate_str, wire_name] = aoc::split_once(line, arrow_str);
     const auto output_wire = get_signal(wire_name);
     gate_t gate{};
     if (gate_str.starts_with(not_str)) {
@@ -89,8 +88,7 @@ std::tuple<std::vector<gate_t>, signal_t, signal_t> parse(
       }
       gate.lhs = get_signal(gate_str);
     } else {
-      const auto [lhs, op, rhs] =
-          aoc::split<std::array<std::string_view, 3>>(gate_str, ' ');
+      const auto [lhs, op, rhs] = aoc::split_fixed<3>(gate_str, ' ');
       gate.lhs = get_signal(lhs);
       gate.op = [&]() {
         if (op == and_str) {

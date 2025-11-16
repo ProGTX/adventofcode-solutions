@@ -29,8 +29,7 @@ connections_t parse(const std::string& filename) {
   };
   connections_t connections;
   for (str line : aoc::views::read_lines(filename)) {
-    let[from, to_str, to, eq_str, value] =
-        aoc::split<std::array<str, 5>>(line, ' ');
+    let[from, to_str, to, eq_str, value] = aoc::split_fixed<5>(line, ' ');
     let from_id = get_id(from);
     let to_id = get_id(to);
     connections.resize(

@@ -172,8 +172,7 @@ template <bool joker>
 int solve_case(const std::string& filename) {
   bids_type<joker> bids;
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [hand_str, bid_str] =
-        aoc::split<std::array<std::string_view, 2>>(line, ' ');
+    auto [hand_str, bid_str] = aoc::split_once(line, ' ');
     bids.emplace_back(hand_str, aoc::to_number<int>(bid_str));
   }
 

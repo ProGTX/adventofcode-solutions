@@ -161,8 +161,7 @@ template <int factor>
 int solve_case(const std::string& filename) {
   int sum = 0;
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [springs, groups_str] =
-        aoc::split<std::array<std::string, 2>>(line, ' ');
+    auto [springs, groups_str] = aoc::split_once<std::string>(line, ' ');
     auto spring_groups = aoc::split<std::vector<int>>(groups_str, ',');
     std::tie(springs, spring_groups) = unfold<factor>(springs, spring_groups);
     sum += num_arrangements(springs, spring_groups);

@@ -89,7 +89,7 @@ int_t solve_case(const std::string& filename) {
     auto& current = machines.back();
     const auto prefix = line.substr(0, prize_prefix.size());
     line = line.substr(prize_prefix.size());
-    auto [x, y] = aoc::split<std::array<std::string_view, 2>>(line, ',');
+    auto [x, y] = aoc::split_once(line, ',');
 
     if (prefix == prize_prefix) {
       current.prize = point_t{aoc::to_number<int_t>(x.substr(2)),

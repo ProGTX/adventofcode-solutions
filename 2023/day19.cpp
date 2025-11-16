@@ -120,8 +120,7 @@ int_t solve_case(const std::string& filename) {
   };
   const auto parse_workflows = [&](std::string_view line) {
     // px{a<2006:qkq,m>2090:A,rfg}
-    auto [name, rules_str_raw] =
-        aoc::split<std::array<std::string_view, 2>>(line, '{');
+    auto [name, rules_str_raw] = aoc::split_once(line, '{');
     auto rules_str = aoc::split<std::vector<std::string_view>>(
         rules_str_raw.substr(0, rules_str_raw.size() - 1), ',');
     workflow_t workflow;
@@ -132,8 +131,8 @@ int_t solve_case(const std::string& filename) {
   };
   const auto parse_parts = [&](std::string_view line) {
     // {x=787,m=2655,a=1222,s=2876}
-    auto [x, m, a, s] = aoc::split<std::array<std::string_view, 4>>(
-        line.substr(1, line.size() - 2), ',');
+    auto [x, m, a, s] =
+        aoc::split_fixed<4>(line.substr(1, line.size() - 2), ',');
     part_t part{
         .x = aoc::to_number<int>(x.substr(2)),
         .m = aoc::to_number<int>(m.substr(2)),

@@ -49,7 +49,7 @@ lens_t split_label(std::string_view str) {
   if (str.back() == '-') {
     return {std::string(str.substr(0, str.size() - 1)), -1};
   }
-  auto [name, number] = aoc::split<std::array<std::string_view, 2>>(str, "="sv);
+  auto [name, number] = aoc::split_once(str, "="sv);
   return {std::string(name), aoc::to_number<int>(number)};
 }
 

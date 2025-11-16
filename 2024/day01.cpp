@@ -77,8 +77,7 @@ int solve_case(const std::string& filename) {
   std::vector<int> right_list;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [left, right] =
-        aoc::split<std::array<int, 2>>(line, std::string_view("   "));
+    auto [left, right] = aoc::split_once<int>(line, std::string_view("   "));
     left_list.push_back(left);
     right_list.push_back(right);
   }

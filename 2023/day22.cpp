@@ -299,7 +299,7 @@ int_t solve_case(const std::string& filename) {
 
   for ([[maybe_unused]] int id = 0;
        std::string_view line : aoc::views::read_lines(filename)) {
-    auto [first, last] = aoc::split<std::array<std::string_view, 2>>(line, '~');
+    auto [first, last] = aoc::split_once(line, '~');
     {
 #if DEBUG_PRINT
       const auto n = name_chars.size();

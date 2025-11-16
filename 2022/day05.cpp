@@ -60,7 +60,7 @@ std::string solve_case(const std::string& filename) {
 
     // move N from A to B
     auto [move_str, n_str, from_str, from_pos_str, to_str, to_pos_str] =
-        aoc::split<std::array<std::string_view, 6>>(line, ' ');
+        aoc::split_fixed<6>(line, ' ');
 
     auto move_num_crates = aoc::to_number<int>(n_str);
 

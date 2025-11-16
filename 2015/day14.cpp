@@ -17,7 +17,7 @@ struct Reindeer {
 fn parse(String const& filename) -> Vec<Reindeer> {
   return aoc::views::read_lines(filename) |
          std::views::transform([](str line) {
-           let words = aoc::split<std::array<str, 14>>(line, ' ');
+           let words = aoc::split_fixed<14>(line, ' ');
            return Reindeer{
                .kms = aoc::to_number<u32>(words[3]),
                .fly = aoc::to_number<u32>(words[6]),

@@ -83,8 +83,7 @@ int solve_case(const std::string& filename) {
   named_valves_t named_valves;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [valve_info, tunnel_info] =
-        aoc::split<std::array<std::string, 2>>(line, ';');
+    auto [valve_info, tunnel_info] = aoc::split_once<std::string>(line, ';');
 
     auto [vstr0, name, vstr1, vstr2, rate_str] =
         aoc::split<std::array<std::string, 5>>(valve_info, ' ');
