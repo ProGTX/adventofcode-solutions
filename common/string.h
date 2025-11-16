@@ -193,7 +193,7 @@ constexpr value_type construct(R&& r) {
     auto view = construct_string<std::string_view>(std::forward<R>(r));
     return to_number<value_type>(view);
   } else {
-    return value_type{r};
+    return value_type{std::forward<R>(r)};
   }
 }
 
@@ -248,7 +248,7 @@ constexpr std::array<output_inner_t, 2> split_once(R&& r, Pattern&& delimiter,
       std::forward<R>(r), std::forward<Pattern>(delimiter), std::move(proj));
 }
 
-template <char one, class return_t = unsigned, std::ranges::range R>
+template <char one = '1', class return_t = unsigned, std::ranges::range R>
 constexpr return_t binary_to_number(R&& str) {
   return_t num = 0;
   return_t multiplier = 1;
@@ -259,19 +259,19 @@ constexpr return_t binary_to_number(R&& str) {
   return num;
 }
 
-template <char one, class return_t = unsigned>
+template <char one = '1', class return_t = unsigned>
 constexpr return_t binary_to_number(const char* str) {
   return binary_to_number<one, return_t>(std::string_view{str});
 }
-template <char one, class return_t = unsigned, size_t size>
+template <char one = '1', class return_t = unsigned, size_t size>
 constexpr return_t binary_to_number(const char str[size]) {
   return binary_to_number<one, return_t>(std::string_view{str, size});
 }
 
 static_assert(0 == binary_to_number<'1'>("0"));
 static_assert(1 == binary_to_number<'1'>("1"));
-static_assert(2 == binary_to_number<'1'>("01"));
-static_assert(13 == binary_to_number<'1'>("1011"));
+static_assert(2 == binary_to_number("01"));
+static_assert(13 == binary_to_number("1011"));
 static_assert(205 == binary_to_number<'#'>("#.##..##."));
 static_assert(6757 == binary_to_number<'#'>("#.#..##..#.##"));
 
