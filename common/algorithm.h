@@ -7,6 +7,7 @@
 #include "point.h"
 #include "range_to.h"
 #include "ranges.h"
+#include "string.h"
 #include "utility.h"
 
 #ifndef AOC_MODULE_SUPPORT
@@ -15,6 +16,7 @@
 #include <concepts>
 #include <iostream>
 #include <span>
+#include <stdexecpt>
 #include <utility>
 #include <vector>
 #endif
@@ -284,6 +286,118 @@ std::vector<Node> get_path(const predecessor_map<Node>& predecessors,
     it = predecessors.find(it->second);
   }
   return path;
+}
+
+template <std::integral counter_type>
+struct combinations_args {
+  counter_type single_min;
+  counter_type single_max;
+  counter_type all_min;
+  counter_type all_max;
+};
+
+namespace detail {
+
+template <std::ranges::sized_range Combination, std::integral counter_type,
+          class CallbackFn>
+constexpr void gen_combinations_recursive(
+    Combination& combination, CallbackFn& callback,
+    const combinations_args<counter_type>& args, const std::size_t pos,
+    const std::size_t size, const counter_type current_sum) {
+  // Base case: we've filled all positions
+  if (pos == size) {
+    if ((current_sum >= args.all_min) && (current_sum <= args.all_max)) {
+      callback(static_cast<const Combination&>(combination));
+    }
+    return;
+  }
+
+  // Calculate how many positions are left to fill
+  const auto remaining_positions = size - pos;
+
+  // Try each possible value for the current position
+  for (auto val = args.single_min; val <= args.single_max; ++val) {
+    const auto new_sum = current_sum + val;
+
+    // Prune: check if it's still possible to reach all_min
+    // (even if we fill remaining positions with single_max)
+    const auto max_possible_sum =
+        new_sum + (remaining_positions - 1) * args.single_max;
+    if (max_possible_sum < args.all_min) {
+      continue; // Skip this branch
+    }
+
+    // Prune: check if we've already exceeded all_max
+    // (even if we fill remaining positions with single_min)
+    const auto min_possible_sum =
+        new_sum + (remaining_positions - 1) * args.single_min;
+    if (min_possible_sum > args.all_max) {
+      break; // No need to try larger values
+    }
+
+    combination[pos] = val;
+    gen_combinations_recursive(combination, callback, args, pos + 1, size,
+                               new_sum);
+  }
+}
+
+} // namespace detail
+
+/**
+ * Iterates over all combinations of size N, with limitations.
+ *
+ * - N is the size of elements.
+ * - A combination is std::array if N is known at compile time,
+ *   std::vector otherwise.
+ * - Each element ranges from args.single_min to args.single_max (inclusive).
+ * - Sum of all elements is between args.all_min and args.all_max (inclusive).
+ * - Only generates valid combinations.
+ * - Calls the callback on each valid combination.
+ */
+template <std::integral counter_type = unsigned, std::ranges::sized_range R,
+          class CallbackFn>
+  requires(std::invocable<CallbackFn, std::span<const counter_type>>)
+constexpr void gen_combinations(R&& elements, CallbackFn&& callback,
+                                const combinations_args<counter_type> args) {
+  if ((args.single_max < args.single_min) ||
+      (args.all_max < args.all_min) ||
+      (args.single_max > args.all_max)) {
+    return;
+  }
+  auto combination = [&] {
+    constexpr auto fixed_size = max_container_elems<R>();
+    if constexpr (fixed_size != std::string::npos) {
+      auto counter = std::array<counter_type, fixed_size>{};
+      return counter;
+    } else {
+      return std::vector<counter_type>(std::ranges::size(elements), 0);
+    }
+  }();
+  const auto size = combination.size();
+  if (size == 0) {
+    return;
+  }
+  if ((size * args.single_min) > args.all_max) {
+    throw std::runtime_error("Element-wise minimum exceeds global maximum");
+  }
+  constexpr std::size_t pos = 0;
+  constexpr counter_type current_sum = 0;
+  detail::gen_combinations_recursive(combination, callback, args, pos, size,
+                                     current_sum);
+}
+
+template <std::integral counter_type = unsigned, std::ranges::sized_range R,
+          class CallbackFn>
+constexpr void binary_combinations(R&& elements, CallbackFn&& callback) {
+  // No need to forward elements and callback, can be used as references
+  return gen_combinations(
+      elements, callback,
+      combinations_args<counter_type>{
+          .single_min = 0,
+          .single_max = 1,
+          .all_min = 0,
+          .all_max = static_cast<counter_type>(std::ranges::size(elements)),
+      });
 }
 
 } // AOC_EXPORT_NAMESPACE(aoc)

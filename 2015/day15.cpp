@@ -64,39 +64,20 @@ fn score_cookie(std::span<const Ingredient> ingredients,
 
 template <bool KCAL_500>
 fn solve_case(String const& filename) -> u32 {
-  constexpr let LIMIT = 100u;
   let ingredients = parse(filename);
   auto max_score = 0u;
-  auto teaspoon_stack = Vec<u32>{};
-  teaspoon_stack.push_back(0u);
-  auto teaspoons = 0u;
-  while (!teaspoon_stack.empty()) {
-    if (teaspoons > LIMIT) {
-      {
-        let last_teaspoon = teaspoon_stack.back();
-        teaspoon_stack.pop_back();
-        teaspoons -= last_teaspoon;
-      }
-      if (!teaspoon_stack.empty()) {
-        auto& last_teaspoon = teaspoon_stack.back();
-        last_teaspoon += 1;
-        teaspoons += 1;
-        continue;
-      } else {
-        break;
-      }
-    }
-    if (teaspoon_stack.size() == (ingredients.size() - 1)) {
-      teaspoon_stack.push_back(LIMIT - teaspoons);
-      let score = score_cookie<KCAL_500>(ingredients, teaspoon_stack);
-      max_score = std::max(max_score, score);
-      teaspoon_stack.pop_back();
-      teaspoon_stack.back() += 1;
-      teaspoons += 1;
-      continue;
-    }
-    teaspoon_stack.push_back(0);
-  }
+  aoc::gen_combinations(
+      ingredients,
+      [&](std::span<const u32> teaspoon_stack) {
+        let score = score_cookie<KCAL_500>(ingredients, teaspoon_stack);
+        max_score = std::max(max_score, score);
+      },
+      aoc::combinations_args<u32>{
+          .single_min = 0,
+          .single_max = 100,
+          .all_min = 100,
+          .all_max = 100,
+      });
   return max_score;
 }
 
