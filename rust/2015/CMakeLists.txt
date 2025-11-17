@@ -17,5 +17,6 @@ add_rust_test(day12 ${year})
 add_rust_test(day14 ${year})
 add_rust_test(day15 ${year})
 add_rust_test(day16 ${year})
+add_rust_test(day17 ${year})
 
 generate_cargo_toml(${year} "${rust_test_names}")
