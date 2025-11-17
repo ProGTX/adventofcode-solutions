@@ -48,7 +48,7 @@ constexpr auto shortest_path(const racetrack_t& track, const point start_pos,
         if ((node.length >= max_length) || (node.pos == end_pos)) {
           return neighbors;
         }
-        for (auto neighbor_pos : track.basic_neighbors(node.pos)) {
+        for (auto neighbor_pos : track.basic_neighbor_positions(node.pos)) {
           const auto neighbor = track.at(neighbor_pos.y, neighbor_pos.x);
           if ((wall_allowed && (neighbor == wall)) || (neighbor != wall)) {
             bool cheated = node.cheated;

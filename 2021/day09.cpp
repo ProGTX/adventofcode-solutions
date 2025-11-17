@@ -22,9 +22,8 @@ constexpr std::vector<point> find_low_points(const heightmap_t& heightmap) {
       const auto current_point = point{col, row};
       const auto current_height = heightmap.at(row, col);
       if (std::ranges::all_of(
-              heightmap.basic_neighbors({col, row}), [&](const point neighbor) {
-                return current_height < heightmap.at(neighbor.y, neighbor.x);
-              })) {
+              heightmap.basic_neighbor_values({col, row}),
+              [&](const char neighbor) { return current_height < neighbor; })) {
         low_points.push_back(current_point);
       }
     }
@@ -50,7 +49,7 @@ constexpr int find_basin(const heightmap_t& heightmap, const point low_point) {
     const auto current = *current_it;
     unvisited.erase(current_it);
     basin.emplace(current);
-    for (const auto neighbor : heightmap.basic_neighbors(current)) {
+    for (const auto neighbor : heightmap.basic_neighbor_positions(current)) {
       if (basin.contains(neighbor) ||
           (heightmap.at(neighbor.y, neighbor.x) == wall)) {
         continue;

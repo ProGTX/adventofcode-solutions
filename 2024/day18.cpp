@@ -34,7 +34,7 @@ constexpr std::optional<int> shortest_path(const memspace_t& memspace) {
   const auto distances = aoc::shortest_distances_dijkstra(
       start_pos,
       [&](const point current) {
-        return memspace.basic_neighbors(current) |
+        return memspace.basic_neighbor_positions(current) |
                std::views::filter([&](point neighbor) {
                  return memspace.at(neighbor.y, neighbor.x) != corrupted;
                }) |

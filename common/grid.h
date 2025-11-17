@@ -392,11 +392,33 @@ class grid {
                            static_cast<size_t>(column));
   }
 
-  constexpr auto basic_neighbors(point pos) const {
-    return this->get_neighbors(pos, basic_neighbor_diffs);
+  constexpr auto basic_neighbor_positions(point pos) const {
+    return this->get_neighbors(pos, basic_neighbor_diffs, std::true_type{});
   }
-  constexpr auto all_neighbors(point pos) const {
-    return this->get_neighbors(pos, all_neighbor_diffs);
+  constexpr auto basic_neighbor_positions(size_t linear_index) const {
+    return this->get_neighbors(this->position(linear_index),
+                               basic_neighbor_diffs, std::true_type{});
+  }
+  constexpr auto all_neighbor_positions(point pos) const {
+    return this->get_neighbors(pos, all_neighbor_diffs, std::true_type{});
+  }
+  constexpr auto all_neighbor_positions(size_t linear_index) const {
+    return this->get_neighbors(this->position(linear_index), all_neighbor_diffs,
+                               std::true_type{});
+  }
+  constexpr auto basic_neighbor_values(point pos) const {
+    return this->get_neighbors(pos, basic_neighbor_diffs, std::false_type{});
+  }
+  constexpr auto basic_neighbor_values(size_t linear_index) const {
+    return this->get_neighbors(this->position(linear_index),
+                               basic_neighbor_diffs, std::false_type{});
+  }
+  constexpr auto all_neighbor_values(point pos) const {
+    return this->get_neighbors(pos, all_neighbor_diffs, std::false_type{});
+  }
+  constexpr auto all_neighbor_values(size_t linear_index) const {
+    return this->get_neighbors(this->position(linear_index), all_neighbor_diffs,
+                               std::false_type{});
   }
 
  private:
@@ -445,14 +467,24 @@ class grid {
     }
   }
 
-  template <size_t size>
-  constexpr auto get_neighbors(
-      point pos, const std::array<point, size>& neighbor_diffs) const {
-    static_vector<point, size> neighbors;
+  template <class Self, size_t size, bool return_pos>
+  constexpr auto get_neighbors(this Self&& self, point pos,
+                               const std::array<point, size>& neighbor_diffs,
+                               std::bool_constant<return_pos>) {
+    // TODO: Support returning static_vector<std::reference_wrapper>
+    // this Self&& already helps with that,
+    // but it will also require improvements to static_vector.
+    auto neighbors =
+        static_vector<std::conditional_t<return_pos, point, value_type>,
+                      size>{};
     for (const auto neighbor_diff : neighbor_diffs) {
       const auto neighbor_pos = pos + neighbor_diff;
-      if (this->in_bounds(neighbor_pos.y, neighbor_pos.x)) {
-        neighbors.push_back(neighbor_pos);
+      if (self.in_bounds(neighbor_pos.y, neighbor_pos.x)) {
+        if constexpr (return_pos) {
+          neighbors.push_back(neighbor_pos);
+        } else {
+          neighbors.emplace_back(self.at(neighbor_pos.y, neighbor_pos.x));
+        }
       }
     }
     return neighbors;
