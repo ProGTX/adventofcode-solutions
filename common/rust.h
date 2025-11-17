@@ -11,7 +11,7 @@
 #include <vector>
 
 #define let const auto
-#define fn constexpr auto
+#define fn [[nodiscard]] constexpr auto
 
 using i32 = std::int32_t;
 using u32 = std::uint32_t;
