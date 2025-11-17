@@ -91,6 +91,16 @@ constexpr auto rotate_right(R&& r) {
   return rotate_right(std::ranges::begin(r), std::ranges::end(r));
 }
 
+template <std::ranges::forward_range R1, std::ranges::forward_range R2>
+constexpr auto dot_product(R1&& r1, R2&& r2) {
+  // TODO: Generalize to more than two ranges
+  return accumulate(
+      std::views::zip(r1, r2) | std::views::transform([](auto&& values) {
+        return std::get<0>(values) * std::get<1>(values);
+      }),
+      std::iter_value_t<R1>{});
+}
+
 } // namespace ranges
 
 namespace views {
