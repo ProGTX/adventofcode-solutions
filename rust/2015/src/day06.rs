@@ -1,3 +1,5 @@
+use aoc::grid::Grid;
+
 const fn turn_on_fn1(_: u32) -> u32 {
     1
 }
@@ -24,34 +26,6 @@ const TOGGLE: &str = "toggle ";
 const THROUGH: &str = " through ";
 
 type OpFnT = fn(u32) -> u32;
-
-struct Grid {
-    data: Vec<u32>,
-    #[allow(dead_code)]
-    num_rows: usize,
-    num_columns: usize,
-}
-
-impl Grid {
-    fn new(value: u32, num_rows: usize, num_columns: usize) -> Self {
-        Grid {
-            data: vec![value; num_rows * num_columns],
-            num_rows,
-            num_columns,
-        }
-    }
-    fn linear_index(&self, row: usize, column: usize) -> usize {
-        row * self.num_columns + column
-    }
-    fn at(&self, row: usize, column: usize) -> u32 {
-        let index = self.linear_index(row, column);
-        self.data[index]
-    }
-    fn modify(&mut self, value: u32, row: usize, column: usize) {
-        let index = self.linear_index(row, column);
-        self.data[index] = value;
-    }
-}
 
 fn parse_point(s: &str, separator: &str) -> (usize, usize) {
     let (column_s, row_s) = s.split_once(separator).unwrap();

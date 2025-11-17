@@ -1,4 +1,4 @@
-# @GENERATED@
+# @RUST_GENERATED@
 
 [package]
 name = "year@YEAR@"
@@ -12,6 +12,7 @@ unused_parens = "allow"
 needless_return = "allow"
 
 [dependencies]
+aoc = {path = "../utils" }
 itertools = "0.14.0"
 
 @CARGO_BIN_SECTIONS@

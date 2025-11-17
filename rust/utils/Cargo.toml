@@ -1,0 +1,10 @@
+[package]
+name = "aoc"
+version = "0.1.0"
+edition = "2024"
+
+[lints.rust]
+unused_parens = "allow"
+
+[lints.clippy]
+needless_return = "allow"

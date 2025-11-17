@@ -1,5 +1,5 @@
 set(year 2015)
-set(rust_test_names "")
+set(rust_local_sources "")
 
 add_rust_test(day01 ${year})
 add_rust_test(day02 ${year})
@@ -19,4 +19,4 @@ add_rust_test(day15 ${year})
 add_rust_test(day16 ${year})
 add_rust_test(day17 ${year})
 
-generate_cargo_toml(${year} "${rust_test_names}")
+generate_cargo_toml(${year} "${rust_local_sources}")
