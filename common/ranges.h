@@ -91,15 +91,22 @@ constexpr auto rotate_right(R&& r) {
   return rotate_right(std::ranges::begin(r), std::ranges::end(r));
 }
 
-template <std::ranges::forward_range R1, std::ranges::forward_range R2>
-constexpr auto dot_product(R1&& r1, R2&& r2) {
-  // TODO: Generalize to more than two ranges
-  return accumulate(
-      std::views::zip(r1, r2) | std::views::transform([](auto&& values) {
-        return std::get<0>(values) * std::get<1>(values);
-      }),
-      std::iter_value_t<R1>{});
+template <std::ranges::forward_range... Rs>
+constexpr auto dot_product(Rs&&... rs) {
+  auto zipped = std::views::zip(rs...);
+  using value_type = std::iter_value_t<std::ranges::iterator_t<
+      std::remove_reference_t<std::tuple_element_t<0, std::tuple<Rs...>>>>>;
+  return std::ranges::fold_left(
+      zipped, value_type{}, [](auto acc, auto&& tuple) {
+        auto product =
+            std::apply([](auto&&... elems) { return (elems * ...); }, tuple);
+        return acc + product;
+      });
 }
+static_assert(270 == dot_product(std::array{1, 2, 3}, //
+                                 std::array{4, 5, 6}, //
+                                 std::array{7, 8, 9}  //
+                                 ));
 
 } // namespace ranges
 
