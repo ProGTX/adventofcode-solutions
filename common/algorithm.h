@@ -298,7 +298,7 @@ struct combinations_args {
 
 namespace detail {
 
-template <std::ranges::sized_range Combination, std::integral counter_type,
+template <std::integral counter_type, std::ranges::sized_range Combination,
           class CallbackFn>
 constexpr void gen_combinations_recursive(
     Combination& combination, CallbackFn& callback,
@@ -336,8 +336,8 @@ constexpr void gen_combinations_recursive(
     }
 
     combination[pos] = val;
-    gen_combinations_recursive(combination, callback, args, pos + 1, size,
-                               new_sum);
+    gen_combinations_recursive<counter_type>(combination, callback, args,
+                                             pos + 1, size, new_sum);
   }
 }
 
@@ -356,7 +356,6 @@ constexpr void gen_combinations_recursive(
  */
 template <std::integral counter_type = unsigned, std::ranges::sized_range R,
           class CallbackFn>
-  requires(std::invocable<CallbackFn, std::span<const counter_type>>)
 constexpr void gen_combinations(R&& elements, CallbackFn&& callback,
                                 const combinations_args<counter_type> args) {
   if ((args.single_max < args.single_min) ||
@@ -382,15 +381,15 @@ constexpr void gen_combinations(R&& elements, CallbackFn&& callback,
   }
   constexpr std::size_t pos = 0;
   constexpr counter_type current_sum = 0;
-  detail::gen_combinations_recursive(combination, callback, args, pos, size,
-                                     current_sum);
+  detail::gen_combinations_recursive<counter_type>(combination, callback, args,
+                                                   pos, size, current_sum);
 }
 
 template <std::integral counter_type = unsigned, std::ranges::sized_range R,
           class CallbackFn>
 constexpr void binary_combinations(R&& elements, CallbackFn&& callback) {
   // No need to forward elements and callback, can be used as references
-  return gen_combinations(
+  return gen_combinations<counter_type>(
       elements, callback,
       combinations_args<counter_type>{
           .single_min = 0,

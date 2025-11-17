@@ -191,8 +191,8 @@ constexpr std::string read_line(std::ifstream& stream, Args... args) {
 
 template <class output_t>
 constexpr size_t max_container_elems() {
-  if constexpr (is_array_class_v<output_t>) {
-    return std::tuple_size<output_t>::value;
+  if constexpr (is_array_class_v<std::remove_cvref_t<output_t>>) {
+    return std::tuple_size<std::remove_cvref_t<output_t>>::value;
   } else {
     return std::string::npos;
   }
@@ -293,7 +293,7 @@ static_assert(std::ranges::equal(
 
 /**
  * Simplified version of split that stores output to std::array<value_type, N>.
- * 
+ *
  * If the string splits into more than N elements,
  * everything after the Nth element is discarded.
  */
