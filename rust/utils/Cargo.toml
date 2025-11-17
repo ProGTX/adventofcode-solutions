@@ -8,3 +8,6 @@ unused_parens = "allow"
 
 [lints.clippy]
 needless_return = "allow"
+
+[dependencies]
+arrayvec = "0.7.6"
