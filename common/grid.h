@@ -57,7 +57,7 @@ constexpr auto to_facing(char c) {
     case '>':
       return aoc::east;
     default:
-      AOC_ASSERT(false, "Error parsing directions");
+      AOC_UNREACHABLE("Error parsing directions");
   }
 }
 
@@ -88,7 +88,7 @@ std::ostream& operator<<(std::ostream& out, const facing_t& facing) {
       out << "northeast";
       break;
     default:
-      AOC_ASSERT(false, "Invalid sky direction");
+      AOC_UNREACHABLE("Invalid sky direction");
   }
   return out;
 }
@@ -113,7 +113,7 @@ constexpr point_type<T> get_diff(facing_t facing) {
     case northeast:
       return {1, -1};
     default:
-      AOC_ASSERT(false, "Facing into an invalid direction");
+      AOC_UNREACHABLE("Facing into an invalid direction");
       return {};
   }
 };

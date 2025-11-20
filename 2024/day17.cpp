@@ -90,7 +90,7 @@ constexpr auto run_program(std::span<const int> program,
         instruction_ptr += 2;
         break;
       default:
-        AOC_ASSERT(false, "Invalid instruction");
+        AOC_UNREACHABLE("Invalid instruction");
     }
   }
   AOC_NOT_CONSTEXPR(std::cout << aoc::print_range(registers) << std::endl;);

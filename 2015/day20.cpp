@@ -19,7 +19,7 @@ fn solve_case1() -> u32 {
       return house;
     }
   }
-  AOC_ASSERT(false, "Unreachable");
+  AOC_UNREACHABLE("House should have been found in infinite loop");
 }
 
 int main() {

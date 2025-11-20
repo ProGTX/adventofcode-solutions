@@ -86,7 +86,7 @@ constexpr int energize(const machine_t& machine, beam_t start) {
           }
           break;
         default:
-          AOC_ASSERT(false, "Invalid value in the machine");
+          AOC_UNREACHABLE("Invalid value in the machine");
           break;
       }
       if (direction == point{}) {

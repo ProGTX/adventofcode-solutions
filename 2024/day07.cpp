@@ -61,7 +61,7 @@ constexpr int_t evaluate_equation(const int_t test_value,
         if (operation_id == 2) {
           sum = aoc::concat_numbers(sum, static_cast<unsigned>(current_num));
         } else {
-          AOC_ASSERT(false, "Invalid operation ID");
+          AOC_UNREACHABLE("Invalid operation ID");
         }
       }
     }

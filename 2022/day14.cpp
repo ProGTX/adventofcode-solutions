@@ -166,7 +166,7 @@ int solve_case(const std::string& filename) {
          (linear_index < cave_map.size()); linear_index += index_increase) {
       auto value = cave_map.data()[linear_index];
       if (value == start) {
-        AOC_ASSERT(false, "This condition shouldn't be reached");
+        AOC_UNREACHABLE("This condition shouldn't be reached");
       }
       if ((value == rock) || (value == sand)) {
         // Found solid ground, try to insert it above

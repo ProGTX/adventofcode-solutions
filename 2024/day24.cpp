@@ -37,7 +37,7 @@ struct gate_t {
       case op_xor:
         return wires[lhs] ^ wires[rhs];
       default:
-        AOC_ASSERT(false, "Invalid op");
+        AOC_UNREACHABLE("Invalid op");
         return uninit_wire;
     }
   }
@@ -133,7 +133,7 @@ int_t solve_case(const std::string& filename) {
         } else if (op_str == "XOR") {
           return op_xor;
         }
-        AOC_ASSERT(false, "Invalid op");
+        AOC_UNREACHABLE("Invalid op");
         return uninit_wire;
       }();
 

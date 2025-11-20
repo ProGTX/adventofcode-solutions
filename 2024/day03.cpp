@@ -69,7 +69,7 @@ constexpr int parse_multiplications(std::string_view line) {
       left = 0;
       right = 0;
     } else {
-      AOC_ASSERT(false, "Invalid condition");
+      AOC_UNREACHABLE("Invalid condition");
     }
   }
   return sum;

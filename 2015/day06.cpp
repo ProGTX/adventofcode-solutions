@@ -66,7 +66,7 @@ unsigned solve_case(const std::string& filename) {
       boundaries =
           aoc::split<boundaries_t>(line.substr(toggle.size()), through);
     } else {
-      AOC_ASSERT(false, "Invalid beginning of line")
+      AOC_UNREACHABLE("Invalid beginning of line")
     }
     const auto begin = aoc::split<point>(boundaries[0], ',');
     const auto end = aoc::split<point>(boundaries[1], ',');

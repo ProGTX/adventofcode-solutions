@@ -104,7 +104,7 @@ int_t solve_case(const std::string& filename) {
       current.b = point_t{aoc::to_number<int_t>(x.substr(ax_prefix.size())),
                           aoc::to_number<int_t>(y.substr(y_prefix.size()))};
     } else {
-      AOC_ASSERT(false, "Parsing failure");
+      AOC_UNREACHABLE("Parsing failure");
     }
   }
 

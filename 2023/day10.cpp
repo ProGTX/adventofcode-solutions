@@ -106,7 +106,7 @@ constexpr std::vector<int> get_pipe_loop(const field_t& field,
       case south_west_7:
         return {pos_2d + south_diff, pos_2d + west_diff};
       default:
-        AOC_ASSERT(false, "Invalid pipe tile");
+        AOC_UNREACHABLE("Invalid pipe tile");
         return {point{}, point{}};
     }
   };

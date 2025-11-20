@@ -103,7 +103,7 @@ std::tuple<std::vector<gate_t>, signal_t, signal_t> parse(
         if (op == rshift_str) {
           return operation_t::rshift_op;
         }
-        AOC_ASSERT(false, "Invalid operation!");
+        AOC_UNREACHABLE("Invalid operation!");
       }();
       gate.rhs = get_signal(rhs);
     }
@@ -149,7 +149,7 @@ constexpr strict_signal_t solve_wire(const std::span<gate_t> inputs,
     case rshift_op:
       return strict(gate.lhs >> gate.rhs);
     default:
-      AOC_ASSERT(false, "Operation should have been covered before!");
+      AOC_UNREACHABLE("Operation should have been covered before!");
   }
 }
 

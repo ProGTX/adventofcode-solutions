@@ -61,7 +61,7 @@ int cube_power(std::span<const std::string_view, Extent> games) {
       } else if (color == "blue") {
         current_config.blue = number;
       } else {
-        AOC_ASSERT(false, "Invalid color");
+        AOC_UNREACHABLE("Invalid color");
       }
       if constexpr (!part2) {
         if (!config.contains(current_config)) {

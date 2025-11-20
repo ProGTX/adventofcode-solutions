@@ -70,7 +70,7 @@ constexpr std::pair<state_t, char> advance_state(
           break;
         }
       default:
-        AOC_ASSERT(false, "Unexpected state");
+        AOC_UNREACHABLE("Unexpected state");
         break;
     }
     previous = state.arr[state.arr_pos];

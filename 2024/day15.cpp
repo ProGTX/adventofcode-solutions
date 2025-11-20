@@ -65,12 +65,12 @@ constexpr map_t move_robot(map_t map, point robot_pos,
               searching = false;
               break;
             default:
-              AOC_ASSERT(false, "Invalid cell");
+              AOC_UNREACHABLE("Invalid cell");
           }
         }
       } break;
       default:
-        AOC_ASSERT(false, "Invalid cell");
+        AOC_UNREACHABLE("Invalid cell");
     }
   }
   return map;

@@ -29,7 +29,7 @@ fn parse(String const& filename) -> std::pair<ReplacementsT, String> {
     auto [it, _] = replacements.emplace(needle, String10T{});
     it->second.push_back(replace);
   }
-  AOC_ASSERT(false, "Unreachable");
+  AOC_UNREACHABLE("Last line is supposed to terminate the loop");
 }
 
 fn solve_case1(auto&& parse_input) -> usize {

@@ -41,7 +41,7 @@ fn solve_case(String const& filename) -> u32 {
       return static_cast<u32>(index + 1);
     }
   }
-  AOC_ASSERT(false, "Aunt not found!");
+  AOC_UNREACHABLE("Aunt not found!");
 }
 
 int main() {

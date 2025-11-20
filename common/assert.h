@@ -28,4 +28,8 @@
     throw 0;                                                                   \
   }
 
+// In theory we could use std::unreachable,
+// but it seems to conflict with modules
+#define AOC_UNREACHABLE(message) AOC_ASSERT(false, message)
+
 #endif // AOC_ASSERT_H

@@ -46,7 +46,7 @@ int_t solve_case(const std::string& filename) {
         case 'U':
           return aoc::north;
         default:
-          AOC_ASSERT(false, "Invalid direction");
+          AOC_UNREACHABLE("Invalid direction");
           return aoc::southeast;
       }
     }());

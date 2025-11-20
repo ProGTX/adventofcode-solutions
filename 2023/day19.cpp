@@ -96,7 +96,7 @@ int_t solve_case(const std::string& filename) {
         case 's':
           return &part_t::s;
         default:
-          AOC_ASSERT(false, "Invalid part member");
+          AOC_UNREACHABLE("Invalid part member");
           throw 0;
       }
     }());
