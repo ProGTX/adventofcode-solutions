@@ -168,6 +168,66 @@ constexpr auto read_numbers(std::ifstream& file, Args... args) {
   return read_lines(file, std::forward<Args>(args)...) | views::to_number<T>();
 }
 
+struct match_indices_view : std::ranges::view_interface<match_indices_view> {
+ private:
+  std::string_view haystack;
+  std::string_view needle;
+
+ public:
+  constexpr match_indices_view(std::string_view haystack,
+                               std::string_view needle) noexcept
+      : haystack{haystack}, needle{needle} {}
+
+  struct iterator {
+   private:
+    std::string_view haystack;
+    std::string_view needle;
+    std::size_t pos;
+    std::size_t next;
+
+   public:
+    constexpr iterator(std::string_view haystack, std::string_view needle,
+                       std::size_t start)
+        : haystack{haystack}, needle{needle}, pos{start} {
+      advance();
+    }
+    constexpr void advance() { next = haystack.find(needle, pos); }
+    constexpr auto operator*() const {
+      return std::pair{next, haystack.substr(next, needle.size())};
+    }
+    constexpr iterator& operator++() {
+      pos = next + needle.size();
+      advance();
+      return *this;
+    }
+    constexpr bool operator==(std::default_sentinel_t) const {
+      return next == std::string_view::npos;
+    }
+  };
+
+  constexpr iterator begin() const { return iterator{haystack, needle, 0}; }
+  constexpr std::default_sentinel_t end() const { return {}; }
+};
+
+namespace detail {
+
+struct match_indices_fn {
+  std::string_view needle;
+  constexpr auto operator()(std::string_view haystack) const {
+    return match_indices_view{haystack, needle};
+  }
+  constexpr friend auto operator|(std::string_view haystack,
+                                  const match_indices_fn& fn) {
+    return fn(haystack);
+  }
+};
+
+} // namespace detail
+
+constexpr auto match_indices(std::string_view needle) {
+  return detail::match_indices_fn{needle};
+}
+
 } // namespace views
 
 constexpr std::size_t pattern_size(std::string_view str) { return str.size(); }
