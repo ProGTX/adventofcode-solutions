@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -24,3 +25,7 @@ template <class T>
 using Option = std::optional<T>;
 template <class T>
 using Vec = std::vector<T>;
+
+template <std::weakly_incrementable W,
+          std::semiregular Bound = std::unreachable_sentinel_t>
+using Range = std::ranges::iota_view<W, Bound>;
