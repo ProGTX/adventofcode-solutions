@@ -18,7 +18,7 @@ function(add_rust_test sample_name year)
     )
 
     add_test(NAME ${year}_${sample_name}_rust
-        COMMAND ${RUST_BUILD_DIR_EXPR}/${sample_name}
+        COMMAND ${RUST_BUILD_DIR_EXPR}/${year}_${sample_name}
         DEPENDS rust_build
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/${year}"
     )
@@ -37,7 +37,7 @@ function(generate_cargo_toml year rust_local_sources)
     foreach(src ${rust_local_sources})
         string(APPEND CARGO_BIN_SECTIONS
 "[[bin]]
-name = \"${src}\"
+name = \"${year}_${src}\"
 path = \"src/${src}.rs\"
 ")
     endforeach()
@@ -50,6 +50,7 @@ endfunction()
 
 add_subdirectory(utils)
 add_subdirectory(2015)
+add_subdirectory(2021)
 
 # After all tests have been added for all years,
 # create the command that actually builds all the Rust source files
