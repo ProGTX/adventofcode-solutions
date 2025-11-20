@@ -5,6 +5,7 @@
 #include "compiler.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#include <algorithm>
 #include <bit>
 #include <cmath>
 #include <concepts>
@@ -128,6 +129,44 @@ constexpr unsigned flip_bit(unsigned number, unsigned index) {
 }
 static_assert(3 == flip_bit(2, 0));
 static_assert(2 == flip_bit(3, 0));
+
+// https://stackoverflow.com/a/11924315
+template <class T>
+constexpr std::vector<T> prime_factors(const T N) {
+  auto result = std::vector<T>{};
+  auto n = N;
+  auto z = static_cast<T>(2);
+  while (z * z <= n) {
+    if (n % z == 0) {
+      result.push_back(z);
+      n /= z;
+    } else {
+      z++;
+    }
+  }
+  if (n > 1) {
+    result.push_back(n);
+  }
+  return result;
+}
+
+template <bool sorted = true, class T>
+constexpr std::vector<T> divisors(const T n) {
+  auto result = std::vector<T>{};
+  const auto sqrt_n = static_cast<T>(std::sqrt(n));
+  for (T i = 1; i <= sqrt_n; ++i) {
+    if (n % i == 0) {
+      result.push_back(i);
+      if (i != (n / i)) {
+        result.push_back(n / i);
+      }
+    }
+  }
+  if constexpr (sorted) {
+    std::ranges::sort(result);
+  }
+  return result;
+}
 
 } // AOC_EXPORT_NAMESPACE(aoc)
 
