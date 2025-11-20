@@ -13,6 +13,7 @@ needless_return = "allow"
 
 [dependencies]
 aoc = {path = "../utils" }
+arrayvec = "0.7.6"
 itertools = "0.14.0"
 
 @CARGO_BIN_SECTIONS@
