@@ -13,6 +13,7 @@
 
 #define let const auto
 #define fn [[nodiscard]] constexpr auto
+#define loop while (true)
 
 using i32 = std::int32_t;
 using u32 = std::uint32_t;
@@ -23,6 +24,7 @@ using str = std::string_view;
 
 template <class T>
 using Option = std::optional<T>;
+inline constexpr auto None = std::nullopt;
 template <class T>
 using Vec = std::vector<T>;
 
