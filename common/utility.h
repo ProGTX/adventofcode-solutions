@@ -13,6 +13,7 @@
 #include <iostream>
 #include <iterator>
 #include <numeric>
+#include <optional>
 #include <ranges>
 #include <string>
 #include <tuple>
@@ -58,6 +59,31 @@ constexpr size_t max_container_elems() {
   }
 }
 static_assert(4 == max_container_elems<std::array<int, 4>>());
+
+template <class output_t>
+constexpr auto inserter_it(output_t& elems) {
+  if constexpr (insertable<output_t>) {
+    return std::inserter(elems, std::end(elems));
+  } else if constexpr (back_insertable<output_t>) {
+    return std::back_inserter(elems);
+  } else if constexpr (specialization_of<output_t, std::optional>) {
+    return std::addressof(elems);
+  } else {
+    return std::begin(elems);
+  }
+}
+
+template <class output_t>
+constexpr auto insertion_end_it(output_t& elems) {
+  if constexpr (specialization_of<output_t, std::optional>) {
+    return std::addressof(elems) + 1;
+  } else if constexpr (const auto N = max_container_elems<output_t>();
+                       N != std::string::npos) {
+    return std::begin(elems) + N;
+  } else {
+    return std::unreachable_sentinel;
+  }
+}
 
 // https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp
 

@@ -63,17 +63,6 @@ struct is_array_class<std::array<T, N>> : std::true_type {};
 template <class T>
 inline constexpr bool is_array_class_v = is_array_class<T>::value;
 
-template <class output_t>
-constexpr auto inserter_it(output_t& elems) {
-  if constexpr (insertable<output_t>) {
-    return std::inserter(elems, std::end(elems));
-  } else if constexpr (back_insertable<output_t>) {
-    return std::back_inserter(elems);
-  } else {
-    return std::begin(elems);
-  }
-}
-
 // https://stackoverflow.com/a/68066873/793006
 template <typename Op, typename Arg1, typename Arg2>
 concept binary_op = std::is_invocable_v<Op, Arg1, Arg2>;
