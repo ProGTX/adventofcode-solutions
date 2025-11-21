@@ -34,10 +34,11 @@ impl<T> Grid<T> {
         row * self.num_columns + column
     }
 
+    /// Returns (column, row)
     pub fn position(&self, linear_index: usize) -> (usize, usize) {
         return (
-            linear_index % self.num_columns,
-            linear_index / self.num_columns,
+            linear_index % self.num_columns, // column
+            linear_index / self.num_columns, // row
         );
     }
 
@@ -52,6 +53,37 @@ impl<T> Grid<T> {
     pub fn modify(&mut self, value: T, row: usize, column: usize) {
         let index = self.linear_index(row, column);
         self.data[index] = value;
+    }
+
+    pub fn row(&self, row: usize) -> &[T] {
+        let row_start = self.linear_index(row, 0);
+        &self.data[row_start..row_start + self.num_columns]
+    }
+    pub fn row_mut(&mut self, row: usize) -> &mut [T] {
+        let row_start = self.linear_index(row, 0);
+        &mut self.data[row_start..row_start + self.num_columns]
+    }
+    pub fn for_row_mut<F>(&mut self, row: usize, mut f: F)
+    where
+        F: FnMut(&mut T),
+    {
+        for column in 0..self.num_rows {
+            let index = self.linear_index(row, column);
+            f(&mut self.data[index]);
+        }
+    }
+
+    pub fn column(&self, column: usize) -> impl Iterator<Item = &T> {
+        (0..self.num_rows).map(move |row| &self.data[self.linear_index(row, column)])
+    }
+    pub fn for_column_mut<F>(&mut self, column: usize, mut f: F)
+    where
+        F: FnMut(&mut T),
+    {
+        for row in 0..self.num_rows {
+            let index = self.linear_index(row, column);
+            f(&mut self.data[index]);
+        }
     }
 
     pub fn in_bounds_unsigned(&self, row: usize, column: usize) -> bool {
@@ -100,6 +132,7 @@ impl Grid<char> {
     pub fn from_file(filename: &str) -> Self {
         let lines = std::fs::read_to_string(filename)
             .unwrap()
+            .trim()
             .lines()
             .map(|line| line.to_string())
             .collect::<Vec<String>>();
@@ -109,4 +142,28 @@ impl Grid<char> {
             num_columns: lines[0].len(),
         }
     }
+}
+
+impl<T> Grid<T> {
+    pub fn from_char_grid(char_grid: &Grid<char>) -> Self
+    where
+        T: From<u32>,
+    {
+        Grid {
+            data: char_grid
+                .data
+                .iter()
+                .map(|c| T::from(c.to_digit(10).unwrap()))
+                .collect(),
+            num_rows: char_grid.num_rows,
+            num_columns: char_grid.num_columns,
+        }
+    }
+}
+
+pub fn from_file<T>(filename: &str) -> Grid<T>
+where
+    T: From<u32>,
+{
+    Grid::from_char_grid(&Grid::<char>::from_file(filename))
 }
