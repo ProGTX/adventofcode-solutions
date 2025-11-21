@@ -407,19 +407,36 @@ constexpr void binary_combinations(R&& elements, CallbackFn&& callback,
       callback, early_return);
 }
 
+/// Corresponds to math combinations of (n k), where n is size(elements).
+template <std::integral counter_type = unsigned, std::ranges::sized_range R,
+          class CallbackFn, class EarlyReturnFn = std::false_type>
+constexpr void simple_combinations(R&& elements, const counter_type k,
+                                   CallbackFn&& callback,
+                                   EarlyReturnFn&& early_return = {}) {
+  // No need to forward elements and callback, can be used as references
+  return gen_combinations<counter_type>(elements,
+                                        combinations_args<counter_type>{
+                                            .single_min = 0,
+                                            .single_max = 1,
+                                            .all_min = k,
+                                            .all_max = k,
+                                        },
+                                        callback, early_return);
+}
+
 /**
  * Given a combination configuration of elements, returns a list of elements
  * for which the combination indicates their selection.
  * Used in conjunction with gen_combinations or binary_combinations.
- * 
+ *
  * The default return type is a vector of references to the elements,
  * can be changed by specifying output_t.
  * Return type can be anything that inserter_it supports.
- * 
+ *
  * Mostly useful when single_min is (0 or 1) and single_max is 1.
  * Can be used outside of those parameters, but the amount information
  * is lost in this function, so the interpretation is up to the user.
- * 
+ *
  * all_min and all_max can be used as normal.
  *
  * @code

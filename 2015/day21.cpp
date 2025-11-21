@@ -67,6 +67,7 @@ constexpr const auto shop_weapons = std::array{
     Entity{74, 8, 0}, //
 };
 constexpr const auto shop_armor = std::array{
+    Entity{0, 0, 0},   // No armor
     Entity{13, 0, 1},  //
     Entity{31, 0, 2},  //
     Entity{53, 0, 3},  //
@@ -74,6 +75,8 @@ constexpr const auto shop_armor = std::array{
     Entity{102, 0, 5}, //
 };
 constexpr const auto shop_rings = std::array{
+    Entity{0, 0, 0},   // No ring
+    Entity{0, 0, 0},   // No ring
     Entity{20, 0, 1},  //
     Entity{25, 1, 0},  //
     Entity{40, 0, 2},  //
@@ -88,52 +91,30 @@ struct inspect_t;
 template <u32 START_HP>
 fn solve_case1(Entity const& input) -> u32 {
   auto best_cost = aoc::as_consteval(shop_weapons[4].value +
-                                     shop_armor[4].value +
-                                     shop_rings[4].value +
-                                     shop_rings[5].value);
+                                     shop_armor[5].value +
+                                     shop_rings[6].value +
+                                     shop_rings[7].value);
   for (let weapon : shop_weapons) {
-    aoc::gen_combinations(
-        shop_armor,
-        aoc::combinations_args<u32>{
-            .single_min = 0,
-            .single_max = 1,
-            .all_min = 0,
-            .all_max = 1,
-        },
-        [&](auto&& armor_combo) {
-          let armor = aoc::binary_select_from_combination<Option<Entity>>(
-                          shop_armor, armor_combo)
-                          .value_or(Entity{});
-          aoc::gen_combinations(
-              shop_rings,
-              aoc::combinations_args<u32>{
-                  .single_min = 0,
-                  .single_max = 1,
-                  .all_min = 0,
-                  .all_max = 2,
-              },
-              [&](auto&& rings_combo) {
-                let ring_pair =
-                    aoc::binary_select_from_combination<std::array<Entity, 2>>(
-                        shop_rings, rings_combo);
-                auto player = Entity{
-                    .value = START_HP,
-                    .damage = weapon.damage +
-                              ring_pair[0].damage +
-                              ring_pair[1].damage,
-                    .armor =
-                        armor.armor + ring_pair[0].armor + ring_pair[1].armor,
-                };
-                auto boss = input;
-                if (play_game(player, boss)) {
-                  best_cost = std::min(weapon.value +
-                                           armor.value +
-                                           ring_pair[0].value +
-                                           ring_pair[1].value,
-                                       best_cost);
-                }
-              });
-        });
+    for (let armor : shop_armor) {
+      aoc::simple_combinations(shop_rings, 2, [&](auto&& rings_combo) {
+        let ring_pair =
+            aoc::binary_select_from_combination<std::array<Entity, 2>>(
+                shop_rings, rings_combo);
+        auto player = Entity{
+            .value = START_HP,
+            .damage = weapon.damage + ring_pair[0].damage + ring_pair[1].damage,
+            .armor = armor.armor + ring_pair[0].armor + ring_pair[1].armor,
+        };
+        auto boss = input;
+        if (play_game(player, boss)) {
+          best_cost = std::min(weapon.value +
+                                   armor.value +
+                                   ring_pair[0].value +
+                                   ring_pair[1].value,
+                               best_cost);
+        }
+      });
+    }
   }
   return best_cost;
 }
