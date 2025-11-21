@@ -14,6 +14,7 @@
 #include <iterator>
 #include <numeric>
 #include <ranges>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -45,6 +46,18 @@ struct sorted_unique_t {
   explicit constexpr sorted_unique_t() = default;
 };
 inline constexpr sorted_unique_t sorted_unique{};
+
+template <class output_t>
+constexpr size_t max_container_elems() {
+  if constexpr (requires {
+                  std::tuple_size<std::remove_cvref_t<output_t>>::value;
+                }) {
+    return std::tuple_size<std::remove_cvref_t<output_t>>::value;
+  } else {
+    return std::string::npos;
+  }
+}
+static_assert(4 == max_container_elems<std::array<int, 4>>());
 
 // https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp
 

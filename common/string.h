@@ -249,15 +249,6 @@ constexpr std::string read_line(std::ifstream& stream, Args... args) {
   return *view.begin();
 }
 
-template <class output_t>
-constexpr size_t max_container_elems() {
-  if constexpr (is_array_class_v<std::remove_cvref_t<output_t>>) {
-    return std::tuple_size<std::remove_cvref_t<output_t>>::value;
-  } else {
-    return std::string::npos;
-  }
-}
-
 template <class value_type, std::ranges::range R>
 constexpr value_type construct(R&& r) {
   if constexpr (contains_uncvref<value_type, std::string_view, std::string>) {

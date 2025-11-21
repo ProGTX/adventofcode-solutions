@@ -4,6 +4,7 @@
 #include "assert.h"
 #include "compiler.h"
 #include "ranges.h"
+#include "utility.h"
 
 #ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
@@ -200,5 +201,19 @@ static_assert(std::ranges::equal(std::array{2, 4, 6, 42}, impl_test_insert(3)));
 #endif
 
 } // AOC_EXPORT_NAMESPACE(aoc)
+
+namespace std {
+
+template <class T, size_t N>
+struct tuple_size<aoc::static_vector<T, N>>
+    : std::integral_constant<std::size_t, N> {};
+
+} // namespace std
+
+AOC_EXPORT_NAMESPACE(aoc) {
+
+static_assert(4 == max_container_elems<static_vector<int, 4>>());
+
+}
 
 #endif // AOC_STATIC_VECTOR_H
