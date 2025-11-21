@@ -130,10 +130,18 @@ constexpr unsigned flip_bit(unsigned number, unsigned index) {
 static_assert(3 == flip_bit(2, 0));
 static_assert(2 == flip_bit(3, 0));
 
+template <class output_t, class T>
+constexpr auto push_back_storage() {
+  if constexpr (std::same_as<output_t, void>) {
+    return std::vector<T>{};
+  } else {
+    return output_t{};
+  }
+}
+
 // https://stackoverflow.com/a/11924315
-template <class T>
-constexpr std::vector<T> prime_factors(const T N) {
-  auto result = std::vector<T>{};
+template <class output_t, class T>
+constexpr void prime_factors(output_t& result, const T N) {
   auto n = N;
   auto z = static_cast<T>(2);
   while (z * z <= n) {
@@ -147,24 +155,33 @@ constexpr std::vector<T> prime_factors(const T N) {
   if (n > 1) {
     result.push_back(n);
   }
+}
+template <class output_t = void, class T>
+constexpr output_t prime_factors(const T N) {
+  auto result = push_back_storage<output_t, T>();
+  prime_factors(result, N);
   return result;
 }
 
-template <bool sorted = true, class T>
-constexpr std::vector<T> divisors(const T n) {
-  auto result = std::vector<T>{};
-  const auto sqrt_n = static_cast<T>(std::sqrt(n));
+template <bool sorted = true, class output_t, class T>
+constexpr void divisors(output_t& result, const T N) {
+  const auto sqrt_n = static_cast<T>(std::sqrt(N));
   for (T i = 1; i <= sqrt_n; ++i) {
-    if (n % i == 0) {
+    if (N % i == 0) {
       result.push_back(i);
-      if (i != (n / i)) {
-        result.push_back(n / i);
+      if (i != (N / i)) {
+        result.push_back(N / i);
       }
     }
   }
   if constexpr (sorted) {
     std::ranges::sort(result);
   }
+}
+template <class output_t = void, bool sorted = true, class T>
+constexpr auto divisors(const T N) {
+  auto result = push_back_storage<output_t, T>();
+  divisors(result, N);
   return result;
 }
 

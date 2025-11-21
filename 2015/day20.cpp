@@ -12,9 +12,11 @@
 template <u32 target>
 fn solve_case1() -> u32 {
   static_assert(target > 10);
+  auto divisors = std::vector<u32>{};
   for (let house : Range{2u}) {
-    let presents =
-        10 * aoc::ranges::accumulate(aoc::divisors<false>(house), 0u);
+    divisors.clear();
+    aoc::divisors<false>(divisors, house);
+    let presents = 10 * aoc::ranges::accumulate(divisors, 0u);
     if (presents >= target) {
       return house;
     }
