@@ -299,9 +299,9 @@ struct combinations_args {
 namespace detail {
 
 template <std::integral counter_type, std::ranges::sized_range Combination,
-          class CallbackFn>
+          class CallbackFn, class EarlyReturnFn>
 constexpr void gen_combinations_recursive(
-    Combination& combination, CallbackFn& callback,
+    Combination& combination, CallbackFn& callback, EarlyReturnFn& early_return,
     const combinations_args<counter_type>& args, const std::size_t pos,
     const std::size_t size, const counter_type current_sum) {
   // Base case: we've filled all positions
@@ -317,6 +317,9 @@ constexpr void gen_combinations_recursive(
 
   // Try each possible value for the current position
   for (auto val = args.single_min; val <= args.single_max; ++val) {
+    if (early_return()) {
+      break;
+    }
     const auto new_sum = current_sum + val;
 
     // Prune: check if it's still possible to reach all_min
@@ -336,8 +339,8 @@ constexpr void gen_combinations_recursive(
     }
 
     combination[pos] = val;
-    gen_combinations_recursive<counter_type>(combination, callback, args,
-                                             pos + 1, size, new_sum);
+    gen_combinations_recursive<counter_type>(
+        combination, callback, early_return, args, pos + 1, size, new_sum);
   }
 }
 
@@ -354,20 +357,23 @@ constexpr void gen_combinations_recursive(
  * - Only generates valid combinations.
  * - Calls the callback on each valid combination.
  */
-template <std::integral counter_type = unsigned, std::ranges::sized_range R,
-          class CallbackFn>
-constexpr void gen_combinations(R&& elements, CallbackFn&& callback,
-                                const combinations_args<counter_type> args) {
+template <std::integral counter_type = unsigned,
+          std::ranges::sized_range ElementsR, class CallbackFn,
+          class EarlyReturnFn = std::false_type>
+  requires std::is_invocable_r_v<bool, EarlyReturnFn>
+constexpr void gen_combinations(ElementsR&& elements,
+                                const combinations_args<counter_type> args,
+                                CallbackFn&& callback,
+                                EarlyReturnFn&& early_return = {}) {
   if ((args.single_max < args.single_min) ||
       (args.all_max < args.all_min) ||
       (args.single_max > args.all_max)) {
     return;
   }
   auto combination = [&] {
-    constexpr auto fixed_size = max_container_elems<R>();
-    if constexpr (fixed_size != std::string::npos) {
-      auto counter = std::array<counter_type, fixed_size>{};
-      return counter;
+    if constexpr (const auto N = max_container_elems<ElementsR>();
+                  N != std::string::npos) {
+      return std::array<counter_type, N>{};
     } else {
       return std::vector<counter_type>(std::ranges::size(elements), 0);
     }
@@ -381,22 +387,24 @@ constexpr void gen_combinations(R&& elements, CallbackFn&& callback,
   }
   constexpr std::size_t pos = 0;
   constexpr counter_type current_sum = 0;
-  detail::gen_combinations_recursive<counter_type>(combination, callback, args,
-                                                   pos, size, current_sum);
+  detail::gen_combinations_recursive<counter_type>(
+      combination, callback, early_return, args, pos, size, current_sum);
 }
 
 template <std::integral counter_type = unsigned, std::ranges::sized_range R,
-          class CallbackFn>
-constexpr void binary_combinations(R&& elements, CallbackFn&& callback) {
+          class CallbackFn, class EarlyReturnFn = std::false_type>
+constexpr void binary_combinations(R&& elements, CallbackFn&& callback,
+                                   EarlyReturnFn&& early_return = {}) {
   // No need to forward elements and callback, can be used as references
   return gen_combinations<counter_type>(
-      elements, callback,
+      elements,
       combinations_args<counter_type>{
           .single_min = 0,
           .single_max = 1,
           .all_min = 0,
           .all_max = static_cast<counter_type>(std::ranges::size(elements)),
-      });
+      },
+      callback, early_return);
 }
 
 } // AOC_EXPORT_NAMESPACE(aoc)
