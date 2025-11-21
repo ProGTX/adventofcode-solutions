@@ -407,6 +407,78 @@ constexpr void binary_combinations(R&& elements, CallbackFn&& callback,
       callback, early_return);
 }
 
+/**
+ * Given a combination configuration of elements, returns a list of elements
+ * for which the combination indicates their selection.
+ * Used in conjunction with gen_combinations or binary_combinations.
+ * 
+ * The default return type is a vector of references to the elements,
+ * can be changed by specifying output_t.
+ * Return type can be anything that inserter_it supports.
+ * 
+ * Mostly useful when single_min is (0 or 1) and single_max is 1.
+ * Can be used outside of those parameters, but the amount information
+ * is lost in this function, so the interpretation is up to the user.
+ * 
+ * all_min and all_max can be used as normal.
+ *
+ * @code
+ * const auto elements = std::array{1, 2, 3, 4, 5};
+ * gen_combinations(
+ *   elements,
+ *   combinations_args {
+ *     .single_min = 0,
+ *     .single_max = 1,
+ *     .all_min = 0,
+ *     .all_max = 2,
+ *   },
+ *   [&](auto&& combo) {
+ *     const auto selected = binary_select_from_combination(
+ *       elements, combo);
+ *     // `selected` contains references to the original elements
+ *     assert(selected.size() <= 2);
+ *   }
+ * );
+ * @endcode
+ */
+template <class output_t = void, std::ranges::sized_range ElementsR,
+          std::ranges::sized_range CombinationR>
+constexpr auto binary_select_from_combination(ElementsR&& elements,
+                                              CombinationR&& combination) {
+  using element_type =
+      std::remove_reference_t<decltype(*std::ranges::begin(elements))>;
+  auto output = [] {
+    if constexpr (std::same_as<output_t, void>) {
+      return std::vector<std::reference_wrapper<element_type>>{};
+    } else {
+      return output_t{};
+    }
+  }();
+  constexpr const auto store_element = [] {
+    if constexpr (std::same_as<output_t, void>) {
+      return [](auto&& value) { return std::ref(value); };
+    } else {
+      return std::identity{};
+    }
+  }();
+  const auto end = insertion_end_it(output);
+  for (auto inserter = inserter_it(output);
+       auto&& [element, combo] :
+       std::views::zip(std::forward<ElementsR>(elements),
+                       std::forward<CombinationR>(combination))) {
+    if (combo) {
+      *inserter = store_element(element);
+      ++inserter;
+    }
+    if constexpr (std::same_as<decltype(end), std::unreachable_sentinel_t>) {
+      // No check for end
+    } else if (inserter == end) {
+      break;
+    }
+  }
+  return output;
+}
+
 } // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_ALGORITHM_H
