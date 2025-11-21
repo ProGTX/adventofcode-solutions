@@ -2,6 +2,7 @@
 members = [
     "2015",
     "2021",
+    "2022",
     "utils",
 ]
 resolver = "3"

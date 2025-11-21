@@ -1,55 +1,41 @@
 // https://adventofcode.com/2022/day/1
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <iostream>
-#include <iterator>
-#include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
-#include <string>
-#include <string_view>
-#include <vector>
+#include <span>
 
-int solve_case(const std::string& filename, int numElvesAverage) {
-  std::vector<int> caloriesPerElf;
-  int singleElfCalories = 0;
+fn parse(String const& filename) -> Vec<u32> {
+  return aoc::split(aoc::trim(aoc::read_file(filename)), "\n\n") |
+         std::views::transform([](str food) {
+           return aoc::ranges::accumulate(aoc::split_to_vec<u32>(food, '\n'),
+                                          0u);
+         }) |
+         aoc::ranges::to<Vec<u32>>();
+}
 
-  for (std::string line : aoc::views::read_lines(filename, aoc::keep_empty{})) {
-    if (line.empty()) {
-      // New elf, add previous one
-      caloriesPerElf.push_back(singleElfCalories);
-      singleElfCalories = 0;
-      continue;
-    }
-    // Same elf
-    int currentCal = aoc::to_number<int>(line);
-    singleElfCalories += currentCal;
-  }
+fn solve_case1(std::span<const u32> elves) -> u32 {
+  return std::ranges::max(elves);
+}
 
-  // Need to add last elf
-  caloriesPerElf.push_back(singleElfCalories);
-
-  std::ranges::sort(caloriesPerElf);
-
-  namespace views = std::ranges::views;
-  auto calsPerTopElves =
-      caloriesPerElf | views::reverse | views::take(numElvesAverage);
-
-  auto caloriesSum = std::accumulate(std::begin(calsPerTopElves),
-                                     std::end(calsPerTopElves), 0);
-
-  std::cout << filename << " -> " << caloriesSum << std::endl;
-  return caloriesSum;
+fn solve_case2(Vec<u32> elves) -> u32 {
+  std::ranges::sort(elves, std::greater{});
+  return aoc::ranges::accumulate(elves | std::views::take(3), 0u);
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
-  AOC_EXPECT_RESULT(24000, solve_case("day01.example", 1));
-  AOC_EXPECT_RESULT(75622, solve_case("day01.input", 1));
-  std::cout << "Part 2" << std::endl;
-  AOC_EXPECT_RESULT(45000, solve_case("day01.example", 3));
-  AOC_EXPECT_RESULT(213159, solve_case("day01.input", 3));
+  std::println("Part 1");
+  let example = parse("day01.example");
+  AOC_EXPECT_RESULT(24000, solve_case1(example));
+  let input = parse("day01.input");
+  AOC_EXPECT_RESULT(75622, solve_case1(input));
+
+  std::println("Part 2");
+  AOC_EXPECT_RESULT(45000, solve_case2(example));
+  AOC_EXPECT_RESULT(213159, solve_case2(input));
   AOC_RETURN_CHECK_RESULT();
 }
