@@ -91,9 +91,20 @@ const SHOP_RINGS: [Entity; 8] = [
     Entity::new(100, 3, 0),
 ];
 
-fn solve_case1<const START_HP: u32>(input: &Entity) -> u32 {
-    let mut best_cost =
-        SHOP_WEAPONS[4].value + SHOP_ARMOR[4].value + SHOP_RINGS[4].value + SHOP_RINGS[5].value;
+fn solve_case<const START_HP: u32, const PART2: bool>(input: &Entity) -> u32 {
+    let mut best_cost = if (PART2) {
+        0
+    } else {
+        SHOP_WEAPONS[4].value + SHOP_ARMOR[4].value + SHOP_RINGS[4].value + SHOP_RINGS[5].value
+    };
+    let expected = !PART2;
+    let update_cost = |current_cost: u32, new_cost: u32| {
+        return if (!PART2) {
+            current_cost.min(new_cost)
+        } else {
+            current_cost.max(new_cost)
+        };
+    };
     for weapon in &SHOP_WEAPONS {
         for armor in &SHOP_ARMOR {
             for ring_pair in SHOP_RINGS.iter().combinations(2) {
@@ -103,9 +114,11 @@ fn solve_case1<const START_HP: u32>(input: &Entity) -> u32 {
                     armor: armor.armor + ring_pair[0].armor + ring_pair[1].armor,
                 };
                 let mut boss = input.clone();
-                if (play_game(&mut player, &mut boss)) {
-                    best_cost = best_cost
-                        .min(weapon.value + armor.value + ring_pair[0].value + ring_pair[1].value);
+                if (play_game(&mut player, &mut boss) == expected) {
+                    best_cost = update_cost(
+                        best_cost,
+                        weapon.value + armor.value + ring_pair[0].value + ring_pair[1].value,
+                    );
                 }
             }
         }
@@ -116,11 +129,11 @@ fn solve_case1<const START_HP: u32>(input: &Entity) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day21.example");
-    assert_eq!(65, solve_case1::<8>(&example));
+    assert_eq!(65, solve_case::<8, false>(&example));
     let input = parse("day21.input");
-    assert_eq!(111, solve_case1::<100>(&input));
+    assert_eq!(111, solve_case::<100, false>(&input));
 
-    //println!("Part 2");
-    //assert_eq!(3, solve_case2(&example));
-    //assert_eq!(1257, solve_case2(&input));
+    println!("Part 2");
+    assert_eq!(188, solve_case::<8, true>(&example));
+    assert_eq!(188, solve_case::<100, true>(&input));
 }

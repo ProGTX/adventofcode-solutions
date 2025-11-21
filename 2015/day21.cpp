@@ -88,12 +88,21 @@ constexpr const auto shop_rings = std::array{
 template <class T>
 struct inspect_t;
 
-template <u32 START_HP>
-fn solve_case1(Entity const& input) -> u32 {
-  auto best_cost = aoc::as_consteval(shop_weapons[4].value +
-                                     shop_armor[5].value +
-                                     shop_rings[6].value +
-                                     shop_rings[7].value);
+template <u32 START_HP, bool PART2>
+fn solve_case(Entity const& input) -> u32 {
+  auto best_cost = aoc::as_consteval(PART2 ? 0
+                                           : shop_weapons[4].value +
+                                                 shop_armor[5].value +
+                                                 shop_rings[6].value +
+                                                 shop_rings[7].value);
+  constexpr const bool expected = !PART2;
+  const auto update_cost = [&](u32 new_cost) {
+    if constexpr (!PART2) {
+      return std::min(best_cost, new_cost);
+    } else {
+      return std::max(best_cost, new_cost);
+    }
+  };
   for (let weapon : shop_weapons) {
     for (let armor : shop_armor) {
       aoc::simple_combinations(shop_rings, 2, [&](auto&& rings_combo) {
@@ -106,12 +115,11 @@ fn solve_case1(Entity const& input) -> u32 {
             .armor = armor.armor + ring_pair[0].armor + ring_pair[1].armor,
         };
         auto boss = input;
-        if (play_game(player, boss)) {
-          best_cost = std::min(weapon.value +
-                                   armor.value +
-                                   ring_pair[0].value +
-                                   ring_pair[1].value,
-                               best_cost);
+        if (play_game(player, boss) == expected) {
+          best_cost = update_cost(weapon.value +
+                                  armor.value +
+                                  ring_pair[0].value +
+                                  ring_pair[1].value);
         }
       });
     }
@@ -122,13 +130,13 @@ fn solve_case1(Entity const& input) -> u32 {
 int main() {
   std::println("Part 1");
   let example = parse("day21.example");
-  AOC_EXPECT_RESULT(65, solve_case1<8>(example));
+  AOC_EXPECT_RESULT(65, (solve_case<8, false>(example)));
   let input = parse("day21.input");
-  AOC_EXPECT_RESULT(111, solve_case1<100>(input));
+  AOC_EXPECT_RESULT(111, (solve_case<100, false>(input)));
 
-  // std::println("Part 2");
-  // AOC_EXPECT_RESULT(3, solve_case2(example));
-  // AOC_EXPECT_RESULT(1257, solve_case2(input));
+  std::println("Part 2");
+  AOC_EXPECT_RESULT(188, (solve_case<8, true>(example)));
+  AOC_EXPECT_RESULT(188, (solve_case<100, true>(input)));
 
   AOC_RETURN_CHECK_RESULT();
 }
