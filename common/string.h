@@ -275,10 +275,18 @@ constexpr value_type construct(R&& r) {
  * The output type controls a lot of the behavior of the function.
  * It must be a container-like type that can be iterated over
  * and has value_type defined.
+ * If not specified, defaults to vector<string_view>.
  *
  * skip_empty and the projection control what happens to the intermediate
  * elements. If skip_empty is true, empty element won't be stored.
  * The projection is applied to the element before storing.
+ *
+ * @code
+ * auto result = aoc::split("hello world", ' ');
+ * static_assert(std::same_as<decltype(result), std::vector<std::string_view>>);
+ * assert(result[0] == "hello");
+ * assert(result[1] == "world");
+ * @endcode
  *
  * @code
  * auto result = aoc::split<std::vector<std::string>>("hello world", ' ');
@@ -310,10 +318,17 @@ constexpr value_type construct(R&& r) {
  * // "today" is not included in result
  * @endcode
  */
-template <class output_t, bool skip_empty = false, std::ranges::range R,
+template <class output_t = void, bool skip_empty = false, std::ranges::range R,
           class Pattern, class Proj = std::identity>
-constexpr output_t split(R&& r, Pattern&& delimiter, Proj proj = {}) {
-  using value_type = typename output_t::value_type;
+constexpr auto split(R&& r, Pattern&& delimiter, Proj proj = {}) {
+  auto out = [] {
+    if constexpr (std::same_as<output_t, void>) {
+      return std::vector<std::string_view>{};
+    } else {
+      return output_t{};
+    }
+  }();
+  using value_type = typename decltype(out)::value_type;
   auto split_view = [&]() {
     if constexpr (std::same_as<std::decay_t<Pattern>, const char*>) {
       return r | std::views::split(std::string_view{delimiter});
@@ -321,9 +336,7 @@ constexpr output_t split(R&& r, Pattern&& delimiter, Proj proj = {}) {
       return r | std::views::split(delimiter);
     }
   }();
-  output_t out;
-
-  constexpr const auto fixed_capacity = max_container_elems<output_t>();
+  constexpr const auto fixed_capacity = max_container_elems<decltype(out)>();
 
   int count = 0;
   for (auto out_it = inserter_it(out); auto&& v : split_view) {
