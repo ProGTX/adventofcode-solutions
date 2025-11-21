@@ -681,6 +681,21 @@ struct constant_value {
   }
 };
 
+namespace detail {
+template <class T>
+constexpr const auto as_consteval_helper =
+    [](T&& value) static consteval { return std::forward<T>(value); };
+
+} // namespace detail
+
+/// Forces constant evaluation of the value expression
+///
+/// Only needed because constinit cannot be used on local variables
+template <class T>
+constexpr decltype(auto) as_consteval(T&& value) {
+  return detail::as_consteval_helper<T>(std::forward<T>(value));
+};
+
 } // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_UTILITY_H
