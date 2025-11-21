@@ -138,6 +138,14 @@ constexpr auto read_lines_from_file(std::ifstream& file, Args...) {
 
 } // namespace detail
 
+// https://stackoverflow.com/a/2602258
+std::string read_file(const std::string& filename) {
+  auto file = std::ifstream{filename};
+  auto buffer = std::stringstream{};
+  buffer << file.rdbuf();
+  return buffer.str();
+}
+
 namespace views {
 
 struct __read_lines {
