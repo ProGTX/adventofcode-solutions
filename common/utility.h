@@ -87,43 +87,6 @@ constexpr auto insertion_end_it(output_t& elems) {
 
 // https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp
 
-template <class T>
-struct ranged_iterator {
-  using iterator_category = std::random_access_iterator_tag;
-  using difference_type = std::ptrdiff_t;
-  using value_type = T;
-  using pointer = T*;
-  using reference = T&;
-
-  constexpr ranged_iterator(pointer ptr, difference_type diff)
-      : m_ptr{ptr}, m_diff{diff} {}
-
-  constexpr reference operator*() const { return *m_ptr; }
-
-  constexpr pointer operator->() { return m_ptr; }
-
-  constexpr ranged_iterator& operator++() {
-    m_ptr += m_diff;
-    return *this;
-  }
-  constexpr ranged_iterator operator++(int) {
-    ranged_iterator tmp = *this;
-    ++(*this);
-    return tmp;
-  }
-
-  constexpr friend bool operator==(const ranged_iterator& lhs,
-                                   const ranged_iterator& rhs) {
-    return (lhs.m_diff == rhs.m_diff) && (lhs.m_ptr == rhs.m_ptr);
-  };
-
- private:
-  pointer m_ptr;
-  difference_type m_diff;
-};
-template <class T>
-ranged_iterator(T*, std::ptrdiff_t) -> ranged_iterator<T>;
-
 struct linked_list_iterator_tag {};
 
 template <class Container, bool linked_list = false>
