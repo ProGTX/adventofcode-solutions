@@ -24,6 +24,7 @@ where
 {
     std::fs::read_to_string(filename)
         .unwrap()
+        .trim()
         .lines()
         .map(|line| line.trim().parse::<T>().unwrap())
         .collect()
