@@ -23,5 +23,6 @@ add_rust_test(day19 ${year})
 add_rust_test(day20 ${year})
 add_rust_test(day21 ${year})
 add_rust_test(day22 ${year})
+add_rust_test(day23 ${year})
 
 generate_cargo_toml(${year} "${rust_local_sources}")
