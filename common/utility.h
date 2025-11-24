@@ -19,6 +19,7 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 #endif
 
@@ -643,6 +644,19 @@ struct constant_value {
     return value;
   }
 };
+
+template <class... Ts>
+struct overload : Ts... {
+  using Ts::operator()...;
+};
+template <class... Ts>
+overload(Ts...) -> overload<Ts...>;
+
+template <class Variant, class... VisitorTs>
+constexpr auto match(Variant&& var, VisitorTs&&... visitor) {
+  return std::visit(overload{std::forward<VisitorTs>(visitor)...},
+                    std::forward<Variant>(var));
+}
 
 namespace detail {
 template <class T>
