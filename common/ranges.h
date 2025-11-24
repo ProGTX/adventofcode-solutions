@@ -108,6 +108,13 @@ static_assert(270 == dot_product(std::array{1, 2, 3}, //
                                  std::array{7, 8, 9}  //
                                  ));
 
+// Shouldn't be needed once all compilers support extending containers
+// using ranges (__cpp_lib_containers_ranges)
+template <class T, std::ranges::input_range R>
+void extend(std::vector<T>& vec, R&& r) {
+  vec.insert(std::end(vec), std::ranges::begin(r), std::ranges::end(r));
+}
+
 } // namespace ranges
 
 namespace views {
