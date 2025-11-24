@@ -580,6 +580,10 @@ struct transform_cast {
 
 template <class value_type = int>
 constexpr auto to_number_with_rest(std::string_view str, int base = 10) {
+  AOC_ASSERT(str.size() > 0, "Cannot parse empty string");
+  if (str[0] == '+') {
+    str = str.substr(1);
+  }
   auto first = str.data();
   auto last = first + str.size();
   value_type value;
