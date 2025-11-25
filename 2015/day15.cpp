@@ -66,18 +66,16 @@ template <bool KCAL_500>
 fn solve_case(String const& filename) -> u32 {
   let ingredients = parse(filename);
   auto max_score = 0u;
-  aoc::gen_combinations(ingredients,
-                        aoc::combinations_args<u32>{
+  for (let& teaspoon_stack : aoc::views::counted_combinations(
+           ingredients, aoc::combinations_args<u32>{
                             .single_min = 0,
                             .single_max = 100,
                             .all_min = 100,
                             .all_max = 100,
-                        },
-                        [&](std::span<const u32> teaspoon_stack) {
-                          let score = score_cookie<KCAL_500>(ingredients,
-                                                             teaspoon_stack);
-                          max_score = std::max(max_score, score);
-                        });
+                        })) {
+    let score = score_cookie<KCAL_500>(ingredients, teaspoon_stack);
+    max_score = std::max(max_score, score);
+  }
   return max_score;
 }
 

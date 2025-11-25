@@ -15,6 +15,7 @@
 #include <compare>
 #include <concepts>
 #include <iostream>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <utility>
@@ -296,55 +297,25 @@ struct combinations_args {
   counter_type all_max;
 };
 
-namespace detail {
-
-template <std::integral counter_type, std::ranges::sized_range Combination,
-          class CallbackFn, class EarlyReturnFn>
-constexpr void gen_combinations_recursive(
-    Combination& combination, CallbackFn& callback, EarlyReturnFn& early_return,
-    const combinations_args<counter_type>& args, const std::size_t pos,
-    const std::size_t size, const counter_type current_sum) {
-  // Base case: we've filled all positions
-  if (pos == size) {
-    if ((current_sum >= args.all_min) && (current_sum <= args.all_max)) {
-      callback(static_cast<const Combination&>(combination));
-    }
-    return;
-  }
-
-  // Calculate how many positions are left to fill
-  const auto remaining_positions = size - pos;
-
-  // Try each possible value for the current position
-  for (auto val = args.single_min; val <= args.single_max; ++val) {
-    if (early_return()) {
-      break;
-    }
-    const auto new_sum = current_sum + val;
-
-    // Prune: check if it's still possible to reach all_min
-    // (even if we fill remaining positions with single_max)
-    const auto max_possible_sum =
-        new_sum + (remaining_positions - 1) * args.single_max;
-    if (max_possible_sum < args.all_min) {
-      continue; // Skip this branch
-    }
-
-    // Prune: check if we've already exceeded all_max
-    // (even if we fill remaining positions with single_min)
-    const auto min_possible_sum =
-        new_sum + (remaining_positions - 1) * args.single_min;
-    if (min_possible_sum > args.all_max) {
-      break; // No need to try larger values
-    }
-
-    combination[pos] = val;
-    gen_combinations_recursive<counter_type>(
-        combination, callback, early_return, args, pos + 1, size, new_sum);
+template <std::integral counter_type = unsigned,
+          std::ranges::sized_range ElementsR>
+constexpr auto get_empty_combination(ElementsR&& elements,
+                                     counter_type single_min = 0) {
+  if constexpr (const auto N = max_container_elems<ElementsR>();
+                N != std::string::npos) {
+    auto combination = std::array<counter_type, N>{};
+    std::ranges::fill(combination, single_min);
+    return combination;
+  } else {
+    return std::vector<counter_type>(std::ranges::size(elements), single_min);
   }
 }
 
-} // namespace detail
+template <std::ranges::sized_range ElementsR, std::integral counter_type>
+using combination_type =
+    decltype(get_empty_combination<counter_type>(std::declval<ElementsR>()));
+
+namespace ranges {
 
 /**
  * Iterates over all combinations of size N, with limitations.
@@ -357,72 +328,208 @@ constexpr void gen_combinations_recursive(
  * - Only generates valid combinations.
  * - Calls the callback on each valid combination.
  */
-template <std::integral counter_type = unsigned,
-          std::ranges::sized_range ElementsR, class CallbackFn,
-          class EarlyReturnFn = std::false_type>
-  requires std::is_invocable_r_v<bool, EarlyReturnFn>
-constexpr void gen_combinations(ElementsR&& elements,
-                                const combinations_args<counter_type> args,
-                                CallbackFn&& callback,
-                                EarlyReturnFn&& early_return = {}) {
-  if ((args.single_max < args.single_min) ||
-      (args.all_max < args.all_min) ||
-      (args.single_max > args.all_max)) {
-    return;
-  }
-  auto combination = [&] {
-    if constexpr (const auto N = max_container_elems<ElementsR>();
-                  N != std::string::npos) {
-      return std::array<counter_type, N>{};
-    } else {
-      return std::vector<counter_type>(std::ranges::size(elements), 0);
-    }
-  }();
-  const auto size = combination.size();
-  if (size == 0) {
-    return;
-  }
-  if ((size * args.single_min) > args.all_max) {
-    throw std::runtime_error("Element-wise minimum exceeds global maximum");
-  }
-  constexpr std::size_t pos = 0;
-  constexpr counter_type current_sum = 0;
-  detail::gen_combinations_recursive<counter_type>(
-      combination, callback, early_return, args, pos, size, current_sum);
-}
+template <std::ranges::range ElementsR, std::integral counter_type = unsigned>
+class combinations_view : public std::ranges::view_interface<
+                              combinations_view<ElementsR, counter_type>> {
+ private:
+  using combination_type =
+      aoc::combination_type<decltype(std::declval<ElementsR>().base()),
+                            counter_type>;
 
-template <std::integral counter_type = unsigned, std::ranges::sized_range R,
-          class CallbackFn, class EarlyReturnFn = std::false_type>
-constexpr void binary_combinations(R&& elements, CallbackFn&& callback,
-                                   EarlyReturnFn&& early_return = {}) {
-  // No need to forward elements and callback, can be used as references
-  return gen_combinations<counter_type>(
-      elements,
-      combinations_args<counter_type>{
-          .single_min = 0,
-          .single_max = 1,
-          .all_min = 0,
-          .all_max = static_cast<counter_type>(std::ranges::size(elements)),
-      },
-      callback, early_return);
-}
+  ElementsR range;
+  std::size_t num_elems;
+  combinations_args<counter_type> args;
+
+  class iterator {
+   private:
+    const combinations_view* parent;
+    std::optional<combination_type> combination_opt;
+
+    constexpr bool is_done() const { return !combination_opt.has_value(); }
+
+    constexpr bool is_valid() const {
+      AOC_ASSERT(!this->is_done(),
+                 "Can only call this function with an active iterator");
+      const auto sum = ranges::accumulate(*combination_opt, counter_type{0});
+      return (sum >= parent->args.all_min) && (sum <= parent->args.all_max);
+    }
+
+    constexpr void advance() {
+      if (is_done()) {
+        return;
+      }
+
+      auto& combination = *combination_opt;
+      const auto size = parent->num_elems;
+
+      // Try to increment from the last position
+      auto pos = size - 1;
+
+      while (true) {
+        if (combination[pos] < parent->args.single_max) {
+          ++combination[pos];
+
+          // Check if this path can lead to valid combinations
+          const auto current_sum = ranges::accumulate(
+              combination | std::views::take(pos + 1), counter_type{0});
+
+          const auto remaining = static_cast<counter_type>(size - pos - 1);
+          const auto max_possible =
+              current_sum + remaining * parent->args.single_max;
+          const auto min_possible =
+              current_sum + remaining * parent->args.single_min;
+
+          if ((max_possible >= parent->args.all_min) &&
+              (min_possible <= parent->args.all_max)) {
+            // Reset positions after current one to minimum
+            std::ranges::fill(combination | std::views::drop(pos + 1),
+                              parent->args.single_min);
+
+            // Check if this combination is valid
+            if (this->is_valid()) {
+              return; // Found valid combination
+            }
+
+            // Otherwise continue searching
+            pos = size - 1;
+            continue;
+          }
+          // If pruned, continue incrementing
+        } else if (pos == 0) {
+          break;
+        } else {
+          // Backtrack
+          pos--;
+        }
+      }
+
+      combination_opt = std::nullopt;
+    }
+
+    constexpr void find_first_valid() {
+      // Check if initial combination is valid
+      if (this->is_valid()) {
+        return;
+      }
+      // Find first valid combination
+      this->advance();
+    }
+
+   public:
+    using value_type = std::vector<counter_type>;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::input_iterator_tag;
+
+    template <bool end>
+    constexpr iterator(const combinations_view* parent, std::bool_constant<end>)
+        : parent{parent}, combination_opt{std::nullopt} {
+      if constexpr (!end) {
+        combination_opt = aoc::get_empty_combination<counter_type>(
+            parent->range.base(), parent->args.single_min);
+        this->find_first_valid();
+      }
+    }
+
+    constexpr const auto& operator*() const { return *combination_opt; }
+    constexpr const auto* operator->() const {
+      return std::addressof(*combination_opt);
+    }
+
+    constexpr iterator& operator++() {
+      this->advance();
+      return *this;
+    }
+
+    constexpr iterator operator++(int) {
+      auto tmp = *this;
+      this->advance();
+      return tmp;
+    }
+
+    constexpr friend bool operator==(const iterator& lhs, const iterator& rhs) {
+      return lhs.is_done() == rhs.is_done();
+    }
+    constexpr friend bool operator!=(const iterator& lhs, const iterator& rhs) {
+      return !(lhs == rhs);
+    }
+  };
+
+ public:
+  constexpr combinations_view(ElementsR range,
+                              combinations_args<counter_type> args)
+      : range{std::move(range)},
+        num_elems{std::ranges::size(this->range)},
+        args{args} {}
+
+  constexpr iterator begin() const { return iterator{this, std::false_type{}}; }
+  constexpr iterator end() const { return iterator{this, std::true_type{}}; }
+};
+template <std::ranges::sized_range ElementsR,
+          std::integral counter_type = unsigned>
+combinations_view(ElementsR&&, combinations_args<counter_type>)
+    -> combinations_view<std::views::all_t<ElementsR>, counter_type>;
+
+} // namespace ranges
+
+namespace detail {
+
+struct counted_combinations_closure
+    : std::ranges::range_adaptor_closure<counted_combinations_closure> {
+  template <std::ranges::range ElementsR, std::integral counter_type = unsigned>
+  constexpr auto operator()(ElementsR&& elements,
+                            combinations_args<counter_type> args) const {
+    return ranges::combinations_view{std::forward<ElementsR>(elements),
+                                     std::move(args)};
+  }
+};
 
 /// Corresponds to math combinations of (n k), where n is size(elements).
-template <std::integral counter_type = unsigned, std::ranges::sized_range R,
-          class CallbackFn, class EarlyReturnFn = std::false_type>
-constexpr void simple_combinations(R&& elements, const counter_type k,
-                                   CallbackFn&& callback,
-                                   EarlyReturnFn&& early_return = {}) {
-  // No need to forward elements and callback, can be used as references
-  return gen_combinations<counter_type>(elements,
-                                        combinations_args<counter_type>{
-                                            .single_min = 0,
-                                            .single_max = 1,
-                                            .all_min = k,
-                                            .all_max = k,
-                                        },
-                                        callback, early_return);
-}
+struct math_combinations_closure
+    : std::ranges::range_adaptor_closure<math_combinations_closure> {
+  template <std::ranges::range ElementsR, std::integral counter_type>
+  constexpr auto operator()(ElementsR&& elements, const counter_type k) const {
+    return ranges::combinations_view{std::forward<ElementsR>(elements),
+                                     combinations_args<counter_type>{
+                                         .single_min = 0,
+                                         .single_max = 1,
+                                         .all_min = k,
+                                         .all_max = k,
+                                     }};
+  }
+};
+
+template <std::integral counter_type>
+struct binary_combinations_closure
+    : std::ranges::range_adaptor_closure<
+          binary_combinations_closure<counter_type>> {
+  template <std::ranges::range ElementsR>
+  constexpr auto operator()(ElementsR&& elements) const {
+    return ranges::combinations_view{
+        std::forward<ElementsR>(elements),
+        combinations_args<counter_type>{
+            .single_min = 0,
+            .single_max = 1,
+            .all_min = 0,
+            .all_max = static_cast<counter_type>(std::ranges::size(elements)),
+        }};
+  }
+};
+
+} // namespace detail
+
+namespace views {
+
+/// Corresponds to math combinations of (n k), where n is size(elements).
+constexpr inline auto combinations = aoc::detail::math_combinations_closure{};
+
+constexpr inline auto counted_combinations =
+    aoc::detail::counted_combinations_closure{};
+
+template <std::integral counter_type = unsigned>
+constexpr inline auto binary_combinations =
+    aoc::detail::binary_combinations_closure<counter_type>{};
+
+} // namespace views
 
 /**
  * Given a combination configuration of elements, returns a list of elements
@@ -441,21 +548,19 @@ constexpr void simple_combinations(R&& elements, const counter_type k,
  *
  * @code
  * const auto elements = std::array{1, 2, 3, 4, 5};
- * gen_combinations(
+ * for (const auto& combo : counted_combinations(
  *   elements,
  *   combinations_args {
  *     .single_min = 0,
  *     .single_max = 1,
  *     .all_min = 0,
  *     .all_max = 2,
- *   },
- *   [&](auto&& combo) {
+ * ) {
  *     const auto selected = binary_select_from_combination(
  *       elements, combo);
  *     // `selected` contains references to the original elements
  *     assert(selected.size() <= 2);
  *   }
- * );
  * @endcode
  */
 template <class output_t = void, std::ranges::sized_range ElementsR,

@@ -19,17 +19,16 @@ fn solve_case(String const& filename) -> u32 {
   }();
   let size = containers.size();
   auto count = std::array<u32, (COUNT_WAYS ? size : 0) + 1>{};
-  aoc::binary_combinations<u32>(
-      containers, [&](std::span<const u32, size> combination) {
-        let exact_match =
-            aoc::ranges::dot_product(containers, combination) == LITERS;
-        if constexpr (!COUNT_WAYS) {
-          count[0] += static_cast<u32>(exact_match);
-        } else if (exact_match) {
-          let num_used = aoc::ranges::accumulate(combination, 0u);
-          count[num_used] += 1;
-        }
-      });
+  for (let& combination : aoc::views::binary_combinations<u32>(containers)) {
+    let exact_match =
+        aoc::ranges::dot_product(containers, combination) == LITERS;
+    if constexpr (!COUNT_WAYS) {
+      count[0] += static_cast<u32>(exact_match);
+    } else if (exact_match) {
+      let num_used = aoc::ranges::accumulate(combination, 0u);
+      count[num_used] += 1;
+    }
+  }
   if constexpr (!COUNT_WAYS) {
     return count[0];
   } else {

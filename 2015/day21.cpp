@@ -105,7 +105,7 @@ fn solve_case(Entity const& input) -> u32 {
   };
   for (let weapon : shop_weapons) {
     for (let armor : shop_armor) {
-      aoc::simple_combinations(shop_rings, 2, [&](auto&& rings_combo) {
+      for (let& rings_combo : aoc::views::combinations(shop_rings, 2u)) {
         let ring_pair =
             aoc::binary_select_from_combination<std::array<Entity, 2>>(
                 shop_rings, rings_combo);
@@ -121,7 +121,7 @@ fn solve_case(Entity const& input) -> u32 {
                                   ring_pair[0].value +
                                   ring_pair[1].value);
         }
-      });
+      }
     }
   }
   return best_cost;
