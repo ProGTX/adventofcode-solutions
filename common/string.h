@@ -242,7 +242,7 @@ constexpr std::size_t pattern_size(std::string_view str) { return str.size(); }
 constexpr std::size_t pattern_size(const std::string& str) {
   return str.size();
 }
-constexpr std::size_t pattern_size(char c) { return 1; }
+constexpr std::size_t pattern_size(char) { return 1; }
 constexpr std::size_t pattern_size(const char* str) {
   return pattern_size(std::string_view{str});
 }

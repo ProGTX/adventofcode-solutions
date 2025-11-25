@@ -1,7 +1,18 @@
 #ifndef AOC_COMPILER_H
 #define AOC_COMPILER_H
 
+#if defined(__INTELLISENSE__) && !defined(AOC_DISABLE_MODULES)
+#define AOC_DISABLE_MODULES
+#endif
+
+#if defined(AOC_MODULE_SUPPORT) && defined(AOC_DISABLE_MODULES)
+#undef AOC_MODULE_SUPPORT
+#endif
+
 #ifndef AOC_EXPORT
+#define AOC_EXPORT
+#elifdef AOC_DISABLE_MODULES
+#undef AOC_EXPORT
 #define AOC_EXPORT
 #endif
 

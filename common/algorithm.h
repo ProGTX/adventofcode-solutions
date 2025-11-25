@@ -16,7 +16,7 @@
 #include <concepts>
 #include <iostream>
 #include <span>
-#include <stdexecpt>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 #endif
