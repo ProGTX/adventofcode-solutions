@@ -63,10 +63,10 @@ static_assert(4 == max_container_elems<std::array<int, 4>>());
 
 template <class output_t>
 constexpr auto inserter_it(output_t& elems) {
-  if constexpr (insertable<output_t>) {
-    return std::inserter(elems, std::end(elems));
-  } else if constexpr (back_insertable<output_t>) {
+  if constexpr (back_insertable<output_t>) {
     return std::back_inserter(elems);
+  } else if constexpr (insertable<output_t>) {
+    return std::inserter(elems, std::end(elems));
   } else if constexpr (specialization_of<output_t, std::optional>) {
     return std::addressof(elems);
   } else {
