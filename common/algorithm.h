@@ -7,6 +7,7 @@
 #include "point.h"
 #include "range_to.h"
 #include "ranges.h"
+#include "static_vector.h"
 #include "string.h"
 #include "utility.h"
 
@@ -301,11 +302,17 @@ template <std::integral counter_type = unsigned,
           std::ranges::sized_range ElementsR>
 constexpr auto get_empty_combination(ElementsR&& elements,
                                      counter_type single_min = 0) {
-  if constexpr (const auto N = max_container_elems<ElementsR>();
+  using underlying_type = decltype([&] {
+    if constexpr (requires { elements.base(); }) {
+      return elements.base();
+    } else {
+      return elements;
+    };
+  }());
+  if constexpr (const auto N = max_container_elems<underlying_type>();
                 N != std::string::npos) {
-    auto combination = std::array<counter_type, N>{};
-    std::ranges::fill(combination, single_min);
-    return combination;
+    return static_vector<counter_type, N>(std::ranges::size(elements),
+                                          single_min);
   } else {
     return std::vector<counter_type>(std::ranges::size(elements), single_min);
   }
@@ -331,26 +338,39 @@ namespace ranges {
 template <std::ranges::range ElementsR, std::integral counter_type = unsigned>
 class combinations_view : public std::ranges::view_interface<
                               combinations_view<ElementsR, counter_type>> {
- private:
-  using combination_type =
-      aoc::combination_type<decltype(std::declval<ElementsR>().base()),
-                            counter_type>;
+ public:
+  using value_type =
+      aoc::combination_type<decltype(std::declval<ElementsR>()), counter_type>;
+  using reference = const value_type&;
+  using const_reference = const value_type&;
+  using difference_type = std::ptrdiff_t;
+  using iterator_category = std::input_iterator_tag;
 
-  ElementsR range;
+ private:
+  std::views::all_t<ElementsR> range;
   std::size_t num_elems;
   combinations_args<counter_type> args;
 
   class iterator {
-   private:
-    const combinations_view* parent;
-    std::optional<combination_type> combination_opt;
+   public:
+    using value_type =
+        aoc::combination_type<decltype(std::declval<ElementsR>()),
+                              counter_type>;
+    using reference = const value_type&;
+    using pointer = const value_type*;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::input_iterator_tag;
 
-    constexpr bool is_done() const { return !combination_opt.has_value(); }
+   private:
+    const combinations_view* parent{nullptr};
+    value_type combination;
+
+    constexpr bool is_done() const { return combination.empty(); }
 
     constexpr bool is_valid() const {
       AOC_ASSERT(!this->is_done(),
                  "Can only call this function with an active iterator");
-      const auto sum = ranges::accumulate(*combination_opt, counter_type{0});
+      const auto sum = ranges::accumulate(combination, counter_type{0});
       return (sum >= parent->args.all_min) && (sum <= parent->args.all_max);
     }
 
@@ -359,7 +379,6 @@ class combinations_view : public std::ranges::view_interface<
         return;
       }
 
-      auto& combination = *combination_opt;
       const auto size = parent->num_elems;
 
       // Try to increment from the last position
@@ -403,7 +422,7 @@ class combinations_view : public std::ranges::view_interface<
         }
       }
 
-      combination_opt = std::nullopt;
+      combination.clear();
     }
 
     constexpr void find_first_valid() {
@@ -416,24 +435,21 @@ class combinations_view : public std::ranges::view_interface<
     }
 
    public:
-    using value_type = std::vector<counter_type>;
-    using difference_type = std::ptrdiff_t;
-    using iterator_category = std::input_iterator_tag;
+    // Default constructor creates an end iterator
+    constexpr iterator() noexcept = default;
 
     template <bool end>
     constexpr iterator(const combinations_view* parent, std::bool_constant<end>)
-        : parent{parent}, combination_opt{std::nullopt} {
+        : parent{parent}, combination{} {
       if constexpr (!end) {
-        combination_opt = aoc::get_empty_combination<counter_type>(
-            parent->range.base(), parent->args.single_min);
+        combination = aoc::get_empty_combination<counter_type>(
+            parent->range, parent->args.single_min);
         this->find_first_valid();
       }
     }
 
-    constexpr const auto& operator*() const { return *combination_opt; }
-    constexpr const auto* operator->() const {
-      return std::addressof(*combination_opt);
-    }
+    constexpr const auto& operator*() const { return combination; }
+    constexpr const auto* operator->() const { return &combination; }
 
     constexpr iterator& operator++() {
       this->advance();
@@ -463,6 +479,8 @@ class combinations_view : public std::ranges::view_interface<
 
   constexpr iterator begin() const { return iterator{this, std::false_type{}}; }
   constexpr iterator end() const { return iterator{this, std::true_type{}}; }
+
+  static_assert(std::sentinel_for<iterator, iterator>);
 };
 template <std::ranges::sized_range ElementsR,
           std::integral counter_type = unsigned>
@@ -473,45 +491,69 @@ combinations_view(ElementsR&&, combinations_args<counter_type>)
 
 namespace detail {
 
+template <std::integral counter_type>
 struct counted_combinations_closure
-    : std::ranges::range_adaptor_closure<counted_combinations_closure> {
+    : std::ranges::range_adaptor_closure<
+          counted_combinations_closure<counter_type>> {
+  combinations_args<counter_type> args;
+
+  template <std::ranges::range ElementsR>
+  constexpr auto operator()(ElementsR&& elements) const {
+    return ranges::combinations_view{std::forward<ElementsR>(elements), args};
+  }
+};
+template <std::integral counter_type>
+counted_combinations_closure(combinations_args<counter_type>)
+    -> counted_combinations_closure<counter_type>;
+
+struct counted_combinations_fn {
+  template <std::integral counter_type = unsigned>
+  constexpr auto operator()(combinations_args<counter_type> args) const {
+    return counted_combinations_closure{.args = args};
+  }
+
   template <std::ranges::range ElementsR, std::integral counter_type = unsigned>
   constexpr auto operator()(ElementsR&& elements,
                             combinations_args<counter_type> args) const {
-    return ranges::combinations_view{std::forward<ElementsR>(elements),
-                                     std::move(args)};
+    return counted_combinations_closure{.args = args}(
+        std::forward<ElementsR>(elements));
   }
 };
 
 /// Corresponds to math combinations of (n k), where n is size(elements).
-struct math_combinations_closure
-    : std::ranges::range_adaptor_closure<math_combinations_closure> {
+struct math_combinations_fn {
+  template <std::integral counter_type>
+  constexpr auto operator()(const counter_type k) const {
+    return counted_combinations_closure{.args = combinations_args<counter_type>{
+                                            .single_min = 0,
+                                            .single_max = 1,
+                                            .all_min = k,
+                                            .all_max = k,
+                                        }};
+  }
+
   template <std::ranges::range ElementsR, std::integral counter_type>
   constexpr auto operator()(ElementsR&& elements, const counter_type k) const {
-    return ranges::combinations_view{std::forward<ElementsR>(elements),
-                                     combinations_args<counter_type>{
-                                         .single_min = 0,
-                                         .single_max = 1,
-                                         .all_min = k,
-                                         .all_max = k,
-                                     }};
+    return this->operator()(k)(std::forward<ElementsR>(elements));
   }
 };
 
 template <std::integral counter_type>
-struct binary_combinations_closure
-    : std::ranges::range_adaptor_closure<
-          binary_combinations_closure<counter_type>> {
+struct binary_combinations_fn
+    : std::ranges::range_adaptor_closure<binary_combinations_fn<counter_type>> {
+  constexpr auto operator()(counter_type num_elements) const {
+    return counted_combinations_closure{.args = combinations_args<counter_type>{
+                                            .single_min = 0,
+                                            .single_max = 1,
+                                            .all_min = 0,
+                                            .all_max = num_elements,
+                                        }};
+  }
+
   template <std::ranges::range ElementsR>
   constexpr auto operator()(ElementsR&& elements) const {
-    return ranges::combinations_view{
-        std::forward<ElementsR>(elements),
-        combinations_args<counter_type>{
-            .single_min = 0,
-            .single_max = 1,
-            .all_min = 0,
-            .all_max = static_cast<counter_type>(std::ranges::size(elements)),
-        }};
+    return this->operator()(static_cast<counter_type>(
+        std::ranges::size(elements)))(std::forward<ElementsR>(elements));
   }
 };
 
@@ -519,15 +561,15 @@ struct binary_combinations_closure
 
 namespace views {
 
-/// Corresponds to math combinations of (n k), where n is size(elements).
-constexpr inline auto combinations = aoc::detail::math_combinations_closure{};
-
 constexpr inline auto counted_combinations =
-    aoc::detail::counted_combinations_closure{};
+    aoc::detail::counted_combinations_fn{};
+
+/// Corresponds to math combinations of (n k), where n is size(elements).
+constexpr inline auto combinations = aoc::detail::math_combinations_fn{};
 
 template <std::integral counter_type = unsigned>
 constexpr inline auto binary_combinations =
-    aoc::detail::binary_combinations_closure<counter_type>{};
+    aoc::detail::binary_combinations_fn<counter_type>{};
 
 } // namespace views
 
@@ -602,5 +644,12 @@ constexpr auto binary_select_from_combination(ElementsR&& elements,
 }
 
 } // AOC_EXPORT_NAMESPACE(aoc)
+
+static_assert(std::movable<aoc::ranges::combinations_view<std::vector<int>>>);
+
+static_assert(
+    std::ranges::view<aoc::ranges::combinations_view<std::vector<int>>>);
+static_assert(
+    std::ranges::range<aoc::ranges::combinations_view<std::vector<int>>>);
 
 #endif // AOC_ALGORITHM_H

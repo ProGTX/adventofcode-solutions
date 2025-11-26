@@ -19,7 +19,7 @@ fn solve_case(String const& filename) -> u32 {
   }();
   let size = containers.size();
   auto count = std::array<u32, (COUNT_WAYS ? size : 0) + 1>{};
-  for (let& combination : aoc::views::binary_combinations<u32>(containers)) {
+  for (let& combination : containers | aoc::views::binary_combinations<u32>) {
     let exact_match =
         aoc::ranges::dot_product(containers, combination) == LITERS;
     if constexpr (!COUNT_WAYS) {
