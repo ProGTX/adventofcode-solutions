@@ -200,6 +200,20 @@ static_assert(std::ranges::equal(std::array{2, 4, 42, 6}, impl_test_insert(2)));
 static_assert(std::ranges::equal(std::array{2, 4, 6, 42}, impl_test_insert(3)));
 #endif
 
+namespace detail {
+
+template <class T>
+struct is_static_vector : std::false_type {};
+
+template <class T, size_t N>
+struct is_static_vector<static_vector<T, N>> : std::true_type {};
+
+} // namespace detail
+
+template <class T>
+concept is_static_vector =
+    detail::is_static_vector<std::remove_cvref_t<T>>::value;
+
 } // AOC_EXPORT_NAMESPACE(aoc)
 
 namespace std {
