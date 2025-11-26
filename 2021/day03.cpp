@@ -1,124 +1,98 @@
 // https://adventofcode.com/2021/day/3
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
-#include <array>
 #include <iostream>
-#include <iterator>
-#include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
-#include <string>
-#include <string_view>
-#include <vector>
+#include <span>
 
-template <size_t bit_width>
-using bits_array = std::array<int, bit_width>;
+using Bitset = aoc::static_vector<u8, 12>;
+using Counter = aoc::static_vector<i16, 12>;
 
-template <size_t bit_width>
-using bits_lines_t = std::vector<bits_array<bit_width>>;
-
-template <size_t bit_width>
-int to_decimal(const bits_array<bit_width>& bits) {
-  int decimal = 0;
-  for (int multiplier = 1; auto bit : bits | std::ranges::views::reverse) {
-    decimal += bit * multiplier;
-    multiplier *= 2;
-  }
-  return decimal;
+fn parse(String const& filename) -> Vec<Bitset> {
+  return aoc::views::read_lines(filename) |
+         std::views::transform([](str line) {
+           return line |
+                  aoc::views::to_number<u8>() |
+                  aoc::ranges::to<Bitset>();
+         }) |
+         aoc::ranges::to<Vec<Bitset>>();
 }
 
-template <size_t bit_width>
-int solve_part1(const std::string& filename) {
-  std::array<std::array<int, 2>, bit_width> occurrences;
-  for (int i = 0; i < bit_width; ++i) {
-    occurrences[i] = {0, 0};
-  }
-
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    for (int bitPos = 0; auto bit_char : line) {
-      auto bit = static_cast<int>(bit_char - '0');
-      ++occurrences[bitPos][bit];
-      ++bitPos;
-    }
-  }
-
-  bits_array<bit_width> gamma;
-  bits_array<bit_width> epsilon;
-  for (int i = 0; i < bit_width; ++i) {
-    const bool more_ones = (occurrences[i][1] >= occurrences[i][0]);
-    gamma[i] = more_ones ? 1 : 0;
-    epsilon[i] = more_ones ? 0 : 1;
-  }
-
-  auto consumption = to_decimal(gamma) * to_decimal(epsilon);
-  std::cout << filename << " -> " << consumption << std::endl;
-  return consumption;
+fn count_bits(std::span<const Bitset> report) -> Counter {
+  let init = Counter(report[0].size(), 0);
+  return std::ranges::fold_left(report, init, [](let& acc, let& bitset) {
+    return std::views::zip(acc, bitset) |
+           std::views::transform([](let&& zip_it) {
+             let[count, bit] = zip_it;
+             return count + static_cast<i16>(bit) - static_cast<i16>(bit == 0);
+           }) |
+           aoc::ranges::to<Counter>();
+  });
 }
 
-template <size_t bit_width>
-int solve_part2(const std::string& filename) {
-  bits_lines_t<bit_width> bits_lines;
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    bits_array<bit_width> bits;
-    std::ranges::transform(line, std::begin(bits), [&](unsigned char bit_char) {
-      return static_cast<int>(bit_char - '0');
-    });
-    bits_lines.push_back(bits);
+fn to_decimal(Bitset const& report) -> u32 {
+  using pair = aoc::point_type<u32>;
+  return std::ranges::fold_left(
+             report | std::views::reverse, pair{0, 1},
+             [](let& acc_pair, let bit) {
+               let[acc, multiplier] = acc_pair;
+               return pair{acc + (static_cast<u32>(bit) * multiplier),
+                           multiplier * 2};
+             })
+      .x;
+}
+
+fn solve_case1(std::span<const Bitset> report) -> u32 {
+  let gamma = count_bits(report) |
+              std::views::transform(
+                  [](let count) { return static_cast<u8>(count > 0); }) |
+              aoc::ranges::to<Bitset>();
+  let epsilon = gamma |
+                std::views::transform(aoc::equal_to_value{0}) |
+                aoc::views::transform_cast<u8>() |
+                aoc::ranges::to<Bitset>();
+  return to_decimal(gamma) * to_decimal(epsilon);
+}
+
+fn solve_case2(std::span<const Bitset> report) -> u32 {
+  using Report = Vec<Bitset>;
+  auto oxy_gen = report | aoc::ranges::to<Report>();
+  auto co2_scrubber = report | aoc::ranges::to<Report>();
+  for (let index : Range{0uz, report[0].size()}) {
+    if (oxy_gen.size() > 1) {
+      let oxy_count = count_bits(oxy_gen);
+      oxy_gen = oxy_gen |
+                std::views::filter([&](let& bitset) {
+                  return (oxy_count[index] >= 0) == (bitset[index] > 0);
+                }) |
+                aoc::ranges::to<Report>();
+    }
+    if (co2_scrubber.size() > 1) {
+      let co2_count = count_bits(co2_scrubber);
+      co2_scrubber = co2_scrubber |
+                     std::views::filter([&](let& bitset) {
+                       return (co2_count[index] >= 0) != (bitset[index] > 0);
+                     }) |
+                     aoc::ranges::to<Report>();
+    }
   }
-
-  bits_lines_t<bit_width> bits_lines_oxy{bits_lines};
-  bits_lines_t<bit_width> bits_lines_co2{std::move(bits_lines)};
-
-  std::array<bits_lines_t<bit_width>, 2> bits_lines_new_oxy;
-  std::array<bits_lines_t<bit_width>, 2> bits_lines_new_co2;
-
-  const auto reset_new_bits = [&] {
-    for (int i = 0; i < 2; ++i) {
-      bits_lines_new_oxy[i].clear();
-      bits_lines_new_co2[i].clear();
-    }
-  };
-
-  for (int bitPos = 0; bitPos < bit_width; ++bitPos) {
-    reset_new_bits();
-    for (int i = 0; i < 2; ++i) {
-      bits_lines_new_oxy[i].reserve(bits_lines_oxy.size());
-      bits_lines_new_co2[i].reserve(bits_lines_co2.size());
-    }
-    for (const auto& bits : bits_lines_oxy) {
-      bits_lines_new_oxy[bits[bitPos]].push_back(bits);
-    }
-    for (const auto& bits : bits_lines_co2) {
-      bits_lines_new_co2[bits[bitPos]].push_back(bits);
-    }
-    if (bits_lines_new_oxy[0].size() > bits_lines_new_oxy[1].size()) {
-      std::swap(bits_lines_oxy, bits_lines_new_oxy[0]);
-    } else {
-      std::swap(bits_lines_oxy, bits_lines_new_oxy[1]);
-    }
-    if (bits_lines_new_co2[0].size() <= bits_lines_new_co2[1].size()) {
-      std::swap(bits_lines_co2, bits_lines_new_co2[0]);
-    } else {
-      std::swap(bits_lines_co2, bits_lines_new_co2[1]);
-    }
-  }
-
-  bits_array<bit_width> oxy_generator{bits_lines_oxy[0]};
-  bits_array<bit_width> co2_scrubber{bits_lines_co2[0]};
-
-  auto life_support = to_decimal(oxy_generator) * to_decimal(co2_scrubber);
-  std::cout << filename << " -> " << life_support << std::endl;
-  return life_support;
+  return to_decimal(oxy_gen[0]) * to_decimal(co2_scrubber[0]);
 }
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  AOC_EXPECT_RESULT(198, solve_part1<5>("day03.example"));
-  AOC_EXPECT_RESULT(4138664, solve_part1<12>("day03.input"));
+  let example = parse("day03.example");
+  AOC_EXPECT_RESULT(198, solve_case1(example));
+  let input = parse("day03.input");
+  AOC_EXPECT_RESULT(4138664, solve_case1(input));
+
   std::cout << "Part 2" << std::endl;
-  AOC_EXPECT_RESULT(230, solve_part2<5>("day03.example"));
-  AOC_EXPECT_RESULT(4273224, solve_part2<12>("day03.input"));
+  AOC_EXPECT_RESULT(230, solve_case2(example));
+  AOC_EXPECT_RESULT(4273224, solve_case2(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
