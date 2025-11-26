@@ -8,7 +8,6 @@ fn parse(filename: &str) -> (ReplacementsT, String) {
     let mut replacements = ReplacementsT::new();
     let mut last = false;
     for line in aoc::file::read_lines(filename) {
-        let line = line.unwrap();
         if (last) {
             return (replacements, line);
         }

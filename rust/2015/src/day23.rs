@@ -2,8 +2,8 @@ type Instructions = Vec<(String, usize, i8)>;
 
 fn parse(filename: &str) -> Instructions {
     aoc::file::read_lines(filename)
+        .iter()
         .map(|line| {
-            let line = line.unwrap();
             let (instruction, args) = line.split_once(' ').unwrap();
             let (first, second) = match (args.split_once(", ")) {
                 Some((first, second)) => (

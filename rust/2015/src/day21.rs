@@ -49,9 +49,10 @@ fn play_game(player: &mut Entity, boss: &mut Entity) -> bool {
 }
 
 fn parse(filename: &str) -> Entity {
-    let mut lines_it = aoc::file::read_lines(filename);
+    let lines = aoc::file::read_lines(filename);
+    let mut lines_it = lines.iter();
     let mut parse_line = || {
-        let line = lines_it.next().unwrap().unwrap();
+        let line = lines_it.next().unwrap();
         let (_, value_str) = line.split_once(": ").unwrap();
         let value = value_str.parse::<u32>().unwrap();
         return value;
