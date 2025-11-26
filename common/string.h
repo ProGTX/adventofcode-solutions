@@ -64,9 +64,6 @@ constexpr std::string_view trim(std::string_view str,
   str = rtrim(str, whitespace);
   return str;
 }
-constexpr std::string_view trim_simple(std::string_view str) {
-  return trim(str);
-}
 
 template <class return_t = void, bool keep_spaces = false>
 struct trimmer_base {
