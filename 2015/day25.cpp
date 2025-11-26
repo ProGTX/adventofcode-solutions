@@ -46,10 +46,8 @@ fn solve_case(const coords_t coords) -> i64 {
       .row = 1,
       .column = 1,
   };
-  int counter = 0;
   while ((current.row != row) || (current.column != column)) {
     current = next(current);
-    ++counter;
   }
   return current.value;
 }
