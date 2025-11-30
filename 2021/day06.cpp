@@ -6,14 +6,12 @@
 #include <array>
 #include <cstdint>
 #include <iostream>
-#include <iterator>
-#include <map>
 #include <numeric>
 #include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
-#include <vector>
 
 using int_t = std::int64_t;
 
@@ -22,31 +20,27 @@ using school = std::array<int_t, production_length>;
 
 template <int num_days, int production_length, int maturing_length>
 int_t simulate_fish(school<production_length>& fish) {
-  school<maturing_length> brood;
-  std::ranges::fill(brood, 0);
+  school<maturing_length> brood{};
 
   for (int day = 0; day < num_days; ++day) {
-    int_t num_new_brood = fish.front();
+    const auto num_new_brood = fish.front();
     aoc::ranges::rotate_left(fish);
 
-    int_t num_new_matures = brood.front();
+    const auto num_new_matures = brood.front();
     std::shift_left(brood.begin(), brood.end(), 1);
 
     fish.back() += num_new_matures;
-    // Important to overwrite brood in the back
-    // because shift_left did not necessarily clear them
     brood.back() = num_new_brood;
   }
 
-  return std::accumulate(fish.begin(), fish.end(), int_t{0}) +
-         std::accumulate(brood.begin(), brood.end(), int_t{0});
+  return aoc::ranges::accumulate(fish, int_t{0}) +
+         aoc::ranges::accumulate(brood, int_t{0});
 }
 
 template <int num_days, int production_length, int maturing_length>
 int_t solve_case(const std::string& filename) {
   using lanternfish = school<production_length>;
-  lanternfish fish;
-  std::ranges::fill(fish, 0);
+  lanternfish fish{};
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
     auto stages = aoc::split_to_vec<int>(line, ',');
@@ -62,12 +56,14 @@ int_t solve_case(const std::string& filename) {
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(26, (solve_case<18, 7, 2>("day06.example")));
   AOC_EXPECT_RESULT(5934, (solve_case<80, 7, 2>("day06.example")));
   AOC_EXPECT_RESULT(371379, (solve_case<80, 7, 2>("day06.input")));
-  std::cout << "Part 2" << std::endl;
+
+  std::println("Part 2");
   AOC_EXPECT_RESULT(26984457539, (solve_case<256, 7, 2>("day06.example")));
   AOC_EXPECT_RESULT(1674303997472, (solve_case<256, 7, 2>("day06.input")));
+
   AOC_RETURN_CHECK_RESULT();
 }
