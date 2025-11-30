@@ -38,7 +38,7 @@ fn solve_case1(forrest: &Forrest) -> u32 {
     for (index, tree_height) in forrest.data.iter().enumerate() {
         let (tree_column, tree_row) = forrest.position(index);
         let check = |row, column, visible: &mut u32| -> bool {
-            if (forrest.at(row, column) >= *tree_height) {
+            if (forrest.get(row, column) >= tree_height) {
                 *visible = 0;
                 return false;
             }
@@ -60,7 +60,7 @@ fn solve_case2(forrest: &Forrest) -> u32 {
         let (tree_column, tree_row) = forrest.position(index);
         let check = |row, column, scenic_score: &mut u32| -> bool {
             *scenic_score += 1;
-            if (forrest.at(row, column) >= *tree_height) {
+            if (forrest.get(row, column) >= tree_height) {
                 return false;
             }
             return true;

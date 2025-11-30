@@ -71,8 +71,8 @@ fn solve_case<const BRIGHTNESS: bool>(filename: &str) -> u32 {
 
         for row in beginy..(endy + 1) {
             for column in beginx..(endx + 1) {
-                let c = lights.at(row, column);
-                lights.modify(operation(c), row, column);
+                let c = lights.get_mut(row, column);
+                *c = operation(*c);
             }
         }
     }

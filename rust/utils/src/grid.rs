@@ -42,12 +42,13 @@ impl<T> Grid<T> {
         );
     }
 
-    pub fn at(&self, row: usize, column: usize) -> T
-    where
-        T: Copy,
-    {
+    pub fn get(&self, row: usize, column: usize) -> &T {
         let index = self.linear_index(row, column);
-        self.data[index]
+        &self.data[index]
+    }
+    pub fn get_mut(&mut self, row: usize, column: usize) -> &mut T {
+        let index = self.linear_index(row, column);
+        &mut self.data[index]
     }
 
     pub fn modify(&mut self, value: T, row: usize, column: usize) {
@@ -90,7 +91,7 @@ impl<T> Grid<T> {
         return (row < self.num_rows) && (column < self.num_columns);
     }
 
-    pub fn in_bounds_signed(&self, row: i32, column: i32) -> bool {
+    pub fn in_bounds_signed(&self, row: isize, column: isize) -> bool {
         return (row >= 0)
             && (column >= 0)
             && self.in_bounds_unsigned(row as usize, column as usize);
@@ -103,11 +104,14 @@ impl<T> Grid<T> {
         let mut neighbors = ArrayVec::<T, 8>::new();
         for neighbor_diff in ALL_NEIGHBOR_DIFFS {
             let neighbor_pos = (
-                (column as i32) + neighbor_diff.0,
-                (row as i32) + neighbor_diff.1,
+                (column as isize) + (neighbor_diff.0 as isize),
+                (row as isize) + (neighbor_diff.1 as isize),
             );
             if (self.in_bounds_signed(neighbor_pos.1, neighbor_pos.0)) {
-                neighbors.push(self.at(neighbor_pos.1 as usize, neighbor_pos.0 as usize));
+                neighbors.push(
+                    self.get(neighbor_pos.1 as usize, neighbor_pos.0 as usize)
+                        .clone(),
+                );
             }
         }
         return neighbors;
