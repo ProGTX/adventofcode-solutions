@@ -14,6 +14,7 @@ endfunction()
 add_rust_source(file utils)
 add_rust_source(grid utils)
 add_rust_source(math utils)
+add_rust_source(point utils)
 
 function(generate_utils)
     set(RUST_UTILS_SECTION "")
