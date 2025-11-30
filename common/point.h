@@ -125,6 +125,10 @@ struct point_type {
 
   constexpr point_type normal() const { return *this / this->abs(); }
 
+  constexpr point_type max(const point_type& other) const {
+    return {std::max(x, other.x), std::max(y, other.y)};
+  }
+
   constexpr friend value_type distance_manhattan(const point_type& lhs,
                                                  const point_type& rhs) {
     auto diff = (rhs - lhs).abs();
