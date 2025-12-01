@@ -33,7 +33,7 @@ fn solve_case2(sequence: &[i32]) -> i32 {
             current += rotation;
             let num_zeros = (current / 100).abs() + ((current <= 0) && !current_zero) as i32;
             // Here we have to use the full formula for the modulo
-            current = ((current % 100) + 100) % 100;
+            current = current.rem_euclid(100);
             num_zeros
         })
         .sum()
