@@ -12,7 +12,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/.."
 
-years=(2015 2021 2022 2023 2024)
+years=(2015 2021 2022 2023 2024 2025)
 days=$(seq 1 25)
 
 # Generate (year, day) pairs
