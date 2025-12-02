@@ -38,23 +38,37 @@ fn solve_case1(std::span<const range_t> ranges) -> u64 {
 }
 
 fn solve_case2(std::span<const range_t> ranges) -> u64 {
+  constexpr let all_divisors = [] {
+    using DivisorStorage = aoc::static_vector<u64, 7>;
+    auto divisors = aoc::static_vector<DivisorStorage, 11>{};
+    divisors.emplace_back(); // 0
+    divisors.back().push_back(1);
+    for (let div : Range{usize{1}, divisors.capacity()}) {
+      divisors.push_back(aoc::divisors<DivisorStorage>(div));
+    }
+    return divisors;
+  }();
   return aoc::ranges::accumulate(
-      ranges | std::views::transform([](range_t range) {
+      ranges | std::views::transform([&](range_t range) {
         return aoc::ranges::accumulate(
-            range | std::views::filter([](u64 id) {
+            range | std::views::filter([&](u64 id) {
               let id_str = std::to_string(id);
               let s = str{id_str};
               let size = s.size();
-              let divisors = aoc::divisors(size);
+              let& divisors = all_divisors[size];
               // Skip 1
               return std::ranges::any_of(
                   divisors | std::views::drop(1), [&](u64 divisor) {
                     let chunks = s | std::views::chunk(size / (divisor));
                     auto chunks_it = std::begin(chunks);
-                    let first = *chunks_it | aoc::ranges::to<String>();
+                    let first = str{std::ranges::begin(*chunks_it),
+                                    std::ranges::end(*chunks_it)};
+                    ++chunks_it;
                     return std::ranges::all_of(
-                        chunks_it, std::end(chunks), [&](auto chunk) {
-                          return (chunk | aoc::ranges::to<String>()) == first;
+                        chunks_it, std::end(chunks), [&](auto&& chunk) {
+                          let current = str{std::ranges::begin(chunk),
+                                            std::ranges::end(chunk)};
+                          return current == first;
                         });
                   });
             }),

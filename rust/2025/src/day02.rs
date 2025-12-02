@@ -1,4 +1,4 @@
-use itertools::Itertools;
+use arrayvec::ArrayVec;
 
 type Range = std::ops::Range<u64>;
 
@@ -37,6 +37,21 @@ fn solve_case1(ranges: &[Range]) -> u64 {
 }
 
 fn solve_case2(ranges: &[Range]) -> u64 {
+    let all_divisors = {
+        type DivisorStorage = ArrayVec<u64, 7>;
+        let mut divisors = ArrayVec::<DivisorStorage, 11>::new();
+        divisors.push(DivisorStorage::new()); // 0
+        divisors.last_mut().unwrap().push(1);
+        for div in 1..divisors.capacity() {
+            divisors.push(
+                aoc::math::divisors(div as u64)
+                    .iter()
+                    .map(|&v| v)
+                    .collect::<DivisorStorage>(),
+            );
+        }
+        divisors
+    };
     ranges
         .iter()
         .map(|range| {
@@ -49,13 +64,16 @@ fn solve_case2(ranges: &[Range]) -> u64 {
                     }
                     let s = id.to_string();
                     let size = s.len();
-                    let divisors = aoc::math::divisors(size as u64);
+                    let divisors = &all_divisors[size];
                     // Skip 1
                     return divisors[1..].iter().any(|&divisor| {
-                        let chunks = s.chars().chunks(size / (divisor as usize));
-                        let mut chunks_iter = chunks.into_iter();
-                        let first = chunks_iter.next().unwrap().collect::<String>();
-                        return chunks_iter.all(|chunk| chunk.collect::<String>() == first);
+                        let chunks = s.as_bytes().chunks(size / (divisor as usize));
+                        let mut chunks_it = chunks.into_iter();
+                        let first = str::from_utf8(chunks_it.next().unwrap()).unwrap();
+                        return chunks_it.all(|chunk| {
+                            let current = str::from_utf8(chunk).unwrap();
+                            current == first
+                        });
                     });
                 })
                 .sum::<u64>()
