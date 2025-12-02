@@ -7,6 +7,13 @@ pub struct Grid<T> {
     pub num_columns: usize,
 }
 
+pub const BASIC_NEIGHBOR_DIFFS: [(i32, i32); 4] = [
+    (0, -1),
+    (-1, 0),
+    (1, 0),
+    (0, 1), //
+];
+
 pub const ALL_NEIGHBOR_DIFFS: [(i32, i32); 8] = [
     (-1, -1),
     (0, -1),
@@ -97,12 +104,17 @@ impl<T> Grid<T> {
             && self.in_bounds_unsigned(row as usize, column as usize);
     }
 
-    pub fn all_neighbor_values(&self, row: usize, column: usize) -> ArrayVec<T, 8>
+    fn get_neighbor_values<const N: usize>(
+        &self,
+        neighbor_diffs: &[(i32, i32); N],
+        row: usize,
+        column: usize,
+    ) -> ArrayVec<T, N>
     where
         T: Copy,
     {
-        let mut neighbors = ArrayVec::<T, 8>::new();
-        for neighbor_diff in ALL_NEIGHBOR_DIFFS {
+        let mut neighbors = ArrayVec::new();
+        for neighbor_diff in neighbor_diffs {
             let neighbor_pos = (
                 (column as isize) + (neighbor_diff.0 as isize),
                 (row as isize) + (neighbor_diff.1 as isize),
@@ -115,6 +127,20 @@ impl<T> Grid<T> {
             }
         }
         return neighbors;
+    }
+
+    pub fn basic_neighbor_values(&self, row: usize, column: usize) -> ArrayVec<T, 4>
+    where
+        T: Copy,
+    {
+        self.get_neighbor_values(&BASIC_NEIGHBOR_DIFFS, row, column)
+    }
+
+    pub fn all_neighbor_values(&self, row: usize, column: usize) -> ArrayVec<T, 8>
+    where
+        T: Copy,
+    {
+        self.get_neighbor_values(&ALL_NEIGHBOR_DIFFS, row, column)
     }
 
     pub fn print(&self)
