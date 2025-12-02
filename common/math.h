@@ -9,6 +9,7 @@
 #include <bit>
 #include <cmath>
 #include <concepts>
+#include <cstdint>
 #include <type_traits>
 #endif
 
@@ -64,6 +65,27 @@ constexpr T pown(T x, unsigned p) {
 }
 static_assert(1024 == pown(2, 10));
 static_assert(100 == pown(10, 2));
+
+/** Returns floor(sqrt(n)) for n >= 0
+ *
+ * Used as a constexpr alternative to std::sqrt.
+ * Shouldn't be necessary anymore in C++26.
+ */
+constexpr std::uint64_t sqrt_newton(std::uint64_t n) {
+  if (n == 0) {
+    return 0;
+  }
+
+  // Initial guess
+  std::uint64_t x = n;
+  std::uint64_t y = (x + 1) / 2;
+
+  while (y < x) {
+    x = y;
+    y = (x + (n / x)) / 2;
+  }
+  return x;
+}
 
 // (n, k) = n! / (k! * (n-k)!)
 // (n, k) = (n - 1, k - 1) * n / k
@@ -165,7 +187,7 @@ constexpr output_t prime_factors(const T N) {
 
 template <bool sorted = true, class output_t, class T>
 constexpr void divisors(output_t& result, const T N) {
-  const auto sqrt_n = static_cast<T>(std::sqrt(N));
+  const auto sqrt_n = static_cast<T>(sqrt_newton(N));
   for (T i = 1; i <= sqrt_n; ++i) {
     if (N % i == 0) {
       result.push_back(i);
