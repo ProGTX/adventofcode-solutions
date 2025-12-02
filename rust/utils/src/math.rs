@@ -1,3 +1,4 @@
+use std::convert::TryFrom;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Sub, SubAssign};
 
 pub trait Numeric:
@@ -56,17 +57,42 @@ pub fn prime_factors<T: Numeric>(n: T) -> Vec<T> {
     return result;
 }
 
-// TODO: Make it generic
-pub fn divisors(n: u32) -> Vec<u32> {
+pub trait UnsignedOps:
+    Copy
+    + Ord
+    + Into<u64>
+    + TryFrom<u64>
+    + std::ops::Rem<Output = Self>
+    + std::ops::Div<Output = Self>
+    + std::ops::Add<Output = Self>
+{
+}
+impl UnsignedOps for u8 {}
+impl UnsignedOps for u16 {}
+impl UnsignedOps for u32 {}
+impl UnsignedOps for u64 {}
+
+fn int_sqrt_u64(n: u64) -> u64 {
+    (n as f64).sqrt() as u64
+}
+
+pub fn divisors<T: UnsignedOps>(n: T) -> Vec<T> {
+    let n_u64: u64 = n.into();
+    let sqrt = int_sqrt_u64(n_u64);
     let mut result = Vec::new();
-    let sqrt_n = (n as f64).sqrt() as u32;
-    for i in 1..=sqrt_n {
-        if (n % i == 0) {
+    let mut i_u64 = 1u64;
+    while (i_u64 <= sqrt) {
+        let i = T::try_from(i_u64).ok().unwrap();
+        if ((n % i) == T::try_from(0u64).ok().unwrap()) {
             result.push(i);
-            if (i != (n / i)) {
-                result.push(n / i);
+
+            let other_u64 = n_u64 / i_u64;
+            let other = T::try_from(other_u64).ok().unwrap();
+            if (other != i) {
+                result.push(other);
             }
         }
+        i_u64 += 1;
     }
     result.sort();
     result
