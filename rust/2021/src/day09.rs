@@ -11,9 +11,8 @@ fn get_low_points(heightmap: &Heightmap) -> LowPoints {
         .iter()
         .enumerate()
         .filter(|&(linear_index, current)| {
-            let (column, row) = heightmap.position(linear_index);
             heightmap
-                .basic_neighbor_values(row, column)
+                .basic_neighbor_values(heightmap.position(linear_index))
                 .iter()
                 .all(|neighbor| current < neighbor)
         })

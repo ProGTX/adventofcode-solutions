@@ -1,4 +1,8 @@
+use crate::point::Point;
 use arrayvec::ArrayVec;
+
+pub type Ipos = Point<isize>;
+pub type Upos = Point<usize>;
 
 #[derive(Clone)]
 pub struct Grid<T> {
@@ -7,22 +11,22 @@ pub struct Grid<T> {
     pub num_columns: usize,
 }
 
-pub const BASIC_NEIGHBOR_DIFFS: [(i32, i32); 4] = [
-    (0, -1),
-    (-1, 0),
-    (1, 0),
-    (0, 1), //
+pub const BASIC_NEIGHBOR_DIFFS: [Ipos; 4] = [
+    Point::new(0, -1),
+    Point::new(-1, 0),
+    Point::new(1, 0),
+    Point::new(0, 1),
 ];
 
-pub const ALL_NEIGHBOR_DIFFS: [(i32, i32); 8] = [
-    (-1, -1),
-    (0, -1),
-    (1, -1),
-    (-1, 0),
-    (1, 0),
-    (-1, 1),
-    (0, 1),
-    (1, 1),
+pub const ALL_NEIGHBOR_DIFFS: [Ipos; 8] = [
+    Point::new(-1, -1),
+    Point::new(0, -1),
+    Point::new(1, -1),
+    Point::new(-1, 0),
+    Point::new(1, 0),
+    Point::new(-1, 1),
+    Point::new(0, 1),
+    Point::new(1, 1),
 ];
 
 impl<T> Grid<T> {
@@ -37,13 +41,17 @@ impl<T> Grid<T> {
         }
     }
 
-    pub fn linear_index(&self, row: usize, column: usize) -> usize {
+    pub const fn linear_index(&self, row: usize, column: usize) -> usize {
         row * self.num_columns + column
     }
 
+    pub const fn linear_from_pos(&self, pos: Upos) -> usize {
+        self.linear_index(pos.y, pos.x)
+    }
+
     /// Returns (column, row)
-    pub fn position(&self, linear_index: usize) -> (usize, usize) {
-        return (
+    pub const fn position(&self, linear_index: usize) -> Upos {
+        return Upos::new(
             linear_index % self.num_columns, // column
             linear_index / self.num_columns, // row
         );
@@ -106,22 +114,18 @@ impl<T> Grid<T> {
 
     fn get_neighbor_values<const N: usize>(
         &self,
-        neighbor_diffs: &[(i32, i32); N],
-        row: usize,
-        column: usize,
+        neighbor_diffs: &[Ipos; N],
+        ipos: Ipos,
     ) -> ArrayVec<T, N>
     where
         T: Copy,
     {
         let mut neighbors = ArrayVec::new();
         for neighbor_diff in neighbor_diffs {
-            let neighbor_pos = (
-                (column as isize) + (neighbor_diff.0 as isize),
-                (row as isize) + (neighbor_diff.1 as isize),
-            );
-            if (self.in_bounds_signed(neighbor_pos.1, neighbor_pos.0)) {
+            let neighbor_pos = ipos + *neighbor_diff;
+            if (self.in_bounds_signed(neighbor_pos.y, neighbor_pos.x)) {
                 neighbors.push(
-                    self.get(neighbor_pos.1 as usize, neighbor_pos.0 as usize)
+                    self.get(neighbor_pos.y as usize, neighbor_pos.x as usize)
                         .clone(),
                 );
             }
@@ -129,18 +133,24 @@ impl<T> Grid<T> {
         return neighbors;
     }
 
-    pub fn basic_neighbor_values(&self, row: usize, column: usize) -> ArrayVec<T, 4>
+    pub fn basic_neighbor_values(&self, upos: Upos) -> ArrayVec<T, 4>
     where
         T: Copy,
     {
-        self.get_neighbor_values(&BASIC_NEIGHBOR_DIFFS, row, column)
+        self.get_neighbor_values(
+            &BASIC_NEIGHBOR_DIFFS,
+            Ipos::new(upos.x as isize, upos.y as isize),
+        )
     }
 
-    pub fn all_neighbor_values(&self, row: usize, column: usize) -> ArrayVec<T, 8>
+    pub fn all_neighbor_values(&self, upos: Upos) -> ArrayVec<T, 8>
     where
         T: Copy,
     {
-        self.get_neighbor_values(&ALL_NEIGHBOR_DIFFS, row, column)
+        self.get_neighbor_values(
+            &ALL_NEIGHBOR_DIFFS,
+            Ipos::new(upos.x as isize, upos.y as isize),
+        )
     }
 
     pub fn print(&self)

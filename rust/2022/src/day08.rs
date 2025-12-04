@@ -36,7 +36,7 @@ where
 fn solve_case1(forrest: &Forrest) -> u32 {
     let mut visibility = Score::new(0, forrest.num_rows, forrest.num_columns);
     for (index, tree_height) in forrest.data.iter().enumerate() {
-        let (tree_column, tree_row) = forrest.position(index);
+        let (tree_column, tree_row) = forrest.position(index).into();
         let check = |row, column, visible: &mut u32| -> bool {
             if (forrest.get(row, column) >= tree_height) {
                 *visible = 0;
@@ -57,7 +57,7 @@ fn solve_case1(forrest: &Forrest) -> u32 {
 fn solve_case2(forrest: &Forrest) -> u32 {
     let mut score = Score::new(0, forrest.num_rows, forrest.num_columns);
     for (index, tree_height) in forrest.data.iter().enumerate() {
-        let (tree_column, tree_row) = forrest.position(index);
+        let (tree_column, tree_row) = forrest.position(index).into();
         let check = |row, column, scenic_score: &mut u32| -> bool {
             *scenic_score += 1;
             if (forrest.get(row, column) >= tree_height) {

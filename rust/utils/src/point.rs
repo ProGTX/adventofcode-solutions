@@ -7,6 +7,10 @@ pub struct Point<T> {
 }
 
 impl<T> Point<T> {
+    pub const fn new(x: T, y: T) -> Self {
+        Point { x, y }
+    }
+
     // TODO: Change delimiter to Pattern trait once it's stable
     pub fn parse(s: &str, delimiter: &str) -> Option<Self>
     where
@@ -91,6 +95,19 @@ impl<T> Point<T> {
                 self.y / rhs.y
             },
         }
+    }
+}
+
+// Tuple to Point
+impl<T> From<(T, T)> for Point<T> {
+    fn from((x, y): (T, T)) -> Self {
+        Point { x, y }
+    }
+}
+// Point to Tuple
+impl<T> From<Point<T>> for (T, T) {
+    fn from(point: Point<T>) -> Self {
+        (point.x, point.y)
     }
 }
 

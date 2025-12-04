@@ -18,14 +18,14 @@ fn solve_case<const STEPS: u32, const STUCK_CORNERS: bool>(original_lights: &Gri
     let mut next_lights = current_lights.clone();
     for _ in 0..STEPS {
         for (index, light) in current_lights.data.iter().enumerate() {
-            let (column, row) = current_lights.position(index);
+            let pos = current_lights.position(index);
             if (STUCK_CORNERS) {
-                if (corners.contains(&(column, row))) {
+                if (corners.contains(&pos.into())) {
                     continue;
                 }
             }
             let num_on_neighbors = current_lights
-                .all_neighbor_values(row, column)
+                .all_neighbor_values(pos)
                 .into_iter()
                 .filter(|light| *light == LIGHT_ON)
                 .count();
@@ -42,7 +42,7 @@ fn solve_case<const STEPS: u32, const STUCK_CORNERS: bool>(original_lights: &Gri
                     LIGHT_OFF
                 }
             };
-            next_lights.modify(next, row, column);
+            next_lights.modify(next, pos.y, pos.x);
         }
         std::mem::swap(&mut current_lights, &mut next_lights);
     }
