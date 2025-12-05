@@ -72,7 +72,7 @@ impl UnsignedOps for u16 {}
 impl UnsignedOps for u32 {}
 impl UnsignedOps for u64 {}
 
-fn int_sqrt_u64(n: u64) -> u64 {
+pub fn int_sqrt_u64(n: u64) -> u64 {
     (n as f64).sqrt() as u64
 }
 
@@ -94,6 +94,5 @@ pub fn divisors<T: UnsignedOps>(n: T) -> Vec<T> {
         }
         i_u64 += 1;
     }
-    result.sort();
     result
 }
