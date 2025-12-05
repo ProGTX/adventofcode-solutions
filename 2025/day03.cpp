@@ -48,18 +48,20 @@ fn solve_case(Batteries const& batteries) -> u64 {
             index_of_max(current.substr(0, size - (TURN_NUM - 1))));
         for (let tail : Range{0uz, (TURN_NUM - 1)} | std::views::reverse) {
           let offset = indexes.back();
-          indexes.push_back(
-              index_of_max(current.substr(offset + 1, size - tail)) +
+          indexes.push_back( //
               offset +
-              1);
+              1 +
+              index_of_max(
+                  current.substr(offset + 1, size - tail - offset - 1)));
         }
         using pair = aoc::point_type<u64>;
         let result = std::ranges::fold_left(
             indexes | std::views::reverse, pair{0, 1},
             [&](pair acc_pair, usize index) {
               let[acc, multiplier] = acc_pair;
-              return pair{acc + static_cast<u64>(current[index]) * multiplier,
-                          multiplier * 10};
+              return pair{
+                  acc + aoc::to_number<u64>(current[index]) * multiplier,
+                  multiplier * 10};
             });
         return result.x;
       }),
