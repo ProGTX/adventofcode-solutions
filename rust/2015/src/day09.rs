@@ -50,10 +50,17 @@ fn best_distance<const GREATER: bool>(connections: ConnectionsT) -> u32 {
     let mut best = if GREATER { 0 } else { u32::MAX };
     let mut current_path = HashSet::<usize>::new();
     for (from_id, place) in connections.iter().enumerate() {
-        debug_assert!(
-            place.is_sorted_by_key(|link| link.distance),
-            "Destinations must be sorted by distance"
-        );
+        if !GREATER {
+            debug_assert!(
+                place.is_sorted_by_key(|link| link.distance),
+                "Destinations must be sorted by distance"
+            );
+        } else {
+            debug_assert!(
+                place.is_sorted_by_key(|link| std::cmp::Reverse(link.distance)),
+                "Destinations must be sorted by distance"
+            );
+        }
         let mut current_link = place;
         current_path.clear();
         current_path.insert(from_id);
