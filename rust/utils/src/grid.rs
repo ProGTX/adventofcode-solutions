@@ -112,6 +112,38 @@ impl<T> Grid<T> {
             && self.in_bounds_unsigned(row as usize, column as usize);
     }
 
+    fn get_neighbor_positions<const N: usize>(
+        &self,
+        neighbor_diffs: &[Ipos; N],
+        ipos: Ipos,
+    ) -> ArrayVec<Upos, N> {
+        let mut neighbors = ArrayVec::new();
+        for neighbor_diff in neighbor_diffs {
+            let neighbor_pos = ipos + *neighbor_diff;
+            if (self.in_bounds_signed(neighbor_pos.y, neighbor_pos.x)) {
+                neighbors.push(Upos {
+                    x: neighbor_pos.x as usize,
+                    y: neighbor_pos.y as usize,
+                });
+            }
+        }
+        return neighbors;
+    }
+
+    pub fn basic_neighbor_positions(&self, upos: Upos) -> ArrayVec<Upos, 4> {
+        self.get_neighbor_positions(
+            &BASIC_NEIGHBOR_DIFFS,
+            Ipos::new(upos.x as isize, upos.y as isize),
+        )
+    }
+
+    pub fn all_neighbor_positions(&self, upos: Upos) -> ArrayVec<Upos, 8> {
+        self.get_neighbor_positions(
+            &ALL_NEIGHBOR_DIFFS,
+            Ipos::new(upos.x as isize, upos.y as isize),
+        )
+    }
+
     fn get_neighbor_values<const N: usize>(
         &self,
         neighbor_diffs: &[Ipos; N],
@@ -120,17 +152,10 @@ impl<T> Grid<T> {
     where
         T: Copy,
     {
-        let mut neighbors = ArrayVec::new();
-        for neighbor_diff in neighbor_diffs {
-            let neighbor_pos = ipos + *neighbor_diff;
-            if (self.in_bounds_signed(neighbor_pos.y, neighbor_pos.x)) {
-                neighbors.push(
-                    self.get(neighbor_pos.y as usize, neighbor_pos.x as usize)
-                        .clone(),
-                );
-            }
-        }
-        return neighbors;
+        self.get_neighbor_positions(neighbor_diffs, ipos)
+            .iter()
+            .map(|neighbor_pos| self.get(neighbor_pos.y, neighbor_pos.x).clone())
+            .collect::<ArrayVec<T, N>>()
     }
 
     pub fn basic_neighbor_values(&self, upos: Upos) -> ArrayVec<T, 4>
