@@ -471,9 +471,12 @@ class combinations_view : public std::ranges::view_interface<
   };
 
  public:
-  constexpr combinations_view(ElementsR&& range,
+  template <std::ranges::sized_range ElementsRDep = ElementsR>
+  constexpr combinations_view(ElementsRDep&& range,
                               combinations_args<counter_type> args)
-      : range{range}, num_elems{std::ranges::size(this->range)}, args{args} {}
+      : range{std::forward<ElementsRDep>(range)},
+        num_elems{std::ranges::size(this->range)},
+        args{args} {}
 
   constexpr iterator begin() const { return iterator{this, std::false_type{}}; }
   constexpr iterator end() const { return iterator{this, std::true_type{}}; }
