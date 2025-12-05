@@ -437,7 +437,11 @@ class grid {
   constexpr auto row_view_detail(Begin start) const {
     auto view = std::ranges::subrange(start, start + this->row_length());
     if constexpr (std::same_as<Return, void>) {
-      return view;
+      if constexpr (std::same_as<T, char>) {
+        return std::string_view{view.begin(), view.end()};
+      } else {
+        return view;
+      }
     } else if constexpr (is_array_class_v<Return>) {
       Return row;
       std::ranges::copy(view, std::begin(row));

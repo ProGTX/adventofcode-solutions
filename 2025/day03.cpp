@@ -41,8 +41,7 @@ template <usize TURN_NUM>
 fn solve_case(Batteries const& batteries) -> u64 {
   return aoc::ranges::accumulate(
       Range{0uz, batteries.num_rows()} | std::views::transform([&](usize row) {
-        let current_view = batteries.row_view(row);
-        let current = str{current_view.begin(), current_view.end()};
+        let current = batteries.row_view(row);
         let size = current.size();
         auto indexes = aoc::static_vector<usize, TURN_NUM>{};
         indexes.push_back(
