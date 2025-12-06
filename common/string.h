@@ -52,6 +52,8 @@ constexpr auto min_suffix_trim_removal(std::string_view str, std::size_t pos) {
 }
 } // namespace detail
 
+constexpr const std::string_view all_whitespace = " \t\n\r\f\v";
+
 constexpr std::string_view rtrim(std::string_view str,
                                  std::string_view whitespace) {
   const auto pos(str.find_last_not_of(whitespace));
@@ -59,7 +61,7 @@ constexpr std::string_view rtrim(std::string_view str,
   return str;
 }
 constexpr std::string_view trim(std::string_view str,
-                                std::string_view whitespace = " \t\n\r\f\v") {
+                                std::string_view whitespace = all_whitespace) {
   str = ltrim(str, whitespace);
   str = rtrim(str, whitespace);
   return str;
@@ -75,17 +77,18 @@ struct trimmer_base {
                            std::string, std::string_view>,
         return_t>;
     auto str = construct_string<std::string_view>(std::forward<R>(r));
-    if constexpr (keep_spaces) {
-      return construct_string<actual_ret_t>(trim(str, "\t\n\r\f\v"));
-    } else {
-      return construct_string<actual_ret_t>(trim(str));
-    }
+    constexpr std::string_view whitespace = [] {
+      if constexpr (keep_spaces) {
+        return all_whitespace.substr(1);
+      } else {
+        return all_whitespace;
+      }
+    }();
+    return construct_string<actual_ret_t>(trim(str, whitespace));
   }
 };
 template <class return_t = void>
 using trimmer = trimmer_base<return_t, false>;
-template <class return_t = void>
-using trimmer_keep_spaces = trimmer_base<return_t, true>;
 
 struct keep_empty {};
 struct keep_spaces {};
@@ -125,9 +128,9 @@ struct full_line {
 
 template <class... Args>
 constexpr auto read_lines_from_file(std::ifstream& file, Args...) {
-  using trimmer_t = std::conditional_t<contains_uncvref<keep_spaces, Args...>,
-                                       trimmer_keep_spaces<std::string>,
-                                       trimmer<std::string>>;
+  constexpr bool should_keep_spaces = contains_uncvref<keep_spaces, Args...>;
+  using trimmer_t = trimmer_base<std::string, should_keep_spaces>;
+
   constexpr bool keep_empty_lines = contains_uncvref<keep_empty, Args...>;
 
   return std::views::istream<full_line<trimmer_t, keep_empty_lines>>(file);

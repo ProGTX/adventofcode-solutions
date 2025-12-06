@@ -670,13 +670,16 @@ struct char_grid_config_output {
   std::optional<point> end_pos;
 };
 
+template <class... ReadArgsTs>
 std::pair<char_grid<>, char_grid_config_output> read_char_grid(
-    const std::string& filename, const char_grid_config_input config_input) {
+    const std::string& filename, const char_grid_config_input config_input,
+    ReadArgsTs... read_args) {
   char_grid<> return_grid;
   char_grid_config_output config_output{};
   using point = char_grid_config_output::point;
   const bool padding = config_input.padding.has_value();
-  for (std::string line : views::read_lines(filename)) {
+  for (std::string line :
+       views::read_lines(filename, std::forward<ReadArgsTs>(read_args)...)) {
     if (padding && return_grid.empty()) {
       return_grid.add_row(
           std::views::repeat(*config_input.padding, line.size() + 2));
@@ -711,8 +714,10 @@ std::pair<char_grid<>, char_grid_config_output> read_char_grid(
   return std::pair{return_grid, config_output};
 }
 
-auto read_char_grid(const std::string& filename) {
-  auto [grid, config_ignore] = read_char_grid(filename, {});
+template <class... ReadArgsTs>
+auto read_char_grid(const std::string& filename, ReadArgsTs... read_args) {
+  auto [grid, _] =
+      read_char_grid(filename, {}, std::forward<ReadArgsTs>(read_args)...);
   return grid;
 }
 
