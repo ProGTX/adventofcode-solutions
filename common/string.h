@@ -432,6 +432,61 @@ constexpr auto split_once(std::string_view str, Pattern&& delimiter,
 static_assert("world today" == split_once("hello world today", ' ')[1]);
 static_assert(2 == aoc::split_once<int>("1 2", ' ')[1]);
 
+/**
+ * split_sstream takes a slightly different approach to splitting a string
+ * than `split`, by not specifying a delimiter, but the delimiter is determined
+ * based on the `value_type`, exactly like how std::istringstream works.
+ *
+ * If value_type is std::string, the string will be split based on
+ * any whitespace. If it's a number type, the function will collect
+ * all numbers it can extract from the string.
+ *
+ * @code
+ * auto result = split_sstream("hello    world today  ");
+ * static_assert(std::same_as<
+ *                 decltype(result),
+ *                 std::vector<std::string>>);
+ * assert(result.size() == 3);
+ * assert(result[0] == "hello");
+ * assert(result[1] == "world");
+ * assert(result[2] == "today");
+ * @endcode
+ *
+ * @code
+ * auto result = split_sstream<int>("3453m6546 254, 6323,2342ad84");
+ * static_assert(std::same_as<
+ *                 decltype(result),
+ *                 std::vector<int>>);
+ * assert(result.size() == 6);
+ * assert(result[0] == 3453);
+ * assert(result[1] == 6546);
+ * assert(result[2] == 254);
+ * assert(result[3] == 6323);
+ * assert(result[4] == 2342);
+ * assert(result[5] == 84);
+ * @endcode
+ *
+ * IMPORTANT: You can't split into string_views before C++26.
+ *
+ * Unfortunately istringstream isn't constexpr even in C++26.
+ * 
+ * TODO: Support different output containers.
+ */
+template <class value_type = std::string>
+constexpr std::vector<value_type> split_sstream(std::string s) {
+  auto stream = std::istringstream{s};
+  return std::views::istream<value_type>(stream) |
+         aoc::ranges::to<std::vector<value_type>>();
+}
+template <class value_type = std::string>
+constexpr auto split_sstream(std::string_view s) {
+  return split_sstream<value_type>(std::string{s});
+}
+template <class value_type = std::string>
+constexpr auto split_sstream(const char* s) {
+  return split_sstream<value_type>(std::string{s});
+}
+
 template <char one = '1', class return_t = unsigned, std::ranges::range R>
 constexpr return_t binary_to_number(R&& str) {
   return_t num = 0;
