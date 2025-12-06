@@ -112,7 +112,13 @@ static_assert(270 == dot_product(std::array{1, 2, 3}, //
 // using ranges (__cpp_lib_containers_ranges)
 template <class T, std::ranges::input_range R>
 void extend(std::vector<T>& vec, R&& r) {
-  vec.insert(std::end(vec), std::ranges::begin(r), std::ranges::end(r));
+  if constexpr (std::ranges::sized_range<R>) {
+    vec.insert(std::end(vec), std::ranges::begin(r), std::ranges::end(r));
+  } else {
+    for (auto&& elem : r) {
+      vec.push_back(std::forward<decltype(elem)>(elem));
+    }
+  }
 }
 
 } // namespace ranges
