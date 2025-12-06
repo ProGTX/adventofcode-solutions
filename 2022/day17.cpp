@@ -108,21 +108,6 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
     return true;
   };
 
-  const auto print_chamber = [&]() {
-    chamber.print_all([&](std::ostream& out, int row, int column) {
-      auto value = chamber.at(chamber.num_rows() - row - 1, column);
-      if (value == empty_char) {
-        value = '.';
-      } else if ((column == 0) || (column == chamber.row_length() - 1)) {
-        value = '|';
-      } else if (row == chamber.num_rows() - 1) {
-        value = '-';
-      }
-      out << value;
-    });
-  };
-  (void)print_chamber;
-
   rock_index_t current_height = 1;
   int pattern_index = 0;
   const auto rock_solver = [&](const int rock_index) {

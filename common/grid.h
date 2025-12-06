@@ -332,7 +332,7 @@ class grid {
     for (size_t row = 0; row < this->num_rows(); ++row) {
       out << "  ";
       for (size_t column = 0; column < this->row_length(); ++column) {
-        this->get_print_single_f(print_single_f)(out, row, column);
+        out << print_single_f(this->at(row, column));
       }
       out << std::endl;
     }
@@ -422,17 +422,6 @@ class grid {
   }
 
  private:
-  template <class print_single_ft>
-  constexpr auto get_print_single_f(print_single_ft print_single_f) const {
-    if constexpr (std::is_same_v<print_single_ft, std::identity>) {
-      return [this](std::ostream& out, size_t row, size_t column) {
-        out << this->at(row, column);
-      };
-    } else {
-      return print_single_f;
-    }
-  }
-
   template <class Return, class Begin>
   constexpr auto row_view_detail(Begin start) const {
     auto view = std::ranges::subrange(start, start + this->row_length());

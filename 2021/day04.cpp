@@ -29,14 +29,6 @@ class board : public aoc::array_grid<int, 5> {
     }
   }
 
-  void print() const {
-    this->print_all([this](std::ostream& out, int row, int column) {
-      const auto index = this->linear_index(row, column);
-      out << std::setw(2) << m_data[index] << std::setw(1) << "|"
-          << markers[index] << " ";
-    });
-  }
-
   constexpr auto add(const row_t& row) {
     if (this->is_complete()) {
       AOC_NOT_CONSTEXPR(throw std::runtime_error("Cannot add any more rows"));
