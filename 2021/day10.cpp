@@ -26,13 +26,11 @@ constexpr int_t get_score(std::string_view navigation_line) {
   for (const char c : navigation_line) {
     if (auto pos = closing_braces.find(c); pos != std::string::npos) {
       if (c == closing_braces_stack.back()) {
-        aoc::pop_stack(closing_braces_stack);
+        closing_braces_stack.pop_back();
+      } else if constexpr (!autocomplete) {
+        return illegal_scores[pos];
       } else {
-        if constexpr (!autocomplete) {
-          return illegal_scores[pos];
-        } else {
-          return 0;
-        }
+        return 0;
       }
     } else {
       pos = opening_braces.find(c);
