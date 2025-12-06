@@ -197,15 +197,20 @@ impl Grid<char> {
     pub fn from_file(filename: &str) -> Self {
         let lines = std::fs::read_to_string(filename)
             .unwrap()
-            .trim()
             .lines()
             .map(|line| line.to_string())
             .collect::<Vec<String>>();
-        Grid {
+        let mut grid = Grid {
             data: lines.join("").chars().collect::<Vec<char>>(),
             num_rows: lines.len(),
             num_columns: lines[0].len(),
-        }
+        };
+        let size = grid.num_rows * grid.num_columns;
+        // Ensure the data is a proper rectangle
+        // TODO: What to do if we're cutting off data?
+        // That's probably ill-formed data anyway.
+        grid.data.resize(size, ' ');
+        grid
     }
 }
 
