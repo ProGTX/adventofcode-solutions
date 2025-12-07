@@ -31,9 +31,9 @@ fn solve_case<const NUM_STEPS: usize>(energy_levels: &EnergyLevels) -> usize {
                 current_levels.all_neighbor_positions(current_levels.position(current_index))
             {
                 let index = current_levels.linear_from_pos(neighbor_pos);
-                let value = current_levels.get_mut(neighbor_pos.y, neighbor_pos.x);
-                *value += 1;
-                if ((*value > 9) && !visited.contains(&index)) {
+                let energy = current_levels.get_mut(neighbor_pos.y, neighbor_pos.x);
+                *energy += 1;
+                if ((*energy > 9) && !visited.contains(&index)) {
                     unvisited.push(index);
                 }
             }
