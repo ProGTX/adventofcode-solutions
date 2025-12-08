@@ -1,3 +1,4 @@
+use std::hash::{Hash, Hasher};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, PartialOrd)]
@@ -199,5 +200,16 @@ where
     fn div_assign(&mut self, rhs: Self) {
         self.x /= rhs.x;
         self.y /= rhs.y;
+    }
+}
+
+impl<T> Hash for Point<T>
+where
+    T: Clone,
+    usize: From<T>,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write_usize(usize::from(self.x.clone()));
+        state.write_usize(usize::from(self.y.clone()));
     }
 }
