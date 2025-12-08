@@ -193,24 +193,87 @@ impl<T> Grid<T> {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct ConfigInput {
+    pub padding: Option<char>,
+    pub start_char: Option<char>,
+    pub end_char: Option<char>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct ConfigOutput {
+    pub start_pos: Option<Upos>,
+    pub end_pos: Option<Upos>,
+}
+
 impl Grid<char> {
-    pub fn from_file(filename: &str) -> Self {
+    pub fn from_file_config(filename: &str, config: ConfigInput) -> (Self, ConfigOutput) {
         let lines = std::fs::read_to_string(filename)
             .unwrap()
             .lines()
             .map(|line| line.to_string())
             .collect::<Vec<String>>();
-        let mut grid = Grid {
-            data: lines.join("").chars().collect::<Vec<char>>(),
-            num_rows: lines.len(),
-            num_columns: lines[0].len(),
+        let padding = config.padding.is_some();
+        let mut output_config = ConfigOutput::default();
+        let set_once = |optional_pos: &mut Option<Upos>,
+                        optional_char: &Option<char>,
+                        line: &String,
+                        row_id| {
+            *optional_pos = optional_pos.or_else(|| {
+                optional_char.and_then(|input_char| {
+                    line.chars()
+                        .position(|c| c == input_char)
+                        .map(|column_id| Upos {
+                            x: column_id + (padding as usize),
+                            y: row_id,
+                        })
+                })
+            });
+        };
+        let mut grid = {
+            let mut padded_data = Vec::<char>::new();
+            let num_rows = lines.len() + 2 * (padding as usize);
+            let num_columns = lines[0].len() + 2 * (padding as usize);
+            if (padding) {
+                padded_data.extend(std::iter::repeat(config.padding.unwrap()).take(num_columns));
+            }
+            let mut row_id = (padding as usize);
+            for line in lines {
+                if (padding) {
+                    padded_data.push(config.padding.unwrap());
+                }
+                set_once(
+                    &mut output_config.start_pos,
+                    &config.start_char,
+                    &line,
+                    row_id,
+                );
+                set_once(&mut output_config.end_pos, &config.end_char, &line, row_id);
+                padded_data.extend(line.chars());
+                if (padding) {
+                    padded_data.push(config.padding.unwrap());
+                }
+                row_id += 1;
+            }
+            if (padding) {
+                padded_data.extend(std::iter::repeat(config.padding.unwrap()).take(num_columns));
+            }
+            Grid {
+                data: padded_data,
+                num_rows: num_rows,
+                num_columns: num_columns,
+            }
         };
         let size = grid.num_rows * grid.num_columns;
         // Ensure the data is a proper rectangle
         // TODO: What to do if we're cutting off data?
         // That's probably ill-formed data anyway.
-        grid.data.resize(size, ' ');
-        grid
+        grid.data.resize(size, config.padding.unwrap_or(' '));
+        (grid, output_config)
+    }
+
+    pub fn from_file(filename: &str) -> Self {
+        Self::from_file_config(filename, ConfigInput::default()).0
     }
 }
 

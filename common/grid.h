@@ -665,44 +665,42 @@ struct char_grid_config_output {
 
 template <class... ReadArgsTs>
 std::pair<char_grid<>, char_grid_config_output> read_char_grid(
-    const std::string& filename, const char_grid_config_input config_input,
+    const std::string& filename, const char_grid_config_input config,
     ReadArgsTs... read_args) {
   char_grid<> return_grid;
   char_grid_config_output config_output{};
   using point = char_grid_config_output::point;
-  const bool padding = config_input.padding.has_value();
+  const bool padding = config.padding.has_value();
+  const auto set_once = [padding](std::optional<point>& optional_pos,
+                                  const std::optional<char>& optional_char,
+                                  std::string_view line, std::size_t row_id) {
+    optional_pos = optional_pos.or_else([&] {
+      return optional_char.and_then([&](char input_char) {
+        const auto pos = line.find(input_char);
+        return (pos != std::string::npos)
+                   ? std::optional{point(pos + static_cast<int>(padding),
+                                         row_id)}
+                   : std::nullopt;
+      });
+    });
+  };
   for (std::string line :
        views::read_lines(filename, std::forward<ReadArgsTs>(read_args)...)) {
     if (padding && return_grid.empty()) {
-      return_grid.add_row(
-          std::views::repeat(*config_input.padding, line.size() + 2));
+      return_grid.add_row(std::views::repeat(*config.padding, line.size() + 2));
     }
-    if (config_input.start_char) {
-      const auto pos = line.find(*config_input.start_char);
-      if (pos != std::string::npos) {
-        config_output.start_pos =
-            point(pos + static_cast<int>(padding),
-                  return_grid.num_rows() + static_cast<int>(padding));
-      }
-    }
-    if (config_input.end_char) {
-      const auto pos = line.find(*config_input.end_char);
-      if (pos != std::string::npos) {
-        config_output.end_pos =
-            point(pos + static_cast<int>(padding),
-                  return_grid.num_rows() + static_cast<int>(padding));
-      }
-    }
+    const auto row_id = return_grid.num_rows();
+    set_once(config_output.start_pos, config.start_char, line, row_id);
+    set_once(config_output.end_pos, config.end_char, line, row_id);
     if (padding) {
-      return_grid.add_row(
-          *config_input.padding + std::move(line) + *config_input.padding);
+      return_grid.add_row(*config.padding + std::move(line) + *config.padding);
     } else {
       return_grid.add_row(std::move(line));
     }
   }
   if (padding) {
     return_grid.add_row(
-        std::views::repeat(*config_input.padding, return_grid.row_length()));
+        std::views::repeat(*config.padding, return_grid.row_length()));
   }
   return std::pair{return_grid, config_output};
 }
