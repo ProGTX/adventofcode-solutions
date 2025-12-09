@@ -49,18 +49,23 @@ constexpr T sign(T value) {
 }
 
 // https://stackoverflow.com/a/59420788/793006
+// NOTE: The SO code contains UB, this has been fixed here
 template <typename T>
 constexpr T pown(T x, unsigned p) {
+  if (p == 0) {
+    return 1;
+  }
   T result = 1;
-
-  while (p > 0) {
+  while (true) {
     if (p & 0x1) {
       result *= x;
     }
-    x *= x;
     p >>= 1;
+    if (p == 0) {
+      break;
+    }
+    x *= x;
   }
-
   return result;
 }
 static_assert(1024 == pown(2, 10));
