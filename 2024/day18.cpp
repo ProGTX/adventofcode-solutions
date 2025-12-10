@@ -38,9 +38,7 @@ constexpr std::optional<int> shortest_path(const memspace_t& memspace) {
                std::views::filter([&](point neighbor) {
                  return memspace.at(neighbor.y, neighbor.x) != corrupted;
                }) |
-               aoc::dijkstra_uniform_neighbors_view() |
-               aoc::ranges::to<
-                   aoc::static_vector<aoc::dijkstra_neighbor_t<point>, 4>>();
+               aoc::dijkstra_uniform_neighbors_view();
       },
       end_pos);
 

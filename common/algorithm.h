@@ -79,9 +79,6 @@ template <class Node, class NeighborsFn,
           class PredecessorMap = predecessor_map<Node>>
   requires std::totally_ordered<Node> &&
            requires(Node node) {
-             {
-               *std::begin(std::declval<NeighborsFn>()(node))
-             } -> std::convertible_to<dijkstra_neighbor_t<Node>>;
              { std::declval<EndReachedFn>()(node) } -> std::same_as<bool>;
            } &&
            contains_uncvref<PredecessorMap, predecessor_map<Node>,
@@ -144,8 +141,7 @@ constexpr flat_map<Node, int> shortest_distances_dijkstra(
 
     // 4. For the current node, consider all of its unvisited neighbors
     // and update their distances through the current node
-    auto neighbors = get_reachable_neighbors(current);
-    for (const auto& neighbor : neighbors) {
+    for (const auto& neighbor : get_reachable_neighbors(current)) {
       const auto new_neighbor_dist = distance + neighbor.distance;
       auto existing_it = distances.find(neighbor.node);
       if (existing_it != std::end(distances)) {
@@ -267,6 +263,7 @@ constexpr auto shortest_distances_dijkstra(
 template <class Node, class NeighborsFn,
           class EndReachedFn = constant_value<bool>,
           class PredecessorMap = predecessor_map<Node>>
+  requires(!std::is_const_v<Node>)
 constexpr auto shortest_distances_dijkstra(
     std::span<Node> start_nodes, NeighborsFn&& get_reachable_neighbors,
     EndReachedFn&& end_reached = {},
