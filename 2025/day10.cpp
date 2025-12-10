@@ -16,6 +16,7 @@ using Joltage = aoc::static_vector<u16, 10>;
 using Input = Vec<std::tuple<Lights, Buttons, Joltage>>;
 
 namespace stdv = std::views;
+namespace stdr = std::ranges;
 
 fn parse(String const& filename) -> Input {
   using tuple = Input::value_type;
@@ -36,35 +37,33 @@ fn parse(String const& filename) -> Input {
       aoc::ranges::to<Input>();
 }
 
-struct DijkstraState {
+struct DijkstraLights {
   Lights lights;
   u32 decimal;
 
-  constexpr DijkstraState(Lights lights = {})
-      : lights(std::move(lights)), decimal(aoc::binary_to_number(lights)) {}
+  constexpr DijkstraLights(Lights lights = {})
+      : lights(std::move(lights)),
+        decimal(aoc::binary_to_number(this->lights)) {}
 
-  fn operator==(DijkstraState const& other) const {
+  fn operator==(DijkstraLights const& other) const {
     return (decimal == other.decimal);
   }
-  fn operator<=>(DijkstraState const& other) const {
+  fn operator<=>(DijkstraLights const& other) const {
     return (decimal <=> other.decimal);
   }
 };
 
 fn solve_case1(Input const& input) -> u32 {
-  using DijkstraNeighbors =
-      aoc::static_vector<aoc::dijkstra_neighbor_t<DijkstraState>,
-                         Buttons{}.capacity()>;
   return aoc::ranges::accumulate(
       input | stdv::transform([](let& tuple) {
         let & [ lights, buttons, _ ] = tuple;
-        let start = DijkstraState{lights |
-                                  aoc::views::transform_to_value(0) |
-                                  aoc::ranges::to<Lights>()};
-        let target = DijkstraState{lights};
+        let start = DijkstraLights{lights |
+                                   aoc::views::transform_to_value(0) |
+                                   aoc::ranges::to<Lights>()};
+        let target = DijkstraLights{lights};
         let distances = aoc::shortest_distances_dijkstra(
             start,
-            [&](DijkstraState const& current) {
+            [&](DijkstraLights const& current) {
               return //
                   buttons |
                   stdv::transform([&](Button const& button) {
@@ -72,15 +71,83 @@ fn solve_case1(Input const& input) -> u32 {
                     for (let pos : button) {
                       next_lights[pos] = static_cast<u8>(next_lights[pos] == 0);
                     }
-                    return DijkstraState{next_lights};
+                    return DijkstraLights{next_lights};
                   }) |
-                  aoc::dijkstra_uniform_neighbors_view() |
-                  aoc::ranges::to<DijkstraNeighbors>();
+                  aoc::dijkstra_uniform_neighbors_view();
             },
             target);
         return static_cast<u32>(distances.at(target));
       }),
       u32{});
+}
+
+struct DijkstraJoltage {
+  Joltage joltage;
+  aoc::point_type<u64> compressed;
+  static constexpr let max_jolt = u64{300};
+
+  constexpr DijkstraJoltage(Joltage joltage = {})
+      : joltage(std::move(joltage)) {
+    // We can compress the joltage based on observed input
+    auto multiplier = u64{1};
+    for (let jolt : this->joltage | stdv::take(5)) {
+      compressed.x += jolt * multiplier;
+      multiplier *= max_jolt;
+    }
+    multiplier = 1;
+    for (let jolt : this->joltage | stdv::drop(5)) {
+      compressed.y += jolt * multiplier;
+      multiplier *= max_jolt;
+    }
+  }
+
+  fn increment(usize pos) {
+    joltage[pos] += 1;
+    auto* value = compressed.begin() + static_cast<usize>(pos >= 5);
+    *value += aoc::pown(max_jolt, pos % 5);
+  }
+
+  fn operator==(DijkstraJoltage const& other) const {
+    return compressed == other.compressed;
+  }
+  fn operator<=>(DijkstraJoltage const& other) const {
+    return compressed <=> other.compressed;
+  }
+};
+
+fn solve_case2(Input const& input) -> u64 {
+  return aoc::ranges::accumulate(
+      input | stdv::transform([](let& tuple) {
+        let & [ _, buttons, joltage ] = tuple;
+        let start = DijkstraJoltage{joltage |
+                                    aoc::views::transform_to_value(0) |
+                                    aoc::ranges::to<Joltage>()};
+        let target = DijkstraJoltage{joltage};
+        let distances = aoc::shortest_distances_dijkstra(
+            start,
+            [&](DijkstraJoltage const& current) {
+              return //
+                  buttons |
+                  stdv::transform([&](Button const& button) {
+                    auto next = current;
+                    for (let pos : button) {
+                      next.increment(pos);
+                    }
+                    return next;
+                  }) |
+                  stdv::filter([&](let& joltage) {
+                    return stdr::all_of( //
+                        joltage.joltage | stdv::enumerate, [&](let& pair) {
+                          let[index, jolt] = pair;
+                          return jolt <= target.joltage[index];
+                        });
+                  }) |
+                  aoc::dijkstra_uniform_neighbors_view();
+            },
+            target);
+        return static_cast<u64>(distances.at(target));
+      }),
+      u64{});
 }
 
 int main() {
@@ -90,8 +157,10 @@ int main() {
   let input = parse("day10.input");
   AOC_EXPECT_RESULT(535, solve_case1(input));
 
-  // std::println("Part 2");
-  // AOC_EXPECT_RESULT(33, solve_case2(example));
+  std::println("Part 2");
+  std::cout.flush();
+  AOC_EXPECT_RESULT(33, solve_case2(example));
+  // Dijkstra is too slow for part 2 :(
   // AOC_EXPECT_RESULT(100011612, solve_case2(input));
 
   AOC_RETURN_CHECK_RESULT();
