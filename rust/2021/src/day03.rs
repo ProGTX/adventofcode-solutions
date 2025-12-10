@@ -23,13 +23,7 @@ fn count_bits(report: &[Bitset]) -> Counter {
 }
 
 fn to_decimal(bitset: &Bitset) -> u32 {
-    bitset
-        .iter()
-        .rev()
-        .fold((0, 1), |(acc, multiplier), bit| {
-            (acc + ((*bit as u32) * multiplier), multiplier * 2)
-        })
-        .0
+    aoc::math::binary_to_number(bitset)
 }
 
 fn solve_case1(report: &[Bitset]) -> u32 {

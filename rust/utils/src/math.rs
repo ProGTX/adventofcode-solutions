@@ -96,3 +96,19 @@ pub fn divisors<T: UnsignedOps>(n: T) -> Vec<T> {
     }
     result
 }
+
+pub fn binary_to_number<T>(bitset: &[u8]) -> T
+where
+    T: From<u8> + Copy + Add<Output = T> + Mul<Output = T>,
+{
+    bitset
+        .iter()
+        .rev()
+        .fold((T::from(0_u8), T::from(1_u8)), |(acc, multiplier), &bit| {
+            (
+                acc + (T::from(bit) * multiplier),
+                multiplier * T::from(2_u8),
+            )
+        })
+        .0
+}
