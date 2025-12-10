@@ -35,15 +35,7 @@ fn count_bits(std::span<const Bitset> report) -> Counter {
 }
 
 fn to_decimal(Bitset const& bitset) -> u32 {
-  using pair = aoc::point_type<u32>;
-  return std::ranges::fold_left(
-             bitset | std::views::reverse, pair{0, 1},
-             [](let& acc_pair, let bit) {
-               let[acc, multiplier] = acc_pair;
-               return pair{acc + (static_cast<u32>(bit) * multiplier),
-                           multiplier * 2};
-             })
-      .x;
+  return aoc::binary_to_number(bitset | std::views::reverse);
 }
 
 fn solve_case1(std::span<const Bitset> report) -> u32 {

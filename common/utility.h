@@ -662,6 +662,23 @@ constexpr auto match(Variant&& var, VisitorTs&&... visitor) {
                     std::forward<Variant>(var));
 }
 
+/**
+ * Converts a range representing a binary number to a single decimal number.
+ *
+ * @see string.h for string specializations
+ */
+template <auto one = 1, class return_t = unsigned, std::ranges::range R,
+          bool force_this = false>
+constexpr return_t binary_to_number(R&& range) {
+  auto num = return_t{};
+  auto multiplier = return_t{1};
+  for (const auto& v : range) {
+    num += multiplier * static_cast<return_t>(v == one);
+    multiplier *= 2;
+  }
+  return num;
+}
+
 namespace detail {
 template <class T>
 constexpr const auto as_consteval_helper =

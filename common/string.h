@@ -469,7 +469,7 @@ static_assert(2 == aoc::split_once<int>("1 2", ' ')[1]);
  * IMPORTANT: You can't split into string_views before C++26.
  *
  * Unfortunately istringstream isn't constexpr even in C++26.
- * 
+ *
  * TODO: Support different output containers.
  */
 template <class value_type = std::string>
@@ -487,24 +487,24 @@ constexpr auto split_sstream(const char* s) {
   return split_sstream<value_type>(std::string{s});
 }
 
-template <char one = '1', class return_t = unsigned, std::ranges::range R>
-constexpr return_t binary_to_number(R&& str) {
-  return_t num = 0;
-  return_t multiplier = 1;
-  for (char v : str) {
-    num += multiplier * static_cast<int>(v == one);
-    multiplier *= 2;
-  }
-  return num;
-}
-
 template <char one = '1', class return_t = unsigned>
 constexpr return_t binary_to_number(const char* str) {
-  return binary_to_number<one, return_t>(std::string_view{str});
+  return binary_to_number<one, return_t, std::string_view, true>(
+      std::string_view{str});
 }
 template <char one = '1', class return_t = unsigned, size_t size>
 constexpr return_t binary_to_number(const char str[size]) {
-  return binary_to_number<one, return_t>(std::string_view{str, size});
+  return binary_to_number<one, return_t, std::string_view, true>(
+      std::string_view{str, size});
+}
+template <char one = '1', class return_t = unsigned>
+constexpr return_t binary_to_number(std::string_view str) {
+  return binary_to_number<one, return_t, std::string_view, true>(str);
+}
+template <char one = '1', class return_t = unsigned>
+constexpr return_t binary_to_number(const std::string& str) {
+  return binary_to_number<one, return_t, std::string_view, true>(
+      std::string_view{str});
 }
 
 static_assert(0 == binary_to_number<'1'>("0"));
