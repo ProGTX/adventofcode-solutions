@@ -6,7 +6,6 @@
 #include <array>
 #include <cstdlib>
 #include <iostream>
-#include <map>
 #include <print>
 #include <ranges>
 #include <span>
@@ -59,18 +58,12 @@ static constexpr const auto rshift_str = "RSHIFT"sv;
 
 std::tuple<std::vector<gate_t>, signal_t, signal_t> parse(
     const std::string& filename) {
-  aoc::flat_map<std::string, wire_id_t> wires;
-  auto current_wire_id = first_wire_id;
+  auto name_to_id = aoc::name_to_id(first_wire_id);
   const auto get_signal = [&](std::string_view wire_name) -> signal_t {
     if (std::isdigit(wire_name[0])) {
       return aoc::to_number<signal_t>(wire_name);
     }
-    const auto [it, inserted] =
-        wires.try_emplace(std::string{wire_name}, current_wire_id);
-    if (inserted) {
-      ++current_wire_id;
-    }
-    return it->second;
+    return name_to_id.intern(wire_name);
   };
   std::vector<gate_t> inputs;
   for (std::string_view line : aoc::views::read_lines(filename)) {

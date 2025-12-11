@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
+use aoc::string::NameToId;
 
 // A signal can be a wire ID or an an actual value
 // We unify them by storing values as 16-bit numbers,
@@ -58,20 +57,12 @@ const LSHIFT_STR: &str = "LSHIFT";
 const RSHIFT_STR: &str = "RSHIFT";
 
 fn parse(filename: &str) -> (Vec<GateT>, SignalT, SignalT) {
-    let mut wires = HashMap::<String, WireIdT>::new();
-    let mut current_wire_id = FIRST_WIRE_ID;
+    let mut name_to_id = NameToId::from(FIRST_WIRE_ID as usize);
     let mut get_signal = |wire_name: &str| -> SignalT {
         if wire_name.chars().next().unwrap().is_digit(10) {
             return wire_name.parse().unwrap();
         }
-        return match wires.entry(wire_name.to_string()) {
-            Entry::Vacant(e) => {
-                let id = e.insert(current_wire_id);
-                current_wire_id += 1;
-                *id
-            }
-            Entry::Occupied(e) => *e.into_mut(),
-        };
+        return name_to_id.intern(wire_name) as u32;
     };
     let mut inputs = Vec::<GateT>::new();
     for line in std::fs::read_to_string(filename).unwrap().lines() {

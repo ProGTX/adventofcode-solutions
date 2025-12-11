@@ -541,6 +541,10 @@ static_assert(2 == count_substrings("cbacba" | std::views::reverse, "abc"));
 
 class name_to_id {
  public:
+  constexpr name_to_id() = default;
+
+  constexpr explicit name_to_id(std::size_t start) : current_id(start) {}
+
   constexpr std::size_t intern(std::string_view name) {
     const auto it = name_ids.find(name);
     if (it != std::end(name_ids)) {

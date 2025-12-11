@@ -6,8 +6,12 @@ pub struct NameToId {
 }
 impl NameToId {
     pub fn new() -> Self {
+        Self::from(0)
+    }
+
+    pub fn from(start: usize) -> Self {
         Self {
-            current_id: 0,
+            current_id: start,
             name_ids: HashMap::new(),
         }
     }
