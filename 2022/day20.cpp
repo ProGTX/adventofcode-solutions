@@ -43,10 +43,20 @@ list_t reorder_list(const list_t& original_list) {
           std::ranges::find_if(reordered_list, [&](const indexed_num_t& rnum) {
             return rnum.index == indexed_number.index;
           });
-      auto next_it = (aoc::cyclic_iterator{aoc::linked_list_iterator_tag{},
-                                           reordered_list, current_it} +
-                      indexed_number.value)
-                         .to_underlying();
+
+      auto next_it = [&] {
+        const auto diff = indexed_number.value;
+        auto it = current_it;
+        if (diff == 0) {
+          return it;
+        }
+        const auto begin = std::begin(reordered_list);
+        const auto size = std::ssize(reordered_list) - 1;
+        auto pos = std::distance(begin, it);
+        pos = (size + (pos + (diff % size))) % size;
+        it = begin + pos;
+        return it;
+      }();
 
       auto it_distance = std::distance(current_it, next_it);
       if (it_distance < 0) {
@@ -67,18 +77,22 @@ list_t reorder_list(const list_t& original_list) {
 
 value_t sum_numbers(const list_t& list) {
   auto zero_it = std::ranges::find(list, 0);
-  auto cyclic_it = aoc::cyclic_iterator{list, zero_it};
   value_t sum = 0;
+  auto next = [&] {
+    const auto begin = std::begin(list);
+    const auto size = std::size(list);
+    auto pos = std::distance(begin, zero_it);
+    pos = (size + (pos + (1000 % size))) % size;
+    zero_it = begin + pos;
+    sum += *zero_it;
+  };
   std::cout << "sum_numbers" << std::endl;
-  cyclic_it += 1000;
-  std::cout << "  " << *cyclic_it << std::endl;
-  sum += *cyclic_it;
-  cyclic_it += 1000;
-  std::cout << "  " << *cyclic_it << std::endl;
-  sum += *cyclic_it;
-  cyclic_it += 1000;
-  std::cout << "  " << *cyclic_it << std::endl;
-  sum += *cyclic_it;
+  next();
+  std::cout << "  " << *zero_it << std::endl;
+  next();
+  std::cout << "  " << *zero_it << std::endl;
+  next();
+  std::cout << "  " << *zero_it << std::endl;
   return sum;
 }
 
