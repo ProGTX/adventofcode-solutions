@@ -1,11 +1,11 @@
 use aoc::string::NameToId;
 use arrayvec::ArrayVec;
 
-// A filesystem is a list of folders and a list of files
+// A filesystem is a list of folders and a list of file sizes
 // where each folder contains a list of IDs of files and folders.
 // The two are differentiated by file IDs starting at a higher number.
-// The list of files contains a size for each file.
-type Filesystem = (Vec<Vec<usize>>, Vec<u32>);
+type Folder = ArrayVec<usize, 11>;
+type Filesystem = (Vec<Folder>, Vec<u32>);
 const FILE_ID_START: usize = 1 << 16;
 
 fn parse(filename: &str) -> Filesystem {
@@ -18,7 +18,7 @@ fn parse(filename: &str) -> Filesystem {
     };
     let mut current_dir = get_root_dir();
     let mut folders = Vec::new();
-    folders.push(Vec::default());
+    folders.push(Folder::default());
     let mut file_sizes = Vec::new();
     let mut current_dir_id = folder_ids.intern(&current_dir[0]);
 
@@ -41,7 +41,7 @@ fn parse(filename: &str) -> Filesystem {
                 // ls, handled on following lines
             }
         } else {
-            folders.resize(folder_ids.new_len(folders.len()), Vec::default());
+            folders.resize(folder_ids.new_len(folders.len()), Folder::default());
             let (first, name) = line.split_once(" ").unwrap();
             let name = name.to_string();
             folders[current_dir_id].push(match first {
@@ -65,7 +65,7 @@ fn parse(filename: &str) -> Filesystem {
     return (folders, file_sizes);
 }
 
-fn get_folder_size(folders: &Vec<Vec<usize>>, file_sizes: &Vec<u32>, folder_id: usize) -> u32 {
+fn get_folder_size(folders: &Vec<Folder>, file_sizes: &Vec<u32>, folder_id: usize) -> u32 {
     folders[folder_id]
         .iter()
         .map(|&id| {
