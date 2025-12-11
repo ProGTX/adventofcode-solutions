@@ -1,3 +1,4 @@
+use aoc::string::NameToId;
 use std::collections::{HashMap, HashSet, hash_map::Entry};
 
 #[derive(Clone)]
@@ -9,30 +10,13 @@ struct LinkT {
 type ConnectionsT = Vec<Vec<LinkT>>;
 
 fn parse(filename: &str) -> ConnectionsT {
-    let mut current_id = 0;
-    let mut place_ids = HashMap::<String, usize>::new();
-    let mut get_id = |place: &str| -> usize {
-        match place_ids.entry(place.to_string()) {
-            Entry::Vacant(e) => {
-                let id = e.insert(current_id);
-                current_id += 1;
-                *id
-            }
-            Entry::Occupied(e) => *e.into_mut(),
-        }
-    };
+    let mut name_to_id = NameToId::new();
     let mut connections = ConnectionsT::new();
     for line in std::fs::read_to_string(filename).unwrap().lines() {
         let parts = line.split(' ').collect::<Vec<_>>();
-        let from_id = get_id(parts[0]);
-        let to_id = get_id(parts[2]);
-        connections.resize(
-            connections
-                .len()
-                .max((from_id + 1) as usize)
-                .max((to_id + 1) as usize),
-            Default::default(),
-        );
+        let from_id = name_to_id.intern(parts[0]);
+        let to_id = name_to_id.intern(parts[2]);
+        connections.resize(name_to_id.new_len(connections.len()), Default::default());
         let distance = parts[4].parse::<u32>().unwrap();
         connections[from_id].push(LinkT {
             to_id: to_id,
