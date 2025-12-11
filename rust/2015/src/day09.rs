@@ -1,5 +1,5 @@
 use aoc::string::NameToId;
-use std::collections::{HashMap, HashSet, hash_map::Entry};
+use std::collections::HashSet;
 
 #[derive(Clone)]
 struct LinkT {
