@@ -22,7 +22,7 @@ AOC_EXPORT_NAMESPACE(aoc) {
 // Barebones implementation of
 // https://en.cppreference.com/w/cpp/container/flat_set, but with constexpr
 // NOTE: Can be replaced by std::flat_set in C++26
-template <class Key, class Compare = std::less<Key>,
+template <class Key, class Compare = std::ranges::less,
           class KeyContainer = std::vector<Key>>
 class flat_set {
  private:
@@ -148,33 +148,31 @@ class flat_set {
   /////////
   // Lookup
 
-  // find()
-  constexpr iterator find(const Key& key) { // 1
-    auto it = this->lower_bound(key);
-    if ((it == end()) || (*it == key)) {
+  template <class Self, class K>
+  constexpr auto find(this Self&& self, const K& key)
+      -> decltype(self.begin()) {
+    auto it = self.lower_bound(key);
+    if ((it == self.end()) || (*it == key)) {
       return it;
     } else {
-      return end();
-    }
-  }
-  constexpr const_iterator find(const Key& key) const { // 2
-    auto it = this->lower_bound(key);
-    if ((it == end()) || (*it == key)) {
-      return it;
-    } else {
-      return end();
+      return self.end();
     }
   }
 
-  constexpr bool contains(const Key& key) const {
+  template <class K>
+  constexpr size_type count(const K& key) const {
+    return static_cast<size_type>(this->contains(key));
+  }
+
+  template <class K>
+  constexpr bool contains(const K& key) const {
     return this->find(key) != end();
   }
 
-  constexpr iterator lower_bound(const Key& key) {
-    return std::ranges::lower_bound(key_container, key, compare);
-  }
-  constexpr const_iterator lower_bound(const Key& key) const {
-    return std::ranges::lower_bound(key_container, key, compare);
+  template <class Self, class K>
+  constexpr auto lower_bound(this Self&& self, const K& key)
+      -> decltype(self.begin()) {
+    return std::ranges::lower_bound(self.key_container, key, self.compare);
   }
 
  private:
@@ -200,7 +198,7 @@ class flat_set {
 // Barebones implementation of
 // https://en.cppreference.com/w/cpp/container/flat_map, but with constexpr
 // NOTE: Can be replaced by std::flat_map in C++26
-template <class Key, class T, class Compare = std::less<Key>,
+template <class Key, class T, class Compare = std::ranges::less,
           class KeyContainer = std::vector<Key>,
           class MappedContainer = std::vector<T>>
 class flat_map {
@@ -589,36 +587,31 @@ class flat_map {
   /////////
   // Lookup
 
-  constexpr iterator find(const Key& key) {
-    auto key_it = this->lower_bound_key(key);
-    if ((key_it == storage.keys.end()) || (*key_it == key)) {
-      return this->make_iterator(key_it);
+  template <class Self, class K>
+  constexpr auto find(this Self&& self, const K& key)
+      -> decltype(self.begin()) {
+    auto key_it = self.lower_bound_key(key);
+    if ((key_it == self.storage.keys.end()) || (*key_it == key)) {
+      return self.make_iterator(key_it);
     } else {
-      return end();
-    }
-  }
-  constexpr const_iterator find(const Key& key) const {
-    auto key_it = this->lower_bound_key(key);
-    if ((key_it == storage.keys.end()) || (*key_it == key)) {
-      return this->make_iterator(key_it);
-    } else {
-      return end();
+      return self.end();
     }
   }
 
-  constexpr size_type count(const Key& key) const {
+  template <class K>
+  constexpr size_type count(const K& key) const {
     return static_cast<size_type>(this->contains(key));
   }
 
-  constexpr bool contains(const Key& key) const {
+  template <class K>
+  constexpr bool contains(const K& key) const {
     return this->find(key) != end();
   }
 
-  constexpr iterator lower_bound(const Key& key) {
-    return this->make_iterator(this->lower_bound_key(key));
-  }
-  constexpr const_iterator lower_bound(const Key& key) const {
-    return this->make_iterator(this->lower_bound_key(key));
+  template <class Self, class K>
+  constexpr auto lower_bound(this Self&& self, const K& key)
+      -> decltype(self.begin()) {
+    return self.make_iterator(self.lower_bound_key(key));
   }
 
   ////////////
@@ -659,10 +652,12 @@ class flat_map {
     }
   }
 
-  constexpr key_iterator lower_bound_key(const Key& key) {
+  template <class K>
+  constexpr key_iterator lower_bound_key(const K& key) {
     return std::ranges::lower_bound(storage.keys, key, compare);
   }
-  constexpr const_key_iterator lower_bound_key(const Key& key) const {
+  template <class K>
+  constexpr const_key_iterator lower_bound_key(const K& key) const {
     return std::ranges::lower_bound(storage.keys, key, compare);
   }
 
