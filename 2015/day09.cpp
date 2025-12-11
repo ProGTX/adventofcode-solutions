@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <array>
 #include <iostream>
-#include <map>
 #include <print>
 #include <ranges>
 
@@ -18,23 +17,13 @@ struct link_t {
 using connections_t = std::vector<std::vector<link_t>>;
 
 connections_t parse(const std::string& filename) {
-  int current_id = 0;
-  std::map<std::string, int> place_ids;
-  let get_id = [&](str place) {
-    let[it, inserted] = place_ids.try_emplace(std::string{place}, current_id);
-    if (inserted) {
-      ++current_id;
-    }
-    return it->second;
-  };
-  connections_t connections;
+  auto connections = connections_t{};
+  auto name_to_id = aoc::name_to_id{};
   for (str line : aoc::views::read_lines(filename)) {
     let[from, to_str, to, eq_str, value] = aoc::split_to_array<5>(line, ' ');
-    let from_id = get_id(from);
-    let to_id = get_id(to);
-    connections.resize(
-        std::ranges::max({connections.size(), static_cast<size_t>(from_id + 1),
-                          static_cast<size_t>(to_id + 1)}));
+    let from_id = name_to_id.intern(from);
+    let to_id = name_to_id.intern(to);
+    connections.resize(name_to_id.new_size(connections.size()));
     let distance = aoc::to_number<int>(value);
     connections[from_id].emplace_back(to_id, distance);
     connections[to_id].emplace_back(from_id, distance);

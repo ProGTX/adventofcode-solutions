@@ -3,6 +3,7 @@
 
 #include "compiler.h"
 #include "concepts.h"
+#include "flat.h"
 #include "range_to.h"
 #include "utility.h"
 
@@ -537,6 +538,42 @@ static_assert(2 == count_substrings("abcabc", "abc"));
 static_assert(2 == count_substrings("abcyabc", "abc"));
 static_assert(2 == count_substrings("abcyacabc", "abc"));
 static_assert(2 == count_substrings("cbacba" | std::views::reverse, "abc"));
+
+class name_to_id {
+ public:
+  constexpr std::size_t intern(std::string_view name) {
+    const auto it = name_ids.find(name);
+    if (it != std::end(name_ids)) {
+      return it->second;
+    }
+    name_ids.emplace(std::string{name}, current_id);
+    return current_id++;
+  }
+
+  constexpr std::optional<std::size_t> get(std::string_view name) const {
+    const auto it = name_ids.find(name);
+    if (it != std::end(name_ids)) {
+      return it->second;
+    }
+    return {};
+  }
+
+  constexpr std::size_t expect(std::string_view name) const {
+    const auto it = name_ids.find(name);
+    if (it != std::end(name_ids)) {
+      return it->second;
+    }
+    throw std::runtime_error(std::format("name '{}' not found", name));
+  }
+
+  constexpr std::size_t new_size(std::size_t old_size) const {
+    return std::ranges::max(current_id, old_size);
+  }
+
+ private:
+  std::size_t current_id{0};
+  flat_map<std::string, std::size_t> name_ids{};
+};
 
 } // AOC_EXPORT_NAMESPACE(aoc)
 
