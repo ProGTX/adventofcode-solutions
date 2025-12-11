@@ -85,6 +85,18 @@ fn solve_case1((folders, file_sizes): &Filesystem) -> u32 {
         .sum()
 }
 
+fn solve_case2((folders, file_sizes): &Filesystem) -> u32 {
+    let used_space = get_folder_size(folders, file_sizes, 0);
+    let free_space = 70000000 - used_space;
+    let min_delete_space = 30000000 - free_space;
+
+    (1..(folders.len()))
+        .map(|folder_id| get_folder_size(folders, file_sizes, folder_id))
+        .filter(|&folder_size| folder_size >= min_delete_space)
+        .min()
+        .unwrap()
+}
+
 fn main() {
     println!("Part 1");
     let example = parse("day07.example");
@@ -92,7 +104,7 @@ fn main() {
     let input = parse("day07.input");
     assert_eq!(1453349, solve_case1(&input));
 
-    //println!("Part 2");
-    //assert_eq!(24933642, solve_case2(&example));
-    //assert_eq!(2948823, solve_case2(&input));
+    println!("Part 2");
+    assert_eq!(24933642, solve_case2(&example));
+    assert_eq!(2948823, solve_case2(&input));
 }
