@@ -65,3 +65,16 @@ where
     }
     return distances;
 }
+
+pub trait DijkstraNeighborView: Iterator {
+    fn dijkstra_uniform_neighbors(
+        self,
+    ) -> std::iter::Map<Self, fn(Self::Item) -> DijkstraState<Self::Item>>
+    where
+        Self: Sized,
+    {
+        self.map(|data| DijkstraState { data, distance: 1 })
+    }
+}
+
+impl<I: Iterator> DijkstraNeighborView for I {}

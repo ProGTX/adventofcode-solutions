@@ -1,4 +1,4 @@
-use aoc::dijkstra::DijkstraState;
+use aoc::dijkstra::DijkstraNeighborView;
 use aoc::iter::CollectArrayVec;
 use aoc::math::binary_to_number;
 use std::cmp::Ordering;
@@ -84,11 +84,9 @@ fn solve_case1(input: &Input) -> u32 {
                             for &pos in button {
                                 next[pos] = (next[pos] == 0) as u8;
                             }
-                            return DijkstraState {
-                                data: DijkstraLights::from(next),
-                                distance: 1,
-                            };
+                            return DijkstraLights::from(next);
                         })
+                        .dijkstra_uniform_neighbors()
                         .collect_array_vec::<MAX_BUTTONS>()
                 });
             return *distances.get(&end).unwrap();
