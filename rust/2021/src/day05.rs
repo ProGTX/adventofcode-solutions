@@ -12,7 +12,7 @@ fn parse(filename: &str) -> (Segments, Point<i32>) {
                 Point::parse(begin, ",").unwrap(),
                 Point::parse(end, ",").unwrap(),
             );
-            dimensions = dimensions.max(&segment.0).max(&segment.1);
+            dimensions = dimensions.max(segment.0).max(segment.1);
             segment
         })
         .collect::<Vec<_>>();
