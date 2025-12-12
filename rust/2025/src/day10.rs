@@ -1,8 +1,7 @@
+use aoc::dijkstra::DijkstraState;
 use aoc::math::binary_to_number;
 use std::cmp::Ordering;
-use std::collections::BinaryHeap;
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
+use std::hash::{Hash, Hasher};
 
 type Lights = arrayvec::ArrayVec<u8, 10>;
 type Button = arrayvec::ArrayVec<usize, 9>;
@@ -39,72 +38,59 @@ fn parse(filename: &str) -> Input {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-struct DijkstraState {
-    distance: u32,
+struct DijkstraLights {
     lights: Lights,
+    decimal: u32,
 }
-// https://doc.rust-lang.org/std/collections/binary_heap/index.html
-impl Ord for DijkstraState {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other
-            .distance
-            .cmp(&self.distance)
-            .then_with(|| self.lights.cmp(&other.lights))
+impl DijkstraLights {
+    fn from(lights: Lights) -> Self {
+        let decimal = binary_to_number(&lights);
+        Self {
+            lights: lights,
+            decimal: decimal,
+        }
     }
 }
-impl PartialOrd for DijkstraState {
+impl Ord for DijkstraLights {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.decimal.cmp(&self.decimal)
+    }
+}
+impl PartialOrd for DijkstraLights {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
+impl Hash for DijkstraLights {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write_u32(self.decimal);
+    }
+}
+type DijkstraNeighbors = arrayvec::ArrayVec<DijkstraState<DijkstraLights>, 13>;
 
 fn solve_case1(input: &Input) -> u32 {
     input
         .iter()
         .map(|(lights, buttons, _)| {
-            let target = binary_to_number::<u32>(&lights);
-            // Dijkstra
-            let mut distances = HashMap::new();
-            let mut unvisited = BinaryHeap::new();
-            distances.insert(0, 0_u32);
-            unvisited.push(DijkstraState {
-                distance: 0,
-                lights: lights.iter().map(|_| 0).collect::<Lights>(),
-            });
-            while (!unvisited.is_empty()) {
-                let current = unvisited.pop().unwrap();
-                let value = binary_to_number::<u32>(&current.lights);
-                if (value == target) {
-                    break;
-                }
-                if (current.distance > *distances.get(&value).unwrap()) {
-                    continue;
-                }
-                // See if we can find a way with a lower cost going through this node
-                for button in buttons {
-                    let mut next = DijkstraState {
-                        distance: current.distance + 1,
-                        lights: current.lights.clone(),
-                    };
-                    for &pos in button {
-                        next.lights[pos] = (next.lights[pos] == 0) as u8;
-                    }
-                    let next_value = binary_to_number::<u32>(&next.lights);
-                    match distances.entry(next_value) {
-                        Entry::Vacant(e) => {
-                            e.insert(next.distance);
-                            unvisited.push(next);
-                        }
-                        Entry::Occupied(mut e) => {
-                            if (next.distance < *e.get()) {
-                                *e.get_mut() = next.distance;
-                                unvisited.push(next);
+            let start = DijkstraLights::from(lights.iter().map(|_| 0).collect::<Lights>());
+            let end = DijkstraLights::from(lights.clone());
+            let distances =
+                aoc::dijkstra::shortest_distances(&start, &end, |current: &DijkstraLights| {
+                    buttons
+                        .iter()
+                        .map(|button| {
+                            let mut next = current.lights.clone();
+                            for &pos in button {
+                                next[pos] = (next[pos] == 0) as u8;
                             }
-                        }
-                    }
-                }
-            }
-            return *distances.get(&target).unwrap();
+                            return DijkstraState {
+                                data: DijkstraLights::from(next),
+                                distance: 1,
+                            };
+                        })
+                        .collect::<DijkstraNeighbors>()
+                });
+            return *distances.get(&end).unwrap();
         })
         .sum::<u32>()
 }
