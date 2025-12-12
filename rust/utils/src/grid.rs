@@ -41,6 +41,30 @@ impl<T> Grid<T> {
         }
     }
 
+    pub fn from_vec(data: Vec<T>, num_rows: usize, num_columns: usize) -> Self {
+        assert_eq!(
+            data.len(),
+            num_rows * num_columns,
+            "data length {} doesn't match grid dimensions {}x{}",
+            data.len(),
+            num_rows,
+            num_columns
+        );
+        Grid {
+            data,
+            num_rows,
+            num_columns,
+        }
+    }
+
+    pub fn from_iter(
+        iter: impl IntoIterator<Item = T>,
+        num_rows: usize,
+        num_columns: usize,
+    ) -> Self {
+        Self::from_vec(iter.into_iter().collect(), num_rows, num_columns)
+    }
+
     pub const fn linear_index(&self, row: usize, column: usize) -> usize {
         row * self.num_columns + column
     }
