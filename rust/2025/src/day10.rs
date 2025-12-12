@@ -1,11 +1,13 @@
 use aoc::dijkstra::DijkstraState;
+use aoc::iter::CollectArrayVec;
 use aoc::math::binary_to_number;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 
 type Lights = arrayvec::ArrayVec<u8, 10>;
 type Button = arrayvec::ArrayVec<usize, 9>;
-type Buttons = arrayvec::ArrayVec<Button, 13>;
+const MAX_BUTTONS: usize = 13;
+type Buttons = arrayvec::ArrayVec<Button, MAX_BUTTONS>;
 type Joltage = arrayvec::ArrayVec<u16, 10>;
 type Input = Vec<(Lights, Buttons, Joltage)>;
 
@@ -66,7 +68,6 @@ impl Hash for DijkstraLights {
         state.write_u32(self.decimal);
     }
 }
-type DijkstraNeighbors = arrayvec::ArrayVec<DijkstraState<DijkstraLights>, 13>;
 
 fn solve_case1(input: &Input) -> u32 {
     input
@@ -88,7 +89,7 @@ fn solve_case1(input: &Input) -> u32 {
                                 distance: 1,
                             };
                         })
-                        .collect::<DijkstraNeighbors>()
+                        .collect_array_vec::<MAX_BUTTONS>()
                 });
             return *distances.get(&end).unwrap();
         })

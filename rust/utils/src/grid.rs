@@ -1,4 +1,4 @@
-use crate::point::Point;
+use crate::{iter::CollectArrayVec, point::Point};
 use arrayvec::ArrayVec;
 
 pub type Ipos = Point<isize>;
@@ -179,7 +179,7 @@ impl<T> Grid<T> {
         self.get_neighbor_positions(neighbor_diffs, ipos)
             .iter()
             .map(|neighbor_pos| self.get(neighbor_pos.y, neighbor_pos.x).clone())
-            .collect::<ArrayVec<T, N>>()
+            .collect_array_vec::<N>()
     }
 
     pub fn basic_neighbor_values(&self, upos: Upos) -> ArrayVec<T, 4>
