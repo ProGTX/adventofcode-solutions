@@ -579,6 +579,18 @@ class name_to_id {
   flat_map<std::string, std::size_t> name_ids{};
 };
 
+namespace ranges {
+
+template <std::ranges::viewable_range R>
+  requires std::ranges::range<std::ranges::range_value_t<R>> &&
+           std::same_as<
+               std::ranges::range_value_t<std::ranges::range_value_t<R>>, char>
+constexpr std::string join(R&& r, char delimiter) {
+  return r | std::views::join_with(delimiter) | aoc::ranges::to<std::string>();
+}
+
+} // namespace ranges
+
 } // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_STRING_H

@@ -1,171 +1,121 @@
 // https://adventofcode.com/2022/day/7
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
-#include <array>
 #include <iostream>
-#include <iterator>
-#include <memory>
-#include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
-#include <string>
-#include <string_view>
-#include <vector>
 
-class filesystem_t : public aoc::graph<int, filesystem_t, std::string> {
- private:
-  using base_t = aoc::graph<int, filesystem_t, std::string>;
+using Folder = aoc::static_vector<usize, 11>;
+using Filesystem = std::pair<Vec<Folder>, Vec<u32>>;
+constexpr let FILE_ID_START = usize{1} << 16;
 
- public:
-  enum type_t {
-    folder,
-    file,
+namespace stdv = std::views;
+namespace stdr = std::ranges;
+
+fn parse(String const& filename) -> Filesystem {
+  auto folder_ids = aoc::name_to_id{};
+  auto file_ids = aoc::name_to_id{FILE_ID_START};
+  let get_root_dir = [] {
+    auto path = aoc::static_vector<String, 11>{};
+    path.emplace_back("/");
+    return path;
   };
+  auto current_dir = get_root_dir();
+  auto folders = Vec<Folder>{};
+  folders.emplace_back();
+  auto file_sizes = Vec<u32>{};
+  auto current_dir_id = folder_ids.intern(current_dir[0]);
 
-  filesystem_t() : graph{nullptr, "/", 0, false} {}
-
-  filesystem_t* add_file(std::string name, int size_) {
-    return this->add_child(std::unique_ptr<filesystem_t>{
-        new filesystem_t{this, std::move(name), size_, file}});
-  }
-
-  filesystem_t* add_folder(std::string name) {
-    return this->add_child(std::unique_ptr<filesystem_t>{
-        new filesystem_t{this, std::move(name), 0, folder}});
-  }
-
-  filesystem_t* get_child(std::string_view child_name) const {
-    if (child_name == "..") {
-      return this->get_parent();
-    }
-    return base_t::get_child(child_name);
-  }
-
-  friend void set_sizes(filesystem_t& node) {
-    if (node.get_type() == file) {
-      return;
-    }
-    int sum = 0;
-    for (const auto& child : node) {
-      set_sizes(*child);
-      sum += child->get_size();
-    }
-    node.value() = sum;
-  }
-
-  int get_size() const { return this->value(); }
-
-  type_t get_type() const { return this->is_leaf() ? file : folder; }
-
- private:
-  filesystem_t(filesystem_t* parent, std::string name, int size, type_t type)
-      : graph{parent, name, size, (type == file)} {}
-};
-
-template <int max_size>
-int sum_folder_sizes(const filesystem_t* node) {
-  int current_size = node->get_size();
-  int sum =
-      ((node->get_type() == filesystem_t::folder) && (current_size <= max_size))
-          ? current_size
-          : 0;
-  for (const auto& child : *node) {
-    sum += sum_folder_sizes<max_size>(child.get());
-  }
-  return sum;
-}
-
-using folder_sizes_t = std::vector<std::pair<std::string_view, int>>;
-
-template <int max_used_space>
-void get_folder_sizes(filesystem_t* node, const int used_space,
-                      folder_sizes_t& folder_sizes) {
-  for (const auto& child : *node) {
-    if (child->get_type() != filesystem_t::folder) {
-      continue;
-    }
-    int current_size = child->get_size();
-    if ((max_used_space - used_space + current_size) > 0) {
-      folder_sizes.emplace_back(child->name(), current_size);
-    }
-    get_folder_sizes<max_used_space>(child.get(), used_space, folder_sizes);
-  }
-}
-
-template <bool delete_space>
-int solve_case(const std::string& filename) {
-  filesystem_t filesystem;
-  filesystem_t* current_node = &filesystem;
-
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [instruction, name, cd_to] = aoc::split_to_array<3>(line, ' ');
-    if (instruction[0] == '$') {
-      if (name == "cd") {
-        if (cd_to == "/") {
-          current_node = &filesystem;
-          continue;
-        }
-        auto child_node = current_node->get_child(cd_to);
-        if (child_node == nullptr) {
-          current_node = current_node->add_folder(std::string{cd_to});
+  for (str line : aoc::views::read_lines(filename)) {
+    if (line.starts_with("$ ")) {
+      let command = line.substr(2);
+      if (command.starts_with("cd ")) {
+        let dir = command.substr(3);
+        if (dir == "/") {
+          current_dir = get_root_dir();
+        } else if (dir == "..") {
+          current_dir.pop_back();
         } else {
-          current_node = child_node;
+          current_dir.emplace_back(dir);
         }
-      } else if (name == "ls") {
-        // Don't have to do anything with ls
+        current_dir_id = folder_ids.intern(aoc::ranges::join(current_dir, '/'));
       } else {
-        throw std::runtime_error("Unknown instruction " + std::string{name});
-      }
-      continue;
-    }
-    auto child_node = current_node->get_child(name);
-    if (instruction == "dir") {
-      if (child_node == nullptr) {
-        current_node->add_folder(std::string{name});
-      } else {
-        // Folder already exists
+        // ls, handled on following lines
       }
     } else {
-      // File
-      auto filesize = aoc::to_number<int>(instruction);
-      if (child_node == nullptr) {
-        current_node->add_file(std::string{name}, filesize);
+      folders.resize(folder_ids.new_size(folders.size()));
+      let[first, name] = aoc::split_once<String>(line, " ");
+      if (first == "dir") {
+        auto subfolder = current_dir;
+        subfolder.push_back(std::move(name));
+        folders[current_dir_id].push_back(
+            folder_ids.intern(aoc::ranges::join(subfolder, '/')));
       } else {
-        // File already exists
+        auto filename = current_dir;
+        filename.push_back(std::move(name));
+        folders[current_dir_id].push_back(
+            file_ids.intern(aoc::ranges::join(filename, '/')));
+
+        let size = aoc::to_number<u32>(first);
+        file_sizes.push_back(size);
       }
     }
   }
 
-  set_sizes(filesystem);
+  return {std::move(folders), std::move(file_sizes)};
+}
 
-  int space = 0;
-  if constexpr (!delete_space) {
-    space = sum_folder_sizes<100000>(&filesystem);
-  } else {
-    static constexpr int max_space = 70'000'000;
-    static constexpr int required_free_space = 30'000'000;
-    folder_sizes_t folder_sizes;
-    get_folder_sizes<max_space - required_free_space>(
-        &filesystem, filesystem.get_size(), folder_sizes);
-    std::ranges::sort(folder_sizes,
-                      [](auto&& name_size_lhs, auto&& name_size_rhs) {
-                        return (name_size_lhs.second < name_size_rhs.second);
-                      });
-    space = folder_sizes[0].second;
-  }
+fn get_folder_size(Vec<Folder> const& folders, Vec<u32> const& file_sizes,
+                   usize folder_id) -> u32 {
+  return aoc::ranges::accumulate(
+      folders[folder_id] | stdv::transform([&](usize id) {
+        if (id >= FILE_ID_START) {
+          return file_sizes[id - FILE_ID_START];
+        } else {
+          return get_folder_size(folders, file_sizes, id);
+        }
+      }),
+      u32{});
+}
 
-  std::cout << filename << " -> " << space << std::endl;
-  return space;
+fn solve_case1(Filesystem const& filesystem) -> u32 {
+  let & [ folders, file_sizes ] = filesystem;
+  return aoc::ranges::accumulate(
+      Range{0uz, folders.size()} | //
+          stdv::transform([&](usize folder_id) {
+            return get_folder_size(folders, file_sizes, folder_id);
+          }) |
+          stdv::filter([](u32 folder_size) { return folder_size <= 100000; }),
+      u32{});
+}
+
+fn solve_case2(Filesystem const& filesystem) -> u32 {
+  let & [ folders, file_sizes ] = filesystem;
+  let used_space = get_folder_size(folders, file_sizes, 0);
+  let free_space = 70000000 - used_space;
+  let min_delete_space = 30000000 - free_space;
+  return stdr::min( //
+      Range{1uz, folders.size()} |
+      stdv::transform([&](usize folder_id) {
+        return get_folder_size(folders, file_sizes, folder_id);
+      }) |
+      stdv::filter(
+          [&](u32 folder_size) { return folder_size >= min_delete_space; }));
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
-  AOC_EXPECT_RESULT(95437, solve_case<false>("day07.example"));
-  AOC_EXPECT_RESULT(1453349, solve_case<false>("day07.input"));
-  // std::cout << "Part 2" << std::endl;
-  AOC_EXPECT_RESULT(24933642, solve_case<true>("day07.example"));
-  AOC_EXPECT_RESULT(2948823, solve_case<true>("day07.input"));
+  std::println("Part 1");
+  let example = parse("day07.example");
+  AOC_EXPECT_RESULT(95437, solve_case1(example));
+  let input = parse("day07.input");
+  AOC_EXPECT_RESULT(1453349, solve_case1(input));
+
+  std::println("Part 2");
+  AOC_EXPECT_RESULT(24933642, solve_case2(example));
+  AOC_EXPECT_RESULT(2948823, solve_case2(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
