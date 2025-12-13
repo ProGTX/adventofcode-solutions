@@ -1,200 +1,145 @@
 // https://adventofcode.com/2022/day/13
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
-#include <array>
+#include <cctype>
 #include <iostream>
-#include <iterator>
-#include <memory>
-#include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
-#include <set>
-#include <stack>
-#include <string>
-#include <string_view>
-#include <vector>
+#include <variant>
 
-struct packet_tree : public aoc::graph<int, packet_tree, std::string_view> {
- private:
-  using base_t = aoc::graph<int, packet_tree, std::string_view>;
+namespace stdv = std::views;
+namespace stdr = std::ranges;
 
- protected:
-  constexpr packet_tree(packet_tree* parent, int value, bool is_leaf)
-      : base_t{parent, "", value, is_leaf} {}
+struct Packet;
+using PacketList = Vec<Packet>;
+using PacketPair = aoc::point_type<Packet>;
+using Input = Vec<PacketPair>;
 
- public:
-  constexpr packet_tree() : base_t{nullptr, "", 0, false} {}
+struct Packet {
+  std::variant<u32, PacketList> data;
+  constexpr std::strong_ordering operator<=>(Packet const& other) const;
+  constexpr bool operator==(Packet const& other) const = default;
 
-  packet_tree* add_value(int value) {
-    return this->add_child(child_ptr_t{new packet_tree{this, value, true}});
-  }
-
-  packet_tree* add_list() {
-    return this->add_child(child_ptr_t{new packet_tree{this, 0, false}});
-  }
-
-  static packet_tree list_from_value(int value) {
-    packet_tree packet;
-    packet.add_value(value);
-    return packet;
+  friend std::ostream& operator<<(std::ostream& out, Packet const& p) {
+    aoc::match(
+        p.data, //
+        [&](u32 num) { out << num; },
+        [&](PacketList const& list) {
+          out << '[';
+          for (let& v : list) {
+            out << v << ',';
+          }
+          out << ']';
+        });
+    return out;
   }
 };
 
-using packet_node_t = packet_tree::child_ptr_t;
-
-enum ordering {
-  incorrect,
-  correct,
-  inconclusive,
-};
-
-ordering in_right_order(packet_tree* first, packet_tree* second) {
-  packet_tree tmp_list;
-  packet_tree* first_child_list;
-  packet_tree* second_child_list;
-  for (auto lhs_it = first->begin(), rhs_it = second->begin();;
-       ++lhs_it, ++rhs_it) {
-    if (lhs_it == first->end()) {
-      if (rhs_it != second->end()) {
-        // If the left list runs out of items first,
-        // the inputs are in the right order
-        return correct;
+fn parse_list_inner(str s) -> Packet {
+  auto list_stack = Vec<PacketList>{};
+  list_stack.emplace_back();
+  auto current_number = Option<u32>{};
+  let push_number = [&] {
+    if (current_number.has_value()) {
+      list_stack.back().emplace_back(*current_number);
+    }
+    current_number = None;
+  };
+  for (let c : s) {
+    if (std::isdigit(c)) {
+      let digit = aoc::to_number<u32>(c);
+      if (current_number.has_value()) {
+        current_number = *current_number * 10 + digit;
       } else {
-        return inconclusive;
+        current_number = digit;
       }
-    }
-    if (rhs_it == second->end()) {
-      // If the right list runs out of items first,
-      // the inputs are not in the right order.
-      return incorrect;
-    }
-
-    first_child_list = lhs_it->get();
-    second_child_list = rhs_it->get();
-    const auto& lhs = *first_child_list;
-    const auto& rhs = *second_child_list;
-
-    // Check integers
-    if (lhs.is_leaf() && rhs.is_leaf()) {
-      if (lhs.value() < rhs.value()) {
-        return correct;
-      } else if (lhs.value() > rhs.value()) {
-        return incorrect;
-      } else {
-        // Continue checking
-        continue;
+    } else {
+      switch (c) {
+        case '[': {
+          push_number();
+          list_stack.emplace_back();
+        } break;
+        case ']': {
+          push_number();
+          let last = aoc::pop_stack(list_stack);
+          list_stack.back().emplace_back(std::move(last));
+        } break;
+        case ',': {
+          push_number();
+        } break;
+        default:
+          AOC_ASSERT(std::isdigit(c), "Invalid character in input");
       }
-    }
-
-    // If exactly one value is an integer, convert the integer to a list
-    // which contains that integer as its only value, then retry the comparison.
-    if (lhs.is_leaf() && !rhs.is_leaf()) {
-      tmp_list = packet_tree::list_from_value(lhs.value());
-      first_child_list = &tmp_list;
-    } else if (!lhs.is_leaf() && rhs.is_leaf()) {
-      tmp_list = packet_tree::list_from_value(rhs.value());
-      second_child_list = &tmp_list;
-    }
-
-    auto list_in_right_order =
-        in_right_order(first_child_list, second_child_list);
-    if (list_in_right_order != inconclusive) {
-      return list_in_right_order;
     }
   }
-  return inconclusive;
+  push_number();
+  return Packet{list_stack.back()};
 }
 
-template <bool sort_all>
-int solve_case(const std::string& filename) {
-  using packet_pair_t = std::array<packet_node_t, 2>;
+fn parse(String const& filename) -> Input {
+  return aoc::split(aoc::trim(aoc::read_file(filename)), "\n\n") |
+         stdv::transform([](str pair) {
+           let[first, second] = aoc::split_once(pair, '\n');
+           return PacketPair{
+               parse_list_inner(first.substr(1, first.size() - 2)),
+               parse_list_inner(second.substr(1, second.size() - 2)),
+           };
+         }) |
+         aoc::ranges::to<Input>();
+}
 
-  using packets_t = std::conditional_t<
-      !sort_all, std::vector<packet_pair_t>,
-      std::set<packet_node_t,
-               decltype([](const packet_node_t& lhs, const packet_node_t& rhs) {
-                 return (in_right_order(lhs.get(), rhs.get()) == correct);
-               })>>;
+constexpr std::strong_ordering Packet::operator<=>(Packet const& other) const {
+  let overload = aoc::overload{
+      [](u32 left, u32 right) { return left <=> right; }, // FORCE FORMATTING
+      [](PacketList const& left, PacketList const& right) {
+        return std::lexicographical_compare_three_way(
+            std::begin(left), std::end(left), //
+            std::begin(right), std::end(right));
+      },
+      [](u32 left, PacketList const& right) {
+        return PacketList(1, Packet{left}) <=> right;
+      },
+      [](PacketList const& left, u32 right) {
+        return left <=> PacketList(1, Packet{right});
+      }};
+  return std::visit(overload, data, other.data);
+}
 
-  packet_pair_t packet_pair;
-  packets_t packets;
-  std::stack<packet_tree*, std::vector<packet_tree*>> packet_stack;
+fn solve_case1(Input const& input) -> u32 {
+  return aoc::ranges::accumulate(
+      input | stdv::enumerate | stdv::filter([](let& index_val_pair) {
+        let & [ first, second ] = std::get<1>(index_val_pair);
+        return first < second;
+      }) | stdv::transform([](let& index_val_pair) {
+        return std::get<0>(index_val_pair) + 1;
+      }),
+      u32{});
+}
 
-  std::string current_number_str;
-  const auto add_number_if_not_empty = [&]() {
-    if (!current_number_str.empty()) {
-      packet_stack.top()->add_value(aoc::to_number<int>(current_number_str));
-      current_number_str.clear();
-    }
-  };
-
-  const auto parse_list = [&](std::string_view line) -> packet_node_t {
-    auto packet = packet_node_t(new packet_tree{});
-    packet_stack.push(packet.get());
-    // Ignore first bracket, handled by the creation above
-    for (auto current_char : line | std::views::drop(1)) {
-      if (current_char == '[') {
-        packet_stack.push(packet_stack.top()->add_list());
-      } else if (current_char == ']') {
-        add_number_if_not_empty();
-        packet_stack.pop();
-      } else if (current_char == ',') {
-        add_number_if_not_empty();
-      } else {
-        current_number_str.push_back(current_char);
-      }
-    }
-    return packet;
-  };
-
-  int index = 0;
-  for (std::string line : aoc::views::read_lines(filename)) {
-    packet_pair[index] = parse_list(line);
-    index = (index + 1) % 2;
-    if (index == 0) {
-      if constexpr (!sort_all) {
-        packets.push_back(std::move(packet_pair));
-      } else {
-        packets.insert(std::move(packet_pair[0]));
-        packets.insert(std::move(packet_pair[1]));
-      }
-    }
-  }
-
-  int score = 0;
-
-  if constexpr (!sort_all) {
-    for (int index = 1; const auto& packet_pair : packets) {
-      auto result = in_right_order(packet_pair[0].get(), packet_pair[1].get());
-      if (result == correct) {
-        score += index;
-      }
-      ++index;
-    }
-  } else {
-    auto divider1_str = "[[2]]";
-    auto divider2_str = "[[6]]";
-    packets.insert(parse_list(divider1_str));
-    packets.insert(parse_list(divider2_str));
-    auto divider1 = packets.find(parse_list(divider1_str));
-    auto divider2 = packets.find(parse_list(divider2_str));
-    auto begin = std::begin(packets);
-    score = (std::distance(begin, divider1) + 1) *
-            (std::distance(begin, divider2) + 1);
-  }
-
-  std::cout << filename << " -> " << score << std::endl;
-  return score;
+fn solve_case2(Input const& input) -> u32 {
+  auto packets = input | stdv::join | aoc::ranges::to<Vec<Packet>>();
+  let p2 = parse_list_inner("[2]");
+  let p6 = parse_list_inner("[6]");
+  packets.push_back(p2);
+  packets.push_back(p6);
+  stdr::sort(packets);
+  return (aoc::ranges::position(packets, p2).value() + 1) *
+         (aoc::ranges::position(packets, p6).value() + 1);
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
-  AOC_EXPECT_RESULT(13, solve_case<false>("day13.example"));
-  AOC_EXPECT_RESULT(5198, solve_case<false>("day13.input"));
-  std::cout << "Part 2" << std::endl;
-  AOC_EXPECT_RESULT(140, solve_case<true>("day13.example"));
-  AOC_EXPECT_RESULT(22344, solve_case<true>("day13.input"));
+  std::println("Part 1");
+  let example = parse("day13.example");
+  AOC_EXPECT_RESULT(13, solve_case1(example));
+  let input = parse("day13.input");
+  AOC_EXPECT_RESULT(5198, solve_case1(input));
+
+  std::println("Part 2");
+  AOC_EXPECT_RESULT(140, solve_case2(example));
+  AOC_EXPECT_RESULT(22344, solve_case2(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
