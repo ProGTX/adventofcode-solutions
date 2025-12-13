@@ -49,7 +49,6 @@ export module aoc;
 #include "compiler.h"
 #include "concepts.h"
 #include "flat.h"
-#include "graph.h"
 #include "grid.h"
 #include "math.h"
 #include "point.h"
