@@ -12,10 +12,12 @@
 #include "utility.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#include <algorithm>
 #include <array>
 #include <compare>
 #include <concepts>
 #include <iostream>
+#include <optional>
 #include <ranges>
 #include <span>
 #include <stdexcept>
@@ -649,5 +651,24 @@ static_assert(
     std::ranges::view<aoc::ranges::combinations_view<std::vector<int>>>);
 static_assert(
     std::ranges::range<aoc::ranges::combinations_view<std::vector<int>>>);
+
+AOC_EXPORT_NAMESPACE(aoc) {
+namespace ranges {
+
+template <std::ranges::input_range R, class T, class Proj = std::identity>
+  requires std::indirect_binary_predicate<
+      std::ranges::equal_to, std::projected<std::ranges::iterator_t<R>, Proj>,
+      const T*>
+constexpr std::optional<std::size_t> position(R&& r, const T& value,
+                                              Proj proj = {}) {
+  auto it = std::ranges::find(r, value, std::move(proj));
+  if (it == std::ranges::end(r)) {
+    return std::nullopt;
+  }
+  return std::ranges::distance(std::ranges::begin(r), it);
+}
+
+} // namespace ranges
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_ALGORITHM_H
