@@ -496,7 +496,7 @@ constexpr auto match(Variant&& var, VisitorTs&&... visitor) {
  */
 template <auto one = 1, class return_t = unsigned, std::ranges::range R,
           bool force_this = false>
-constexpr return_t binary_to_number(R&& range) {
+constexpr return_t binary_to_number(const R& range) {
   auto num = return_t{};
   auto multiplier = return_t{1};
   for (const auto& v : range) {

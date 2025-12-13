@@ -32,13 +32,7 @@ struct bounds_t {
   int max{0};
 
   friend bool operator==(const bounds_t&, const bounds_t&) = default;
-
-  friend bool operator<(const bounds_t& lhs, const bounds_t& rhs) {
-    if (lhs.min < rhs.min) {
-      return true;
-    }
-    return (lhs.min == rhs.min) && (lhs.max < rhs.max);
-  }
+  friend auto operator<=>(const bounds_t& lhs, const bounds_t& rhs) = default;
 };
 
 using beacon_t = point;
