@@ -31,8 +31,8 @@ struct point_type {
   using iterator = value_type*;
   using const_iterator = const value_type*;
 
-  value_type x = 0;
-  value_type y = 0;
+  value_type x = {};
+  value_type y = {};
 
   constexpr bool operator==(const point_type& other) const noexcept = default;
 
