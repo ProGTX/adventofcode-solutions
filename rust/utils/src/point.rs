@@ -35,7 +35,7 @@ impl<T> Point<T> {
         }
     }
 
-    pub fn min(&self, other: &Self) -> Self
+    pub fn min(self, other: Self) -> Self
     where
         T: Copy + Ord,
     {
@@ -45,7 +45,7 @@ impl<T> Point<T> {
         }
     }
 
-    pub fn max(&self, other: &Self) -> Self
+    pub fn max(self, other: Self) -> Self
     where
         T: Copy + Ord,
     {
