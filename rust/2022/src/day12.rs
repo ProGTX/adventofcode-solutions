@@ -35,19 +35,23 @@ fn parse(filename: &str) -> Input {
 }
 
 fn shortest_path(heightmap: &Grid<u8>, start: Upos, end: Upos) -> Option<u32> {
-    let distances = aoc::dijkstra::shortest_distances(&start, &end, |current: &Upos| {
-        let current_height = *heightmap.get(current.y, current.x);
-        heightmap
-            .basic_neighbor_positions(*current)
-            .iter()
-            .filter(|pos| {
-                let neighbor = *heightmap.get(pos.y, pos.x);
-                return neighbor <= (current_height + 1);
-            })
-            .cloned()
-            .dijkstra_uniform_neighbors()
-            .collect_array_vec::<4>()
-    });
+    let distances = aoc::dijkstra::shortest_distances(
+        &start,
+        |current: &Upos| *current == end,
+        |current: &Upos| {
+            let current_height = *heightmap.get(current.y, current.x);
+            heightmap
+                .basic_neighbor_positions(*current)
+                .iter()
+                .filter(|pos| {
+                    let neighbor = *heightmap.get(pos.y, pos.x);
+                    return neighbor <= (current_height + 1);
+                })
+                .cloned()
+                .dijkstra_uniform_neighbors()
+                .collect_array_vec::<4>()
+        },
+    );
     return distances.get(&end).cloned();
 }
 

@@ -24,11 +24,16 @@ impl<T: Ord> PartialOrd for DijkstraState<T> {
     }
 }
 
-pub fn shortest_distances<T, F, I>(start: &T, end: &T, get_neighbors: F) -> HashMap<T, u32>
+pub fn shortest_distances<T, GetEndF, GetNeighborsF, NeighborIter>(
+    start: &T,
+    is_end: GetEndF,
+    get_neighbors: GetNeighborsF,
+) -> HashMap<T, u32>
 where
     T: Clone + Ord + Hash,
-    I: IntoIterator<Item = DijkstraState<T>>,
-    F: Fn(&T) -> I,
+    GetEndF: Fn(&T) -> bool,
+    NeighborIter: IntoIterator<Item = DijkstraState<T>>,
+    GetNeighborsF: Fn(&T) -> NeighborIter,
 {
     let mut distances = HashMap::new();
     let mut unvisited = BinaryHeap::new();
@@ -39,7 +44,7 @@ where
     });
     while (!unvisited.is_empty()) {
         let current = unvisited.pop().unwrap();
-        if (current.data == *end) {
+        if (is_end(&current.data)) {
             break;
         }
         if (current.distance > *distances.get(&current.data).unwrap()) {
@@ -77,4 +82,4 @@ pub trait DijkstraNeighborView: Iterator {
     }
 }
 
-impl<I: Iterator> DijkstraNeighborView for I {}
+impl<NeighborIter: Iterator> DijkstraNeighborView for NeighborIter {}

@@ -75,8 +75,10 @@ fn solve_case1(input: &Input) -> u32 {
         .map(|(lights, buttons, _)| {
             let start = DijkstraLights::from(lights.iter().map(|_| 0).collect::<Lights>());
             let end = DijkstraLights::from(lights.clone());
-            let distances =
-                aoc::dijkstra::shortest_distances(&start, &end, |current: &DijkstraLights| {
+            let distances = aoc::dijkstra::shortest_distances(
+                &start,
+                |current| *current == end,
+                |current: &DijkstraLights| {
                     buttons
                         .iter()
                         .map(|button| {
@@ -88,7 +90,8 @@ fn solve_case1(input: &Input) -> u32 {
                         })
                         .dijkstra_uniform_neighbors()
                         .collect_array_vec::<MAX_BUTTONS>()
-                });
+                },
+            );
             return *distances.get(&end).unwrap();
         })
         .sum::<u32>()
