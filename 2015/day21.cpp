@@ -43,7 +43,7 @@ fn play_game(Entity& player, Entity& boss) -> bool {
   }
 }
 
-fn parse(String const& filename) -> Entity {
+auto parse(String const& filename) -> Entity {
   auto lines_view = aoc::views::read_lines(filename);
   auto line_it = std::ranges::begin(lines_view);
   let parse_line = [&] {

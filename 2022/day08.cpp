@@ -11,7 +11,7 @@
 using Forrest = aoc::char_grid<>;
 using Score = aoc::grid<u32>;
 
-fn parse(String const& filename) -> Forrest {
+auto parse(String const& filename) -> Forrest {
   return aoc::read_char_grid(filename);
 }
 

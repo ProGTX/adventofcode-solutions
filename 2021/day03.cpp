@@ -12,7 +12,7 @@
 using Bitset = aoc::static_vector<u8, 12>;
 using Counter = aoc::static_vector<i16, 12>;
 
-fn parse(String const& filename) -> Vec<Bitset> {
+auto parse(String const& filename) -> Vec<Bitset> {
   return aoc::views::read_lines(filename) |
          std::views::transform([](str line) {
            return line |

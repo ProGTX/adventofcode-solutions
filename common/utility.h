@@ -509,7 +509,7 @@ constexpr return_t binary_to_number(const R& range) {
 namespace detail {
 template <class T>
 constexpr const auto as_consteval_helper =
-    [](T&& value) static consteval { return std::forward<T>(value); };
+    [](T&& value) static AOC_CONSTEVAL { return std::forward<T>(value); };
 
 } // namespace detail
 
@@ -517,7 +517,7 @@ constexpr const auto as_consteval_helper =
 ///
 /// Only needed because constinit cannot be used on local variables
 template <class T>
-constexpr decltype(auto) as_consteval(T&& value) {
+constexpr auto as_consteval(T&& value) -> decltype(auto) {
   return detail::as_consteval_helper<T>(std::forward<T>(value));
 };
 

@@ -13,7 +13,7 @@ using Input = std::pair<Manifolds, point>;
 constexpr let empty = '.';
 constexpr let splitter = '^';
 
-fn parse(String const& filename) -> Input {
+auto parse(String const& filename) -> Input {
   auto [manifolds, config] = aoc::read_char_grid(
       filename, {.padding = {}, .start_char = 'S', .end_char = {}});
   return {std::move(manifolds), *config.start_pos};

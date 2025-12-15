@@ -14,7 +14,7 @@ struct Reindeer {
   u32 rest;
 };
 
-fn parse(String const& filename) -> Vec<Reindeer> {
+auto parse(String const& filename) -> Vec<Reindeer> {
   return aoc::views::read_lines(filename) |
          std::views::transform([](str line) {
            let words = aoc::split_to_array<14>(line, ' ');

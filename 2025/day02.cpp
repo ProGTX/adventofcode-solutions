@@ -11,7 +11,7 @@
 
 using range_t = Range<u64, u64>;
 
-fn parse(String const& filename) -> Vec<range_t> {
+auto parse(String const& filename) -> Vec<range_t> {
   using Point = aoc::point_type<u64>;
   return aoc::split(aoc::trim(aoc::read_file(filename)), ",") |
          std::views::transform([](str range) {

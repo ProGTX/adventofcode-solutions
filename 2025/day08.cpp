@@ -13,7 +13,7 @@
 using Boxes = Vec<std::array<i64, 3>>;
 constexpr let usize_max = std::numeric_limits<usize>::max();
 
-fn parse(String const& filename) -> Boxes {
+auto parse(String const& filename) -> Boxes {
   return aoc::views::read_lines(filename) |
          std::views::transform(
              [](str line) { return aoc::split_to_array<3, i64>(line, ','); }) |

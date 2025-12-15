@@ -79,7 +79,7 @@ fn parse_list_inner(str s) -> Packet {
   return Packet{list_stack.back()};
 }
 
-fn parse(String const& filename) -> Input {
+auto parse(String const& filename) -> Input {
   return aoc::split(aoc::trim(aoc::read_file(filename)), "\n\n") |
          stdv::transform([](str pair) {
            let[first, second] = aoc::split_once(pair, '\n');

@@ -9,7 +9,7 @@
 #include <ranges>
 #include <span>
 
-fn parse(String const& filename) -> Vec<i32> {
+auto parse(String const& filename) -> Vec<i32> {
   return aoc::views::read_lines(filename) |
          std::views::transform([](str line) {
            auto distance = aoc::to_number<i32>(line.substr(1));

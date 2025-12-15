@@ -11,7 +11,7 @@
 
 using Batteries = aoc::char_grid<>;
 
-fn parse(String const& filename) -> Batteries {
+auto parse(String const& filename) -> Batteries {
   return aoc::read_char_grid(filename);
 }
 

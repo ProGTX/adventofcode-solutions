@@ -9,7 +9,7 @@
 #include <ranges>
 #include <span>
 
-fn parse(String const& filename) -> Vec<u32> {
+auto parse(String const& filename) -> Vec<u32> {
   return aoc::views::read_numbers<u32>(filename) | aoc::ranges::to<Vec<u32>>();
 }
 

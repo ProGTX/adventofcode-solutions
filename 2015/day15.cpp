@@ -18,7 +18,7 @@ fn parse_property(str property) -> i32 {
   return aoc::to_number<i32>(aoc::split_once(property, ' ')[1]);
 }
 
-fn parse(String const& filename) -> Vec<Ingredient> {
+auto parse(String const& filename) -> Vec<Ingredient> {
   return aoc::views::read_lines(filename) |
          std::views::transform([](str line) {
            let properties = aoc::split_to_array<5>(line, ", ");

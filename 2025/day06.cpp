@@ -10,7 +10,7 @@
 
 using CharGrid = aoc::char_grid<>;
 
-fn parse(String const& filename) -> CharGrid {
+auto parse(String const& filename) -> CharGrid {
   return aoc::read_char_grid(filename, aoc::keep_spaces{});
 }
 

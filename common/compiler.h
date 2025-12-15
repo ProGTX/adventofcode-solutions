@@ -22,12 +22,17 @@
 
 #if defined(_MSC_VER)
 #define AOC_COMPILER_MSVC _MSC_VER
+#define AOC_CONSTEVAL
 #elif defined(__GNUC__)
 #if defined(__clang__)
 #define AOC_COMPILER_CLANG __clang_major__
 #else
 #define AOC_COMPILER_GCC __GNUC__
 #endif
+#endif
+
+#if !defined(_MSC_VER)
+#define AOC_CONSTEVAL consteval
 #endif
 
 #define AOC_NOT_CONSTEXPR(statement)                                           \

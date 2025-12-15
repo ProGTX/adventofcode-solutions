@@ -13,8 +13,8 @@
 #include <vector>
 
 using int_t = std::int64_t;
-constexpr const std::string opening_braces = "([{<";
-constexpr const std::string closing_braces = ")]}>";
+constexpr const std::string_view opening_braces = "([{<";
+constexpr const std::string_view closing_braces = ")]}>";
 constexpr const std::array illegal_scores = {3, 57, 1197, 25137};
 
 template <bool autocomplete>

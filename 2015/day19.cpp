@@ -14,7 +14,7 @@
 using String10T = aoc::static_vector<String, 10>;
 using ReplacementsT = std::map<String, String10T>;
 
-fn parse(String const& filename) -> std::pair<ReplacementsT, String> {
+auto parse(String const& filename) -> std::pair<ReplacementsT, String> {
   auto replacements = ReplacementsT{};
   auto last = false;
   for (str line : aoc::views::read_lines(filename, aoc::keep_empty{})) {

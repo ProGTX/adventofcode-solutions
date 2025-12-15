@@ -16,7 +16,7 @@
 
 using namespace std::string_view_literals;
 using int_t = int;
-constexpr inline auto start = std::string{"in"};
+constexpr inline auto start = "in"sv;
 
 struct part_t {
   int x;
@@ -38,7 +38,7 @@ using workflow_t = std::vector<rule_t>;
 using workflow_map_t = std::map<std::string, workflow_t>;
 
 bool check_part(const part_t& part, const workflow_map_t& workflows) {
-  auto current = start;
+  auto current = std::string{start};
   while (true) {
     const auto& workflow = workflows.at(current);
     for (const auto& rule : workflow) {

@@ -10,7 +10,7 @@
 
 using coords_t = aoc::point_type<u32>;
 
-fn parse(String const& filename) -> coords_t {
+auto parse(String const& filename) -> coords_t {
   let file = String{aoc::trim(aoc::read_file(filename), " \t\n\r\f\v.")};
   let[_, info] = aoc::split_once(file, "row ");
   let[row, column] = aoc::split_once<u32>(info, ", column ");

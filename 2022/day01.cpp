@@ -9,7 +9,7 @@
 #include <ranges>
 #include <span>
 
-fn parse(String const& filename) -> Vec<u32> {
+auto parse(String const& filename) -> Vec<u32> {
   return aoc::split(aoc::trim(aoc::read_file(filename)), "\n\n") |
          std::views::transform([](str food) {
            return aoc::ranges::accumulate(aoc::split_to_vec<u32>(food, '\n'),

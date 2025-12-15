@@ -11,7 +11,7 @@
 using range_t = aoc::point_type<u64>;
 using Input = std::pair<Vec<range_t>, Vec<u64>>;
 
-fn parse(String const& filename) -> Input {
+auto parse(String const& filename) -> Input {
   using Point = aoc::point_type<u64>;
   auto lines = aoc::views::read_lines(filename, aoc::keep_empty{});
 

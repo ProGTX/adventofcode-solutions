@@ -12,7 +12,7 @@ using Point = aoc::point_type<i32>;
 
 using Segments = Vec<std::pair<Point, Point>>;
 
-fn parse(String const& filename) -> std::pair<Segments, Point> {
+auto parse(String const& filename) -> std::pair<Segments, Point> {
   auto dimensions = Point{};
   auto segments = aoc::views::read_lines(filename) |
                   std::views::transform([&](str line) {

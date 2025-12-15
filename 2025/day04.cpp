@@ -30,7 +30,7 @@ fn accessible_indexes(PaperRolls const& paper_rolls) -> Vec<usize> {
       aoc::ranges::to<Vec<usize>>();
 }
 
-fn parse(String const& filename) -> PaperRolls {
+auto parse(String const& filename) -> PaperRolls {
   return aoc::read_char_grid(filename);
 }
 

@@ -15,7 +15,7 @@ using Input = std::pair<Vec<Outputs>, aoc::name_to_id>;
 namespace stdv = std::views;
 namespace stdr = std::ranges;
 
-fn parse(String const& filename) -> Input {
+auto parse(String const& filename) -> Input {
   auto result = Vec<Outputs>{};
   auto name_to_id = aoc::name_to_id{};
   for (str line : aoc::views::read_lines(filename)) {

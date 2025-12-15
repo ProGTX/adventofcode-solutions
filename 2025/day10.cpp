@@ -18,7 +18,7 @@ using Input = Vec<std::tuple<Lights, Buttons, Joltage>>;
 namespace stdv = std::views;
 namespace stdr = std::ranges;
 
-fn parse(String const& filename) -> Input {
+auto parse(String const& filename) -> Input {
   using tuple = Input::value_type;
   return //
       aoc::views::read_lines(filename) |

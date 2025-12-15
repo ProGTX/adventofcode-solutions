@@ -13,7 +13,7 @@
 using EnergyLevels = aoc::char_grid<>;
 constexpr let usize_max = std::numeric_limits<usize>::max();
 
-fn parse(String const& filename) -> EnergyLevels {
+auto parse(String const& filename) -> EnergyLevels {
   return aoc::read_char_grid(filename);
 }
 

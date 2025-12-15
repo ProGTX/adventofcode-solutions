@@ -12,7 +12,7 @@ using grid_t = aoc::char_grid<>;
 constexpr let light_on = '#';
 constexpr let light_off = '.';
 
-fn parse(String const& filename) -> grid_t {
+auto parse(String const& filename) -> grid_t {
   return aoc::read_char_grid(filename);
 }
 

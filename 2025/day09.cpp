@@ -10,7 +10,7 @@
 
 using Point = aoc::point_type<i64>;
 
-fn parse(String const& filename) -> Vec<Point> {
+auto parse(String const& filename) -> Vec<Point> {
   return aoc::views::read_lines(filename) |
          std::views::transform(
              [](str line) { return aoc::split<Point>(line, ','); }) |

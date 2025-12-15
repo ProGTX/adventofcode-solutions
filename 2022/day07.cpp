@@ -15,7 +15,7 @@ constexpr let FILE_ID_START = usize{1} << 16;
 namespace stdv = std::views;
 namespace stdr = std::ranges;
 
-fn parse(String const& filename) -> Filesystem {
+auto parse(String const& filename) -> Filesystem {
   auto folder_ids = aoc::name_to_id{};
   auto file_ids = aoc::name_to_id{FILE_ID_START};
   let get_root_dir = [] {
