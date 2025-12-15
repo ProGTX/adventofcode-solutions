@@ -8,6 +8,7 @@
 #include <functional>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <ostream>
@@ -29,19 +30,9 @@ struct monkey_t {
   std::vector<item_t> items;
   operation_t operation;
   test_t test;
-
-  std::ostream& print(std::string_view indent = "",
-                      std::ostream& out = std::cout) const {
-    out << indent << aoc::print_range(items) << std::endl;
-    out << indent << "operation(7) = " << operation(7) << std::endl;
-    out << indent << "test{" << test.divisible_by << ",true(" << test.on_true
-        << "),"
-        << "false(" << test.on_false << ")}" << std::endl;
-    return out;
-  }
 };
 
-template <int num_rounds, int num_average, item_t relief_factor>
+template <int num_rounds, item_t relief_factor>
 item_t solve_case(const std::string& filename) {
   std::vector<monkey_t> monkeys;
   monkey_t* current = nullptr;
@@ -86,22 +77,21 @@ item_t solve_case(const std::string& filename) {
     }
   }
 
+  if constexpr (relief_factor != 1) {
+    divisible_max = std::numeric_limits<item_t>::max();
+  }
+
   std::vector<item_t> num_inspected(monkeys.size(), 0);
   for (int round = 0; round < num_rounds; ++round) {
     for (int monkey_id = 0; auto& monkey : monkeys) {
       for (const auto item : monkey.items) {
-        auto worry_level = monkey.operation(item);
-        if (relief_factor == 1) {
-          worry_level = worry_level % divisible_max;
-        } else {
-          worry_level /= relief_factor;
-        }
+        const auto worry_level =
+            monkey.operation(item % divisible_max) / relief_factor;
         auto next_monkey = ((worry_level % monkey.test.divisible_by) == 0)
                                ? monkey.test.on_true
                                : monkey.test.on_false;
         monkeys[next_monkey].items.push_back(worry_level);
       }
-      // std::cout << std::endl;
       num_inspected[monkey_id] += monkey.items.size();
       monkey.items.clear();
       ++monkey_id;
@@ -111,9 +101,7 @@ item_t solve_case(const std::string& filename) {
   std::ranges::sort(num_inspected, std::greater<>{});
 
   // Store score as an unsigned long to prevent overflow
-  auto score = std::accumulate(std::begin(num_inspected),
-                               std::begin(num_inspected) + num_average, 1ul,
-                               std::multiplies<>{});
+  const auto score = num_inspected[0] * num_inspected[1];
 
   std::cout << filename << " -> " << score << std::endl;
   return score;
@@ -121,10 +109,10 @@ item_t solve_case(const std::string& filename) {
 
 int main() {
   std::cout << "Part 1" << std::endl;
-  AOC_EXPECT_RESULT(10605, (solve_case<20, 2, 3>("day11.example")));
-  AOC_EXPECT_RESULT(98280, (solve_case<20, 2, 3>("day11.input")));
+  AOC_EXPECT_RESULT(10605, (solve_case<20, 3>("day11.example")));
+  AOC_EXPECT_RESULT(98280, (solve_case<20, 3>("day11.input")));
   std::cout << "Part 2" << std::endl;
-  AOC_EXPECT_RESULT(2713310158, (solve_case<10000, 2, 1>("day11.example")));
-  AOC_EXPECT_RESULT(17673687232, (solve_case<10000, 2, 1>("day11.input")));
+  AOC_EXPECT_RESULT(2713310158, (solve_case<10000, 1>("day11.example")));
+  AOC_EXPECT_RESULT(17673687232, (solve_case<10000, 1>("day11.input")));
   AOC_RETURN_CHECK_RESULT();
 }
