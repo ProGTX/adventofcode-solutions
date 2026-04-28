@@ -525,11 +525,18 @@ static_assert(16.5f ==
 namespace std {
 template <class T>
 struct hash<aoc::point_type<T>> {
-  // https://stackoverflow.com/a/64151007
   constexpr size_t operator()(const aoc::point_type<T>& value) const {
-    size_t x_hash = std::hash<T>{}(value.x);
-    size_t y_hash = std::hash<T>{}(value.y) << 1;
-    return x_hash ^ y_hash;
+    if constexpr (sizeof(T) * 2 <= sizeof(size_t)) {
+      // Pack both values into size_t with no collisions
+      using U = std::make_unsigned_t<T>;
+      return static_cast<size_t>(static_cast<U>(value.x)) |
+             (static_cast<size_t>(static_cast<U>(value.y)) << (sizeof(T) * 8));
+    } else {
+      // https://www.boost.org/doc/libs/1_86_0/libs/container_hash/doc/html/hash.html#notes_hash_combine
+      size_t seed = std::hash<T>{}(value.x);
+      seed ^= std::hash<T>{}(value.y) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      return seed;
+    }
   }
 };
 } // namespace std
