@@ -21,6 +21,7 @@
 #include <ranges>
 #include <span>
 #include <stdexcept>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 #endif
@@ -79,10 +80,11 @@ template <class Node, class NeighborsFn,
   requires std::totally_ordered<Node> &&
            requires(Node node) {
              { std::declval<EndReachedFn>()(node) } -> std::same_as<bool>;
+             { std::hash<Node>{}(node) } -> std::convertible_to<std::size_t>;
            } &&
            contains_uncvref<PredecessorMap, predecessor_map<Node>,
                             predecessor_map_all<Node>>
-constexpr flat_map<Node, int> shortest_distances_dijkstra(
+std::unordered_map<Node, int> shortest_distances_dijkstra(
     std::span<const Node> start_nodes, NeighborsFn&& get_reachable_neighbors,
     EndReachedFn&& end_reached = {},
     PredecessorMap* predecessors_out = nullptr) {
@@ -97,7 +99,7 @@ constexpr flat_map<Node, int> shortest_distances_dijkstra(
   // discovered so far between the node v and the starting node.
   // NOTE: This also serves as the set of visited nodes.
   //       If it hasn't been visited yet, it has an infinite distance.
-  flat_map<Node, int> distances;
+  std::unordered_map<Node, int> distances;
   for (const auto& node : start_nodes) {
     distances.emplace(node, 0);
   }
