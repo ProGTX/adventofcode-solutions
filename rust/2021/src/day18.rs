@@ -169,14 +169,14 @@ fn add(lhs: &SFN, rhs: &SFN) -> SFN {
     reduce(&mut SFN::pair(lhs.clone(), rhs.clone())).clone()
 }
 
-fn magnitude(sfn: &SFN) -> u64 {
+fn magnitude(sfn: &SFN) -> u32 {
     match sfn {
-        SFN::Number(num) => *num as u64,
+        SFN::Number(num) => *num as u32,
         SFN::Pair(left, right) => 3 * magnitude(left) + 2 * magnitude(right),
     }
 }
 
-fn solve_case1(numbers: &[SFN]) -> u64 {
+fn solve_case1(numbers: &[SFN]) -> u32 {
     magnitude(
         &numbers[1..]
             .iter()
@@ -184,9 +184,13 @@ fn solve_case1(numbers: &[SFN]) -> u64 {
     )
 }
 
-fn solve_case2(numbers: &[SFN]) -> u64 {
-    // TODO: Implement Part 2
-    0
+fn solve_case2(numbers: &[SFN]) -> u32 {
+    let n = numbers.len();
+    (0..n)
+        .flat_map(|i| (0..n).filter(move |&j| j != i).map(move |j| (i, j)))
+        .map(|(i, j)| magnitude(&add(&numbers[i], &numbers[j])))
+        .max()
+        .unwrap()
 }
 
 fn main() {
@@ -213,6 +217,6 @@ fn main() {
     assert_eq!(4207, solve_case1(&input));
 
     println!("Part 2");
-    // assert_eq!(3993, solve_case2(&example));
-    // assert_eq!(XXX, solve_case2(&input));
+    assert_eq!(3993, solve_case2(&example));
+    assert_eq!(4635, solve_case2(&input));
 }
