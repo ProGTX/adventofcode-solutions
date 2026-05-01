@@ -9,25 +9,42 @@
 #include <string>
 #include <vector>
 
-auto parse(String const& filename) -> Vec<std::string> {
-  return aoc::views::read_lines(filename) | aoc::ranges::to<Vec<std::string>>();
+using Point3D = aoc::nd_point_type<i32, 3>;
+using Scanner = Vec<Point3D>;
+
+fn parse(String const& filename) -> Vec<Scanner> {
+  auto scanners = Vec<Scanner>{};
+  auto current = Scanner{};
+  for (str line : aoc::views::read_lines(filename)) {
+    if (line.starts_with("---")) {
+      current.clear();
+    } else if (line.empty()) {
+      scanners.push_back(std::move(current));
+    } else {
+      current.push_back(aoc::split<Point3D>(line, ','));
+    }
+  }
+  // last scanner has no trailing blank line
+  scanners.push_back(std::move(current));
+  return scanners;
 }
 
-fn solve_case1(std::span<const std::string> data) -> uint64_t {
+fn solve_case1(std::span<const Scanner> data) -> usize {
   // TODO: Implement Part 1
   return 0;
 }
 
-fn solve_case2(std::span<const std::string> data) -> uint64_t {
+fn solve_case2(std::span<const Scanner> data) -> usize {
   // TODO: Implement Part 2
   return 0;
 }
 
 int main() {
+  std::println("UNSOLVED");
+
   std::println("Part 1");
   const auto example = parse("day19.example");
-  AOC_EXPECT_RESULT(0, solve_case1(example));
-
+  // AOC_EXPECT_RESULT(79, solve_case1(example));
   const auto input = parse("day19.input");
   // AOC_EXPECT_RESULT(XXX, solve_case1(input));
 
