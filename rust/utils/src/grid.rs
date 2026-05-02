@@ -231,12 +231,7 @@ pub struct ConfigOutput {
 }
 
 impl Grid<char> {
-    pub fn from_file_config(filename: &str, config: ConfigInput) -> (Self, ConfigOutput) {
-        let lines = std::fs::read_to_string(filename)
-            .unwrap()
-            .lines()
-            .map(|line| line.to_string())
-            .collect::<Vec<String>>();
+    pub fn from_lines_config(lines: &[String], config: ConfigInput) -> (Self, ConfigOutput) {
         let padding = config.padding.is_some();
         let mut output_config = ConfigOutput::default();
         let set_once = |optional_pos: &mut Option<Upos>,
@@ -294,6 +289,15 @@ impl Grid<char> {
         // That's probably ill-formed data anyway.
         grid.data.resize(size, config.padding.unwrap_or(' '));
         (grid, output_config)
+    }
+
+    pub fn from_file_config(filename: &str, config: ConfigInput) -> (Self, ConfigOutput) {
+        let lines = std::fs::read_to_string(filename)
+            .unwrap()
+            .lines()
+            .map(|line| line.to_string())
+            .collect::<Vec<String>>();
+        Self::from_lines_config(&lines, config)
     }
 
     pub fn from_file(filename: &str) -> Self {
