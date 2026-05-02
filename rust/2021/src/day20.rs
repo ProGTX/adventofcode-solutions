@@ -43,43 +43,33 @@ fn apply(algorithm: &Algorithm, input_image: &Image) -> Image {
                 }
             }
             let alg_index = aoc::math::binary_to_number::<usize>(&bits);
-            output_image.modify(algorithm[alg_index], y as usize + PADDING, x as usize + PADDING);
+            output_image.modify(
+                algorithm[alg_index],
+                y as usize + PADDING,
+                x as usize + PADDING,
+            );
         }
     }
-    Grid::from_iter(
-        output_image
-            .data
-            .iter()
-            .map(|v| if (*v > 0) { '#' } else { '.' }),
-        output_image.num_rows,
-        output_image.num_columns,
-    )
-    .print();
-    println!();
     return output_image;
 }
 
-fn solve_case1((algorithm, input_image): &Input) -> u32 {
-    apply(algorithm, &apply(algorithm, input_image))
-        .data
-        .iter()
-        .sum()
-}
-
-fn solve_case2((algorithm, input_image): &Input) -> u32 {
-    // TODO: Implement Part 2
-    0
+fn solve_case<const ITERATIONS: usize>((algorithm, input_image): &Input) -> u32 {
+    let mut image = input_image.clone();
+    for _ in 0..ITERATIONS {
+        image = apply(algorithm, &image);
+    }
+    image.data.iter().sum()
 }
 
 fn main() {
     println!("Part 1");
 
     let example = parse("day20.example");
-    assert_eq!(35, solve_case1(&example));
+    assert_eq!(35, solve_case::<2>(&example));
     let input = parse("day20.input");
-    assert_eq!(5249, solve_case1(&input));
+    assert_eq!(5249, solve_case::<2>(&input));
 
     println!("Part 2");
-    // assert_eq!(XXX, solve_case2(&example));
-    // assert_eq!(XXX, solve_case2(&input));
+    assert_eq!(3351, solve_case::<50>(&example));
+    assert_eq!(15714, solve_case::<50>(&input));
 }
