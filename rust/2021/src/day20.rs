@@ -9,7 +9,8 @@ const PADDING: usize = 3;
 fn parse(filename: &str) -> Input {
     let lines = aoc::file::read_lines(filename);
     let algorithm = lines[0].chars().map(|c| (c == '#') as u32).collect();
-    let char_image = Grid::from_lines_config(&lines[2..], ConfigInput::default()).0;
+    const SKIP_LINES: usize = 2; // read_lines doesn't skip empty lines
+    let char_image = Grid::from_lines_config(&lines[SKIP_LINES..], ConfigInput::default()).0;
     // Add padding on each side to simulate the infinite image
     let mut image = Image::new(
         0,
@@ -27,8 +28,9 @@ fn parse(filename: &str) -> Input {
 
 fn apply(algorithm: &Algorithm, input_image: &Image) -> Image {
     // The output image increases on each side
+    let background = (algorithm[0] + input_image.data[0]) % 2;
     let mut output_image = Image::new(
-        (algorithm[0] + input_image.data[0]) % 2,
+        background,
         input_image.num_rows + 2 * PADDING,
         input_image.num_columns + 2 * PADDING,
     );
