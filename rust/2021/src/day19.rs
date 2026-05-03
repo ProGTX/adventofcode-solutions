@@ -1,10 +1,6 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct Point3D {
-    x: i32,
-    y: i32,
-    z: i32,
-}
+use aoc::nd_point::NDPoint;
 
+type Point3D = NDPoint<i32, 3>;
 type Scanner = Vec<Point3D>;
 
 fn parse(filename: &str) -> Vec<Scanner> {
@@ -18,9 +14,11 @@ fn parse(filename: &str) -> Vec<Scanner> {
         } else {
             let mut parts = line.splitn(3, ',');
             current.push(Point3D {
-                x: parts.next().unwrap().parse().unwrap(),
-                y: parts.next().unwrap().parse().unwrap(),
-                z: parts.next().unwrap().parse().unwrap(),
+                data: [
+                    parts.next().unwrap().parse().unwrap(),
+                    parts.next().unwrap().parse().unwrap(),
+                    parts.next().unwrap().parse().unwrap(),
+                ],
             });
         }
     }
