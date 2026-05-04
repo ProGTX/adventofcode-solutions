@@ -73,18 +73,23 @@ using predecessor_map_all =
     flat_map<std::remove_cvref_t<Node>, flat_set<std::remove_cvref_t<Node>>>;
 
 // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Algorithm
+// https://en.wikipedia.org/wiki/A*_search_algorithm
+// Dijkstra is A* with a zero heuristic (constant_value<int>{}).
+// Heuristic must be admissible (never overestimates the actual remaining cost).
 template <class Node, class NeighborsFn,
+          class HeuristicFn = constant_value<int>,
           class EndReachedFn = constant_value<bool>,
           class PredecessorMap = predecessor_map<Node>>
   requires std::totally_ordered<Node> &&
            requires(Node node) {
              { std::declval<EndReachedFn>()(node) } -> std::same_as<bool>;
+             { std::declval<HeuristicFn>()(node) } -> std::convertible_to<int>;
            } &&
            contains_uncvref<PredecessorMap, predecessor_map<Node>,
                             predecessor_map_all<Node>>
 constexpr flat_map<Node, int> shortest_distances_dijkstra(
     std::span<const Node> start_nodes, NeighborsFn&& get_reachable_neighbors,
-    EndReachedFn&& end_reached = {},
+    HeuristicFn&& heuristic = {}, EndReachedFn&& end_reached = {},
     PredecessorMap* predecessors_out = nullptr) {
   const bool use_predecessors = (predecessors_out != nullptr);
   constexpr const bool all_predecessors =
@@ -97,6 +102,7 @@ constexpr flat_map<Node, int> shortest_distances_dijkstra(
   // discovered so far between the node v and the starting node.
   // NOTE: This also serves as the set of visited nodes.
   //       If it hasn't been visited yet, it has an infinite distance.
+  // Distances represent the g values
   flat_map<Node, int> distances;
   for (const auto& node : start_nodes) {
     distances.emplace(node, 0);
@@ -104,20 +110,22 @@ constexpr flat_map<Node, int> shortest_distances_dijkstra(
 
   // 1. Create a set of all unvisited nodes,
   //    more specifically a min-heap of {distance, node} pairs
-  using entry_t = std::pair<int, Node>;
+  // Open set ordered by f = g + h; store g alongside to detect stale entries.
+  // With h = 0 this is standard Dijkstra.
+  using entry_t = std::tuple<int, int, Node>;
   auto unvisited = priority_queue<entry_t, std::greater<entry_t>>{};
   for (const auto& node : start_nodes) {
-    unvisited.emplace(0, node);
+    unvisited.emplace(static_cast<int>(heuristic(node)), 0, node);
   }
 
   while (!unvisited.empty()) {
     // 3. From the unvisited set, select the current node to be the one
     // with the smallest (finite) distance
-    auto [distance, current] = unvisited.top();
+    auto [f, g_enqueued, current] = unvisited.top();
     unvisited.pop();
 
-    // If a shorter path was found earlier, skip current one
-    if (distances.find(current)->second < distance) {
+    // Skip stale entries — a better g was found after this was enqueued
+    if (distances.find(current)->second < g_enqueued) {
       continue;
     }
 
@@ -130,14 +138,16 @@ constexpr flat_map<Node, int> shortest_distances_dijkstra(
     // 4. For the current node, consider all of its unvisited neighbors
     // and update their distances through the current node
     for (const auto& neighbor : get_reachable_neighbors(current)) {
-      const auto new_neighbor_dist = distance + neighbor.distance;
+      const int tentative_g = g_enqueued + neighbor.distance;
       auto existing_it = distances.find(neighbor.node);
       if (existing_it != std::end(distances)) {
         // Neighbor already visited, update the distance
-        const auto neighbor_dist = existing_it->second;
-        if (new_neighbor_dist < neighbor_dist) {
-          existing_it->second = new_neighbor_dist;
-          unvisited.emplace(new_neighbor_dist, neighbor.node);
+        const int neighbor_g = existing_it->second;
+        if (tentative_g < neighbor_g) {
+          existing_it->second = tentative_g;
+          const int f_new =
+              tentative_g + static_cast<int>(heuristic(neighbor.node));
+          unvisited.emplace(f_new, tentative_g, neighbor.node);
           if constexpr (!all_predecessors) {
             if (use_predecessors) {
               (*predecessors_out)[neighbor.node] = current;
@@ -145,14 +155,15 @@ constexpr flat_map<Node, int> shortest_distances_dijkstra(
           }
         }
         if constexpr (all_predecessors) {
-          if (use_predecessors && (new_neighbor_dist <= neighbor_dist)) {
+          if (use_predecessors && (tentative_g <= neighbor_g)) {
             (*predecessors_out)[neighbor.node].emplace(current);
           }
         }
       } else {
-        // Neighbor hasn't been visited yet
-        distances.try_emplace(neighbor.node, new_neighbor_dist);
-        unvisited.emplace(new_neighbor_dist, neighbor.node);
+        distances.try_emplace(neighbor.node, tentative_g);
+        const int f_new =
+            tentative_g + static_cast<int>(heuristic(neighbor.node));
+        unvisited.emplace(f_new, tentative_g, neighbor.node);
         if (use_predecessors) {
           if constexpr (all_predecessors) {
             (*predecessors_out)[neighbor.node].emplace(current);
@@ -191,6 +202,8 @@ template <has_value_type Container>
 all_nodes_encountered(Container&&)
     -> all_nodes_encountered<typename Container::value_type>;
 
+// Dijkstra convenience overloads (zero heuristic)
+
 template <class Node, class NeighborsFn,
           class PredecessorMap = predecessor_map<Node>>
 constexpr auto shortest_distances_dijkstra(
@@ -199,7 +212,8 @@ constexpr auto shortest_distances_dijkstra(
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
       std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
-      std::forward<NeighborsFn>(get_reachable_neighbors), {}, predecessors_out);
+      std::forward<NeighborsFn>(get_reachable_neighbors), constant_value<int>{},
+      {}, predecessors_out);
 }
 template <class Node, class NeighborsFn,
           class PredecessorMap = predecessor_map<Node>>
@@ -209,7 +223,7 @@ constexpr auto shortest_distances_dijkstra(
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
       std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
-      std::forward<NeighborsFn>(get_reachable_neighbors),
+      std::forward<NeighborsFn>(get_reachable_neighbors), constant_value<int>{},
       equal_to_value{std::forward<Node>(end_node)}, predecessors_out);
 }
 template <class Node, class NeighborsFn,
@@ -221,7 +235,7 @@ constexpr auto shortest_distances_dijkstra(
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
       std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
-      std::forward<NeighborsFn>(get_reachable_neighbors),
+      std::forward<NeighborsFn>(get_reachable_neighbors), constant_value<int>{},
       all_nodes_encountered{end_nodes}, predecessors_out);
 }
 template <class Node, class NeighborsFn,
@@ -233,7 +247,7 @@ constexpr auto shortest_distances_dijkstra(
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
       std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
-      std::forward<NeighborsFn>(get_reachable_neighbors),
+      std::forward<NeighborsFn>(get_reachable_neighbors), constant_value<int>{},
       all_nodes_encountered{end_nodes}, predecessors_out);
 }
 template <class Node, class NeighborsFn,
@@ -245,7 +259,7 @@ constexpr auto shortest_distances_dijkstra(
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
       std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
-      std::forward<NeighborsFn>(get_reachable_neighbors),
+      std::forward<NeighborsFn>(get_reachable_neighbors), constant_value<int>{},
       std::forward<EndReachedFn>(end_reached), predecessors_out);
 }
 template <class Node, class NeighborsFn,
@@ -259,7 +273,37 @@ constexpr auto shortest_distances_dijkstra(
   using node_t = std::remove_cvref_t<Node>;
   return shortest_distances_dijkstra(
       std::span<const node_t>{start_nodes},
+      std::forward<NeighborsFn>(get_reachable_neighbors), constant_value<int>{},
+      std::forward<EndReachedFn>(end_reached), predecessors_out);
+}
+
+// A* convenience overloads (caller-supplied heuristic)
+
+template <class Node, class NeighborsFn, class HeuristicFn,
+          class PredecessorMap = predecessor_map<Node>>
+constexpr auto shortest_distances_astar(
+    Node&& start_node, NeighborsFn&& get_reachable_neighbors,
+    HeuristicFn&& heuristic, Node&& end_node,
+    PredecessorMap* predecessors_out = nullptr) {
+  using node_t = std::remove_cvref_t<Node>;
+  return shortest_distances_dijkstra(
+      std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
       std::forward<NeighborsFn>(get_reachable_neighbors),
+      std::forward<HeuristicFn>(heuristic),
+      equal_to_value{std::forward<Node>(end_node)}, predecessors_out);
+}
+template <class Node, class NeighborsFn, class HeuristicFn,
+          class EndReachedFn = constant_value<bool>,
+          class PredecessorMap = predecessor_map<Node>>
+constexpr auto shortest_distances_astar(
+    Node&& start_node, NeighborsFn&& get_reachable_neighbors,
+    HeuristicFn&& heuristic, EndReachedFn&& end_reached = {},
+    PredecessorMap* predecessors_out = nullptr) {
+  using node_t = std::remove_cvref_t<Node>;
+  return shortest_distances_dijkstra(
+      std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
+      std::forward<NeighborsFn>(get_reachable_neighbors),
+      std::forward<HeuristicFn>(heuristic),
       std::forward<EndReachedFn>(end_reached), predecessors_out);
 }
 
