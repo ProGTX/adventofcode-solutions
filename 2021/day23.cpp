@@ -25,7 +25,7 @@ fn parse(String const& filename) -> Input {
   let lines = aoc::views::read_lines(filename, aoc::keep_spaces{}) |
               aoc::ranges::to<Vec<String>>();
   Input rooms;
-  for (usize room_index = 0; room_index < 4; ++room_index) {
+  for (let room_index : Range{0uz, 4uz}) {
     let col = hallway_index(room_index) + 1;
     rooms[room_index] = {lines[3][col], lines[2][col], EMPTY, EMPTY};
   }
@@ -52,12 +52,62 @@ fn hallway_path(Hallway const& hallway, usize hall_index, usize room_index)
   let hall_above_room = hallway_index(room_index);
   let from = std::min(hall_above_room, hall_index);
   let to = std::max(hall_above_room, hall_index);
-  for (usize i = from; i <= to; ++i) {
+  for (let i : Range{from, to + 1}) {
     if ((i != hall_index) && (hallway[i] >= 'A') && (hallway[i] <= 'D')) {
       return None;
     }
   }
   return std::pair{from, to};
+}
+
+fn heuristic(Configuration const& config, usize room_size) -> i32 {
+  auto cost = i32{};
+
+  for (let h : Range{0uz, config.hallway.size()}) {
+    let c = config.hallway[h];
+    if ((c < 'A') || (c > 'D')) {
+      continue;
+    }
+    let target_room = static_cast<usize>(c - 'A');
+    let steps = std::abs(static_cast<i32>(h) -
+                         static_cast<i32>(hallway_index(target_room))) +
+                1;
+    cost += steps * static_cast<i32>(get_cost(c));
+  }
+
+  for (let r : Range{0uz, 4uz}) {
+    for (let s : Range{0uz, room_size}) {
+      let c = config.rooms[r][s];
+      if (c == EMPTY) {
+        continue;
+      }
+      let target_room = static_cast<usize>(c - 'A');
+
+      if (target_room == r) {
+        // Settled if all slots below are also in the correct room
+        bool below_ok = true;
+        for (usize b = 0; b < s; ++b) {
+          if (config.rooms[r][b] == EMPTY ||
+              static_cast<usize>(config.rooms[r][b] - 'A') != r) {
+            below_ok = false;
+            break;
+          }
+        }
+        if (below_ok)
+          continue;
+        // Must exit and re-enter (wrong amphipod is stuck below)
+        let steps = static_cast<i32>(room_size - s) + 1;
+        cost += steps * static_cast<i32>(get_cost(c));
+      } else {
+        let steps_out = static_cast<i32>(room_size - s);
+        let h_steps = std::abs(static_cast<i32>(hallway_index(r)) -
+                               static_cast<i32>(hallway_index(target_room)));
+        cost += (steps_out + h_steps + 1) * static_cast<i32>(get_cost(c));
+      }
+    }
+  }
+
+  return cost;
 }
 
 fn solve(Rooms const& rooms, usize room_size) -> u32 {
@@ -74,7 +124,7 @@ fn solve(Rooms const& rooms, usize room_size) -> u32 {
   }
   let end = Configuration{HALLWAY, std::move(end_rooms)};
 
-  let distances = aoc::shortest_distances_dijkstra(
+  let distances = aoc::shortest_distances_astar(
       start,
       [&](Configuration const& current) {
         auto neighbors = Vec<aoc::dijkstra_neighbor_t<Configuration>>{};
@@ -192,6 +242,7 @@ fn solve(Rooms const& rooms, usize room_size) -> u32 {
 
         return neighbors;
       },
+      [&](Configuration const& config) { return heuristic(config, room_size); },
       end);
 
   return distances.find(end)->second;
