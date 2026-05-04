@@ -152,38 +152,37 @@ fn solve_case1(rooms: &Rooms) -> u32 {
                 if ((*hall == EMPTY) || (*hall == FORBIDDEN)) {
                     continue;
                 }
-                for (room_index, room) in current.rooms.iter().enumerate() {
-                    let path = hallway_path(&current.hallway, hall_index, room_index);
-                    if (path.is_none()) {
-                        continue;
-                    }
-                    let (room_pos, move_to_bottom) = if (room[ROOM_BOTTOM] == EMPTY) {
-                        (ROOM_BOTTOM, 2)
-                    } else if (correct_room(room[ROOM_BOTTOM], room_index)
-                        && (room[ROOM_TOP] == EMPTY))
-                    {
-                        (ROOM_TOP, 1)
-                    } else {
-                        continue;
-                    };
-
-                    let amphipod = *hall;
-                    let distance = (move_to_bottom + path.unwrap().1 - path.unwrap().0) as u32;
-
-                    let mut new_hallway = current.hallway;
-                    new_hallway[hall_index] = EMPTY;
-
-                    let mut new_rooms = current.rooms;
-                    new_rooms[room_index][room_pos] = amphipod;
-
-                    neighbors.push(DijkstraState {
-                        data: Configuration {
-                            hallway: new_hallway,
-                            rooms: new_rooms,
-                        },
-                        distance: distance * get_cost(amphipod),
-                    });
+                let amphipod = *hall;
+                let room_index = numeric(amphipod) as usize;
+                let room = &current.rooms[room_index];
+                let path = hallway_path(&current.hallway, hall_index, room_index);
+                if (path.is_none()) {
+                    continue;
                 }
+                let (room_pos, move_to_bottom) = if (room[ROOM_BOTTOM] == EMPTY) {
+                    (ROOM_BOTTOM, 2)
+                } else if (correct_room(room[ROOM_BOTTOM], room_index) && (room[ROOM_TOP] == EMPTY))
+                {
+                    (ROOM_TOP, 1)
+                } else {
+                    continue;
+                };
+
+                let distance = (move_to_bottom + path.unwrap().1 - path.unwrap().0) as u32;
+
+                let mut new_hallway = current.hallway;
+                new_hallway[hall_index] = EMPTY;
+
+                let mut new_rooms = current.rooms;
+                new_rooms[room_index][room_pos] = amphipod;
+
+                neighbors.push(DijkstraState {
+                    data: Configuration {
+                        hallway: new_hallway,
+                        rooms: new_rooms,
+                    },
+                    distance: distance * get_cost(amphipod),
+                });
             }
 
             return neighbors;
