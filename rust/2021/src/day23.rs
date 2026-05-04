@@ -1,6 +1,6 @@
 use aoc::dijkstra::DijkstraState;
 
-type Rooms = [[char; 2]; 4];
+type Rooms = [[char; 4]; 4];
 type Hallway = [char; 11];
 
 const fn hallway_index(room_index: usize) -> usize {
@@ -14,7 +14,7 @@ fn parse(filename: &str) -> Rooms {
     std::array::from_fn(|room_index| {
         // +1 for the leading # in the file line
         let col = hallway_index(room_index) + 1;
-        [bottom[col], top[col]]
+        [bottom[col], top[col], EMPTY, EMPTY]
     })
 }
 
@@ -22,8 +22,6 @@ const HALLWAY: Hallway = //
     ['.', '.', 'X', '.', 'X', '.', 'X', '.', 'X', '.', '.'];
 const EMPTY: char = HALLWAY[0];
 const FORBIDDEN: char = HALLWAY[2];
-const ROOM_TOP: usize = 1;
-const ROOM_BOTTOM: usize = 0;
 
 const fn numeric(c: char) -> u8 {
     c as u8 - b'A' as u8
@@ -68,31 +66,28 @@ impl std::fmt::Display for Configuration {
         let [r0, r1, r2, r3] = self.rooms;
         writeln!(f, "#############")?;
         writeln!(f, "#{hallway}#")?;
-        writeln!(
-            f,
-            "###{0}#{1}#{2}#{3}###",
-            r0[ROOM_TOP], r1[ROOM_TOP], r2[ROOM_TOP], r3[ROOM_TOP]
-        )?;
-        writeln!(
-            f,
-            "  #{0}#{1}#{2}#{3}#",
-            r0[ROOM_BOTTOM], r1[ROOM_BOTTOM], r2[ROOM_BOTTOM], r3[ROOM_BOTTOM]
-        )?;
+        writeln!(f, "###{0}#{1}#{2}#{3}###", r0[1], r1[1], r2[1], r3[1])?;
+        writeln!(f, "  #{0}#{1}#{2}#{3}#", r0[0], r1[0], r2[0], r3[0])?;
         writeln!(f, "  #########")
     }
 }
 
-fn solve_case1(rooms: &Rooms) -> u32 {
+fn solve(rooms: &Rooms, room_size: usize) -> u32 {
     let start = Configuration {
         hallway: HALLWAY,
         rooms: *rooms,
     };
+    let mut end_rooms = [[EMPTY; 4]; 4];
+    for room_index in 0..4 {
+        for slot in 0..room_size {
+            end_rooms[room_index][slot] = (b'A' + room_index as u8) as char;
+        }
+    }
     let end = Configuration {
         hallway: HALLWAY,
-        rooms: [['A', 'A'], ['B', 'B'], ['C', 'C'], ['D', 'D']],
+        rooms: end_rooms,
     };
     let distances = aoc::dijkstra::shortest_distances(
-        //
         &start,
         |current| *current == end,
         |current| {
@@ -100,36 +95,31 @@ fn solve_case1(rooms: &Rooms) -> u32 {
 
             // Try moving from room to the hallway
             for (room_index, room) in current.rooms.iter().enumerate() {
-                let (amphipod, new_room, move_to_top) = if (room[ROOM_TOP] != EMPTY) {
-                    // println!("{:?}", room);
-                    if (!correct_room(room[ROOM_TOP], room_index)
-                        || !correct_room(room[ROOM_BOTTOM], room_index))
-                    {
-                        (room[ROOM_TOP], ([room[ROOM_BOTTOM], EMPTY]), 1)
-                    } else {
-                        // Room is already correctly filled
-                        continue;
-                    }
-                } else if (true
-                    && (room[ROOM_BOTTOM] != EMPTY)
-                    && !correct_room(room[ROOM_BOTTOM], room_index))
-                {
-                    (room[ROOM_BOTTOM], ([EMPTY, EMPTY]), 2)
-                } else {
-                    // Nothing to move out
+                let Some(top_slot) = (0..room_size).rev().find(|&i| room[i] != EMPTY)
+                //
+                else {
                     continue;
                 };
+                if (0..=top_slot).all(|i| correct_room(room[i], room_index)) {
+                    continue; // Room settled
+                }
+                let amphipod = room[top_slot];
+                let steps_up = (room_size - top_slot) as u32;
+
+                let mut new_room = *room;
+                new_room[top_slot] = EMPTY;
 
                 for (hall_index, hall) in current.hallway.iter().enumerate() {
                     if (*hall != EMPTY) {
                         continue;
                     }
-                    let path = hallway_path(&current.hallway, hall_index, room_index);
-                    if (path.is_none()) {
+                    let Some(path) = hallway_path(&current.hallway, hall_index, room_index)
+                    //
+                    else {
                         continue;
-                    }
+                    };
 
-                    let distance = (move_to_top + path.unwrap().1 - path.unwrap().0) as u32;
+                    let distance = (steps_up + (path.1 - path.0) as u32);
 
                     let mut new_hallway = current.hallway;
                     new_hallway[hall_index] = amphipod;
@@ -152,29 +142,33 @@ fn solve_case1(rooms: &Rooms) -> u32 {
                 if ((*hall == EMPTY) || (*hall == FORBIDDEN)) {
                     continue;
                 }
+
                 let amphipod = *hall;
                 let room_index = numeric(amphipod) as usize;
                 let room = &current.rooms[room_index];
-                let path = hallway_path(&current.hallway, hall_index, room_index);
-                if (path.is_none()) {
-                    continue;
+
+                if (0..room_size).any(|i| room[i] != EMPTY && !correct_room(room[i], room_index)) {
+                    continue; // Wrong amphipod in room
                 }
-                let (room_pos, move_to_bottom) = if (room[ROOM_BOTTOM] == EMPTY) {
-                    (ROOM_BOTTOM, 2)
-                } else if (correct_room(room[ROOM_BOTTOM], room_index) && (room[ROOM_TOP] == EMPTY))
-                {
-                    (ROOM_TOP, 1)
-                } else {
+                let Some(target) = (0..room_size).find(|&i| room[i] == EMPTY)
+                //
+                else {
+                    continue;
+                };
+                let Some(path) = hallway_path(&current.hallway, hall_index, room_index)
+                //
+                else {
                     continue;
                 };
 
-                let distance = (move_to_bottom + path.unwrap().1 - path.unwrap().0) as u32;
+                let steps_down = (room_size - target) as u32;
+                let distance = (steps_down + (path.1 - path.0) as u32);
 
                 let mut new_hallway = current.hallway;
                 new_hallway[hall_index] = EMPTY;
 
                 let mut new_rooms = current.rooms;
-                new_rooms[room_index][room_pos] = amphipod;
+                new_rooms[room_index][target] = amphipod;
 
                 neighbors.push(DijkstraState {
                     data: Configuration {
@@ -192,9 +186,24 @@ fn solve_case1(rooms: &Rooms) -> u32 {
     return distances[&end];
 }
 
-fn solve_case2(rooms: &Rooms) -> u64 {
-    // TODO: Implement Part 2
-    0
+fn solve_case1(rooms: &Rooms) -> u32 {
+    solve(rooms, 2)
+}
+
+fn solve_case2(rooms: &Rooms) -> u32 {
+    // #D#C#B#A# -> slot 2
+    // #D#B#A#C# -> slot 1
+    let inserted_upper = ['D', 'C', 'B', 'A'];
+    let inserted_lower = ['D', 'B', 'A', 'C'];
+    let rooms4 = std::array::from_fn(|i| {
+        [
+            rooms[i][0],
+            inserted_lower[i],
+            inserted_upper[i],
+            rooms[i][1],
+        ]
+    });
+    solve(&rooms4, 4)
 }
 
 fn main() {
@@ -205,6 +214,6 @@ fn main() {
     assert_eq!(14350, solve_case1(&input));
 
     println!("Part 2");
-    // assert_eq!(XXX, solve_case2(&example));
-    // assert_eq!(XXX, solve_case2(&input));
+    assert_eq!(44169, solve_case2(&example));
+    assert_eq!(49742, solve_case2(&input));
 }
