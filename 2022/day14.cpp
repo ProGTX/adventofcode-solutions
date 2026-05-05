@@ -1,146 +1,141 @@
 // https://adventofcode.com/2022/day/14
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
-#include <algorithm>
 #include <array>
-#include <iterator>
-#include <memory>
-#include <numeric>
 #include <print>
 #include <ranges>
-#include <string>
-#include <string_view>
-#include <vector>
 
-enum special_chars : char {
+namespace stdv = std::views;
+
+enum SpecialChar : char {
   empty = '.',
   rock = '#',
   start = '+',
   sand = 'o',
 };
 
+using RockLine = std::array<point, 2>;
+using RockLines = Vec<RockLine>;
+using CaveMap = aoc::grid<char>;
+constexpr let DEBUG_PRINT = false;
+
+fn parse_rock_lines(str line) -> RockLines {
+  let rock_pairs = aoc::split_to_vec(line, " -> ");
+  let to_point = [](str s) { return aoc::split<point>(aoc::trim(s), ','); };
+  return rock_pairs |
+         stdv::adjacent<2> |
+         stdv::transform([&](let& pair) -> RockLine {
+           let & [ a, b ] = pair;
+           return {to_point(a), to_point(b)};
+         }) |
+         aoc::ranges::to<RockLines>();
+}
+
+auto parse(String const& filename) -> RockLines {
+  return aoc::views::read_lines(filename) |
+         stdv::transform(parse_rock_lines) |
+         stdv::join |
+         aoc::ranges::to<RockLines>();
+}
+
 template <bool with_ground>
-int solve_case(const std::string& filename) {
-  using rock_line_t = std::array<point, 2>;
-  std::vector<rock_line_t> rock_lines;
-
-  aoc::min_max_helper min_max;
-
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    // Simplify "->" delimiter to a single char
-    std::string transformed_line(line.size(), 0);
-    std::ranges::transform(line, std::begin(transformed_line), [](char value) {
-      if (value == '>') {
-        return ' ';
-      }
-      return value;
-    });
-    auto rock_pairs = aoc::split_to_vec(transformed_line, '-');
-    auto previous = aoc::split<point>(rock_pairs[0], ',');
-    min_max.update(previous);
-    for (const auto& rock_pair_str : rock_pairs | std::views::drop(1)) {
-      auto current = aoc::split<point>(aoc::trim(rock_pair_str), ',');
-      min_max.update(current);
-      rock_lines.push_back(rock_line_t{previous, current});
-      previous = current;
-    }
+auto make_cave_map(RockLines const& input) -> std::pair<CaveMap, point> {
+  auto rock_lines = input;
+  auto min_max = aoc::min_max_helper{};
+  for (let& rock_line : rock_lines) {
+    min_max.update(rock_line[0]);
+    min_max.update(rock_line[1]);
   }
 
-  using cave_map_t = aoc::grid<char>;
-
-  point sand_starter{500, 0};
-  min_max.update(sand_starter);
+  auto sand_start = point{500, 0};
+  min_max.update(sand_start);
 
   if constexpr (with_ground) {
-    auto height = min_max.max_value.y - min_max.min_value.y + 2;
-    rock_line_t rock_line{sand_starter + point{-height, height},
-                          sand_starter + point{height, height}};
+    let height = min_max.max_value.y - min_max.min_value.y + 2;
+    let rock_line = RockLine{sand_start + point{-height, height},
+                             sand_start + point{height, height}};
     min_max.update(rock_line[0]);
     min_max.update(rock_line[1]);
     rock_lines.push_back(rock_line);
   }
 
-  auto cave_dimensions = min_max.grid_size();
-  cave_map_t cave_map(empty, cave_dimensions.y, cave_dimensions.x);
+  let cave_dimensions = min_max.grid_size();
+  auto cave_map = CaveMap(empty, cave_dimensions.y, cave_dimensions.x);
 
-  const auto adjust_coordinates = [&](const point& p) {
+  let adjust_coordinates = [&](point const& p) {
     return p - min_max.min_value;
   };
-  const auto modify_cave_map = [&](char value, const point& p) {
-    auto coords = adjust_coordinates(p);
+  let modify_cave_map = [&](char value, point const& p) {
+    let coords = adjust_coordinates(p);
     cave_map.modify(value, coords.y, coords.x);
   };
 
-  for (const auto& rock_line : rock_lines) {
+  for (let& rock_line : rock_lines) {
     auto diff = rock_line[1] - rock_line[0];
-    diff = diff / diff.abs();
-    if (diff.x == 0) {
-      diff.x = 1;
+    auto step = point{(diff.x > 0) - (diff.x < 0), (diff.y > 0) - (diff.y < 0)};
+    auto pos = rock_line[0];
+    while (pos != rock_line[1]) {
+      modify_cave_map(rock, pos);
+      pos = pos + step;
     }
-    if (diff.y == 0) {
-      diff.y = 1;
-    }
-    for (int row = rock_line[0].y; row != rock_line[1].y + diff.y;
-         row += diff.y) {
-      for (int column = rock_line[0].x; column != rock_line[1].x + diff.x;
-           column += diff.x) {
-        modify_cave_map(rock, point{column, row});
-      }
-    }
+    modify_cave_map(rock, rock_line[1]);
   }
 
-  modify_cave_map(start, sand_starter);
+  modify_cave_map(start, sand_start);
 
-  cave_map.print_all();
+  if constexpr (DEBUG_PRINT) {
+    cave_map.print_all();
+  }
 
-  const auto is_valid_index = [&](int row, int column) {
+  return {std::move(cave_map), adjust_coordinates(sand_start)};
+}
+
+template <bool with_ground>
+auto solve_case(RockLines const& input) -> int {
+  auto [cave_map, adjusted_start] = make_cave_map<with_ground>(input);
+
+  let is_valid_index = [&](int row, int column) {
     return (row >= 0) &&
            (row < cave_map.num_rows()) &&
            (column >= 0) &&
            (column < cave_map.row_length());
   };
 
-  const auto is_empty = [&](int row, int column) {
-    return (cave_map.at(row, column) == empty);
+  let is_empty = [&](int row, int column) {
+    let v = cave_map.at(row, column);
+    return v == empty || v == start;
   };
 
-  const auto try_insert_grain = [&](int row, int column) {
-    bool within_bounds = true;
-
-    // This function returns whether a move was successful
-    const auto try_move = [&](int new_row, int new_column) {
-      if (!is_valid_index(new_row, new_column)) {
-        row = new_row;
-        column = new_column;
-        // Move was successful, but it's out of bounds
-        within_bounds = false;
-        return true;
-      }
-      if (is_empty(new_row, new_column)) {
-        row = new_row;
-        column = new_column;
-        within_bounds = true;
-        return true;
-      }
-      // Move was not successful, try something else
-      return false;
-    };
-
+  let try_insert_grain = [&](int row, int column) {
+    auto within_bounds = true;
     while (within_bounds) {
-      // Try to fall down
-      if (try_move(row + 1, column)) {
-        continue;
+      auto moved = false;
+      for (auto [dy, dx] : {
+               std::pair{1, 0},  // down
+               std::pair{1, -1}, // left
+               std::pair{1, 1},  // right
+           }) {
+        let y = row + dy;
+        let x = column + dx;
+        if (!is_valid_index(y, x)) {
+          row = y;
+          column = x;
+          within_bounds = false;
+          moved = true;
+          break;
+        }
+        if (is_empty(y, x)) {
+          row = y;
+          column = x;
+          moved = true;
+          break;
+        }
       }
-      // Try to fall on the left
-      if (try_move(row + 1, column - 1)) {
-        continue;
+      if (!moved) {
+        within_bounds = false;
       }
-      // Try to fall on the right
-      if (try_move(row + 1, column + 1)) {
-        continue;
-      }
-      within_bounds = false;
     }
     if (is_valid_index(row, column) && is_empty(row, column)) {
       cave_map.modify(sand, row, column);
@@ -151,29 +146,27 @@ int solve_case(const std::string& filename) {
   };
 
   // Simulate sand falling
-  int num_grains = 0;
-  const auto adjusted_start = adjust_coordinates(sand_starter);
-  const auto index_increase = cave_map.row_length();
+  auto num_grains = 0;
+  let index_increase = cave_map.row_length();
   while (true) {
-    bool sand_success = false;
+    auto sand_success = false;
     auto previous_index =
         cave_map.linear_index(adjusted_start.y, adjusted_start.x);
     // First go down from the source to the lowest level
     for (auto linear_index = previous_index + index_increase;
          (linear_index < cave_map.size()); linear_index += index_increase) {
-      auto value = cave_map.data()[linear_index];
+      let value = cave_map.data()[linear_index];
       if (value == start) {
         AOC_UNREACHABLE("This condition shouldn't be reached");
       }
       if ((value == rock) || (value == sand)) {
         // Found solid ground, try to insert it above
-        int row = previous_index / index_increase;
-        int column = previous_index % index_increase;
+        let row = static_cast<int>(previous_index / index_increase);
+        let column = static_cast<int>(previous_index % index_increase);
         if (try_insert_grain(row, column)) {
           sand_success = true;
           break;
         } else {
-          sand_success = false;
           break;
         }
       }
@@ -185,22 +178,23 @@ int solve_case(const std::string& filename) {
     ++num_grains;
   }
 
-  if constexpr (with_ground) {
-    // Our simulation doesn't override the starting point, add 1
-    ++num_grains;
+  if constexpr (DEBUG_PRINT) {
+    cave_map.print_all();
   }
-
-  cave_map.print_all();
 
   return num_grains;
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(24, solve_case<false>("day14.example"));
-  AOC_EXPECT_RESULT(655, solve_case<false>("day14.input"));
+  let example = parse("day14.example");
+  AOC_EXPECT_RESULT(24, solve_case<false>(example));
+  let input = parse("day14.input");
+  AOC_EXPECT_RESULT(655, solve_case<false>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(93, solve_case<true>("day14.example"));
-  AOC_EXPECT_RESULT(26484, solve_case<true>("day14.input"));
+  AOC_EXPECT_RESULT(93, solve_case<true>(example));
+  AOC_EXPECT_RESULT(26484, solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
