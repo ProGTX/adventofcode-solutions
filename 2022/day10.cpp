@@ -1,159 +1,114 @@
 // https://adventofcode.com/2022/day/10
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
-#include <algorithm>
 #include <array>
-#include <functional>
-#include <iterator>
-#include <memory>
-#include <numeric>
 #include <print>
 #include <ranges>
-#include <string>
-#include <string_view>
-#include <vector>
+#include <stdexcept>
 
-struct instruction {
-  enum type {
-    noop,
-    addx,
-  };
+constexpr let CRT_WIDTH = 40;
+constexpr let CRT_HEIGHT = 6;
+using Monitor = aoc::array_grid<char, CRT_WIDTH, CRT_HEIGHT>;
+using Result = std::pair<int, String>;
 
-  constexpr instruction() : instruction{noop, 1, 0} {}
-
-  static constexpr instruction make_addx(int value) { return {addx, 2, value}; }
-
-  constexpr void clear() { *this = instruction{}; }
-
-  constexpr bool done() const { return m_cycles_left <= 0; }
-
-  constexpr int tick(int register_value) {
-    if (this->done()) {
-      return register_value;
-    }
-    --m_cycles_left;
-    if (m_cycles_left > 0) {
-      return register_value;
-    }
-    switch (m_type) {
-      case addx:
-        return register_value + m_value;
-      default:
-        return register_value;
-    }
-  }
-
-  constexpr std::string_view get_type_str() const {
-    switch (m_type) {
-      case noop:
-        return "noop";
-      case addx:
-        return "addx";
-      default:
-        return "";
-    }
-  }
-
-  constexpr int get_duration() const { return m_duration; }
-
- protected:
-  constexpr instruction(type op_type, int duration, int value)
-      : m_type{op_type},
-        m_duration{duration},
-        m_cycles_left{duration},
-        m_value{value} {}
-
- private:
-  type m_type;
-  int m_duration;
-  int m_cycles_left;
-  int m_value;
+enum class Operation {
+  noop = 0,
+  addx = 1,
 };
 
-template <bool insert_noop>
-int solve_case(const std::string& filename) {
-  static constexpr size_t width = 40;
-  static constexpr size_t height = 6;
+struct Instruction {
+  Operation operation = Operation::noop;
+  int value = 0;
+};
+using Instructions = Vec<Instruction>;
 
-  using crt = aoc::array_grid<char, width, height>;
-  crt monitor;
-  typename crt::row_t row;
-  for (int i = 0; i < width; ++i) {
-    row[i] = '.';
+fn parse_instruction(str line) -> Instruction {
+  if (line == "noop") {
+    return {};
   }
-  for (int i = 0; i < height; ++i) {
-    monitor.add_row(row);
+  let[operation, value_str] = aoc::split_once(line, ' ');
+  if (operation == "addx") {
+    return {Operation::addx, aoc::to_number<int>(value_str)};
   }
+  throw std::runtime_error("Invalid instruction " + String{operation});
+}
 
-  int signal_strength = 0;
+auto parse(String const& filename) -> Instructions {
+  return aoc::views::read_lines(filename) |
+         std::views::transform(parse_instruction) |
+         aoc::ranges::to<Instructions>();
+}
 
-  int register_X = 1;
-  int pc = 1;
+fn draw(Monitor& monitor, int cycle, int register_x) {
+  let column = (cycle - 1) % CRT_WIDTH;
+  let row = ((cycle - 1) / CRT_WIDTH) % CRT_HEIGHT;
+  let pixel = (aoc::abs(column - register_x) <= 1) ? '#' : '.';
+  monitor.modify(pixel, row, column);
+}
 
-  constexpr int pipeline_length = 2;
-  std::array<instruction, pipeline_length> pipeline;
-  int row_index = -1;
+fn signal_strength(int cycle, int register_x) -> int {
+  if ((cycle == 20) || (((cycle - 20) % 40) == 0)) {
+    return cycle * register_x;
+  }
+  return 0;
+}
 
-  const auto draw = [&] {
-    int column_index = (pc - 1) % width;
-    row_index = (column_index == 0) ? ((row_index + 1) % height) : row_index;
-    auto pixel = std::invoke([&] {
-      if (std::abs(column_index - register_X) <= 1) {
-        return '#';
-      }
-      return '.';
-    });
-    monitor.modify(pixel, row_index, column_index);
+fn duration(Operation operation) -> int {
+  return static_cast<int>(operation) + 1;
+}
+
+fn solve_case(Instructions const& instructions) -> Result {
+  auto signal = 0;
+  auto monitor = Monitor{'.'};
+  auto cycle = 1;
+  auto register_x = 1;
+
+  let run_cycle = [&] {
+    signal += signal_strength(cycle, register_x);
+    draw(monitor, cycle, register_x);
+    ++cycle;
   };
 
-  const auto shift_pipeline = [&]() {
-    // During cycle
-    if ((pc == 20) || (((pc - 20) % 40) == 0)) {
-      signal_strength += (pc * register_X);
+  for (let instruction : instructions) {
+    for (let _ : Range{0, duration(instruction.operation)}) {
+      run_cycle();
     }
-    draw();
-    for (auto& op : pipeline) {
-      register_X = op.tick(register_X);
+    if (instruction.operation == Operation::addx) {
+      register_x += instruction.value;
     }
-    // After cycle
-    ++pc;
-    std::shift_right(std::begin(pipeline), std::end(pipeline), 1);
-    // Always insert a noop at the beginning, should be overriden later
-    pipeline.front().clear();
-  };
-
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [op, value] = aoc::split_once(line, ' ');
-
-    // Place new instruction into the pipeline
-    if (op == "noop") {
-      pipeline.front().clear();
-    } else if (op == "addx") {
-      pipeline.front() = instruction::make_addx(aoc::to_number<int>(value));
-    } else {
-      throw std::runtime_error("Invalid instruction " + std::string{op});
-    }
-
-    if constexpr (insert_noop) {
-      // Instruction needs to block until it's finished
-      auto number_noops = pipeline.front().get_duration() - 1;
-      for (int i = 0; i < number_noops; ++i) {
-        shift_pipeline();
-        pipeline.front().clear();
-      }
-    }
-
-    shift_pipeline();
   }
 
-  monitor.print_all();
-
-  return signal_strength;
+  return {signal, String{monitor.data().data(), monitor.size()}};
 }
 
 int main() {
-  AOC_EXPECT_RESULT(13140, solve_case<true>("day10.example"));
-  AOC_EXPECT_RESULT(11820, solve_case<true>("day10.input"));
+  std::println("Part 1");
+  let example = parse("day10.example");
+  let[example_signal, example_monitor] = solve_case(example);
+  AOC_EXPECT_RESULT(13140, example_signal);
+  let input = parse("day10.input");
+  let[input_signal, input_monitor] = solve_case(input);
+  AOC_EXPECT_RESULT(11820, input_signal);
+
+  std::println("Part 2");
+  constexpr let expected_example_out = str( //
+      "##..##..##..##..##..##..##..##..##..##.."
+      "###...###...###...###...###...###...###."
+      "####....####....####....####....####...."
+      "#####.....#####.....#####.....#####....."
+      "######......######......######......####"
+      "#######.......#######.......#######.....");
+  AOC_EXPECT_RESULT(expected_example_out, example_monitor);
+  constexpr let expected_input_out = str( //
+      "####.###....##.###..###..#..#..##..#..#."
+      "#....#..#....#.#..#.#..#.#.#..#..#.#..#."
+      "###..#..#....#.###..#..#.##...#..#.####."
+      "#....###.....#.#..#.###..#.#..####.#..#."
+      "#....#....#..#.#..#.#.#..#.#..#..#.#..#."
+      "####.#.....##..###..#..#.#..#.#..#.#..#.");
+  AOC_EXPECT_RESULT(expected_input_out, input_monitor);
+
   AOC_RETURN_CHECK_RESULT();
 }
