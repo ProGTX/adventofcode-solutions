@@ -205,11 +205,10 @@ where
 
 impl<T> Hash for Point<T>
 where
-    T: Clone,
-    usize: From<T>,
+    T: Hash,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_usize(usize::from(self.x.clone()));
-        state.write_usize(usize::from(self.y.clone()));
+        self.x.hash(state);
+        self.y.hash(state);
     }
 }
