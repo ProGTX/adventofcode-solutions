@@ -25,9 +25,9 @@ fn solve_case2(std::span<const std::string> data) -> uint64_t {
 
 int main() {
   std::println("Part 1");
+
   const auto example = parse("day24.example");
   AOC_EXPECT_RESULT(0, solve_case1(example));
-
   const auto input = parse("day24.input");
   // AOC_EXPECT_RESULT(XXX, solve_case1(input));
 
