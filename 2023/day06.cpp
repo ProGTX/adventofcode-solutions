@@ -4,9 +4,8 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <iostream>
 #include <map>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -78,15 +77,14 @@ int_t solve_case(const std::string& filename) {
   }
 
   int_t error_margin = num_ways_to_win(total_times, record_distances);
-  std::cout << filename << " -> " << error_margin << std::endl;
   return error_margin;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(288, (solve_case<false>("day06.example")));
   AOC_EXPECT_RESULT(1624896, (solve_case<false>("day06.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(71503, (solve_case<true>("day06.example")));
   AOC_EXPECT_RESULT(32583852, (solve_case<true>("day06.input")));
   AOC_RETURN_CHECK_RESULT();

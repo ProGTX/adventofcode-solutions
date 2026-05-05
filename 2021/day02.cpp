@@ -4,10 +4,9 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <iterator>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -31,7 +30,6 @@ int solve_part1(const std::string& filename) {
     }
   }
 
-  std::cout << filename << " -> " << (horizontal * depth) << std::endl;
   return (horizontal * depth);
 }
 
@@ -55,15 +53,15 @@ int solve_part2(const std::string& filename) {
     }
   }
 
-  std::cout << filename << " -> " << (horizontal * depth) << std::endl;
   return (horizontal * depth);
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(150, solve_part1("day02.example"));
   AOC_EXPECT_RESULT(2120749, solve_part1("day02.input"));
-  // std::cout << "Part 2" << std::endl;
+
+  std::println("Part 2");
   AOC_EXPECT_RESULT(900, solve_part2("day02.example"));
   AOC_EXPECT_RESULT(2138382217, solve_part2("day02.input"));
   AOC_RETURN_CHECK_RESULT();

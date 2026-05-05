@@ -4,10 +4,9 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <iterator>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -90,12 +89,11 @@ int solve_case(const std::string& filename) {
     ++id;
   }
 
-  std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Asserts" << std::endl;
+  std::println("Asserts");
   AOC_EXPECT_RESULT(
       1, (cube_power<config1>(std::span<const std::string_view>{
              {"3 blue, 4 red"sv, "1 red, 2 green, 6 blue"sv, "2 green"sv}})));
@@ -111,10 +109,10 @@ int main() {
                 {"8 green, 6 blue, 20 red"sv, "5 blue, 4 red, 13 green"sv,
                  "5 green, 1 red"sv}})));
 
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(8, solve_case<config1>("day02.example"));
   AOC_EXPECT_RESULT(2600, solve_case<config1>("day02.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(2286, solve_case<config2>("day02.example"));
   AOC_EXPECT_RESULT(86036, solve_case<config2>("day02.input"));
   AOC_RETURN_CHECK_RESULT();

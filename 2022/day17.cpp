@@ -7,11 +7,10 @@
 #include <cmath>
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <memory>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -178,7 +177,6 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
     return std::tuple{static_cast<rock_index_t>(rock_index), current_height - 1,
                       chamber.get_row(current_height - 1)};
   });
-  std::cout << aoc::print_range(initial_top_row) << std::endl;
 
   const auto is_same_as_initial = [&](const chamber_row_t& current_top_row) {
     for (int c = 1; c < initial_top_row.size() - 1; ++c) {
@@ -204,7 +202,6 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
         ++rock_index;
       }
       auto current_top_row = chamber.get_row(current_height - 1);
-      std::cout << aoc::print_range(current_top_row) << std::endl;
       if (is_same_as_initial(current_top_row)) {
         break;
       }
@@ -243,10 +240,6 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
     return current_height - 1 - height_before;
   });
 
-  std::cout << "  initial_height " << initial_height << std::endl;
-  std::cout << "  middle_height " << middle_height << std::endl;
-  std::cout << "  leftover_height " << leftover_height << std::endl;
-
   return initial_height + middle_height + leftover_height;
 }
 
@@ -265,16 +258,15 @@ rock_index_t solve_case(const std::string& filename) {
   }
 
   rock_index_t final_height = get_final_height<num_rocks>(pattern);
-  std::cout << filename << " -> " << final_height << std::endl;
   return final_height;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(17, solve_case<10>("day17.example"));
   AOC_EXPECT_RESULT(3068, solve_case<2022>("day17.example"));
   AOC_EXPECT_RESULT(3085, solve_case<2022>("day17.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(1514285714288, solve_case<1000000000000>("day17.example"));
   solve_case<1000000000000>("day17.input");
   AOC_RETURN_CHECK_RESULT();

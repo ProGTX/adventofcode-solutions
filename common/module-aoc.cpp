@@ -20,13 +20,12 @@ module;
 #include <fstream>
 #include <functional>
 #include <initializer_list>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <memory>
 #include <numeric>
 #include <optional>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <set>
 #include <span>
@@ -53,7 +52,6 @@ export module aoc;
 #include "grid.h"
 #include "math.h"
 #include "point.h"
-#include "print.h"
 #include "range_to.h"
 #include "ranges.h"
 #include "ratio.h"

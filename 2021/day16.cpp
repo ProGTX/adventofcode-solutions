@@ -3,7 +3,6 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
-#include <iostream>
 #include <limits>
 #include <print>
 #include <span>

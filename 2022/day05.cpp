@@ -6,11 +6,10 @@
 #include <array>
 #include <exception>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <stack>
 #include <string>
@@ -83,7 +82,6 @@ std::string solve_case(const std::string& filename) {
     }
   }
 
-  std::cout << "Done parsing " << std::endl;
   std::string top_stacks(static_cast<size_t>(num_stacks), ' ');
 
   for (int pos = 0; const auto& stack : crates) {
@@ -93,15 +91,14 @@ std::string solve_case(const std::string& filename) {
     }
   }
 
-  std::cout << filename << " -> " << top_stacks << std::endl;
   return top_stacks;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT("CMZ", solve_case<false>("day05.example"));
   AOC_EXPECT_RESULT("QGTHFZBHV", solve_case<false>("day05.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT("MCD", solve_case<true>("day05.example"));
   AOC_EXPECT_RESULT("MGDMPSZTM", solve_case<true>("day05.input"));
   AOC_RETURN_CHECK_RESULT();

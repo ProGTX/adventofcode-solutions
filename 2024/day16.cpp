@@ -2,8 +2,8 @@
 
 #include "../common/common.h"
 
-#include <iostream>
 #include <optional>
+#include <print>
 #include <ranges>
 #include <string>
 #include <type_traits>
@@ -152,12 +152,12 @@ int solve_case(const std::string& filename) {
   } else {
     sum = tiles_on_best_paths(maze, *config.start_pos, *config.end_pos);
   }
-  std::cout << filename << " -> " << sum << std::endl;
+
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(7036, solve_case<false>("day16.example"));
   AOC_EXPECT_RESULT(11048, solve_case<false>("day16.example2"));
   // https://www.reddit.com/r/adventofcode/comments/1hfhgl1/2024_day_16_part_1_alternate_test_case/
@@ -165,7 +165,7 @@ int main() {
   // https://www.reddit.com/r/adventofcode/comments/1hgyuqm/2024_day_16_part_1/
   AOC_EXPECT_RESULT(5027, solve_case<false>("day16.example4"));
   AOC_EXPECT_RESULT(94436, solve_case<false>("day16.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(45, solve_case<true>("day16.example"));
   // AOC_EXPECT_RESULT(64, solve_case<true>("day16.example2"));
   AOC_EXPECT_RESULT(481, solve_case<true>("day16.input"));

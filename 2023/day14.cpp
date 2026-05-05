@@ -3,8 +3,7 @@
 #include "../common/common.h"
 
 #include <algorithm>
-#include <iostream>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -143,7 +142,6 @@ static_assert(136 == north_load(rocks_fall(test_platform(), aoc::north)));
 
 template <bool run_cycles>
 int solve_case(const std::string& filename) {
-  std::cout << filename << std::endl;
 
   platform_t platform = aoc::read_char_grid(filename);
 
@@ -183,15 +181,14 @@ int solve_case(const std::string& filename) {
     sum = north_load(platform);
   }
 
-  std::cout << "  -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(136, (solve_case<false>("day14.example")));
   AOC_EXPECT_RESULT(108857, (solve_case<false>("day14.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(64, (solve_case<true>("day14.example")));
   AOC_EXPECT_RESULT(95273, (solve_case<true>("day14.input")));
   AOC_RETURN_CHECK_RESULT();

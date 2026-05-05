@@ -4,11 +4,10 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <iterator>
 #include <memory>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -63,8 +62,6 @@ int solve_case(const std::string& filename) {
   }
 
   auto cave_dimensions = min_max.grid_size();
-  std::cout << "Creating cave map " << cave_dimensions.y << ","
-            << cave_dimensions.x << std::endl;
   cave_map_t cave_map(empty, cave_dimensions.y, cave_dimensions.x);
 
   const auto adjust_coordinates = [&](const point& p) {
@@ -195,15 +192,14 @@ int solve_case(const std::string& filename) {
 
   cave_map.print_all();
 
-  std::cout << filename << " -> " << num_grains << std::endl;
   return num_grains;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(24, solve_case<false>("day14.example"));
   AOC_EXPECT_RESULT(655, solve_case<false>("day14.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(93, solve_case<true>("day14.example"));
   AOC_EXPECT_RESULT(26484, solve_case<true>("day14.input"));
   AOC_RETURN_CHECK_RESULT();

@@ -3,7 +3,7 @@
 #include "../common/common.h"
 
 #include <array>
-#include <iostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -155,15 +155,15 @@ int solve_case(const std::string& filename) {
   int sum = 0;
   sum =
       count_cheats<max_cheat_length>(track, *config.start_pos, *config.end_pos);
-  std::cout << filename << " -> " << sum << std::endl;
+
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(1, solve_case<2>("day20.example"));
   AOC_EXPECT_RESULT(1459, solve_case<2>("day20.input"));
-  // std::cout << "Part 2" << std::endl;
+  // std::println("Part 2");
   // AOC_EXPECT_RESULT(285, solve_case<20>("day20.example"));
   // AOC_EXPECT_RESULT(53515, solve_case<20>("day20.input"));
   AOC_RETURN_CHECK_RESULT();

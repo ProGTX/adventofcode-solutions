@@ -3,8 +3,8 @@
 #include "../common/common.h"
 
 #include <array>
-#include <iostream>
 #include <map>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -83,15 +83,14 @@ int solve_case(const std::string& filename) {
 
   auto sum = calculate_antinodes<harmonics>(antennas, grid_size);
 
-  std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(14, solve_case<false>("day08.example"));
   AOC_EXPECT_RESULT(220, solve_case<false>("day08.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(34, solve_case<true>("day08.example"));
   AOC_EXPECT_RESULT(813, solve_case<true>("day08.input"));
   AOC_RETURN_CHECK_RESULT();

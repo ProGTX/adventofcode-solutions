@@ -4,7 +4,6 @@
 #include "../common/rust.h"
 
 #include <algorithm>
-#include <iostream>
 #include <print>
 #include <ranges>
 #include <span>
@@ -76,13 +75,13 @@ fn solve_case2(std::span<const Bitset> report) -> u32 {
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   let example = parse("day03.example");
   AOC_EXPECT_RESULT(198, solve_case1(example));
   let input = parse("day03.input");
   AOC_EXPECT_RESULT(4138664, solve_case1(input));
 
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(230, solve_case2(example));
   AOC_EXPECT_RESULT(4273224, solve_case2(input));
 

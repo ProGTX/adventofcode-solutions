@@ -5,7 +5,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <iostream>
 #include <print>
 #include <ranges>
 #include <variant>
@@ -22,20 +21,6 @@ struct Packet {
   std::variant<u32, PacketList> data;
   constexpr std::strong_ordering operator<=>(Packet const& other) const;
   constexpr bool operator==(Packet const& other) const = default;
-
-  friend std::ostream& operator<<(std::ostream& out, Packet const& p) {
-    aoc::match(
-        p.data, //
-        [&](u32 num) { out << num; },
-        [&](PacketList const& list) {
-          out << '[';
-          for (let& v : list) {
-            out << v << ',';
-          }
-          out << ']';
-        });
-    return out;
-  }
 };
 
 fn parse_list_inner(str s) -> Packet {

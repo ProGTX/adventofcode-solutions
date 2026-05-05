@@ -4,7 +4,6 @@
 #include "../common/rust.h"
 
 #include <algorithm>
-#include <iostream>
 #include <print>
 #include <ranges>
 #include <tuple>
@@ -158,7 +157,6 @@ int main() {
   AOC_EXPECT_RESULT(535, solve_case1(input));
 
   std::println("Part 2");
-  std::cout.flush();
   AOC_EXPECT_RESULT(33, solve_case2(example));
   // Dijkstra is too slow for part 2 :(
   // AOC_EXPECT_RESULT(100011612, solve_case2(input));

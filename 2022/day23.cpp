@@ -4,12 +4,11 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <numeric>
 #include <optional>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -26,12 +25,6 @@ enum field_type_t : char {
 struct elf_sim_value_t {
   int original_index;
   point pos;
-
-  friend std::ostream& operator<<(std::ostream& out,
-                                  elf_sim_value_t const& elf) {
-    out << '{' << elf.original_index << ':' << elf.pos << '}';
-    return out;
-  }
 };
 
 void print_field(elves_t const& elves) {
@@ -160,16 +153,15 @@ int solve_case(std::string const& filename) {
   } else {
     score = round_when_none_moved;
   }
-  std::cout << filename << " -> " << score << std::endl;
   return score;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(25, (solve_case<3, false>("day23.example2")));
   AOC_EXPECT_RESULT(110, (solve_case<10, false>("day23.example")));
   AOC_EXPECT_RESULT(3906, (solve_case<10, false>("day23.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(4, (solve_case<4, true>("day23.example2")));
   AOC_EXPECT_RESULT(20, (solve_case<100, true>("day23.example")));
   AOC_EXPECT_RESULT(895, (solve_case<1000, true>("day23.input")));

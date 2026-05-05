@@ -4,8 +4,7 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -169,7 +168,6 @@ static_assert(1 == num_inside(test_field(), 6));
 
 template <bool calc_area>
 int solve_case(const std::string& filename) {
-  std::cout << filename << std::endl;
   field_t field;
   int start_index = 0;
 
@@ -187,16 +185,15 @@ int solve_case(const std::string& filename) {
   } else {
     sum = num_inside(field, start_index);
   }
-  std::cout << "  -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(4, (solve_case<false>("day10.example")));
   AOC_EXPECT_RESULT(8, (solve_case<false>("day10.example2")));
   AOC_EXPECT_RESULT(6820, (solve_case<false>("day10.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(1, (solve_case<true>("day10.example")));
   AOC_EXPECT_RESULT(1, (solve_case<true>("day10.example2")));
   AOC_EXPECT_RESULT(4, (solve_case<true>("day10.example3")));

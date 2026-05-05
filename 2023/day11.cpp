@@ -4,8 +4,7 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <iostream>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -87,15 +86,14 @@ int_t solve_case(const std::string& filename) {
       expand_space<factor>(space_rows, row_populated, column_populated);
 
   int_t sum = sum_distances(space);
-  std::cout << filename << " (" << factor << ") -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(374, (solve_case<2>("day11.example")));
   AOC_EXPECT_RESULT(10228230, (solve_case<2>("day11.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(1030, (solve_case<10>("day11.example")));
   AOC_EXPECT_RESULT(8410, (solve_case<100>("day11.example")));
   AOC_EXPECT_RESULT(82000210, (solve_case<1000000>("day11.example")));

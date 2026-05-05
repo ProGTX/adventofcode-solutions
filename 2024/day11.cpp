@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <iostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -69,15 +69,14 @@ int_t solve_case(const std::string& filename) {
   int_t sum = 0;
   sum = change_stones<blink_times>(stones);
 
-  std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(55312, solve_case<25>("day11.example"));
   AOC_EXPECT_RESULT(191690, solve_case<25>("day11.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(65601038650482, solve_case<75>("day11.example"));
   AOC_EXPECT_RESULT(228651922369703, solve_case<75>("day11.input"));
   AOC_RETURN_CHECK_RESULT();

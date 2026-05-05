@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <functional>
-#include <iostream>
+#include <print>
 #include <span>
 #include <string>
 #include <string_view>
@@ -66,15 +66,14 @@ int solve_case(const std::string& filename) {
   int sum = 0;
   sum = safety_factor<grid_size>(move_all_robots<grid_size, seconds>(robots));
 
-  std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(12, (solve_case<{11, 7}, 100>("day14.example")));
   AOC_EXPECT_RESULT(221655456, (solve_case<{101, 103}, 100>("day14.input")));
-  // std::cout << "Part 2" << std::endl;
+  // std::println("Part 2");
   // AOC_EXPECT_RESULT(281, (solve_case<{11,7},true>("day14.example")));
   // AOC_EXPECT_RESULT(53515, (solve_case<{101, 103},true>("day14.input")));
   AOC_RETURN_CHECK_RESULT();

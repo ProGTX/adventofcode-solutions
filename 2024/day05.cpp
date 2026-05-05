@@ -4,8 +4,8 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <iterator>
+#include <print>
 #include <set>
 #include <span>
 #include <string>
@@ -96,17 +96,16 @@ int solve_case(const std::string& filename) {
     }
   }
 
-  std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(61, solve_case<false>("day05.example2"));
   AOC_EXPECT_RESULT(0, solve_case<false>("day05.example3"));
   AOC_EXPECT_RESULT(143, solve_case<false>("day05.example"));
   AOC_EXPECT_RESULT(6034, solve_case<false>("day05.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(0, solve_case<true>("day05.example2"));
   AOC_EXPECT_RESULT(47, solve_case<true>("day05.example3"));
   AOC_EXPECT_RESULT(123, solve_case<true>("day05.example"));

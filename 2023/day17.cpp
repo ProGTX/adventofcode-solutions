@@ -5,8 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <compare>
-#include <iostream>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <set>
 #include <string>
@@ -22,12 +21,6 @@ struct node_t {
   point pos;
   point direction;
   int consecutive;
-
-  friend std::ostream& operator<<(std::ostream& out, const node_t& node) {
-    out << "node_t{" << node.pos << "," << node.direction << ","
-        << node.consecutive << "," << node.heat_loss << "}";
-    return out;
-  }
 
   constexpr std::weak_ordering operator<=>(const node_t& other) const = default;
 };
@@ -76,13 +69,10 @@ int least_heat_loss(const city_block_t& city_block, const node_t start) {
     const auto current = *current_it;
     unvisited.erase(current_it);
     AOC_ASSERT(current.consecutive >= 1, "Invalid consecutive number");
-    // aoc::println("current", current);
-    // aoc::println("  visited, unvisited", visited.size(), unvisited.size());
     if ((current.consecutive >= min) && (current.pos == end_pos)) {
       return current.heat_loss;
     }
     visited.insert(current);
-    // visited_block.modify(0, current.pos.y, current.pos.x);
 
     auto direction = current.direction;
     if (current.consecutive < max) {
@@ -103,7 +93,6 @@ int least_heat_loss(const city_block_t& city_block, const node_t start) {
 
 template <int min, int max>
 int solve_case(const std::string& filename) {
-  std::cout << filename << std::endl;
 
   city_block_t city_block;
 
@@ -111,19 +100,16 @@ int solve_case(const std::string& filename) {
     city_block.add_row(line | aoc::views::to_number<int>());
   }
 
-  int sum = 0;
-  sum = least_heat_loss<min, max>(
+  return least_heat_loss<min, max>(
       city_block,
       node_t{.heat_loss = 0, .pos = {}, .direction = {}, .consecutive = 1});
-  std::cout << "  -> " << sum << std::endl;
-  return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(102, (solve_case<1, 3>("day17.example")));
   AOC_EXPECT_RESULT(967, (solve_case<1, 3>("day17.input")));
-  // std::cout << "Part 2" << std::endl;
+  // std::println("Part 2");
   AOC_EXPECT_RESULT(94, (solve_case<4, 10>("day17.example")));
   AOC_EXPECT_RESULT(71, (solve_case<4, 10>("day17.example2")));
   AOC_EXPECT_RESULT(-1105, (solve_case<4, 10>("day17.input")));

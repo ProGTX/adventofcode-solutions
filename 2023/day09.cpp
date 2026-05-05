@@ -3,8 +3,7 @@
 #include "../common/common.h"
 
 #include <algorithm>
-#include <iostream>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -70,15 +69,15 @@ int solve_case(const std::string& filename) {
   }
 
   int sum = sum_predictions<multiplier>(values);
-  std::cout << filename << " -> " << sum << std::endl;
+
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(114, (solve_case<1>("day09.example")));
   AOC_EXPECT_RESULT(1980437560, (solve_case<1>("day09.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(2, (solve_case<-1>("day09.example")));
   AOC_EXPECT_RESULT(977, (solve_case<-1>("day09.input")));
   AOC_RETURN_CHECK_RESULT();

@@ -4,10 +4,9 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <iterator>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -77,15 +76,14 @@ int solve_case(const std::string& filename) {
     }
   }
 
-  std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(142, solve_case<false>("day01.example"));
   AOC_EXPECT_RESULT(54388, solve_case<false>("day01.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(281, solve_case<true>("day01.example2"));
   AOC_EXPECT_RESULT(53515, solve_case<true>("day01.input"));
   AOC_RETURN_CHECK_RESULT();

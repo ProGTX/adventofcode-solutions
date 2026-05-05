@@ -6,11 +6,10 @@
 #include <array>
 #include <exception>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -44,12 +43,6 @@ void solve_case(const std::string& filename) {
     }
   }
 
-  std::cout << filename << " -> " << std::endl;
-  for (auto pos : positions) {
-    std::cout << "  " << pos << std::endl;
-  }
-  std::cout << std::endl;
-
   if constexpr (window_size == 4) {
     if (filename.find(".example") != std::string::npos) {
       AOC_EXPECT_RESULT(7, positions[0]);
@@ -74,10 +67,10 @@ void solve_case(const std::string& filename) {
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   solve_case<4>("day06.example");
   solve_case<4>("day06.input");
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   solve_case<14>("day06.example");
   solve_case<14>("day06.input");
   AOC_RETURN_CHECK_RESULT();

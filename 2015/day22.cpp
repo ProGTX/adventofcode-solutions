@@ -4,7 +4,6 @@
 #include "../common/rust.h"
 
 #include <algorithm>
-#include <iostream>
 #include <limits>
 #include <print>
 #include <ranges>

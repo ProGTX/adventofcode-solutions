@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <iostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -147,16 +147,16 @@ int_t solve_case(const std::string& filename) {
 
   int_t sum = 0;
   sum = get_z(solve_wires(wires, outputs, input_id_end, regular_wire_id_end));
-  std::cout << filename << " -> " << sum << std::endl;
+
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(4, solve_case<false>("day24.example"));
   AOC_EXPECT_RESULT(2024, solve_case<false>("day24.example2"));
   AOC_EXPECT_RESULT(64755511006320, solve_case<false>("day24.input"));
-  // std::cout << "Part 2" << std::endl;
+  // std::println("Part 2");
   // AOC_EXPECT_RESULT(281, solve_case<true>("day24.example"));
   // AOC_EXPECT_RESULT(53515, solve_case<true>("day24.input"));
   AOC_RETURN_CHECK_RESULT();

@@ -5,9 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <iostream>
 #include <numeric>
-#include <ostream>
 #include <print>
 #include <ranges>
 #include <string>
@@ -51,7 +49,6 @@ int_t solve_case(const std::string& filename) {
 
   int_t num_fish =
       simulate_fish<num_days, production_length, maturing_length>(fish);
-  std::cout << filename << " -> " << num_fish << std::endl;
   return num_fish;
 }
 

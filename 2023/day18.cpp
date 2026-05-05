@@ -5,8 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <iostream>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -28,7 +27,6 @@ int_t lagoon_size(const trench_t& trench, const int_t trench_length) {
 
 template <bool invert>
 int_t solve_case(const std::string& filename) {
-  std::cout << filename << std::endl;
 
   const auto parse_input_p1 =
       [&](std::string_view line) -> std::pair<point_t, int_t> {
@@ -86,16 +84,14 @@ int_t solve_case(const std::string& filename) {
     trench_length += num_cubes;
   }
 
-  auto sum = lagoon_size(trench, trench_length);
-  std::cout << "  -> " << sum << std::endl;
-  return sum;
+  return lagoon_size(trench, trench_length);
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(62, (solve_case<false>("day18.example")));
   AOC_EXPECT_RESULT(40745, (solve_case<false>("day18.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(952408144115, (solve_case<true>("day18.example")));
   AOC_EXPECT_RESULT(90111113594927, (solve_case<true>("day18.input")));
   AOC_RETURN_CHECK_RESULT();

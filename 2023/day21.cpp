@@ -6,8 +6,7 @@
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <iostream>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -77,8 +76,6 @@ positions_t move_one(const garden_t& garden, const positions_t& starting) {
 
 template <int num_steps, bool infinite>
 int_t solve_case(const std::string& filename) {
-  std::cout << filename << " " << num_steps << " " << infinite << std::endl;
-
   garden_t garden;
   positions_t positions;
 
@@ -96,16 +93,14 @@ int_t solve_case(const std::string& filename) {
     positions = move_one<infinite>(garden, positions);
   }
 
-  int_t sum = positions.size();
-  std::cout << "  -> " << sum << std::endl;
-  return sum;
+  return positions.size();
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(16, (solve_case<6, false>("day21.example")));
   AOC_EXPECT_RESULT(3646, (solve_case<64, false>("day21.input")));
-  // std::cout << "Part 2" << std::endl;
+  // std::println("Part 2");
   AOC_EXPECT_RESULT(16, (solve_case<6, true>("day21.example")));
   AOC_EXPECT_RESULT(50, (solve_case<10, true>("day21.example")));
   AOC_EXPECT_RESULT(1594, (solve_case<50, true>("day21.example")));

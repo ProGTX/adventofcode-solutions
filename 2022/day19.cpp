@@ -4,12 +4,11 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <iterator>
 #include <memory>
 #include <numeric>
 #include <optional>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -74,8 +73,6 @@ std::optional<resource_pack> try_consume_robot_resources(
     const resource_pack& resources, const resource_pack& new_robot_cost) {
   auto new_resources = resources - new_robot_cost;
   if (new_resources.is_sufficient()) {
-    std::cout << "  Start building new robot by spending: "
-              << aoc::print_range(new_robot_cost) << std::endl;
     return new_resources;
   } else {
     return std::nullopt;
@@ -117,14 +114,10 @@ int num_opened_geodes(const blueprint_t& blueprint,
   };
 
   for (; minute < minutes; ++minute) {
-    std::cout << "Minute " << (minute + 1) << std::endl;
     auto new_robots = build_robots();
     resources += robots;
     robots += new_robots;
   }
-
-  std::cout << "Total resources: " << aoc::print_range(resources) << std::endl
-            << std::endl;
 
   return resources[geode];
 }
@@ -174,15 +167,14 @@ int solve_case(const std::string& filename) {
                           resource_pack{1, 0, 0, 0}, resource_pack{}, 0);
   }
 
-  std::cout << filename << " -> " << quality_level << std::endl;
   return quality_level;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(33, solve_case<24>("day19.example"));
   // AOC_EXPECT_RESULT(33, solve_case<24>("day19.input"));
-  // std::cout << "Part 2" << std::endl;
+  // std::println("Part 2");
   // AOC_EXPECT_RESULT(10, solve_case<24>("day19.example"));
   // solve_case<24>("day19.input");
   AOC_RETURN_CHECK_RESULT();

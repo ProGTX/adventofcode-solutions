@@ -6,12 +6,11 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <numeric>
 #include <optional>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -129,7 +128,6 @@ std::string solve_case(std::string const& filename) {
   auto snafu = sum_input_as_snafus<base>(aoc::views::read_lines(filename) |
                                          aoc::ranges::to<input_t>());
 
-  std::cout << filename << " -> " << snafu << std::endl;
   return snafu;
 }
 
@@ -159,11 +157,11 @@ int main() {
   AOC_EXPECT_SAME_CONVERSION(5, 3, "1=");
   AOC_EXPECT_SAME_CONVERSION(5, 37, "122");
 
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT("2=-1=0", (solve_case<5, false>("day25.example")));
   AOC_EXPECT_RESULT("2-=12=2-2-2-=0012==2",
                     (solve_case<5, false>("day25.input")));
-  // std::cout << "Part 2" << std::endl;
+  // std::println("Part 2");
   // AOC_EXPECT_RESULT("2=-1=0", (solve_case<5, true>("day25.example")));
   // AOC_EXPECT_RESULT("2=-1=0", (solve_case<5, true>("day25.input")));
   AOC_RETURN_CHECK_RESULT();

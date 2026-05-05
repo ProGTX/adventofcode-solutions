@@ -16,8 +16,8 @@
 #include <array>
 #include <compare>
 #include <concepts>
-#include <iostream>
 #include <optional>
+#include <print>
 #include <ranges>
 #include <span>
 #include <stdexcept>
@@ -36,12 +36,6 @@ struct dijkstra_neighbor_t {
 
   constexpr bool operator==(const dijkstra_neighbor_t&) const = default;
   constexpr auto operator<=>(const dijkstra_neighbor_t&) const = default;
-
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const dijkstra_neighbor_t& neighbor) {
-    out << neighbor.node << " (" << neighbor.distance << ")";
-    return out;
-  }
 };
 
 constexpr auto dijkstra_uniform_neighbors_view() {
@@ -700,5 +694,15 @@ constexpr std::optional<std::size_t> position(R&& r, const T& value,
 
 } // namespace ranges
 } // AOC_EXPORT_NAMESPACE(aoc)
+
+template <class Node>
+struct std::formatter<aoc::dijkstra_neighbor_t<Node>> {
+  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+  auto format(const aoc::dijkstra_neighbor_t<Node>& neighbor,
+              std::format_context& ctx) const {
+    return std::format_to(ctx.out(), "{} ({})", neighbor.node,
+                          neighbor.distance);
+  }
+};
 
 #endif // AOC_ALGORITHM_H

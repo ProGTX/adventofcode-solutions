@@ -4,9 +4,8 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <map>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -201,15 +200,14 @@ int_t solve_case(const std::string& filename) {
   current_seeds = apply_mapping(current_seeds, mapping);
 
   int_t lowest_location = current_seeds[0].begin;
-  std::cout << filename << " -> " << lowest_location << std::endl;
   return lowest_location;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(35, (solve_case<false>("day05.example")));
   AOC_EXPECT_RESULT(486613012, (solve_case<false>("day05.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(46, (solve_case<true>("day05.example")));
   AOC_EXPECT_RESULT(56931769, (solve_case<true>("day05.input")));
   AOC_RETURN_CHECK_RESULT();

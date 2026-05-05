@@ -5,11 +5,10 @@
 #include <algorithm>
 #include <array>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <memory>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -57,12 +56,6 @@ struct instruction {
   }
 
   constexpr int get_duration() const { return m_duration; }
-
-  friend std::ostream& operator<<(std::ostream& out, const instruction& op) {
-    out << "{" << op.get_type_str() << "," << op.m_cycles_left << "("
-        << op.m_duration << ")," << op.m_value << "}";
-    return out;
-  }
 
  protected:
   constexpr instruction(type op_type, int duration, int value)
@@ -156,7 +149,6 @@ int solve_case(const std::string& filename) {
 
   monitor.print_all();
 
-  std::cout << filename << " -> " << signal_strength << std::endl;
   return signal_strength;
 }
 

@@ -5,9 +5,8 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <iostream>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <tuple>
@@ -83,10 +82,10 @@ value_t solve_case(const std::string& filename) {
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(3, (solve_case<1, 1>("day20.example")));
   AOC_EXPECT_RESULT(1591, (solve_case<1, 1>("day20.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(1623178306, (solve_case<10, 811589153>("day20.example")));
   AOC_EXPECT_RESULT(14579387544492, (solve_case<10, 811589153>("day20.input")));
   AOC_RETURN_CHECK_RESULT();

@@ -15,7 +15,7 @@
 #include <cstdlib>
 #include <functional>
 #include <optional>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <type_traits>
@@ -115,11 +115,6 @@ struct point_type {
 #undef AOC_POINTWISE_OP
 
   constexpr point_type operator-() const { return {-x, -y}; }
-
-  friend std::ostream& operator<<(std::ostream& out, const point_type& p) {
-    out << "{" << p.x << "," << p.y << "}";
-    return out;
-  }
 
   constexpr point_type abs() const { return {aoc::abs(x), aoc::abs(y)}; }
 
@@ -369,15 +364,6 @@ class nd_point_type {
   constexpr iterator end() noexcept { return m_data.end(); }
   constexpr const_iterator end() const noexcept { return m_data.end(); }
 
-  friend std::ostream& operator<<(std::ostream& out, const nd_point_type& np) {
-    out << '{';
-    for (int i = 0; i < dims - 1; ++i) {
-      out << np.m_data[i] << ',';
-    }
-    out << np.m_data[dims - 1] << '}';
-    return out;
-  }
-
   template <size_t I>
   constexpr friend value_type get(const nd_point_type& np) {
     static_assert(I < dims);
@@ -469,12 +455,6 @@ struct min_max_helper {
   }
 #endif
 
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const min_max_helper& value) {
-    out << "min{" << value.min_value << ',' << value.max_value << '}';
-    return out;
-  }
-
   constexpr point grid_size() const {
     return max_value - min_value + point{1, 1};
   }
@@ -521,6 +501,40 @@ static_assert(16.5f ==
                              point_type<int>{8, 5}}}));
 
 } // AOC_EXPORT_NAMESPACE(aoc)
+
+template <class T>
+struct std::formatter<aoc::point_type<T>> {
+  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+  auto format(const aoc::point_type<T>& p, std::format_context& ctx) const {
+    return std::format_to(ctx.out(), "{{{},{}}}", p.x, p.y);
+  }
+};
+
+template <class T, int dims>
+struct std::formatter<aoc::nd_point_type<T, dims>> {
+  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+  auto format(const aoc::nd_point_type<T, dims>& np,
+              std::format_context& ctx) const {
+    auto out = ctx.out();
+    *out++ = '{';
+    for (int i = 0; i < dims - 1; ++i) {
+      out = std::format_to(out, "{},", np[i]);
+    }
+    out = std::format_to(out, "{}", np[dims - 1]);
+    *out++ = '}';
+    return out;
+  }
+};
+
+template <>
+struct std::formatter<aoc::min_max_helper> {
+  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+  auto format(const aoc::min_max_helper& value,
+              std::format_context& ctx) const {
+    return std::format_to(ctx.out(), "min{{{},{}}}", value.min_value,
+                          value.max_value);
+  }
+};
 
 namespace std {
 template <class T>

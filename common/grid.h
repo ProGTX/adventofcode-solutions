@@ -14,9 +14,9 @@
 #include <algorithm>
 #include <array>
 #include <functional>
-#include <iostream>
 #include <map>
 #include <optional>
+#include <print>
 #include <ranges>
 #include <string>
 #include <type_traits>
@@ -59,38 +59,6 @@ constexpr auto to_facing(char c) {
     default:
       AOC_UNREACHABLE("Error parsing directions");
   }
-}
-
-std::ostream& operator<<(std::ostream& out, const facing_t& facing) {
-  switch (facing) {
-    case east:
-      out << "east";
-      break;
-    case south:
-      out << "south";
-      break;
-    case west:
-      out << "west";
-      break;
-    case north:
-      out << "north";
-      break;
-    case southeast:
-      out << "southeast";
-      break;
-    case southwest:
-      out << "southwest";
-      break;
-    case northwest:
-      out << "northwest";
-      break;
-    case northeast:
-      out << "northeast";
-      break;
-    default:
-      AOC_UNREACHABLE("Invalid sky direction");
-  }
-  return out;
 }
 
 template <class T = int>
@@ -174,11 +142,6 @@ struct arrow_type {
     } else {
       return position <=> other.position;
     }
-  }
-
-  friend std::ostream& operator<<(std::ostream& out, const arrow_type& arrow) {
-    out << "(" << arrow.position << "," << arrow.direction << ")";
-    return out;
   }
 };
 
@@ -331,17 +294,15 @@ class grid {
   }
 
   template <class print_single_ft = std::identity>
-  std::ostream& print_all(print_single_ft print_single_f = {},
-                          std::ostream& out = std::cout) const {
+  void print_all(print_single_ft print_single_f = {}) const {
     for (size_t row = 0; row < this->num_rows(); ++row) {
-      out << "  ";
+      std::print("  ");
       for (size_t column = 0; column < this->row_length(); ++column) {
-        out << print_single_f(this->at(row, column));
+        std::print("{}", print_single_f(this->at(row, column)));
       }
-      out << std::endl;
+      std::println("");
     }
-    out << std::endl;
-    return out;
+    std::println("");
   }
 
   constexpr auto begin() { return m_data.begin(); }
@@ -610,16 +571,15 @@ class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
   constexpr void clear() { base_t::m_data.clear(); }
 
   template <class print_single_ft = std::identity>
-  void print_all(print_single_ft print_single_f = {},
-                 std::ostream& out = std::cout) const {
+  void print_all(print_single_ft print_single_f = {}) const {
     for (size_t row = 0; row < this->num_rows(); ++row) {
-      out << "  ";
+      std::print("  ");
       for (size_t column = 0; column < this->row_length(); ++column) {
-        this->get_print_single_f(print_single_f)(out, row, column);
+        this->get_print_single_f(print_single_f)(row, column);
       }
-      out << std::endl;
+      std::println("");
     }
-    out << std::endl;
+    std::println("");
   }
 
  protected:
@@ -640,8 +600,8 @@ class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
   template <class print_single_ft>
   constexpr auto get_print_single_f(print_single_ft print_single_f) const {
     if constexpr (std::is_same_v<print_single_ft, std::identity>) {
-      return [this](std::ostream& out, size_t row, size_t column) {
-        out << this->at(row, column);
+      return [this](size_t row, size_t column) {
+        std::print("{}", this->at(row, column));
       };
     } else {
       return print_single_f;
@@ -738,5 +698,51 @@ static_assert(is_grid<sparse_grid<int>>);
 static_assert(is_grid<char_grid<>>);
 
 } // AOC_EXPORT_NAMESPACE(aoc)
+
+template <>
+struct std::formatter<aoc::facing_t> {
+  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+  auto format(aoc::facing_t facing, std::format_context& ctx) const {
+    std::string_view name;
+    switch (facing) {
+      case aoc::east:
+        name = "east";
+        break;
+      case aoc::south:
+        name = "south";
+        break;
+      case aoc::west:
+        name = "west";
+        break;
+      case aoc::north:
+        name = "north";
+        break;
+      case aoc::southeast:
+        name = "southeast";
+        break;
+      case aoc::southwest:
+        name = "southwest";
+        break;
+      case aoc::northwest:
+        name = "northwest";
+        break;
+      case aoc::northeast:
+        name = "northeast";
+        break;
+      default:
+        AOC_UNREACHABLE("Invalid sky direction");
+    }
+    return std::format_to(ctx.out(), "{}", name);
+  }
+};
+
+template <class T>
+struct std::formatter<aoc::arrow_type<T>> {
+  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+  auto format(const aoc::arrow_type<T>& arrow, std::format_context& ctx) const {
+    return std::format_to(ctx.out(), "({},{})", arrow.position,
+                          arrow.direction);
+  }
+};
 
 #endif // AOC_GRID_H

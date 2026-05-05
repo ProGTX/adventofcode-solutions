@@ -6,11 +6,10 @@
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <optional>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -91,20 +90,11 @@ struct signal_transit_t {
   std::string from;
   signal_t signal;
   std::string to;
-
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const signal_transit_t& current_signal) {
-    out << current_signal.from << " -"
-        << (current_signal.signal ? "high" : "low") << "-> "
-        << current_signal.to;
-    return out;
-  }
 };
 
 using module_map_t = aoc::flat_map<std::string, std::unique_ptr<module_t>>;
 
 std::array<int, 2> push_button(module_map_t& module_map) {
-  // aoc::println("push_button");
   std::array<int, 2> num_pulses{0, 0};
   std::vector<signal_transit_t> remaining_signals;
 
@@ -116,7 +106,6 @@ std::array<int, 2> push_button(module_map_t& module_map) {
   for (size_t signals_start = 0; signals_start < remaining_signals.size();
        ++signals_start) {
     const auto current_signal = remaining_signals[signals_start];
-    // std::cout << current_signal << std::endl;
     module_map.at(current_signal.to)
         ->add_input(current_signal.from, current_signal.signal);
 
@@ -132,13 +121,11 @@ std::array<int, 2> push_button(module_map_t& module_map) {
       ++num_pulses[static_cast<int>(*signal)];
     }
   }
-  // aoc::println("num pulses", aoc::print_range(num_pulses));
   return num_pulses;
 }
 
 template <bool>
 int_t solve_case(const std::string& filename) {
-  std::cout << filename << std::endl;
 
   module_map_t module_map;
 
@@ -190,18 +177,15 @@ int_t solve_case(const std::string& filename) {
     total_signals[0] += num_low;
     total_signals[1] += num_high;
   }
-  aoc::println("total signals", aoc::print_range(total_signals));
-  auto sum = total_signals[0] * total_signals[1];
-  std::cout << "  -> " << sum << std::endl;
-  return sum;
+  return total_signals[0] * total_signals[1];
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(32000000, (solve_case<false>("day20.example")));
   AOC_EXPECT_RESULT(11687500, (solve_case<false>("day20.example2")));
   AOC_EXPECT_RESULT(814934624, (solve_case<false>("day20.input")));
-  // std::cout << "Part 2" << std::endl;
+  // std::println("Part 2");
   // AOC_EXPECT_RESULT(952408144115, (solve_case<true>("day20.example")));
   // AOC_EXPECT_RESULT(90111113594927, (solve_case<true>("day20.input")));
   AOC_RETURN_CHECK_RESULT();

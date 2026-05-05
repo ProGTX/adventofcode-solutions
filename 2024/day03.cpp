@@ -2,7 +2,7 @@
 
 #include "../common/common.h"
 
-#include <iostream>
+#include <print>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -130,15 +130,14 @@ int solve_case(const std::string& filename) {
     }
   }
 
-  std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(161, solve_case<false>("day03.example"));
   AOC_EXPECT_RESULT(174960292, solve_case<false>("day03.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(48, solve_case<true>("day03.example2"));
   AOC_EXPECT_RESULT(-61636489, solve_case<true>("day03.input"));
   AOC_RETURN_CHECK_RESULT();

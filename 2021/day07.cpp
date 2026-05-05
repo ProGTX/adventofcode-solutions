@@ -6,11 +6,10 @@
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -120,15 +119,14 @@ int_t solve_case(const std::string& filename) {
   } else {
     cost = lowest_fuel_all(crabs);
   }
-  std::cout << filename << " -> " << cost << std::endl;
   return cost;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(37, (solve_case<false>("day07.example")));
   AOC_EXPECT_RESULT(355592, (solve_case<false>("day07.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(168, (solve_case<true>("day07.example")));
   AOC_EXPECT_RESULT(101618069, (solve_case<true>("day07.input")));
   AOC_RETURN_CHECK_RESULT();

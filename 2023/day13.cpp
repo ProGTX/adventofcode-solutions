@@ -5,8 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <bit>
-#include <iostream>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -227,7 +226,6 @@ constexpr int check_pattern(const pattern_t& pattern) {
 
 template <bool unsmudge>
 int solve_case(const std::string& filename) {
-  std::cout << filename << std::endl;
   pattern_t pattern;
 
   int sum = 0;
@@ -242,16 +240,15 @@ int solve_case(const std::string& filename) {
   }
   sum += check_pattern<unsmudge>(pattern);
 
-  std::cout << "  -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(405, (solve_case<false>("day13.example")));
   AOC_EXPECT_RESULT(712, (solve_case<false>("day13.example2")));
   AOC_EXPECT_RESULT(31265, (solve_case<false>("day13.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(400, (solve_case<true>("day13.example")));
   AOC_EXPECT_RESULT(1415, (solve_case<true>("day13.example2")));
   AOC_EXPECT_RESULT(-36431, (solve_case<true>("day13.input")));

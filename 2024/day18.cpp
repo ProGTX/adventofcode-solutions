@@ -3,8 +3,8 @@
 #include "../common/common.h"
 
 #include <array>
-#include <iostream>
 #include <optional>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -85,15 +85,14 @@ auto solve_case(const std::string& filename) {
   } else {
     result = first_problematic_byte<num_fallen>(memspace, falling_bytes);
   }
-  std::cout << filename << " -> " << result << std::endl;
   return result;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(22, (solve_case<{7, 7}, 12, false>("day18.example")));
   AOC_EXPECT_RESULT(234, (solve_case<{71, 71}, 1024, false>("day18.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT((point{6, 1}),
                     (solve_case<{7, 7}, 12, true>("day18.example")));
   AOC_EXPECT_RESULT((point{58, 19}),

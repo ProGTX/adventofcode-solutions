@@ -5,11 +5,10 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <iostream>
 #include <iterator>
 #include <memory>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -167,15 +166,14 @@ int solve_case(const std::string& filename) {
     }
   }
 
-  std::cout << filename << " -> " << visited.size() << std::endl;
   return visited.size();
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(13, solve_case<2>("day09.example"));
   AOC_EXPECT_RESULT(5695, solve_case<2>("day09.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(1, solve_case<10>("day09.example"));
   AOC_EXPECT_RESULT(36, solve_case<10>("day09.example2"));
   AOC_EXPECT_RESULT(2434, solve_case<10>("day09.input"));

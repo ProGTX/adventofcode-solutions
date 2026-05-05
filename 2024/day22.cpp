@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <iostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -112,15 +112,15 @@ int_t solve_case(const std::string& filename) {
   } else {
     sum = most_bananas(buyer_starters);
   }
-  std::cout << filename << " -> " << sum << std::endl;
+
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(37327623, solve_case<false>("day22.example"));
   AOC_EXPECT_RESULT(20215960478, solve_case<false>("day22.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   // The following two calls can't be static_assert because of compiler limits
   AOC_EXPECT_RESULT(9, most_bananas(std::array{123}));
   AOC_EXPECT_RESULT(23, most_bananas(std::array{1, 2, 3, 2024}));

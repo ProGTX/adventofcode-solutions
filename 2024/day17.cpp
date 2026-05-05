@@ -4,7 +4,7 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -93,7 +93,6 @@ constexpr auto run_program(std::span<const int> program,
         AOC_UNREACHABLE("Invalid instruction");
     }
   }
-  AOC_NOT_CONSTEXPR(std::cout << aoc::print_range(registers) << std::endl;);
   return std::pair{results, registers};
 }
 
@@ -135,15 +134,14 @@ std::string solve_case(const std::string& filename) {
                     }) |
                     std::views::join_with(',') |
                     aoc::ranges::to<std::string>();
-  std::cout << filename << " -> " << result_str << std::endl;
   return result_str;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT("4,6,3,5,6,3,5,2,1,0", solve_case<false>("day17.example"));
   AOC_EXPECT_RESULT("1,7,6,5,1,0,5,0,7", solve_case<false>("day17.input"));
-  // std::cout << "Part 2" << std::endl;
+  // std::println("Part 2");
   // AOC_EXPECT_RESULT(281, solve_case<true>("day17.example"));
   // AOC_EXPECT_RESULT(53515, solve_case<true>("day17.input"));
   AOC_RETURN_CHECK_RESULT();

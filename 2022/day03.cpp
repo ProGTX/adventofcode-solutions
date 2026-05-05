@@ -6,11 +6,10 @@
 #include <array>
 #include <exception>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -51,7 +50,6 @@ int solve_part1(const std::string& filename) {
     }
   }
 
-  std::cout << filename << " -> " << score << std::endl;
   return score;
 }
 
@@ -99,15 +97,14 @@ int solve_part2(const std::string& filename) {
     reset_count();
   }
 
-  std::cout << filename << " -> " << score << std::endl;
   return score;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(157, solve_part1("day03.example"));
   AOC_EXPECT_RESULT(7793, solve_part1("day03.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(70, solve_part2("day03.example"));
   AOC_EXPECT_RESULT(2499, solve_part2("day03.input"));
   AOC_RETURN_CHECK_RESULT();

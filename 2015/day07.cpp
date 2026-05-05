@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <array>
 #include <cstdlib>
-#include <iostream>
 #include <print>
 #include <ranges>
 #include <span>

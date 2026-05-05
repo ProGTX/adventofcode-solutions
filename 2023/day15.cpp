@@ -4,8 +4,7 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -97,7 +96,6 @@ constexpr int sum_boxes(const boxes_t& boxes) {
 
 template <bool lens_sort>
 int solve_case(const std::string& filename) {
-  std::cout << filename << std::endl;
 
   steps_t steps;
   instructions_t instructions;
@@ -117,15 +115,14 @@ int solve_case(const std::string& filename) {
   } else {
     sum = sum_boxes(sort_boxes(instructions));
   }
-  std::cout << "  -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(1320, (solve_case<false>("day15.example")));
   AOC_EXPECT_RESULT(510273, (solve_case<false>("day15.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(145, (solve_case<true>("day15.example")));
   AOC_EXPECT_RESULT(212449, (solve_case<true>("day15.input")));
   AOC_RETURN_CHECK_RESULT();

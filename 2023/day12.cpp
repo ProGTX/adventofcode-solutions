@@ -4,8 +4,7 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -167,15 +166,14 @@ int solve_case(const std::string& filename) {
     sum += num_arrangements(springs, spring_groups);
   }
 
-  std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(21, (solve_case<1>("day12.example")));
   AOC_EXPECT_RESULT(7379, (solve_case<1>("day12.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(525152, (solve_case<5>("day12.example")));
   // AOC_EXPECT_RESULT(525152, (solve_case<5>("day12.input")));
   AOC_RETURN_CHECK_RESULT();

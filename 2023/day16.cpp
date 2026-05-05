@@ -4,8 +4,7 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -103,7 +102,6 @@ constexpr int energize(const machine_t& machine, beam_t start) {
 
 template <bool optimize>
 int solve_case(const std::string& filename) {
-  std::cout << filename << std::endl;
 
   machine_t machine = aoc::read_char_grid(filename);
 
@@ -126,15 +124,14 @@ int solve_case(const std::string& filename) {
                            return energize(machine, beam);
                          }));
   }
-  std::cout << "  -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(46, (solve_case<false>("day16.example")));
   AOC_EXPECT_RESULT(7798, (solve_case<false>("day16.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(51, (solve_case<true>("day16.example")));
   AOC_EXPECT_RESULT(8026, (solve_case<true>("day16.input")));
   AOC_RETURN_CHECK_RESULT();

@@ -5,8 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <functional>
-#include <iostream>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <set>
 #include <string>
@@ -21,7 +20,7 @@ using coord_t = aoc::nd_point_type<int, 3>;
 template <class... Ts>
 void debug([[maybe_unused]] Ts... args) {
 #if DEBUG_PRINT
-  aoc::println(args...);
+  std::println(args...);
 #endif
 }
 
@@ -57,14 +56,6 @@ struct brick_t : public aoc::closed_range<coord_t> {
   }
 
   constexpr bool on_floor() const { return begin.z() <= 1; }
-
-  friend std::ostream& operator<<(std::ostream& out, const brick_t& brick) {
-#if DEBUG_PRINT
-    out << brick.name;
-#endif
-    out << static_cast<const base_t&>(brick);
-    return out;
-  }
 };
 
 // We want bricks to be sorted by height
@@ -292,7 +283,6 @@ int num_single_disintegrations(const brick_list_t& bricks) {
 
 template <bool>
 int_t solve_case(const std::string& filename) {
-  std::cout << filename << std::endl;
 
   brick_list_t bricks;
   std::string name = "AA";
@@ -317,23 +307,20 @@ int_t solve_case(const std::string& filename) {
   // print_tower(bricks);
   bricks = fall_down(bricks);
   if (!all_supported(bricks, std::end(bricks))) {
-    aoc::println("NOT SUPPORTED");
+    AOC_NOT_CONSTEXPR(std::println("NOT SUPPORTED"));
   }
   print_tower(bricks);
 
-  int_t sum = 0;
-  sum = num_single_disintegrations(bricks);
-  std::cout << "  -> " << sum << std::endl;
-  return sum;
+  return num_single_disintegrations(bricks);
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(5, (solve_case<false>("day22.example")));
   AOC_EXPECT_RESULT(3, (solve_case<false>("day22.example2")));
   AOC_EXPECT_RESULT(2, (solve_case<false>("day22.example3")));
   AOC_EXPECT_RESULT(465, (solve_case<false>("day22.input")));
-  // std::cout << "Part 2" << std::endl;
+  // std::println("Part 2");
   // AOC_EXPECT_RESULT(16, (solve_case<true>("day22.example")));
   // AOC_EXPECT_RESULT(16733044, (solve_case<true>("day22.input")));
   AOC_RETURN_CHECK_RESULT();

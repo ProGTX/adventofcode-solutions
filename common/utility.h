@@ -10,10 +10,10 @@
 #include <charconv>
 #include <exception>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <numeric>
 #include <optional>
+#include <print>
 #include <ranges>
 #include <string>
 #include <tuple>
@@ -171,8 +171,8 @@ struct custom_divides {
     if constexpr (std::integral<T>) {
       const auto remainder = (lhs % rhs);
       if (remainder != 0) {
-        std::cout << "Remainder of " << remainder << " for dividing " << lhs
-                  << " by " << rhs << std::endl;
+        std::println("Remainder of {} for dividing {} by {}", remainder, lhs,
+                     rhs);
       }
     }
     return lhs / rhs;
@@ -312,12 +312,6 @@ struct closed_range {
 
   constexpr bool operator==(const closed_range&) const = default;
   constexpr auto operator<=>(const closed_range&) const = default;
-
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const closed_range& range) {
-    out << '[' << range.begin << ',' << range.end << ']';
-    return out;
-  }
 };
 
 template <class T>
@@ -556,5 +550,13 @@ class priority_queue {
 };
 
 } // AOC_EXPORT_NAMESPACE(aoc)
+
+template <class T>
+struct std::formatter<aoc::closed_range<T>> {
+  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+  auto format(const aoc::closed_range<T>& r, std::format_context& ctx) const {
+    return std::format_to(ctx.out(), "[{},{}]", r.begin, r.end);
+  }
+};
 
 #endif // AOC_UTILITY_H

@@ -4,7 +4,6 @@
 #include "../common/rust.h"
 
 #include <array>
-#include <iostream>
 #include <numeric>
 #include <print>
 #include <span>

@@ -6,12 +6,11 @@
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <limits>
 #include <memory>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -103,15 +102,14 @@ item_t solve_case(const std::string& filename) {
   // Store score as an unsigned long to prevent overflow
   const auto score = num_inspected[0] * num_inspected[1];
 
-  std::cout << filename << " -> " << score << std::endl;
   return score;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(10605, (solve_case<20, 3>("day11.example")));
   AOC_EXPECT_RESULT(98280, (solve_case<20, 3>("day11.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(2713310158, (solve_case<10000, 1>("day11.example")));
   AOC_EXPECT_RESULT(17673687232, (solve_case<10000, 1>("day11.input")));
   AOC_RETURN_CHECK_RESULT();

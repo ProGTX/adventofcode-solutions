@@ -5,10 +5,9 @@
 #include <algorithm>
 #include <array>
 #include <functional>
-#include <iostream>
 #include <map>
 #include <optional>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -25,12 +24,6 @@ struct part_t {
   int s;
 
   constexpr int sum() const { return x + m + a + s; }
-
-  friend std::ostream& operator<<(std::ostream& out, const part_t& part) {
-    out << "{" << part.x << ", " << part.m << ", " << part.a << ", " << part.s
-        << "}";
-    return out;
-  }
 };
 
 using rule_t = std::function<std::optional<std::string>(const part_t& part)>;
@@ -70,7 +63,6 @@ int_t sort_parts(const std::vector<part_t>& parts,
 
 template <bool>
 int_t solve_case(const std::string& filename) {
-  std::cout << filename << std::endl;
 
   std::vector<part_t> parts;
   workflow_map_t workflows;
@@ -156,16 +148,14 @@ int_t solve_case(const std::string& filename) {
     }
   }
 
-  auto sum = sort_parts(parts, workflows);
-  std::cout << "  -> " << sum << std::endl;
-  return sum;
+  return sort_parts(parts, workflows);
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(19114, (solve_case<false>("day19.example")));
   AOC_EXPECT_RESULT(509597, (solve_case<false>("day19.input")));
-  // std::cout << "Part 2" << std::endl;
+  // std::println("Part 2");
   // AOC_EXPECT_RESULT(952408144115, (solve_case<true>("day19.example")));
   // AOC_EXPECT_RESULT(90111113594927, (solve_case<true>("day19.input")));
   AOC_RETURN_CHECK_RESULT();

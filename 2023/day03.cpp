@@ -3,12 +3,11 @@
 #include "../common/common.h"
 
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <numeric>
 #include <optional>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -145,15 +144,14 @@ int solve_case(const std::string& filename) {
     sum = aoc::ranges::accumulate(gear_ratios, 0);
   }
 
-  std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(4361, solve_case<false>("day03.example"));
   AOC_EXPECT_RESULT(537732, solve_case<false>("day03.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(467835, solve_case<true>("day03.example"));
   AOC_EXPECT_RESULT(84883664, solve_case<true>("day03.input"));
   AOC_RETURN_CHECK_RESULT();

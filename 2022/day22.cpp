@@ -2,7 +2,7 @@
 
 #include "../common/common.h"
 
-#include <iostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -239,15 +239,14 @@ int solve_case(const std::string& filename) {
       get_jungle<is_cube>(parse_map(raw_map, min_max.max_value)), steps);
 
   auto password = 1000 * pos.y + 4 * pos.x + facing;
-  std::cout << filename << " -> " << password << std::endl;
   return password;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(6032, (solve_case<false, 4>("day22.example")));
   AOC_EXPECT_RESULT(97356, (solve_case<false, 50>("day22.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   // AOC_EXPECT_RESULT(5031, (solve_case<true, 4>("day22.example")));
   // AOC_EXPECT_RESULT(3229579395609, (solve_case<true, 50>("day22.input")));
   AOC_RETURN_CHECK_RESULT();

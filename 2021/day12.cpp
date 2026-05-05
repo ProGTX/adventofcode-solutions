@@ -4,7 +4,6 @@
 #include "../common/rust.h"
 
 #include <cctype>
-#include <iostream>
 #include <print>
 #include <ranges>
 

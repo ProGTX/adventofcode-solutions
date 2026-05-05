@@ -6,11 +6,10 @@
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -169,8 +168,6 @@ int output_to_number(std::string_view out, std::string_view mapping) {
       return w;
     }
   }
-  std::cout << "Error: Invalid wire set: " << aoc::print_range(wire_set)
-            << std::endl;
   throw std::runtime_error("Invalid wire set given");
 }
 
@@ -212,16 +209,15 @@ int_t solve_case(const std::string& filename) {
   } else {
     count = sum_outputs(input);
   }
-  std::cout << filename << " -> " << count << std::endl;
   return count;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(0, (solve_case<false>("day08.example")));
   AOC_EXPECT_RESULT(26, (solve_case<false>("day08.example2")));
   AOC_EXPECT_RESULT(440, (solve_case<false>("day08.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(5353, (solve_case<true>("day08.example")));
   AOC_EXPECT_RESULT(61229, (solve_case<true>("day08.example2")));
   AOC_EXPECT_RESULT(1046281, (solve_case<true>("day08.input")));

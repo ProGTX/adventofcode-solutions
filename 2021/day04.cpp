@@ -6,12 +6,10 @@
 #include <array>
 #include <exception>
 #include <fstream>
-#include <iomanip>
-#include <iostream>
 #include <iterator>
 #include <numeric>
 #include <optional>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -164,17 +162,14 @@ int solve_case(const std::string& filename, int game_rounds) {
 end_rounds:
 
   auto score = winning_number * winning_board.sum_unmarked();
-  std::cout << winning_number << ", " << winning_board.sum_unmarked()
-            << std::endl;
-  std::cout << filename << " -> " << score << std::endl;
   return score;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(4512, solve_case("day04.example", 1));
   AOC_EXPECT_RESULT(64084, solve_case("day04.input", 1));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(1924, solve_case("day04.example", -1));
   AOC_EXPECT_RESULT(12833, solve_case("day04.input", -1));
   AOC_RETURN_CHECK_RESULT();

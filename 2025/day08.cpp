@@ -4,7 +4,6 @@
 #include "../common/rust.h"
 
 #include <algorithm>
-#include <iostream>
 #include <limits>
 #include <print>
 #include <ranges>
@@ -39,8 +38,6 @@ fn solve_case(Boxes const& boxes) -> usize {
         let & [ a, b ] = ab;
         let & [ index_p, p ] = a;
         let & [ index_q, q ] = b;
-        // std::println("{} {} {}", p[0] - q[0], p[1] - q[1], p[2] - q[2]);
-        // std::cout << std::flush;
         return DistanceEntry{
             .distance = (static_cast<u64>(aoc::pown(p[0] - q[0], 2)) +
                          static_cast<u64>(aoc::pown(p[1] - q[1], 2)) +

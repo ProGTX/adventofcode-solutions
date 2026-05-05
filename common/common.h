@@ -24,7 +24,6 @@ import aoc;
 #include "grid.h"
 #include "math.h"
 #include "point.h"
-#include "print.h"
 #include "range_to.h"
 #include "ranges.h"
 #include "ratio.h"
@@ -33,8 +32,8 @@ import aoc;
 #include "timer.h"
 #include "utility.h"
 
-// We're using std::cout and std::end in this file
-#include <iostream>
+// We're using std::print in this file
+#include <print>
 
 #endif
 
@@ -47,8 +46,7 @@ static bool g_success = true;
     constexpr auto expected_v = (expected);                                    \
     const auto actual_v = (actual);                                            \
     if (expected_v != actual_v) {                                              \
-      std::cout << "Wrong result! Expected " << expected_v << ", got "         \
-                << actual_v << std::endl;                                      \
+      std::println("Wrong result! Expected {}, got {}", expected_v, actual_v); \
       g_success = false;                                                       \
     }                                                                          \
   }

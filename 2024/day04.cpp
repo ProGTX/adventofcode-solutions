@@ -3,7 +3,7 @@
 #include "../common/common.h"
 
 #include <algorithm>
-#include <iostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -239,16 +239,15 @@ int solve_case(const std::string& filename) {
     sum = count_xmas_board(board);
   }
 
-  std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(4, solve_case<false>("day04.example2"));
   AOC_EXPECT_RESULT(18, solve_case<false>("day04.example"));
   AOC_EXPECT_RESULT(2517, solve_case<false>("day04.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(9, solve_case<true>("day04.example"));
   AOC_EXPECT_RESULT(1960, solve_case<true>("day04.input"));
   AOC_RETURN_CHECK_RESULT();

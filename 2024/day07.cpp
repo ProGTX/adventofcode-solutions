@@ -4,7 +4,7 @@
 
 #include <array>
 #include <cstdint>
-#include <iostream>
+#include <print>
 #include <ranges>
 #include <span>
 #include <string>
@@ -106,15 +106,14 @@ int_t solve_case(const std::string& filename) {
     sum += evaluate_equation<concat>(test_value, operands);
   }
 
-  std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(3749, solve_case<false>("day07.example"));
   AOC_EXPECT_RESULT(5702958180383, solve_case<false>("day07.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(11387, solve_case<true>("day07.example"));
   AOC_EXPECT_RESULT(92612386119138, solve_case<true>("day07.input"));
   AOC_RETURN_CHECK_RESULT();

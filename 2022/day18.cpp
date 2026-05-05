@@ -4,11 +4,10 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <iterator>
 #include <memory>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <set>
 #include <string>
@@ -48,16 +47,15 @@ int solve_case(const std::string& filename) {
   }
 
   auto area = calc_surface_area(droplets);
-  std::cout << filename << " -> " << area << std::endl;
   return area;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(10, solve_case<false>("day18.example"));
   AOC_EXPECT_RESULT(64, solve_case<false>("day18.example2"));
   AOC_EXPECT_RESULT(4310, solve_case<false>("day18.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(10, solve_case<true>("day18.example"));
   AOC_EXPECT_RESULT(58, solve_case<true>("day18.example2"));
   AOC_RETURN_CHECK_RESULT();

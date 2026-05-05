@@ -5,12 +5,11 @@
 #include <algorithm>
 #include <array>
 #include <cstdlib>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <memory>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -115,28 +114,15 @@ int solve_case(const std::string& filename) {
                            return valve_t<int>{name_to_index(valve.name),
                                                valve.rate, std::move(tunnels)};
                          });
-  std::cout << aoc::print_range(
-                   valves |
-                       std::views::transform([&](const valve_t<int>& valve) {
-                         return aoc::printable_tuple{
-                             valve.name, named_valves[valve.name].name,
-                             valve.rate, valve.tunnels};
-                       }),
-                   "\n")
-            << std::endl;
 
-  auto score =
-      release_pressure(valves, {}, name_to_index("AA"), 0, 0, num_minutes);
-
-  std::cout << filename << " -> " << score << std::endl;
-  return score;
+  return release_pressure(valves, {}, name_to_index("AA"), 0, 0, num_minutes);
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   solve_case<25, false>("day16.example");
   // solve_case<30, false>("day16.input");
-  // std::cout << "Part 2" << std::endl;
+  // std::println("Part 2");
   // solve_case<30, true>("day16.example");
   // solve_case<30, true>("day16.input");
   AOC_RETURN_CHECK_RESULT();

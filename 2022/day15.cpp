@@ -5,12 +5,11 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <memory>
 #include <numeric>
-#include <ostream>
+#include <print>
 #include <ranges>
 #include <set>
 #include <string>
@@ -20,11 +19,6 @@
 struct sensor_t {
   point pos;
   int range;
-
-  friend std::ostream& operator<<(std::ostream& out, const sensor_t& sensor) {
-    out << sensor.pos << "," << sensor.range;
-    return out;
-  }
 };
 
 struct bounds_t {
@@ -178,15 +172,14 @@ std::int64_t solve_case(const std::string& filename) {
     score = beacon.x * multiplier + beacon.y;
   }
 
-  std::cout << filename << " -> " << score << std::endl;
   return score;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(26, (solve_case<10, false>("day15.example")));
   AOC_EXPECT_RESULT(5870800, (solve_case<2000000, false>("day15.input")));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(56000011, (solve_case<10, true>("day15.example")));
   AOC_EXPECT_RESULT(10908230916597, (solve_case<2000000, true>("day15.input")));
   AOC_RETURN_CHECK_RESULT();

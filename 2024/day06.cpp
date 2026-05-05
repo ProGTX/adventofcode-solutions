@@ -3,7 +3,7 @@
 #include "../common/common.h"
 
 #include <algorithm>
-#include <iostream>
+#include <print>
 #include <ranges>
 #include <set>
 #include <string>
@@ -128,26 +128,25 @@ int solve_case(const std::string& filename) {
     sum = interfere_with_guard(lab_map, starting_guard_pos);
   }
 
-  std::cout << filename << " -> " << sum << std::endl;
   return sum;
 }
 
 void test_interference(point extra_obstacle) {
   constexpr point start_pos{5, 7};
   auto lab_map = test_map();
-  aoc::println("TESTING",
+  std::println("TESTING",
                std::views::repeat('~', 64) | aoc::ranges::to<std::string>());
   lab_map.at(extra_obstacle.y, extra_obstacle.x) = obstacle;
-  aoc::println("Check", follow_guard<true>(lab_map, start_pos));
+  std::println("Check", follow_guard<true>(lab_map, start_pos));
   lab_map.at(extra_obstacle.y, extra_obstacle.x) = 'O';
   lab_map.print_all();
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(41, solve_case<false>("day06.example"));
   AOC_EXPECT_RESULT(5030, solve_case<false>("day06.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT(6, solve_case<true>("day06.example"));
   // NOTE: Time required with different containers (on Ryzen 5950X):
   //    std::vector                       = 96    s

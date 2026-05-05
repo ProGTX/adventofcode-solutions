@@ -4,7 +4,7 @@
 
 #include <array>
 #include <cstdint>
-#include <iostream>
+#include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -111,15 +111,15 @@ int_t solve_case(const std::string& filename) {
   int_t sum = 0;
   sum = aoc::ranges::accumulate(
       machines | std::views::transform(&claw_machine::lowest_cost), int_t{0});
-  std::cout << filename << " -> " << sum << std::endl;
+
   return sum;
 }
 
 int main() {
-  std::cout << "Part 1" << std::endl;
+  std::println("Part 1");
   AOC_EXPECT_RESULT(480, solve_case<false>("day13.example"));
   AOC_EXPECT_RESULT(38714, solve_case<false>("day13.input"));
-  std::cout << "Part 2" << std::endl;
+  std::println("Part 2");
   AOC_EXPECT_RESULT((459236326669 + 416082282239),
                     solve_case<true>("day13.example"));
   AOC_EXPECT_RESULT(74015623345775, solve_case<true>("day13.input"));

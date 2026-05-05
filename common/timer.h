@@ -7,7 +7,7 @@
 
 #ifndef AOC_MODULE_SUPPORT
 #include <chrono>
-#include <iostream>
+#include <print>
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {
@@ -52,7 +52,7 @@ class scoped_timer {
 
   ~scoped_timer() {
     timer_.stop();
-    std::cout << timer_.milliseconds() << "ms" << std::endl;
+    std::println("{} ms", timer_.milliseconds());
   }
 
  private:
