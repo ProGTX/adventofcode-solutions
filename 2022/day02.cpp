@@ -1,19 +1,21 @@
 // https://adventofcode.com/2022/day/2
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
-#include <algorithm>
-#include <array>
-#include <exception>
-#include <functional>
-#include <iterator>
-#include <map>
-#include <numeric>
 #include <print>
 #include <ranges>
-#include <string>
+#include <span>
 #include <string_view>
-#include <vector>
+
+auto parse(String const& filename) -> Vec<std::pair<char, char>> {
+  return aoc::views::read_lines(filename) |
+         std::views::transform([](std::string_view line) {
+           auto [a, b] = aoc::split_once(line, ' ');
+           return std::pair{a.at(0), b.at(0)};
+         }) |
+         aoc::ranges::to<Vec<std::pair<char, char>>>();
+}
 
 enum hand {
   // Starts at 0 instead of 1 so we can do modulo 3
@@ -29,7 +31,7 @@ enum outcome {
   win = 6,
 };
 
-int solve_part1(const std::string& filename) {
+fn solve_case1(std::span<const std::pair<char, char>> input) -> int {
   int score = 0;
 
   aoc::flat_map<char, int> hand_map = {
@@ -37,10 +39,9 @@ int solve_part1(const std::string& filename) {
       {'X', rock}, {'Y', paper}, {'Z', scissors},
   };
 
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [opponentStr, responseStr] = aoc::split_once(line, ' ');
-    auto opponent = hand_map.at(opponentStr.at(0));
-    auto response = hand_map.at(responseStr.at(0));
+  for (auto [opponent_char, response_char] : input) {
+    let opponent = hand_map.at(opponent_char);
+    let response = hand_map.at(response_char);
     // Add 1 because values are lower
     score += response + 1;
     if (opponent == response) {
@@ -58,7 +59,7 @@ int solve_part1(const std::string& filename) {
   return score;
 }
 
-int solve_part2(const std::string& filename) {
+fn solve_case2(std::span<const std::pair<char, char>> input) -> int {
   int score = 0;
 
   aoc::flat_map<char, int> hand_map = {
@@ -66,10 +67,9 @@ int solve_part2(const std::string& filename) {
       {'X', lose}, {'Y', draw},  {'Z', win},
   };
 
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [opponentStr, outcomeStr] = aoc::split_once(line, ' ');
-    auto opponent = hand_map.at(opponentStr.at(0));
-    auto outcome = hand_map.at(outcomeStr.at(0));
+  for (auto [opponent_char, outcome_char] : input) {
+    let opponent = hand_map.at(opponent_char);
+    let outcome = hand_map.at(outcome_char);
     score += outcome;
     if (outcome == draw) {
       // Add 1 because values are lower
@@ -91,10 +91,13 @@ int solve_part2(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(15, solve_part1("day02.example"));
-  AOC_EXPECT_RESULT(14375, solve_part1("day02.input"));
+  let example = parse("day02.example");
+  AOC_EXPECT_RESULT(15, solve_case1(example));
+  let input = parse("day02.input");
+  AOC_EXPECT_RESULT(14375, solve_case1(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(12, solve_part2("day02.example"));
-  AOC_EXPECT_RESULT(10274, solve_part2("day02.input"));
+  AOC_EXPECT_RESULT(12, solve_case2(example));
+  AOC_EXPECT_RESULT(10274, solve_case2(input));
   AOC_RETURN_CHECK_RESULT();
 }
