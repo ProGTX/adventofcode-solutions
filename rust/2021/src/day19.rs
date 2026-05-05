@@ -26,12 +26,14 @@ fn parse(filename: &str) -> Vec<Scanner> {
     scanners
 }
 
-fn solve_case1(data: &[Scanner]) -> usize {
+#[allow(dead_code)]
+fn solve_case1(_data: &[Scanner]) -> usize {
     // TODO: Implement Part 1
     0
 }
 
-fn solve_case2(data: &[Scanner]) -> usize {
+#[allow(dead_code)]
+fn solve_case2(_data: &[Scanner]) -> usize {
     // TODO: Implement Part 2
     0
 }
@@ -40,9 +42,9 @@ fn main() {
     println!("UNSOLVED");
 
     println!("Part 1");
-    let example = parse("day19.example");
-    // assert_eq!(79, solve_case1(&example));
-    let input = parse("day19.input");
+    let _example = parse("day19.example");
+    // assert_eq!(79, solve_case1(&_example));
+    let _input = parse("day19.input");
     // assert_eq!(XXX, solve_case1(&input));
 
     println!("Part 2");

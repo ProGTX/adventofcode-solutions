@@ -7,6 +7,7 @@ enum Reg {
 }
 
 #[derive(Clone, Copy, Debug)]
+#[allow(dead_code)]
 enum Operand {
     Reg(Reg),
     Num(i64),
@@ -23,6 +24,7 @@ enum Op {
 }
 
 #[derive(Clone, Copy, Debug)]
+#[allow(dead_code)]
 struct Instr {
     op: Op,
     dst: Reg,
@@ -72,6 +74,7 @@ fn parse(filename: &str) -> Vec<Instr> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn execute(mut regs: [i64; 4], instructions: &[Instr], input: &[i64]) -> [i64; 4] {
     let mut input = input.iter().copied();
     for instr in instructions {
@@ -92,12 +95,13 @@ fn execute(mut regs: [i64; 4], instructions: &[Instr], input: &[i64]) -> [i64; 4
     regs
 }
 
-fn solve_case1(instructions: &[Instr]) -> u64 {
+fn solve_case1(_instructions: &[Instr]) -> u64 {
     // TODO: Implement Part 1
     0
 }
 
-fn solve_case2(instructions: &[Instr]) -> u64 {
+#[allow(dead_code)]
+fn solve_case2(_instructions: &[Instr]) -> u64 {
     // TODO: Implement Part 2
     0
 }
@@ -107,8 +111,8 @@ fn main() {
 
     let example = parse("day24.example");
     assert_eq!(0, solve_case1(&example));
-    let input = parse("day24.input");
-    // assert_eq!(XXX, solve_case1(&input));
+    let _input = parse("day24.input");
+    // assert_eq!(XXX, solve_case1(&_input));
 
     println!("Part 2");
     // assert_eq!(XXX, solve_case2(&example));

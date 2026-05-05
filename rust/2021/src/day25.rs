@@ -54,7 +54,8 @@ fn solve_case1(seafloor: &Seafloor) -> u32 {
     }
 }
 
-fn solve_case2(seafloor: &Seafloor) -> u32 {
+#[allow(dead_code)]
+fn solve_case2(_seafloor: &Seafloor) -> u32 {
     // TODO: Implement Part 2
     0
 }
