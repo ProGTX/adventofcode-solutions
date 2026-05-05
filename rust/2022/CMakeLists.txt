@@ -3,6 +3,7 @@ set(rust_local_sources "")
 
 add_rust_test(day01 ${year})
 add_rust_test(day02 ${year})
+add_rust_test(day03 ${year})
 add_rust_test(day07 ${year})
 add_rust_test(day08 ${year})
 add_rust_test(day11 ${year})
