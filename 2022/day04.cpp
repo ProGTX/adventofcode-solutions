@@ -1,10 +1,12 @@
 // https://adventofcode.com/2022/day/4
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <array>
 #include <print>
-#include <string>
+#include <ranges>
+#include <span>
 #include <string_view>
 
 struct range : public aoc::closed_range<int> {
@@ -13,36 +15,41 @@ struct range : public aoc::closed_range<int> {
       : base_t{range_array[0], range_array[1]} {}
 };
 
+using Input = Vec<std::pair<range, range>>;
+
+auto parse(String const& filename) -> Input {
+  return aoc::views::read_lines(filename) |
+         std::views::transform([](std::string_view line) {
+           auto [firstElfStr, secondElfStr] = aoc::split_once(line, ',');
+           return std::pair{range{aoc::split_once<int>(firstElfStr, '-')},
+                            range{aoc::split_once<int>(secondElfStr, '-')}};
+         }) |
+         aoc::ranges::to<Input>();
+}
+
 template <bool use_overlaps>
-int solve_case(const std::string& filename) {
-  int score = 0;
-
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [firstElfStr, secondElfStr] = aoc::split_once(line, ',');
-
-    auto firstElf = range{aoc::split_once<int>(firstElfStr, '-')};
-    auto secondElf = range{aoc::split_once<int>(secondElfStr, '-')};
-
+fn solve_case(std::span<const std::pair<range, range>> input) -> u32 {
+  u32 score = 0;
+  for (let& [ firstElf, secondElf ] : input) {
     if constexpr (use_overlaps) {
-      if (firstElf.overlaps_with(secondElf)) {
-        score += 1;
-      }
+      score += static_cast<u32>(firstElf.overlaps_with(secondElf));
     } else {
-      if (firstElf.contains(secondElf) || secondElf.contains(firstElf)) {
-        score += 1;
-      }
+      score += static_cast<u32>(firstElf.contains(secondElf) ||
+                                secondElf.contains(firstElf));
     }
   }
-
   return score;
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(2, solve_case<false>("day04.example"));
-  AOC_EXPECT_RESULT(582, solve_case<false>("day04.input"));
+  let example = parse("day04.example");
+  AOC_EXPECT_RESULT(2, solve_case<false>(example));
+  let input = parse("day04.input");
+  AOC_EXPECT_RESULT(582, solve_case<false>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(4, solve_case<true>("day04.example"));
-  AOC_EXPECT_RESULT(893, solve_case<true>("day04.input"));
+  AOC_EXPECT_RESULT(4, solve_case<true>(example));
+  AOC_EXPECT_RESULT(893, solve_case<true>(input));
   AOC_RETURN_CHECK_RESULT();
 }
