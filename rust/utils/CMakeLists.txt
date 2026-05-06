@@ -19,6 +19,7 @@ add_rust_source(math utils)
 add_rust_source(nd_point utils)
 add_rust_source(point utils)
 add_rust_source(string utils)
+add_rust_source(testing utils)
 
 function(generate_utils)
     set(RUST_UTILS_SECTION "")
