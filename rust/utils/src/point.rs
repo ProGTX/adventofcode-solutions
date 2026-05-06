@@ -203,6 +203,14 @@ where
     }
 }
 
+pub fn distance_manhattan<T>(a: Point<T>, b: Point<T>) -> T
+where
+    T: Add<Output = T> + Sub<Output = T> + Neg<Output = T> + PartialOrd + Default + Copy,
+{
+    let diff = (b - a).abs();
+    diff.x + diff.y
+}
+
 impl<T> Hash for Point<T>
 where
     T: Hash,
