@@ -1,86 +1,127 @@
 // https://adventofcode.com/2022/day/15
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
-#include <array>
-#include <cstdint>
-#include <iterator>
 #include <map>
-#include <memory>
-#include <numeric>
 #include <print>
 #include <ranges>
-#include <set>
-#include <string>
-#include <string_view>
-#include <vector>
 
-struct sensor_t {
+namespace stdv = std::views;
+namespace stdr = std::ranges;
+
+struct Sensor {
   point pos;
   int range;
 };
 
-struct bounds_t {
+struct Bounds {
   int min{0};
   int max{0};
 
-  friend bool operator==(const bounds_t&, const bounds_t&) = default;
-  friend auto operator<=>(const bounds_t& lhs, const bounds_t& rhs) = default;
+  constexpr bool operator==(const Bounds&) const = default;
+  constexpr auto operator<=>(const Bounds&) const = default;
 };
 
-using beacon_t = point;
+using Beacon = point;
 
-template <bool find_distress>
-std::vector<point> find_positions(const std::vector<sensor_t>& sensors,
-                                  const std::vector<beacon_t>& beacons,
-                                  const bounds_t& bounds, int inspect_row) {
-  std::vector<sensor_t> sensors_on_row;
-  std::ranges::copy_if(
-      sensors, std::back_inserter(sensors_on_row),
-      [&](const sensor_t& sensor) { return (sensor.pos.y == inspect_row); });
-  std::vector<beacon_t> beacons_on_row;
-  std::ranges::copy_if(
-      beacons, std::back_inserter(beacons_on_row),
-      [&](const beacon_t& beacon) { return (beacon.y == inspect_row); });
+struct Input {
+  Vec<Sensor> sensors;
+  Vec<Beacon> beacons;
+  aoc::min_max_helper min_max;
+};
 
-  std::vector<point> positions;
+fn parse(String const& filename) -> Input {
+  Input result;
 
-  for (int column = bounds.min; column <= bounds.max; ++column) {
-    point current{column, inspect_row};
-    bool within_range =
-        std::ranges::any_of(sensors, [&](const sensor_t& sensor) {
-          return (distance_manhattan(sensor.pos, current) <= sensor.range);
-        });
-    if (within_range == find_distress) {
-      continue;
-    }
-    bool is_empty =
-        !std::ranges::any_of(sensors_on_row,
-                             [&](const sensor_t& sensor) {
-                               return sensor.pos.x == current.x;
-                             }) &&
-        !std::ranges::any_of(beacons_on_row, [&](const beacon_t& beacon) {
-          return beacon.x == current.x;
-        });
-    if (is_empty) {
-      positions.push_back(current);
+  let convert_eq_str = [](str s) {
+    // Works for "x=" and "y="
+    return aoc::to_number<int>(aoc::trim(s).substr(2));
+  };
+
+  for (str line : aoc::views::read_lines(filename)) {
+    auto [sensor_info, beacon_info] = aoc::split_once(line, ':');
+
+    // Don't include the space at end, the null terminator is counted instead
+    sensor_info = sensor_info.substr(sizeof("Sensor at"));
+    beacon_info = beacon_info.substr(sizeof("closest beacon is at"));
+
+    let beacon = [&] {
+      let[x_eq, y_eq] = aoc::split_once(beacon_info, ',');
+      let beacon = point{convert_eq_str(x_eq), convert_eq_str(y_eq)};
+      result.min_max.update(beacon);
+      result.beacons.push_back(beacon);
+      return beacon;
+    }();
+    {
+      let[x_eq, y_eq] = aoc::split_once(sensor_info, ',');
+      let sensor = point{convert_eq_str(x_eq), convert_eq_str(y_eq)};
+      result.min_max.update(sensor);
+      let range = distance_manhattan(sensor, beacon);
+      result.sensors.emplace_back(sensor, range);
     }
   }
 
-  return positions;
+  return result;
 }
 
-beacon_t find_distress_beacon(const std::vector<sensor_t>& sensors,
-                              const bounds_t& bounds) {
-  std::map<int, aoc::flat_set<bounds_t>> row_exclusions;
+template <bool find_distress>
+fn find_positions(Vec<Sensor> const& sensors, Vec<Beacon> const& beacons,
+                  Bounds const& bounds, int inspect_row) -> Vec<point> {
+  let sensors_on_row = sensors |
+                       stdv::filter([&](Sensor const& sensor) {
+                         return sensor.pos.y == inspect_row;
+                       }) |
+                       aoc::ranges::to<Vec<Sensor>>();
+  let beacons_on_row = beacons |
+                       stdv::filter([&](Beacon const& beacon) {
+                         return beacon.y == inspect_row;
+                       }) |
+                       aoc::ranges::to<Vec<Beacon>>();
+  return //
+      Range{bounds.min, bounds.max + 1} |
+      stdv::transform([&](int column) { return point{column, inspect_row}; }) |
+      stdv::filter([&](point current) {
+        let within_range = stdr::any_of(sensors, [&](Sensor const& sensor) {
+          return distance_manhattan(sensor.pos, current) <= sensor.range;
+        });
+        return within_range != find_distress;
+      }) |
+      stdv::filter([&](point current) {
+        return !stdr::any_of(sensors_on_row, [&](Sensor const& sensor) {
+          return sensor.pos.x == current.x;
+        }) && !stdr::any_of(beacons_on_row, [&](Beacon const& beacon) {
+          return beacon.x == current.x;
+        });
+      }) |
+      aoc::ranges::to<Vec<point>>();
+}
 
-  const auto add_exclusion = [&](int row, const sensor_t& sensor, int width) {
+template <int inspect_row>
+fn solve_case1(Input const& input) -> i64 {
+  let & [ sensors, beacons, min_max ] = input;
+  let max_range = stdr::max(sensors, [](Sensor const& lhs, Sensor const& rhs) {
+                    return lhs.range < rhs.range;
+                  }).range;
+  let largest_distance = 2 * max_range + 1;
+  return find_positions<false>(sensors, beacons,
+                               {min_max.min_value.x - largest_distance,
+                                min_max.max_value.x + largest_distance},
+                               inspect_row)
+      .size();
+}
+
+fn find_distress_beacon(Vec<Sensor> const& sensors, Bounds const& bounds)
+    -> Beacon {
+  std::map<int, aoc::flat_set<Bounds>> row_exclusions;
+
+  let add_exclusion = [&](int row, Sensor const& sensor, int width) {
     if ((row < bounds.min) || (row > bounds.max)) {
       return;
     }
-    bounds_t exclusion{std::max(sensor.pos.x - width, bounds.min),
-                       std::min(sensor.pos.x + width, bounds.max)};
+    let exclusion = Bounds{std::max(sensor.pos.x - width, bounds.min),
+                           std::min(sensor.pos.x + width, bounds.max)};
     if (exclusion.min > exclusion.max) {
       return;
     }
@@ -88,7 +129,7 @@ beacon_t find_distress_beacon(const std::vector<sensor_t>& sensors,
   };
 
   // Collect exclusion zones for each row
-  for (const sensor_t& sensor : sensors) {
+  for (let& sensor : sensors) {
     for (int row = sensor.pos.y - sensor.range, width = 0; row < sensor.pos.y;
          ++row, ++width) {
       add_exclusion(row, sensor, width);
@@ -100,87 +141,38 @@ beacon_t find_distress_beacon(const std::vector<sensor_t>& sensors,
   }
 
   // Try to find a gap in the exclusion zones
-  for (const auto& [row, exclusions] : row_exclusions) {
-    bounds_t previous{bounds.min, bounds.min};
-    for (const auto& row_exclusion : exclusions) {
+  for (let& [ row, exclusions ] : row_exclusions) {
+    auto previous = Bounds{bounds.min, bounds.min};
+    for (let& row_exclusion : exclusions) {
       if (row_exclusion.min - previous.max > 0) {
         return point{previous.max + 1, row};
       }
-      previous = bounds_t{row_exclusion.min,
-                          std::max(row_exclusion.max, previous.max)};
+      previous =
+          Bounds{row_exclusion.min, std::max(row_exclusion.max, previous.max)};
     }
   }
 
   return {};
 }
 
-template <int inspect_row, bool find_distress>
-std::int64_t solve_case(const std::string& filename) {
-  std::vector<sensor_t> sensors;
-  std::vector<beacon_t> beacons;
-
-  const auto convert_eq_str = [](std::string_view str) {
-    // Works for "x=" and "y="
-    return aoc::to_number<int>(aoc::trim(str).substr(2));
-  };
-
-  aoc::min_max_helper min_max;
-
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [sensor_info, beacon_info] = aoc::split_once(line, ':');
-
-    // Don't include the space at end, the null terminator is counted instead
-    sensor_info = sensor_info.substr(sizeof("Sensor at"));
-    beacon_info = beacon_info.substr(sizeof("closest beacon is at"));
-
-    point beacon;
-    point sensor;
-    {
-      auto [x_eq, y_eq] = aoc::split_once(beacon_info, ',');
-      beacon = point{convert_eq_str(x_eq), convert_eq_str(y_eq)};
-      min_max.update(beacon);
-      beacons.push_back(beacon);
-    }
-    {
-      auto [x_eq, y_eq] = aoc::split_once(sensor_info, ',');
-      sensor = point{convert_eq_str(x_eq), convert_eq_str(y_eq)};
-      min_max.update(sensor);
-      auto range = distance_manhattan(sensor, beacon);
-      sensors.emplace_back(sensor, range);
-    }
-  }
-
-  // Result for part 2 is huge, store it into a std::int64_t
-  std::int64_t score = 0;
-
-  if constexpr (!find_distress) {
-    auto max_range =
-        std::ranges::max(sensors, [](const sensor_t& lhs, const sensor_t& rhs) {
-          return lhs.range < rhs.range;
-        }).range;
-    const auto largest_distance = 2 * max_range + 1;
-    auto positions =
-        find_positions<find_distress>(sensors, beacons,
-                                      {min_max.min_value.x - largest_distance,
-                                       min_max.max_value.x + largest_distance},
-                                      inspect_row);
-    score = positions.size();
-  } else {
-    constexpr std::int64_t multiplier = 4000000;
-    const int max_pos = (inspect_row == 10) ? 20 : multiplier;
-    auto beacon = find_distress_beacon(sensors, {0, max_pos});
-    score = beacon.x * multiplier + beacon.y;
-  }
-
-  return score;
+template <int inspect_row>
+fn solve_case2(Input const& input) -> i64 {
+  constexpr i64 multiplier = 4000000;
+  let max_pos = (inspect_row == 10) ? 20 : static_cast<int>(multiplier);
+  let beacon = find_distress_beacon(input.sensors, {0, max_pos});
+  return beacon.x * multiplier + beacon.y;
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(26, (solve_case<10, false>("day15.example")));
-  AOC_EXPECT_RESULT(5870800, (solve_case<2000000, false>("day15.input")));
+  let example = parse("day15.example");
+  AOC_EXPECT_RESULT(26, solve_case1<10>(example));
+  let input = parse("day15.input");
+  AOC_EXPECT_RESULT(5870800, solve_case1<2000000>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(56000011, (solve_case<10, true>("day15.example")));
-  AOC_EXPECT_RESULT(10908230916597, (solve_case<2000000, true>("day15.input")));
+  AOC_EXPECT_RESULT(56000011, solve_case2<10>(example));
+  AOC_EXPECT_RESULT(10908230916597, solve_case2<2000000>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
