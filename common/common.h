@@ -44,10 +44,16 @@ static bool g_success = true;
 #define AOC_EXPECT_RESULT(expected, actual)                                    \
   {                                                                            \
     constexpr auto expected_v = (expected);                                    \
+    aoc::timer timer_;                                                         \
+    timer_.start();                                                            \
     const auto actual_v = (actual);                                            \
+    timer_.stop();                                                             \
     if (expected_v != actual_v) {                                              \
-      std::println("Wrong result! Expected {}, got {}", expected_v, actual_v); \
+      std::println("  FAIL {} ms: expected {}, got {}", timer_.milliseconds(), \
+                   expected_v, actual_v);                                      \
       g_success = false;                                                       \
+    } else {                                                                   \
+      std::println("  OK {} ms", timer_.milliseconds());                       \
     }                                                                          \
   }
 
