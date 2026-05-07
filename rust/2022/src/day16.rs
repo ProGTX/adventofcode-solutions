@@ -185,13 +185,11 @@ fn solve_case2((valves, aa_id): &Input) -> u32 {
     let mut most_pressure = 0;
     let num_valves = flow_rates.len();
     for subset1 in (1..num_valves).powerset() {
-        if (subset1.len() > (num_valves / 2)) {
-            // subset2 has already covered these sizes,
-            // mirrored solutions are identical
-            break;
-        }
-        if (subset1.len() < (num_valves / 2)) {
-            // Heuristic, the subsets should be about the same size
+        if (subset1.len() != (num_valves / 2)) {
+            // subset2 has already covered smaller sizes,
+            // mirrored solutions are identical, skipping larger ones is safe
+            // However, skipping smaller ones is a heuristic
+            // that just happens to work here
             continue;
         }
         let subset2 = (1..num_valves).filter(|valve_id| {
