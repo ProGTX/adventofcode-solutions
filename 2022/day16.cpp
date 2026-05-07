@@ -1,129 +1,142 @@
 // https://adventofcode.com/2022/day/16
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <array>
-#include <cstdlib>
-#include <iterator>
-#include <map>
-#include <memory>
-#include <numeric>
+#include <limits>
 #include <print>
-#include <ranges>
+#include <queue>
 #include <string>
 #include <string_view>
 #include <vector>
 
-template <class Name>
-struct valve_t {
-  using name_t = Name;
-  using tunnels_t = std::vector<name_t>;
+namespace stdv = std::views;
 
-  name_t name;
-  int rate;
-  tunnels_t tunnels;
+struct Valve {
+  u32 flow_rate;
+  Vec<usize> tunnels;
+};
+using Valves = Vec<Valve>;
 
-  friend bool operator==(const valve_t& lhs, const valve_t& rhs) {
-    return lhs.name == rhs.name;
-  }
-  friend bool operator==(const valve_t& lhs, const name_t& name) {
-    return lhs.name == name;
-  }
+struct Input {
+  Valves valves;
+  usize aa_id;
 };
 
-using named_valves_t = std::vector<valve_t<std::string>>;
-using valves_t = std::vector<valve_t<int>>;
-// Using string instead of vector gives us SSO
-using path_t = std::string;
+auto parse(const String& filename) -> Input {
+  let lines = aoc::views::read_lines(filename) | aoc::ranges::to<Vec<String>>();
 
-bool on_path(const auto& path, const auto& valve) {
-  auto index = 0;
-  if constexpr (std::same_as<std::decay_t<decltype(valve)>, valve_t<int>>) {
-    index = valve.name;
-  } else {
-    index = valve;
-  }
-  return std::ranges::find(path, index) != std::end(path);
-};
-
-int release_pressure(const valves_t& valves, path_t path,
-                     const int current_index, const int current_release,
-                     const int cumulative_release, const int num_minutes) {
-  if (num_minutes <= 0) {
-    return cumulative_release + current_release;
+  auto name_to_id = aoc::name_to_id{};
+  for (str line : lines) {
+    // "Valve AA has flow rate=..."
+    name_to_id.intern(line.substr(6, 2));
   }
 
-  const auto& current = valves[current_index];
-  std::vector<int> release_values;
-  release_values.reserve(current.tunnels.size() + 1);
+  auto valves = Valves(lines.size());
+  for (str line : lines) {
+    let name = line.substr(6, 2);
+    let id = name_to_id.expect(name);
 
-  if ((current.rate > 0) && !on_path(path, current_index)) {
-    path.push_back(current_index);
-    release_values.push_back(release_pressure(
-        valves, path, current_index, current_release + current.rate,
-        cumulative_release + current_release, num_minutes - 1));
-    path.resize(path.size() - 1);
+    // "...flow rate=20; tunnel..."
+    let[rate_part, rest] = aoc::split_once(line, ';');
+    let flow_rate = aoc::to_number<u32>(aoc::split_once(rate_part, '=')[1]);
+
+    // "... tunnels lead to valves DD, II, BB"  or
+    // "... tunnel leads to valve GG"
+    auto neighbors_str = rest.substr(rest.find("valve") + sizeof("valve") - 1);
+    if (!neighbors_str.empty() && neighbors_str.front() == 's') {
+      neighbors_str = neighbors_str.substr(1);
+    }
+    let tunnels = aoc::split(neighbors_str, ',', aoc::trimmer{}) |
+                  stdv::transform([&](str n) { return name_to_id.expect(n); }) |
+                  aoc::ranges::to<Vec<usize>>();
+
+    valves[id] = Valve{flow_rate, std::move(tunnels)};
   }
 
-  for (const auto& neighbor : current.tunnels) {
-    path.push_back(current_index);
-    release_values.push_back(release_pressure(
-        valves, path, neighbor, current_release,
-        cumulative_release + current_release, num_minutes - 1));
-    path.resize(path.size() - 1);
-  }
-
-  return std::ranges::max(release_values);
+  return {std::move(valves), name_to_id.expect("AA")};
 }
 
-template <int num_minutes, bool>
-int solve_case(const std::string& filename) {
-  named_valves_t named_valves;
-
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [valve_info, tunnel_info] = aoc::split_once<std::string>(line, ';');
-
-    auto [vstr0, name, vstr1, vstr2, rate_str] =
-        aoc::split<std::array<std::string, 5>>(valve_info, ' ');
-
-    auto rate = aoc::to_number<int>(rate_str.substr(sizeof("rate")));
-    tunnel_info = tunnel_info.substr(sizeof("tunnels lead to valves"));
-    auto tunnels = aoc::split_to_vec<std::string>(tunnel_info, ',',
-                                                  aoc::trimmer<std::string>());
-
-    named_valves.emplace_back(std::move(name), rate, std::move(tunnels));
+fn bfs_distances(Valves const& valves, usize start) -> Vec<u32> {
+  constexpr let max_distance = std::numeric_limits<u32>::max();
+  auto distances = Vec<u32>(valves.size(), max_distance);
+  distances[start] = 0;
+  auto queue = std::queue<usize>{};
+  queue.push(start);
+  while (!queue.empty()) {
+    let current = queue.front();
+    queue.pop();
+    for (let next : valves[current].tunnels) {
+      if (distances[next] == max_distance) {
+        distances[next] = distances[current] + 1;
+        queue.push(next);
+      }
+    }
   }
+  return distances;
+}
 
-  const auto named_valves_begin = std::begin(named_valves);
-  const auto name_to_index = [&](std::string_view name) {
-    auto it = std::find_if(
-        std::begin(named_valves), std::end(named_valves),
-        [&](const valve_t<std::string>& valve) { return valve.name == name; });
-    return static_cast<int>(std::distance(named_valves_begin, it));
-  };
+struct SearchState {
+  usize current_id;
+  u32 time_left;
+  Vec<bool> opened;
+};
 
-  valves_t valves;
-  std::ranges::transform(named_valves, std::back_inserter(valves),
-                         [&](const valve_t<std::string>& valve) {
-                           std::vector<int> tunnels;
-                           tunnels.reserve(valve.tunnels.size());
-                           std::ranges::transform(valve.tunnels,
-                                                  std::back_inserter(tunnels),
-                                                  name_to_index);
-                           return valve_t<int>{name_to_index(valve.name),
-                                               valve.rate, std::move(tunnels)};
-                         });
+fn find_most_pressure(const Valves& valves, const Vec<Vec<u32>>& distances,
+                      SearchState state, u32 total_flow, u32 total_pressure)
+    -> u32 {
+  auto most_pressure = total_pressure + total_flow * state.time_left;
+  for (let& [ neighbor_id, neighbor ] : valves | stdv::enumerate) {
+    // Find valves to open
+    if (state.opened[neighbor_id] || neighbor.flow_rate == 0) {
+      continue;
+    }
+    // +1 because it takes 1 minute to open the valve
+    let time_to_open = distances[state.current_id][neighbor_id] + 1;
+    if (time_to_open > state.time_left) {
+      continue;
+    }
+    // Move to neighbor valve and open it
+    auto next_opened = state.opened;
+    next_opened[neighbor_id] = true;
+    most_pressure =
+        std::max(most_pressure,
+                 find_most_pressure(
+                     valves, distances,
+                     SearchState{.current_id = static_cast<usize>(neighbor_id),
+                                 .time_left = state.time_left - time_to_open,
+                                 .opened = std::move(next_opened)},
+                     total_flow + neighbor.flow_rate,
+                     total_pressure + total_flow * time_to_open));
+  }
+  return most_pressure;
+}
 
-  return release_pressure(valves, {}, name_to_index("AA"), 0, 0, num_minutes);
+template <u32 num_minutes>
+fn solve_case1(const Input& input) -> u32 {
+  let num_valves = input.valves.size();
+  let distances = Range{0uz, num_valves} |
+                  stdv::transform([&](let neighbor_id) {
+                    return bfs_distances(input.valves, neighbor_id);
+                  }) |
+                  aoc::ranges::to<Vec<Vec<u32>>>();
+  return find_most_pressure( //
+      input.valves, distances,
+      SearchState{.current_id = input.aa_id,
+                  .time_left = num_minutes,
+                  .opened = Vec<bool>(num_valves, false)},
+      0, 0);
 }
 
 int main() {
   std::println("Part 1");
-  solve_case<25, false>("day16.example");
-  // solve_case<30, false>("day16.input");
-  // std::println("Part 2");
-  // solve_case<30, true>("day16.example");
-  // solve_case<30, true>("day16.input");
+  let example = parse("day16.example");
+  AOC_EXPECT_RESULT(1651, solve_case1<30>(example));
+  let input = parse("day16.input");
+  AOC_EXPECT_RESULT(1647, solve_case1<30>(input));
+
+  std::println("Part 2");
   AOC_RETURN_CHECK_RESULT();
 }
