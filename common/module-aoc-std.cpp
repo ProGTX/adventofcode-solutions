@@ -14,6 +14,7 @@ module;
 #include <exception>
 #include <fstream>
 #include <functional>
+#include <iostream>
 #include <iterator>
 #include <map>
 #include <memory>

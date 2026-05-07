@@ -10,6 +10,7 @@
 #include <charconv>
 #include <exception>
 #include <functional>
+#include <iostream>
 #include <iterator>
 #include <numeric>
 #include <optional>
@@ -548,6 +549,10 @@ class priority_queue {
   constexpr bool empty() const { return m_heap.empty(); }
   constexpr std::size_t size() const { return m_heap.size(); }
 };
+
+/// Custom flush function so that users of the aoc module
+/// don't have to include iostream
+void flush() { std::cout << std::flush; }
 
 } // AOC_EXPORT_NAMESPACE(aoc)
 

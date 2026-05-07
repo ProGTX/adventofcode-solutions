@@ -55,6 +55,7 @@ static bool g_success = true;
     } else {                                                                   \
       std::println("  OK {} ms", timer_.milliseconds());                       \
     }                                                                          \
+    aoc::flush();                                                              \
   }
 
 #define AOC_RETURN_CHECK_RESULT()                                              \
