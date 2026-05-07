@@ -1,11 +1,10 @@
-use std::collections::HashMap;
-
+use arrayvec::ArrayVec;
 use itertools::Itertools;
 
 #[derive(Clone, Debug, Default)]
 struct Valve {
-    flow_rate: u32,
     valves: Vec<usize>,
+    flow_rate: u8,
 }
 
 type Input = (Vec<Valve>, usize);
@@ -27,7 +26,7 @@ fn parse(filename: &str) -> Input {
 
         // "...flow rate=20; tunnel..."
         let (rate_part, rest) = line.split_once(';').unwrap();
-        let flow_rate: u32 = rate_part.split_once('=').unwrap().1.parse().unwrap();
+        let flow_rate: u8 = rate_part.split_once('=').unwrap().1.parse().unwrap();
 
         // "... tunnels lead to valves DD, II, BB" or
         // "... tunnel leads to valve GG"
@@ -46,14 +45,14 @@ fn parse(filename: &str) -> Input {
     (valves, name_to_id.expect("AA"))
 }
 
-fn bfs_distances(valves: &[Valve], start: usize) -> Vec<u32> {
-    let mut distances = vec![u32::MAX; valves.len()];
+fn bfs_distances(valves: &[Valve], start: usize) -> Vec<u8> {
+    let mut distances = vec![u8::MAX; valves.len()];
     distances[start] = 0;
     let mut queue = std::collections::VecDeque::new();
     queue.push_back(start);
     while let Some(current) = queue.pop_front() {
         for &next in &valves[current].valves {
-            if distances[next] == u32::MAX {
+            if distances[next] == u8::MAX {
                 distances[next] = distances[current] + 1;
                 queue.push_back(next);
             }
@@ -62,9 +61,14 @@ fn bfs_distances(valves: &[Valve], start: usize) -> Vec<u32> {
     distances
 }
 
-fn compress_graph(valves: &[Valve], aa_id: usize) -> (Vec<u32>, Vec<Vec<u32>>) {
+// Maximum number of valves after graph compression
+const MAX_VALVES: usize = 16;
+type FlowRates = ArrayVec<u8, MAX_VALVES>;
+type SingleDistances = ArrayVec<u8, MAX_VALVES>;
+
+fn compress_graph(valves: &[Valve], aa_id: usize) -> (FlowRates, Vec<SingleDistances>) {
     // Precompute all-pairs distances
-    let distances: Vec<Vec<u32>> = (0..valves.len())
+    let distances: Vec<Vec<u8>> = (0..valves.len())
         .map(|i| bfs_distances(valves, i))
         .collect();
 
@@ -81,16 +85,16 @@ fn compress_graph(valves: &[Valve], aa_id: usize) -> (Vec<u32>, Vec<Vec<u32>>) {
 
     // Build compressed valves (only flow matters now)
     let n = nodes.len();
-    let mut flow_rates = Vec::with_capacity(n);
+    let mut flow_rates = FlowRates::new();
     for &old_id in &nodes {
         flow_rates.push(valves[old_id].flow_rate);
     }
 
     // Build compressed distance matrix
-    let mut new_distances = vec![vec![0; n]; n];
+    let mut new_distances = vec![SingleDistances::new(); n];
     for (i, &old_i) in nodes.iter().enumerate() {
-        for (j, &old_j) in nodes.iter().enumerate() {
-            new_distances[i][j] = distances[old_i][old_j];
+        for (&old_j) in nodes.iter() {
+            new_distances[i].push(distances[old_i][old_j]);
         }
     }
 
@@ -99,9 +103,9 @@ fn compress_graph(valves: &[Valve], aa_id: usize) -> (Vec<u32>, Vec<Vec<u32>>) {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct SearchState {
-    current_id: usize,
-    opened_mask: u32,
-    time_left: u32,
+    opened_mask: u16,
+    current_id: u8,
+    time_left: u8,
 }
 impl SearchState {
     fn is_open(&self, id: usize) -> bool {
@@ -111,11 +115,10 @@ impl SearchState {
         self.opened_mask |= 1 << id;
     }
 }
-type Cache = HashMap<SearchState, u32>;
 
 fn find_most_pressure(
-    flow_rates: &[u32],
-    distances: &[Vec<u32>],
+    flow_rates: &[u8],
+    distances: &[SingleDistances],
     state: SearchState,
     total_flow: u32,
 ) -> u32 {
@@ -126,10 +129,10 @@ fn find_most_pressure(
             // Find valves to open
             let neighbor_id = *neighbor_id + 1; // Skipped AA
             // +1 because it takes 1 minute to open the valve
-            let time_to_open = distances[state.current_id][neighbor_id] + 1;
+            let time_to_open = distances[state.current_id as usize][neighbor_id] + 1;
             // Despite graph compression, zero flow is used in part 2
             // to exclude a valve from a subset
-            return (neighbor_id != state.current_id)
+            return (neighbor_id != (state.current_id as usize))
                 && (**flow > 0)
                 && !state.is_open(neighbor_id)
                 && (time_to_open <= state.time_left);
@@ -137,24 +140,24 @@ fn find_most_pressure(
         .map(|(neighbor_id, flow)| {
             let neighbor_id = neighbor_id + 1; // Skipped AA 
             // Move to neighbor valve and open it
-            let time_to_open = distances[state.current_id][neighbor_id] + 1;
+            let time_to_open = distances[state.current_id as usize][neighbor_id] + 1;
             let mut new_state = SearchState {
-                current_id: neighbor_id,
                 opened_mask: state.opened_mask,
+                current_id: neighbor_id as u8,
                 time_left: state.time_left - time_to_open,
             };
             new_state.open(neighbor_id);
-            return (total_flow * time_to_open)
+            return (total_flow * time_to_open as u32)
                 + find_most_pressure(
                     //
                     flow_rates,
                     distances,
                     new_state,
-                    total_flow + flow,
+                    total_flow + (*flow as u32),
                 );
         })
         .max()
-        .unwrap_or(total_flow * state.time_left)
+        .unwrap_or(total_flow * state.time_left as u32)
 }
 
 fn solve_case1((valves, aa_id): &Input) -> u32 {
@@ -174,14 +177,23 @@ fn solve_case1((valves, aa_id): &Input) -> u32 {
 fn solve_case2((valves, aa_id): &Input) -> u32 {
     let (flow_rates, distances) = compress_graph(valves, *aa_id);
     let start_state = SearchState {
-        current_id: 0,
         opened_mask: 0,
+        current_id: 0,
         time_left: 26,
     };
 
     let mut most_pressure = 0;
     let num_valves = flow_rates.len();
     for subset1 in (1..num_valves).powerset() {
+        if (subset1.len() > (num_valves / 2)) {
+            // subset2 has already covered these sizes,
+            // mirrored solutions are identical
+            break;
+        }
+        if (subset1.len() < (num_valves / 2)) {
+            // Heuristic, the subsets should be about the same size
+            continue;
+        }
         let subset2 = (1..num_valves).filter(|valve_id| {
             return !subset1.iter().any(|s1_id| s1_id == valve_id);
         });
