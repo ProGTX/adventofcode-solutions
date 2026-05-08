@@ -1,44 +1,49 @@
 // https://adventofcode.com/2022/day/17
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <array>
-#include <cmath>
-#include <cstdint>
 #include <functional>
-#include <iterator>
-#include <memory>
-#include <numeric>
+#include <map>
 #include <print>
 #include <ranges>
-#include <string>
-#include <string_view>
-#include <tuple>
-#include <vector>
 
-using rock_index_t = std::int64_t;
+namespace stdr = std::ranges;
+namespace stdv = std::views;
+
+using rock_index_t = i64;
+using Input = Vec<int>;
 using grid_point = aoc::point_type<rock_index_t>;
-using rock_t = std::array<grid_point, 5>;
+constexpr let rock_size = 5;
+using rock_t = std::array<grid_point, rock_size>;
 
-constexpr void move_rock(rock_t& rock, grid_point move) {
+fn parse(String const& filename) -> Input {
+  auto lines = aoc::views::read_lines(filename);
+  return str{*stdr::begin(lines)} |
+         stdv::transform([](char c) { return (c == '<') ? -1 : 1; }) |
+         aoc::ranges::to<Input>();
+}
+
+fn move_rock(rock_t& rock, grid_point delta) {
   for (grid_point& p : rock) {
-    p += move;
+    p += delta;
   }
 }
 
 template <rock_index_t num_rocks>
-rock_index_t get_final_height(const std::vector<int>& pattern) {
-  static constexpr bool use_sparse_grid = num_rocks > 10000;
+fn solve_case(Input const& pattern) -> rock_index_t {
+  constexpr let use_sparse_grid = num_rocks > 10000;
 
   constexpr int left_most_index = 0;
   constexpr int right_most_index = 4;
   constexpr int top_most_index = 1;
   constexpr int bottom_most_index = 3;
 
-  static constexpr auto initial_rock_displacement = grid_point{2, 3};
+  constexpr let initial_rock_displacement = grid_point{2, 3};
 
-  constexpr std::array<rock_t, 5> rock_structures = std::invoke([] {
+  constexpr let rock_structures = std::invoke([&] {
     std::array<rock_t, 5> rocks;
     rocks[0] = {grid_point{0, 0}, grid_point{1, 0}, grid_point{2, 0},
                 grid_point{3, 0}, grid_point{3, 0}};
@@ -59,18 +64,17 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
     }
     return rocks;
   });
+  constexpr let num_rock_types = rock_structures.size();
 
-  static constexpr std::string_view rock_chars = "|=#$%*";
-  int rock_char_index = 0;
-
-  static constexpr char empty_char = ' ';
-  // static constexpr char rock_char = '#';
-  static constexpr int chamber_width = 7;
+  constexpr let empty_char = ' ';
+  constexpr let wall_char = '|'; // floor and side walls
+  constexpr let rock_char = '#'; // settled rocks
+  constexpr let chamber_width = 7;
 
   // Just use rocks as the walls, no need to do bounds checking
   using chamber_row_t = std::array<char, chamber_width + 2>;
 
-  auto chamber = std::invoke([]() {
+  auto chamber = std::invoke([] {
     if constexpr (use_sparse_grid) {
       return aoc::sparse_grid<char, char{}, grid_point, chamber_row_t>{};
     } else {
@@ -79,45 +83,43 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
   });
 
   // And use rocks for the floor
-  chamber_row_t floor;
-  std::ranges::fill(floor, rock_chars[0]);
-  chamber.add_row(floor);
+  {
+    auto floor = chamber_row_t{};
+    floor.fill(wall_char);
+    chamber.add_row(floor);
+  }
 
-  constexpr chamber_row_t empty_new_row = std::invoke([] {
+  constexpr let empty_new_row = std::invoke([&] {
     chamber_row_t new_row;
-    std::ranges::fill(new_row, empty_char);
-    new_row[0] = new_row[new_row.size() - 1] = rock_chars[0];
+    new_row.fill(empty_char);
+    new_row[0] = new_row[new_row.size() - 1] = wall_char;
     return new_row;
   });
 
-  const auto try_move_rock = [&](rock_t& falling_rock,
-                                 grid_point move) -> bool {
-    move_rock(falling_rock, move);
-    bool intersects_with_rock =
-        std::ranges::any_of(falling_rock, [&](const grid_point& rp) {
-          const auto value = chamber.at(rp.y, rp.x);
-          return std::ranges::any_of(
-              rock_chars, [&](char rock_char) { return (value == rock_char); });
+  let try_move_rock = [&](rock_t& falling_rock, grid_point delta) -> bool {
+    move_rock(falling_rock, delta);
+    let intersects_with_rock =
+        stdr::any_of(falling_rock, [&](const grid_point& rp) {
+          return chamber.at(rp.y, rp.x) != empty_char;
         });
     if (intersects_with_rock) {
       // Invalid movement, move it back
-      move_rock(falling_rock, -move);
+      move_rock(falling_rock, -delta);
       return false;
     }
     return true;
   };
 
-  rock_index_t current_height = 1;
+  auto current_height = rock_index_t{1};
   int pattern_index = 0;
-  const auto rock_solver = [&](const int rock_index) {
-    rock_char_index = (rock_char_index + 1) % rock_chars.size();
-
-    rock_t falling_rock = rock_structures[rock_index % rock_structures.size()];
-    const auto current_rock_height =
+  let rock_solver = [&](rock_index_t rock_index) {
+    auto falling_rock =
+        rock_structures[static_cast<usize>(rock_index % num_rock_types)];
+    let current_rock_height =
         falling_rock[top_most_index].y - falling_rock[bottom_most_index].y + 1;
 
     // Do initial falling stage without a chamber
-    for (int y = 0; y < initial_rock_displacement.y; ++y) {
+    for (let _ : Range{0, initial_rock_displacement.y}) {
       // Only do horizontal movement in  this loop
       auto sideways = pattern[pattern_index];
       auto leftmost = falling_rock[left_most_index].x + sideways;
@@ -129,10 +131,10 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
     }
 
     { // Place falling rock into the chamber
-      auto missing_rows = current_height +
-                          current_rock_height -
-                          static_cast<rock_index_t>(chamber.num_rows());
-      for (int r = 0; r < missing_rows; ++r) {
+      let missing_rows = current_height +
+                         current_rock_height -
+                         static_cast<rock_index_t>(chamber.num_rows());
+      for (rock_index_t r = 0; r < missing_rows; ++r) {
         chamber.add_row(empty_new_row);
       }
       // This move includes the vertical movement from the initial falling stage
@@ -142,15 +144,13 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
     }
 
     // Move rock until it settles
-    while (true) {
+    loop {
       auto sideways = pattern[pattern_index];
       try_move_rock(falling_rock, grid_point{sideways, 0});
       if (!try_move_rock(falling_rock, grid_point{0, -1})) {
         // Rock settled, engrave it into the chamber
         for (const grid_point& rp : falling_rock) {
-          auto actual_rock_char_index =
-              (rock_char_index % (rock_chars.size() - 1)) + 1;
-          chamber.modify(rock_chars[actual_rock_char_index], rp.y, rp.x);
+          chamber.modify(rock_char, rp.y, rp.x);
         }
         current_height =
             std::max(current_height, falling_rock[top_most_index].y + 1);
@@ -161,113 +161,97 @@ rock_index_t get_final_height(const std::vector<int>& pattern) {
     }
   };
 
-  // Perform iterations
+  // Cycle detection: the simulation is periodic once the same
+  // (rock_type, pattern_index, surface_hash) state recurse.
+  //
+  // rock_type and pattern_index alone are not sufficient:
+  // two states can share those while the chamber surface is shaped differently
+  // (rocks settled differently in earlier iterations).
+  // Including a hash of the top 30 rows makes false positives
+  // practically impossible, since 30 rows is well beyond
+  // how deep any rock can reach when settling.
+  //
+  // Once a repeated state is found:
+  //   cycle_rocks: how many rocks fit in one period
+  //   cycle_height: how much the tower grows per period
+  // We skip as many full periods as possible and simulate the remainder
 
-  const int cycle_size =
-      std::min(static_cast<size_t>(num_rocks),
-               std::lcm(rock_structures.size(), pattern.size()));
-  int rock_index = 0;
-
-  const auto [initial_num_rocks, initial_height,
-              initial_top_row] = std::invoke([&]() {
-    for (int r = 0; r < cycle_size; ++r) {
-      rock_solver(rock_index);
-      ++rock_index;
-    }
-    return std::tuple{static_cast<rock_index_t>(rock_index), current_height - 1,
-                      chamber.get_row(current_height - 1)};
-  });
-
-  const auto is_same_as_initial = [&](const chamber_row_t& current_top_row) {
-    for (int c = 1; c < initial_top_row.size() - 1; ++c) {
-      if (current_top_row[c] == initial_top_row[c]) {
-        continue;
-      }
-      if ((current_top_row[c] != empty_char) &&
-          (initial_top_row[c] != empty_char)) {
-        continue;
-      }
-      return false;
-    }
-    return true;
+  // State key: what uniquely identifies the simulation state
+  // rock_type, pattern_index, surface_hash
+  using CycleKey = std::tuple<int, int, size_t>;
+  // State value: where this state was last seen
+  struct SeenState {
+    rock_index_t rock_index;
+    rock_index_t height;
   };
 
-  const auto [num_cycle_reps, rocks_extended_cycle,
-              height_extended_cycle] = std::invoke([&]() {
-    int num_cycle_reps = 0;
-    while (rock_index < num_rocks) {
-      ++num_cycle_reps;
-      for (int r = 0; r < cycle_size; ++r) {
-        rock_solver(rock_index);
-        ++rock_index;
+  // Polynomial rolling hash of the top 30 chamber rows.
+  // Each character is folded in as: hash = hash * 131 + c.
+  // 131 is a prime larger than the printable ASCII range,
+  // which spreads bits well and keeps collisions rare.
+  // A false positive (two different surfaces producing the same hash)
+  // would yield a wrong answer, but with a 64-bit result
+  // and only thousands of states visited before a cycle is found,
+  // the collision probability is negligible.
+  let surface_hash = [&] {
+    size_t hash = 0;
+    for (rock_index_t k = 0; (k < 30) && ((current_height - 1 - k) >= 0); ++k) {
+      for (char c : chamber.get_row(current_height - 1 - k)) {
+        hash = hash * 131 + static_cast<size_t>(c);
       }
-      auto current_top_row = chamber.get_row(current_height - 1);
-      if (is_same_as_initial(current_top_row)) {
-        break;
-      }
     }
-    return std::tuple{num_cycle_reps,
-                      static_cast<rock_index_t>(rock_index - initial_num_rocks),
-                      current_height - 1 - initial_height};
-  });
+    return hash;
+  };
 
-  const auto [middle_height, leftover_rocks] = std::invoke([&]() {
-    if (num_cycle_reps == 0) {
-      return std::tuple{rock_index_t{0}, rock_index_t{0}};
-    }
-    const auto rocks_after_initial = num_rocks - initial_num_rocks;
-    AOC_ASSERT(rocks_after_initial > 0,
-               "Cannot have empty rocks after running cycles");
-    AOC_ASSERT(rocks_extended_cycle > 0,
-               "Cannot have empty rocks after running cycles");
-    AOC_ASSERT(height_extended_cycle > 0,
-               "Cannot have empty height after running cycles");
+  auto seen = std::map<CycleKey, SeenState>{};
+  auto skipped_height = rock_index_t{};
+  bool cycle_found = false;
 
-    const auto num_extended_cycles = rocks_after_initial / rocks_extended_cycle;
-    const auto middle_height = num_extended_cycles * height_extended_cycle;
-    const auto leftover_rocks = std::max(
-        rock_index_t{0},
-        rocks_after_initial - (rocks_extended_cycle * num_extended_cycles));
-    return std::tuple{middle_height, leftover_rocks};
-  });
+  for (rock_index_t index = 0; index < num_rocks; ++index) {
+    // Only compute the key and update the map until the cycle is detected,
+    // afterwards just simulate the remaining leftover rocks.
+    if (!cycle_found) {
+      let rock_type = static_cast<int>(index % num_rock_types);
+      let key = CycleKey{rock_type, pattern_index, surface_hash()};
 
-  const rock_index_t leftover_height = std::invoke([&]() {
-    const auto height_before = current_height - 1;
-    for (int r = 0; r < leftover_rocks; ++r) {
-      rock_solver(rock_index);
-      ++rock_index;
-    }
-    return current_height - 1 - height_before;
-  });
-
-  return initial_height + middle_height + leftover_height;
-}
-
-template <rock_index_t num_rocks>
-rock_index_t solve_case(const std::string& filename) {
-  std::vector<int> pattern;
-
-  for (std::string line : aoc::views::read_lines(filename)) {
-    std::ranges::transform(line, std::back_inserter(pattern), [](char value) {
-      if (value == '<') {
-        return -1;
+      if (seen.contains(key)) {
+        let[prev_i, prev_height] = seen[key];
+        let cycle_rocks = index - prev_i;
+        let cycle_height = (current_height - 1) - prev_height;
+        let full_cycles = (num_rocks - index) / cycle_rocks;
+        skipped_height = full_cycles * cycle_height;
+        index += full_cycles * cycle_rocks;
+        cycle_found = true;
+        if (index >= num_rocks) {
+          break;
+        }
       } else {
-        return 1;
+        seen[key] = SeenState{
+            .rock_index = index,
+            .height = current_height - 1,
+        };
       }
-    });
+    }
+
+    rock_solver(index);
   }
 
-  rock_index_t final_height = get_final_height<num_rocks>(pattern);
-  return final_height;
+  // Physical height of simulated rocks
+  // plus the height of all skipped periods
+  return current_height - 1 + skipped_height;
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(17, solve_case<10>("day17.example"));
-  AOC_EXPECT_RESULT(3068, solve_case<2022>("day17.example"));
-  AOC_EXPECT_RESULT(3085, solve_case<2022>("day17.input"));
+  let example = parse("day17.example");
+  AOC_EXPECT_RESULT(17, solve_case<10>(example));
+  AOC_EXPECT_RESULT(3068, solve_case<2022>(example));
+  let input = parse("day17.input");
+  AOC_EXPECT_RESULT(3085, solve_case<2022>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(1514285714288, solve_case<1000000000000>("day17.example"));
-  solve_case<1000000000000>("day17.input");
+  AOC_EXPECT_RESULT(1514285714288, solve_case<1000000000000>(example));
+  AOC_EXPECT_RESULT(1535483870924, solve_case<1000000000000>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
