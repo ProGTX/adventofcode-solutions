@@ -51,11 +51,11 @@ fn solve_case<const NUM_MIXES: usize, const DECRYPTION_KEY: i64>(numbers: &[i64]
 fn main() {
     println!("Part 1");
     let example = parse("day20.example");
-    assert_eq!(3, solve_case::<1, 1>(&example));
+    aoc::expect_result!(3, solve_case::<1, 1>(&example));
     let input = parse("day20.input");
-    assert_eq!(1591, solve_case::<1, 1>(&input));
+    aoc::expect_result!(1591, solve_case::<1, 1>(&input));
 
     println!("Part 2");
-    assert_eq!(1623178306, solve_case::<10, 811589153>(&example));
-    assert_eq!(14579387544492, solve_case::<10, 811589153>(&input));
+    aoc::expect_result!(1623178306, solve_case::<10, 811589153>(&example));
+    aoc::expect_result!(14579387544492, solve_case::<10, 811589153>(&input));
 }
