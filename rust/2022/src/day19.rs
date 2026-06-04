@@ -29,7 +29,7 @@ fn parse(filename: &str) -> Vec<Blueprint> {
                         _ => unreachable!("Invalid robot type"),
                     }
                 })
-                .collect::<ArrayVec<Resources, 4>>()
+                .collect::<ArrayVec<Resources, NUM_RESOURCES>>()
                 .into_inner()
                 .unwrap()
         })
@@ -67,14 +67,14 @@ impl SearchNode {
     const ROBOTS_MASK: u64 = 0x3f; // 6 bits
     const RESOURCES_MASK: u64 = 0xff; // 8 bits
 
-    const ROBOTS_SHIFT: [u32; 4] = [0, 6, 12, 18];
-    const RESOURCES_SHIFT: [u32; 4] = [24, 32, 40, 48];
+    const ROBOTS_SHIFT: [u32; NUM_ROBOTS] = [0, 6, 12, 18];
+    const RESOURCES_SHIFT: [u32; NUM_RESOURCES] = [24, 32, 40, 48];
     const TIME_SHIFT: u32 = 56;
 
     fn new(robots: Robots, resources: Resources, time_left: u8) -> Self {
         let mut node = Self { 0: 0 };
 
-        for i in 0..4 {
+        for i in 0..NUM_ROBOTS {
             node.set_robot(i, robots[i]);
             node.set_resource(i, resources[i]);
         }
@@ -84,12 +84,12 @@ impl SearchNode {
     }
 
     fn robots(&self, idx: usize) -> u8 {
-        debug_assert!(idx < 4);
+        debug_assert!(idx < NUM_ROBOTS);
         ((self.0 >> Self::ROBOTS_SHIFT[idx]) & Self::ROBOTS_MASK) as u8
     }
 
     fn set_robot(&mut self, idx: usize, value: u8) {
-        debug_assert!(idx < 4);
+        debug_assert!(idx < NUM_ROBOTS);
         debug_assert!(value < 64);
 
         let shift = Self::ROBOTS_SHIFT[idx];
@@ -100,12 +100,12 @@ impl SearchNode {
     }
 
     fn resources(&self, idx: usize) -> u8 {
-        debug_assert!(idx < 4);
+        debug_assert!(idx < NUM_RESOURCES);
         ((self.0 >> Self::RESOURCES_SHIFT[idx]) & Self::RESOURCES_MASK) as u8
     }
 
     fn set_resource(&mut self, idx: usize, value: u8) {
-        debug_assert!(idx < 4);
+        debug_assert!(idx < NUM_RESOURCES);
 
         let shift = Self::RESOURCES_SHIFT[idx];
         let mask = Self::RESOURCES_MASK << shift;
@@ -231,7 +231,7 @@ fn solve_case1(blueprints: &[Blueprint]) -> u16 {
         .sum()
 }
 
-fn solve_case2(blueprints: &[Blueprint]) -> u16 {
+fn solve_case2(blueprints: &[Blueprint]) -> u32 {
     let mut cache = Cache::new();
     blueprints
         .iter()
@@ -245,7 +245,7 @@ fn solve_case2(blueprints: &[Blueprint]) -> u16 {
                 SearchNode::new([1, 0, 0, 0], Resources::default(), 34),
             );
             println!("   Blueprint {} produces {} geodes", id, num_geodes);
-            num_geodes
+            num_geodes as u32
         })
         .product()
 }
