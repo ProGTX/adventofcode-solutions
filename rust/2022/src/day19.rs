@@ -142,8 +142,8 @@ fn clamp_resources(max_resources: &Resources, resources: &Resources, time_left: 
     let mut new_resources = resources.clone();
     // Skip clamping geode resources
     for (id, max_per_minute) in max_resources[0..GEODE_ID].iter().enumerate() {
-        let max_spend = *max_per_minute * time_left;
-        new_resources[id] = new_resources[id].min(max_spend);
+        let max_spend = *max_per_minute as u16 * time_left as u16;
+        new_resources[id] = (new_resources[id] as u16).min(max_spend) as u8;
     }
     new_resources
 }
