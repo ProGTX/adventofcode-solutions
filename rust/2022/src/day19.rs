@@ -36,28 +36,6 @@ fn parse(filename: &str) -> Vec<Blueprint> {
         .collect()
 }
 
-fn try_build_robot(
-    blueprint: &Blueprint,
-    max_resources: &Resources,
-    robots: &Robots,
-    resources: &Resources,
-    robot_id: usize,
-) -> Option<Resources> {
-    let mut new_resources = resources.clone();
-    for (cost_id, cost) in blueprint[robot_id].iter().enumerate() {
-        if (new_resources[cost_id] < *cost) {
-            // Can't afford robot
-            return None;
-        }
-        if (robots[cost_id] > max_resources[cost_id]) {
-            // Too many robots of this type
-            return None;
-        }
-        new_resources[cost_id] -= cost;
-    }
-    Some(new_resources)
-}
-
 /// This SearchNode is compressed into two bytes:
 /// ```
 /// struct SearchNode {
@@ -160,6 +138,38 @@ impl SearchNode {
 
 type Cache = HashMap<SearchNode, u16>;
 
+fn clamp_resources(max_resources: &Resources, resources: &Resources, time_left: u8) -> Resources {
+    let mut new_resources = resources.clone();
+    // Skip clamping geode resources
+    for (id, max_per_minute) in max_resources[0..GEODE_ID].iter().enumerate() {
+        let max_spend = *max_per_minute * time_left;
+        new_resources[id] = new_resources[id].min(max_spend);
+    }
+    new_resources
+}
+
+fn try_build_robot(
+    blueprint: &Blueprint,
+    max_resources: &Resources,
+    robots: &Robots,
+    resources: &Resources,
+    robot_id: usize,
+) -> Option<Resources> {
+    let mut new_resources = resources.clone();
+    for (cost_id, cost) in blueprint[robot_id].iter().enumerate() {
+        if (new_resources[cost_id] < *cost) {
+            // Can't afford robot
+            return None;
+        }
+        if (robots[cost_id] > max_resources[cost_id]) {
+            // Too many robots of this type
+            return None;
+        }
+        new_resources[cost_id] -= cost;
+    }
+    Some(new_resources)
+}
+
 fn max_open_geodes(
     cache: &mut Cache,
     blueprint: &Blueprint,
@@ -173,12 +183,22 @@ fn max_open_geodes(
         return new_resources[GEODE_ID] as u16;
     }
     debug_assert_ne!(0, time_left, "Time should never reach 0");
-    if let Some(&cached_result) = cache.get(&search_node) {
-        return cached_result;
-    }
+
     // Try building each type of robot with the resources available
     let robots = search_node.robots_array();
     let resources = search_node.resources_array();
+
+    // If we have more resources than we can use,
+    // then the cache node is functionally equivalent to the one with the largest resources
+    let cache_node = SearchNode::new(
+        robots.clone(),
+        clamp_resources(max_resources, &resources, time_left),
+        time_left,
+    );
+
+    if let Some(&cached_result) = cache.get(&cache_node) {
+        return cached_result;
+    }
 
     // Building a geode-cracking robot is always better than the alternatives
     if let Some(new_resources) =
@@ -227,7 +247,7 @@ fn max_open_geodes(
                 SearchNode::new(robots, new_resources, time_left - 1),
             )
         });
-    cache.insert(search_node, num_geodes);
+    cache.insert(cache_node, num_geodes);
     return num_geodes;
 }
 
