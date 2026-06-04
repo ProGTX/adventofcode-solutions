@@ -7,10 +7,8 @@ type Resources = [u8; NUM_RESOURCES];
 type Robots = Resources;
 const NUM_ROBOTS: usize = NUM_RESOURCES;
 type Blueprint = [Resources; NUM_ROBOTS];
-const ORE_ID: usize = 0;
-const CLAY_ID: usize = 1;
-const OBSIDIAN_ID: usize = 2;
 const GEODE_ID: usize = 3;
+type Time = u8;
 
 fn parse(filename: &str) -> Vec<Blueprint> {
     aoc::file::read_lines(filename)
@@ -56,7 +54,7 @@ impl SearchNode {
     const RESOURCES_SHIFT: [u32; NUM_RESOURCES] = [24, 32, 40, 48];
     const TIME_SHIFT: u32 = 56;
 
-    fn new(robots: Robots, resources: Resources, time_left: u8) -> Self {
+    fn new(robots: Robots, resources: Resources, time_left: Time) -> Self {
         let mut node = Self { 0: 0 };
 
         for i in 0..NUM_ROBOTS {
@@ -99,11 +97,11 @@ impl SearchNode {
         self.0 |= (value as u64) << shift;
     }
 
-    fn time_left(&self) -> u8 {
-        (self.0 >> Self::TIME_SHIFT) as u8
+    fn time_left(&self) -> Time {
+        (self.0 >> Self::TIME_SHIFT) as Time
     }
 
-    fn set_time_left(&mut self, value: u8) {
+    fn set_time_left(&mut self, value: Time) {
         let mask = 0xffu64 << Self::TIME_SHIFT;
         self.0 &= !mask;
         self.0 |= (value as u64) << Self::TIME_SHIFT;
@@ -127,10 +125,18 @@ impl SearchNode {
         ]
     }
 
+    fn set_resources_array(&mut self, resources: Resources) {
+        for idx in (0..NUM_RESOURCES) {
+            self.set_resource(idx, resources[idx]);
+        }
+    }
+
+    /// Collects resources using current robots,
+    /// returns total new resources after collection
     fn collect_resources(&self) -> Resources {
         let mut new_resources = self.resources_array();
         for robot_id in (0..NUM_ROBOTS) {
-            new_resources[robot_id] += self.robots(robot_id);
+            new_resources[robot_id] = new_resources[robot_id].saturating_add(self.robots(robot_id));
         }
         new_resources
     }
@@ -138,7 +144,7 @@ impl SearchNode {
 
 type Cache = HashMap<SearchNode, u16>;
 
-fn clamp_resources(max_resources: &Resources, resources: &Resources, time_left: u8) -> Resources {
+fn clamp_resources(max_resources: &Resources, resources: &Resources, time_left: Time) -> Resources {
     let mut new_resources = resources.clone();
     // Skip clamping geode resources
     for (id, max_per_minute) in max_resources[0..GEODE_ID].iter().enumerate() {
@@ -148,26 +154,59 @@ fn clamp_resources(max_resources: &Resources, resources: &Resources, time_left: 
     new_resources
 }
 
+/// Figure out how much time it takes to build a robot
+/// and what the resources would be at the end
 fn try_build_robot(
     blueprint: &Blueprint,
     max_resources: &Resources,
-    robots: &Robots,
-    resources: &Resources,
+    search_node: &SearchNode,
     robot_id: usize,
-) -> Option<Resources> {
-    let mut new_resources = resources.clone();
-    for (cost_id, cost) in blueprint[robot_id].iter().enumerate() {
-        if (new_resources[cost_id] < *cost) {
-            // Can't afford robot
-            return None;
-        }
-        if (robots[cost_id] > max_resources[cost_id]) {
+) -> Option<(Time, Resources)> {
+    // First check if we have too many robots already
+    for cost_id in 0..blueprint[robot_id].len() {
+        if (search_node.robots(cost_id) > max_resources[cost_id]) {
             // Too many robots of this type
             return None;
         }
-        new_resources[cost_id] -= cost;
     }
-    Some(new_resources)
+
+    // Advance time until we can build the robot
+    let mut new_node = search_node.clone();
+    for minute in 0..search_node.time_left() {
+        let time_left = new_node.time_left();
+        if (time_left == 0) {
+            // Cannot build robot in time
+            return None;
+        }
+
+        // Check if we can build the robot now
+        let mut new_resources = new_node.resources_array();
+        let mut could_build = true;
+        for (cost_id, cost) in blueprint[robot_id].iter().enumerate() {
+            if (new_node.resources(cost_id) < *cost) {
+                // Can't afford robot yet
+                could_build = false;
+                break;
+            }
+            new_resources[cost_id] -= cost;
+        }
+
+        if (could_build) {
+            new_node.set_resources_array(new_resources);
+        }
+
+        // Spend a minute collecting resources
+        let new_resources = new_node.collect_resources();
+        new_node.set_resources_array(new_resources);
+
+        if (could_build) {
+            return Some((minute + 1, new_resources));
+        }
+        new_node.set_time_left(time_left - 1);
+    }
+
+    // Couldn't build robot in time
+    return None;
 }
 
 fn max_open_geodes(
@@ -177,12 +216,9 @@ fn max_open_geodes(
     search_node: SearchNode,
 ) -> u16 {
     let time_left = search_node.time_left();
-    if (time_left == 1) {
-        // Doesn't make sense to build robots in last minute
-        let new_resources = search_node.collect_resources();
-        return new_resources[GEODE_ID] as u16;
+    if (time_left == 0) {
+        return search_node.resources(GEODE_ID) as u16;
     }
-    debug_assert_ne!(0, time_left, "Time should never reach 0");
 
     // Try building each type of robot with the resources available
     let robots = search_node.robots_array();
@@ -200,53 +236,24 @@ fn max_open_geodes(
         return cached_result;
     }
 
-    // Building a geode-cracking robot is always better than the alternatives
-    if let Some(new_resources) =
-        try_build_robot(blueprint, &max_resources, &robots, &resources, GEODE_ID)
-    {
-        let temp_node = SearchNode::new(robots.clone(), new_resources, time_left);
-        let new_resources = temp_node.collect_resources();
-        let mut new_robots = robots;
-        new_robots[GEODE_ID] += 1;
-        return max_open_geodes(
-            cache,
-            blueprint,
-            max_resources,
-            SearchNode::new(new_robots, new_resources, time_left - 1),
-        );
-    }
-
-    let num_geodes = [ORE_ID, CLAY_ID, OBSIDIAN_ID]
-        .iter()
-        .filter_map(|&robot_id| {
-            if let Some(new_resources) =
-                try_build_robot(blueprint, &max_resources, &robots, &resources, robot_id)
+    // Try building each type of robot
+    let num_geodes = (0..NUM_ROBOTS)
+        .filter_map(|robot_id| {
+            if let Some((time_to_build, new_resources)) =
+                try_build_robot(blueprint, &max_resources, &search_node, robot_id)
             {
-                let temp_node = SearchNode::new(robots.clone(), new_resources, time_left);
-                let new_resources = temp_node.collect_resources();
-                let mut new_robots = robots.clone();
-                new_robots[robot_id] += 1;
-                return Some(max_open_geodes(
-                    cache,
-                    blueprint,
-                    max_resources,
-                    SearchNode::new(new_robots, new_resources, time_left - 1),
-                ));
+                let mut new_node =
+                    SearchNode::new(robots.clone(), new_resources, time_left - time_to_build);
+                new_node.set_robot(robot_id, new_node.robots(robot_id) + 1);
+                return Some(max_open_geodes(cache, blueprint, max_resources, new_node));
             }
             return None;
         })
         .max()
-        .unwrap_or(0)
-        .max({
-            // Try not building any robot
-            let new_resources = search_node.collect_resources();
-            max_open_geodes(
-                cache,
-                blueprint,
-                max_resources,
-                SearchNode::new(robots, new_resources, time_left - 1),
-            )
-        });
+        .unwrap_or(
+            search_node.resources(GEODE_ID) as u16
+                + (search_node.robots(GEODE_ID) as u16) * (time_left as u16),
+        );
     cache.insert(cache_node, num_geodes);
     return num_geodes;
 }
