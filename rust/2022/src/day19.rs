@@ -84,13 +84,13 @@ impl SearchNode {
     }
 
     fn robots(&self, idx: usize) -> u8 {
-        assert!(idx < 4);
+        debug_assert!(idx < 4);
         ((self.0 >> Self::ROBOTS_SHIFT[idx]) & Self::ROBOTS_MASK) as u8
     }
 
     fn set_robot(&mut self, idx: usize, value: u8) {
-        assert!(idx < 4);
-        assert!(value < 64);
+        debug_assert!(idx < 4);
+        debug_assert!(value < 64);
 
         let shift = Self::ROBOTS_SHIFT[idx];
         let mask = Self::ROBOTS_MASK << shift;
@@ -100,12 +100,12 @@ impl SearchNode {
     }
 
     fn resources(&self, idx: usize) -> u8 {
-        assert!(idx < 4);
+        debug_assert!(idx < 4);
         ((self.0 >> Self::RESOURCES_SHIFT[idx]) & Self::RESOURCES_MASK) as u8
     }
 
     fn set_resource(&mut self, idx: usize, value: u8) {
-        assert!(idx < 4);
+        debug_assert!(idx < 4);
 
         let shift = Self::RESOURCES_SHIFT[idx];
         let mask = Self::RESOURCES_MASK << shift;
