@@ -34,77 +34,54 @@ fn parse(filename: &str) -> Vec<Blueprint> {
         .collect()
 }
 
-/// This SearchNode is compressed into two bytes:
-/// ```
-/// struct SearchNode {
-///     robots: [u6; 4],
-///     resources: [u8; 4],
-///     time_left: u8,
-/// }
-/// ```
+/// robots and time_left are packed into a u32:
+/// - robots: [u6; 4] (bits 0-23)
+/// - time_left: u8 (bits 24-31)
 #[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq)]
-#[repr(transparent)]
-struct SearchNode(u64);
+struct SearchNode {
+    packed: u32,
+    resources: Resources,
+}
 
 impl SearchNode {
-    const ROBOTS_MASK: u64 = 0x3f; // 6 bits
-    const RESOURCES_MASK: u64 = 0xff; // 8 bits
-
+    const ROBOTS_MASK: u32 = 0x3f; // 6 bits
     const ROBOTS_SHIFT: [u32; NUM_ROBOTS] = [0, 6, 12, 18];
-    const RESOURCES_SHIFT: [u32; NUM_RESOURCES] = [24, 32, 40, 48];
-    const TIME_SHIFT: u32 = 56;
+    const TIME_SHIFT: u32 = 24;
 
     fn new(robots: Robots, resources: Resources, time_left: Time) -> Self {
-        let mut node = Self { 0: 0 };
-
+        let mut node = Self {
+            packed: 0,
+            resources,
+        };
         for i in 0..NUM_ROBOTS {
             node.set_robot(i, robots[i]);
-            node.set_resource(i, resources[i]);
         }
-
         node.set_time_left(time_left);
         node
     }
 
     fn robots(&self, idx: usize) -> u8 {
         debug_assert!(idx < NUM_ROBOTS);
-        ((self.0 >> Self::ROBOTS_SHIFT[idx]) & Self::ROBOTS_MASK) as u8
+        ((self.packed >> Self::ROBOTS_SHIFT[idx]) & Self::ROBOTS_MASK) as u8
     }
 
     fn set_robot(&mut self, idx: usize, value: u8) {
         debug_assert!(idx < NUM_ROBOTS);
         debug_assert!(value < 64);
-
         let shift = Self::ROBOTS_SHIFT[idx];
         let mask = Self::ROBOTS_MASK << shift;
-
-        self.0 &= !mask;
-        self.0 |= (value as u64) << shift;
-    }
-
-    fn resources(&self, idx: usize) -> u8 {
-        debug_assert!(idx < NUM_RESOURCES);
-        ((self.0 >> Self::RESOURCES_SHIFT[idx]) & Self::RESOURCES_MASK) as u8
-    }
-
-    fn set_resource(&mut self, idx: usize, value: u8) {
-        debug_assert!(idx < NUM_RESOURCES);
-
-        let shift = Self::RESOURCES_SHIFT[idx];
-        let mask = Self::RESOURCES_MASK << shift;
-
-        self.0 &= !mask;
-        self.0 |= (value as u64) << shift;
+        self.packed &= !mask;
+        self.packed |= (value as u32) << shift;
     }
 
     fn time_left(&self) -> Time {
-        (self.0 >> Self::TIME_SHIFT) as Time
+        (self.packed >> Self::TIME_SHIFT) as Time
     }
 
     fn set_time_left(&mut self, value: Time) {
-        let mask = 0xffu64 << Self::TIME_SHIFT;
-        self.0 &= !mask;
-        self.0 |= (value as u64) << Self::TIME_SHIFT;
+        let mask = 0xffu32 << Self::TIME_SHIFT;
+        self.packed &= !mask;
+        self.packed |= (value as u32) << Self::TIME_SHIFT;
     }
 
     fn robots_array(&self) -> Robots {
@@ -116,26 +93,11 @@ impl SearchNode {
         ]
     }
 
-    fn resources_array(&self) -> Resources {
-        [
-            self.resources(0),
-            self.resources(1),
-            self.resources(2),
-            self.resources(3),
-        ]
-    }
-
-    fn set_resources_array(&mut self, resources: Resources) {
-        for idx in (0..NUM_RESOURCES) {
-            self.set_resource(idx, resources[idx]);
-        }
-    }
-
     /// Collects resources using current robots,
     /// returns total new resources after collection
     fn collect_resources(&self) -> Resources {
-        let mut new_resources = self.resources_array();
-        for robot_id in (0..NUM_ROBOTS) {
+        let mut new_resources = self.resources;
+        for robot_id in 0..NUM_ROBOTS {
             new_resources[robot_id] = new_resources[robot_id].saturating_add(self.robots(robot_id));
         }
         new_resources
@@ -180,10 +142,10 @@ fn try_build_robot(
         }
 
         // Check if we can build the robot now
-        let mut new_resources = new_node.resources_array();
+        let mut new_resources = new_node.resources;
         let mut could_build = true;
         for (cost_id, cost) in blueprint[robot_id].iter().enumerate() {
-            if (new_node.resources(cost_id) < *cost) {
+            if (new_node.resources[cost_id] < *cost) {
                 // Can't afford robot yet
                 could_build = false;
                 break;
@@ -192,12 +154,12 @@ fn try_build_robot(
         }
 
         if (could_build) {
-            new_node.set_resources_array(new_resources);
+            new_node.resources = new_resources;
         }
 
         // Spend a minute collecting resources
         let new_resources = new_node.collect_resources();
-        new_node.set_resources_array(new_resources);
+        new_node.resources = new_resources;
 
         if (could_build) {
             return Some((minute + 1, new_resources));
@@ -217,12 +179,12 @@ fn max_open_geodes(
 ) -> u16 {
     let time_left = search_node.time_left();
     if (time_left == 0) {
-        return search_node.resources(GEODE_ID) as u16;
+        return search_node.resources[GEODE_ID] as u16;
     }
 
     // Try building each type of robot with the resources available
     let robots = search_node.robots_array();
-    let resources = search_node.resources_array();
+    let resources = search_node.resources;
 
     // If we have more resources than we can use,
     // then the cache node is functionally equivalent to the one with the largest resources
@@ -251,7 +213,7 @@ fn max_open_geodes(
         })
         .max()
         .unwrap_or(
-            search_node.resources(GEODE_ID) as u16
+            search_node.resources[GEODE_ID] as u16
                 + (search_node.robots(GEODE_ID) as u16) * (time_left as u16),
         );
     cache.insert(cache_node, num_geodes);
