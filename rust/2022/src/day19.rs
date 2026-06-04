@@ -38,12 +38,19 @@ fn parse(filename: &str) -> Vec<Blueprint> {
 
 fn try_build_robot(
     blueprint: &Blueprint,
+    max_resources: &Resources,
+    robots: &Robots,
     resources: &Resources,
     robot_id: usize,
 ) -> Option<Resources> {
     let mut new_resources = resources.clone();
     for (cost_id, cost) in blueprint[robot_id].iter().enumerate() {
         if (new_resources[cost_id] < *cost) {
+            // Can't afford robot
+            return None;
+        }
+        if (robots[cost_id] > max_resources[cost_id]) {
+            // Too many robots of this type
             return None;
         }
         new_resources[cost_id] -= cost;
@@ -153,7 +160,12 @@ impl SearchNode {
 
 type Cache = HashMap<SearchNode, u16>;
 
-fn max_open_geodes(cache: &mut Cache, blueprint: &Blueprint, search_node: SearchNode) -> u16 {
+fn max_open_geodes(
+    cache: &mut Cache,
+    blueprint: &Blueprint,
+    max_resources: &Resources,
+    search_node: SearchNode,
+) -> u16 {
     let time_left = search_node.time_left();
     if (time_left == 1) {
         // Doesn't make sense to build robots in last minute
@@ -168,8 +180,10 @@ fn max_open_geodes(cache: &mut Cache, blueprint: &Blueprint, search_node: Search
     let robots = search_node.robots_array();
     let resources = search_node.resources_array();
 
-    // Building a geode-collecting robot is always better than the alternatives
-    if let Some(new_resources) = try_build_robot(blueprint, &resources, GEODE_ID) {
+    // Building a geode-cracking robot is always better than the alternatives
+    if let Some(new_resources) =
+        try_build_robot(blueprint, &max_resources, &robots, &resources, GEODE_ID)
+    {
         let temp_node = SearchNode::new(robots.clone(), new_resources, time_left);
         let new_resources = temp_node.collect_resources();
         let mut new_robots = robots;
@@ -177,6 +191,7 @@ fn max_open_geodes(cache: &mut Cache, blueprint: &Blueprint, search_node: Search
         return max_open_geodes(
             cache,
             blueprint,
+            max_resources,
             SearchNode::new(new_robots, new_resources, time_left - 1),
         );
     }
@@ -184,7 +199,9 @@ fn max_open_geodes(cache: &mut Cache, blueprint: &Blueprint, search_node: Search
     let num_geodes = [ORE_ID, CLAY_ID, OBSIDIAN_ID]
         .iter()
         .filter_map(|&robot_id| {
-            if let Some(new_resources) = try_build_robot(blueprint, &resources, robot_id) {
+            if let Some(new_resources) =
+                try_build_robot(blueprint, &max_resources, &robots, &resources, robot_id)
+            {
                 let temp_node = SearchNode::new(robots.clone(), new_resources, time_left);
                 let new_resources = temp_node.collect_resources();
                 let mut new_robots = robots.clone();
@@ -192,6 +209,7 @@ fn max_open_geodes(cache: &mut Cache, blueprint: &Blueprint, search_node: Search
                 return Some(max_open_geodes(
                     cache,
                     blueprint,
+                    max_resources,
                     SearchNode::new(new_robots, new_resources, time_left - 1),
                 ));
             }
@@ -205,11 +223,24 @@ fn max_open_geodes(cache: &mut Cache, blueprint: &Blueprint, search_node: Search
             max_open_geodes(
                 cache,
                 blueprint,
+                max_resources,
                 SearchNode::new(robots, new_resources, time_left - 1),
             )
         });
     cache.insert(search_node, num_geodes);
     return num_geodes;
+}
+
+fn max_resources(blueprint: &Blueprint) -> Resources {
+    let mut resources = Resources::default();
+    for robot_costs in blueprint {
+        for (i, &cost) in robot_costs.iter().enumerate() {
+            resources[i] = resources[i].max(cost);
+        }
+    }
+    // We always want more geode-cracking robots
+    resources[GEODE_ID] = u8::MAX;
+    resources
 }
 
 fn solve_case1(blueprints: &[Blueprint]) -> u16 {
@@ -222,6 +253,7 @@ fn solve_case1(blueprints: &[Blueprint]) -> u16 {
             let num_geodes = max_open_geodes(
                 &mut cache,
                 blueprint,
+                &max_resources(&blueprint),
                 SearchNode::new([1, 0, 0, 0], Resources::default(), 24),
             );
             println!("   Blueprint {} produces {} geodes", id, num_geodes);
@@ -242,6 +274,7 @@ fn solve_case2(blueprints: &[Blueprint]) -> u32 {
             let num_geodes = max_open_geodes(
                 &mut cache,
                 blueprint,
+                &max_resources(&blueprint),
                 SearchNode::new([1, 0, 0, 0], Resources::default(), 34),
             );
             println!("   Blueprint {} produces {} geodes", id, num_geodes);
