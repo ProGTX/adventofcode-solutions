@@ -7,6 +7,9 @@ type Resources = [u8; NUM_RESOURCES];
 type Robots = Resources;
 const NUM_ROBOTS: usize = NUM_RESOURCES;
 type Blueprint = [Resources; NUM_ROBOTS];
+const ORE_ID: usize = 0;
+const CLAY_ID: usize = 1;
+const OBSIDIAN_ID: usize = 2;
 const GEODE_ID: usize = 3;
 
 fn parse(filename: &str) -> Vec<Blueprint> {
@@ -164,8 +167,23 @@ fn max_open_geodes(cache: &mut Cache, blueprint: &Blueprint, search_node: Search
     // Try building each type of robot with the resources available
     let robots = search_node.robots_array();
     let resources = search_node.resources_array();
-    let num_geodes = (0..NUM_ROBOTS)
-        .filter_map(|robot_id| {
+
+    // Building a geode-collecting robot is always better than the alternatives
+    if let Some(new_resources) = try_build_robot(blueprint, &resources, GEODE_ID) {
+        let temp_node = SearchNode::new(robots.clone(), new_resources, time_left);
+        let new_resources = temp_node.collect_resources();
+        let mut new_robots = robots;
+        new_robots[GEODE_ID] += 1;
+        return max_open_geodes(
+            cache,
+            blueprint,
+            SearchNode::new(new_robots, new_resources, time_left - 1),
+        );
+    }
+
+    let num_geodes = [ORE_ID, CLAY_ID, OBSIDIAN_ID]
+        .iter()
+        .filter_map(|&robot_id| {
             if let Some(new_resources) = try_build_robot(blueprint, &resources, robot_id) {
                 let temp_node = SearchNode::new(robots.clone(), new_resources, time_left);
                 let new_resources = temp_node.collect_resources();
