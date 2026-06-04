@@ -263,7 +263,7 @@ fn solve_case1(blueprints: &[Blueprint]) -> u16 {
         .sum()
 }
 
-fn solve_case2(blueprints: &[Blueprint]) -> u32 {
+fn solve_case2(blueprints: &[Blueprint]) -> u16 {
     let mut cache = Cache::new();
     blueprints
         .iter()
@@ -275,10 +275,10 @@ fn solve_case2(blueprints: &[Blueprint]) -> u32 {
                 &mut cache,
                 blueprint,
                 &max_resources(&blueprint),
-                SearchNode::new([1, 0, 0, 0], Resources::default(), 34),
+                SearchNode::new([1, 0, 0, 0], Resources::default(), 32),
             );
             println!("   Blueprint {} produces {} geodes", id, num_geodes);
-            num_geodes as u32
+            num_geodes
         })
         .product()
 }
@@ -292,5 +292,5 @@ fn main() {
 
     println!("Part 2");
     aoc::expect_result!(56 * 62, solve_case2(&example));
-    aoc::expect_result!(1337, solve_case2(&input));
+    aoc::expect_result!(2700, solve_case2(&input));
 }
