@@ -275,11 +275,14 @@ fn solve_case1(blueprints: &[Blueprint]) -> u16 {
 }
 
 fn solve_case2(blueprints: &[Blueprint]) -> u16 {
-    blueprints
-        .iter()
-        .take(3)
-        .map(|blueprint| max_open_geodes(blueprint, 32))
-        .product()
+    std::thread::scope(|s| {
+        let handles: Vec<_> = blueprints
+            .iter()
+            .take(3)
+            .map(|blueprint| s.spawn(|| max_open_geodes(blueprint, 32)))
+            .collect();
+        handles.into_iter().map(|h| h.join().unwrap()).product()
+    })
 }
 
 fn main() {

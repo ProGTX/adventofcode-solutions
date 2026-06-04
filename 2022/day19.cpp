@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <future>
 #include <limits>
 #include <print>
 #include <ranges>
@@ -250,12 +251,15 @@ fn solve_case1(Vec<Blueprint> const& blueprints) -> u16 {
 }
 
 fn solve_case2(Vec<Blueprint> const& blueprints) -> u16 {
+  auto futures = Vec<std::future<u16>>{};
+  for (let& blueprint : blueprints | stdv::take(3)) {
+    futures.push_back(std::async(std::launch::async, [&blueprint] {
+      return max_open_geodes(blueprint, 32);
+    }));
+  }
   return std::ranges::fold_left(
-      blueprints |
-          stdv::take(3) |
-          stdv::transform( //
-              [](let& blueprint) { return max_open_geodes(blueprint, 32); }),
-      u16{1}, std::multiplies{});
+      futures | stdv::transform([](auto& f) { return f.get(); }), u16{1},
+      std::multiplies{});
 }
 
 int main() {
