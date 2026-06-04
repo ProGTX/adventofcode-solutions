@@ -48,21 +48,28 @@ fn try_build_robot(
     Some(new_resources)
 }
 
+/// This SearchNode is compressed into two bytes:
+/// ```
+/// struct SearchNode {
+///     robots: [u6; 4],
+///     resources: [u8; 4],
+///     time_left: u8,
+/// }
+/// ```
 #[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq)]
-struct SearchNode {
-    bits: u64,
-}
+#[repr(transparent)]
+struct SearchNode(u64);
 
 impl SearchNode {
-    const A_BITS: u64 = 0x3f; // 6 bits
-    const B_BITS: u64 = 0x7f; // 7 bits; 
+    const ROBOTS_MASK: u64 = 0x3f; // 6 bits
+    const RESOURCES_MASK: u64 = 0xff; // 8 bits
 
-    const A_SHIFT: [u32; 4] = [0, 6, 12, 18];
-    const B_SHIFT: [u32; 4] = [24, 31, 38, 45];
-    const TIME_SHIFT: u32 = 52;
+    const ROBOTS_SHIFT: [u32; 4] = [0, 6, 12, 18];
+    const RESOURCES_SHIFT: [u32; 4] = [24, 32, 40, 48];
+    const TIME_SHIFT: u32 = 56;
 
     fn new(robots: Robots, resources: Resources, time_left: u8) -> Self {
-        let mut node = Self { bits: 0 };
+        let mut node = Self { 0: 0 };
 
         for i in 0..4 {
             node.set_robot(i, robots[i]);
@@ -75,44 +82,43 @@ impl SearchNode {
 
     fn robots(&self, idx: usize) -> u8 {
         assert!(idx < 4);
-        ((self.bits >> Self::A_SHIFT[idx]) & Self::A_BITS) as u8
+        ((self.0 >> Self::ROBOTS_SHIFT[idx]) & Self::ROBOTS_MASK) as u8
     }
 
     fn set_robot(&mut self, idx: usize, value: u8) {
         assert!(idx < 4);
         assert!(value < 64);
 
-        let shift = Self::A_SHIFT[idx];
-        let mask = Self::A_BITS << shift;
+        let shift = Self::ROBOTS_SHIFT[idx];
+        let mask = Self::ROBOTS_MASK << shift;
 
-        self.bits &= !mask;
-        self.bits |= (value as u64) << shift;
+        self.0 &= !mask;
+        self.0 |= (value as u64) << shift;
     }
 
     fn resources(&self, idx: usize) -> u8 {
         assert!(idx < 4);
-        ((self.bits >> Self::B_SHIFT[idx]) & Self::B_BITS) as u8
+        ((self.0 >> Self::RESOURCES_SHIFT[idx]) & Self::RESOURCES_MASK) as u8
     }
 
     fn set_resource(&mut self, idx: usize, value: u8) {
         assert!(idx < 4);
-        assert!(value < 128);
 
-        let shift = Self::B_SHIFT[idx];
-        let mask = Self::B_BITS << shift;
+        let shift = Self::RESOURCES_SHIFT[idx];
+        let mask = Self::RESOURCES_MASK << shift;
 
-        self.bits &= !mask;
-        self.bits |= (value as u64) << shift;
+        self.0 &= !mask;
+        self.0 |= (value as u64) << shift;
     }
 
     fn time_left(&self) -> u8 {
-        (self.bits >> Self::TIME_SHIFT) as u8
+        (self.0 >> Self::TIME_SHIFT) as u8
     }
 
     fn set_time_left(&mut self, value: u8) {
         let mask = 0xffu64 << Self::TIME_SHIFT;
-        self.bits &= !mask;
-        self.bits |= (value as u64) << Self::TIME_SHIFT;
+        self.0 &= !mask;
+        self.0 |= (value as u64) << Self::TIME_SHIFT;
     }
 
     fn robots_array(&self) -> Robots {
