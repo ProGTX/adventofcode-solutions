@@ -226,6 +226,7 @@ fn solve_case2(input: &Input, cube_side: i32) -> i32 {
                         right: face.right,
                         down: face.normal,
                     },
+                    _ => unreachable!("Invalid direction provided"),
                 };
                 neighbors.push(aoc::dijkstra::DijkstraState {
                     data: neighbor,
@@ -262,6 +263,7 @@ fn solve_case2(input: &Input, cube_side: i32) -> i32 {
             Direction::West => -src.right,
             Direction::South => src.down,
             Direction::North => -src.down,
+            _ => unreachable!("Invalid direction provided"),
         };
         let dest = *faces.iter().find(|f| f.normal == dest_normal).unwrap();
 

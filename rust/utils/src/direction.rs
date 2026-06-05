@@ -6,6 +6,10 @@ pub enum Direction {
     South = 1,
     West = 2,
     North = 3,
+    Southeast = 4,
+    Southwest = 5,
+    Northwest = 6,
+    Northeast = 7,
 }
 
 impl Direction {
@@ -15,6 +19,10 @@ impl Direction {
             Direction::South => Pos::new(0, 1),
             Direction::West => Pos::new(-1, 0),
             Direction::North => Pos::new(0, -1),
+            Direction::Southeast => Pos::new(1, 1),
+            Direction::Southwest => Pos::new(-1, 1),
+            Direction::Northwest => Pos::new(-1, -1),
+            Direction::Northeast => Pos::new(1, -1),
         }
     }
 
@@ -24,6 +32,7 @@ impl Direction {
             Direction::South => Direction::West,
             Direction::West => Direction::North,
             Direction::North => Direction::East,
+            _ => panic!("clockwise only valid for basic directions"),
         }
     }
 
@@ -33,16 +42,27 @@ impl Direction {
             Direction::South => Direction::East,
             Direction::West => Direction::South,
             Direction::North => Direction::West,
+            _ => panic!("counterclockwise only valid for basic directions"),
         }
     }
 }
 
 pub const BASIC_DIRECTIONS: [Direction; 4] = [
-    //
     Direction::East,
     Direction::West,
     Direction::South,
     Direction::North,
+];
+
+pub const ALL_SKY_DIRECTIONS: [Direction; 8] = [
+    Direction::East,
+    Direction::South,
+    Direction::West,
+    Direction::North,
+    Direction::Southeast,
+    Direction::Southwest,
+    Direction::Northwest,
+    Direction::Northeast,
 ];
 
 #[derive(Clone, Copy)]
