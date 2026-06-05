@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Sub, SubAssign};
 
 pub trait Numeric:
-    Add
+    Add<Output = Self>
     + Sub<Output = Self>
     + Mul<Output = Self>
     + Div<Output = Self>
@@ -37,6 +37,11 @@ impl<T> Numeric for T where
         + From<u32>
         + From<i32>
 {
+}
+
+pub fn gcd<T: Numeric>(a: T, b: T) -> T {
+    let zero = T::from(0u32);
+    if b == zero { a } else { gcd(b, a % b) }
 }
 
 pub fn prime_factors<T: Numeric>(n: T) -> Vec<T> {
@@ -111,4 +116,62 @@ where
             )
         })
         .0
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct Ratio<T> {
+    num: T,
+    den: T,
+}
+impl<T: Numeric> Ratio<T> {
+    pub fn new(num: T, den: T) -> Self {
+        let zero = T::from(0u32);
+        let one = T::from(1u32);
+        if num == zero {
+            return Self {
+                num: zero,
+                den: one,
+            };
+        }
+        let abs_t = |n: T| -> T { if n < zero { zero - n } else { n } };
+        let g = gcd(abs_t(num), abs_t(den));
+        let sign = if den < zero { T::from(0u32) - one } else { one };
+        Self {
+            num: sign * (num / g),
+            den: sign * (den / g),
+        }
+    }
+
+    pub fn integer(n: T) -> Self {
+        Self::new(n, T::from(1u32))
+    }
+
+    pub fn as_integer(self) -> T {
+        self.num / self.den
+    }
+}
+
+impl<T: Numeric> Add for Ratio<T> {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self {
+        Self::new(self.num * rhs.den + rhs.num * self.den, self.den * rhs.den)
+    }
+}
+impl<T: Numeric> Sub for Ratio<T> {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self {
+        Self::new(self.num * rhs.den - rhs.num * self.den, self.den * rhs.den)
+    }
+}
+impl<T: Numeric> Mul for Ratio<T> {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self {
+        Self::new(self.num * rhs.num, self.den * rhs.den)
+    }
+}
+impl<T: Numeric> Div for Ratio<T> {
+    type Output = Self;
+    fn div(self, rhs: Self) -> Self {
+        Self::new(self.num * rhs.den, self.den * rhs.num)
+    }
 }
