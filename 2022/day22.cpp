@@ -8,42 +8,32 @@
 #include <ranges>
 #include <span>
 
+namespace stdv = std::views;
+namespace stdr = std::ranges;
+
 using parsed_map_t = aoc::char_grid<>;
 constexpr let empty_char = ' ';
 constexpr let tile_char = '.';
 constexpr let wall_char = '#';
-
-// Encode each position
-// Edges of the box/cube specify the index of the connected tile
-// The index is encoded as a linear index into the grid,
-// which is at most 152x202 in size
-// However each empty space on the edge needs to distinguish direction as well,
-// so it needs to store two indexes
-// The inside tiles then need to be larger than any index
-using jungle_t = aoc::grid<int>;
-constexpr let empty_space = 1000 * 1000;
-constexpr let empty_tile = 1000 * 1000 + 1;
-constexpr let wall_tile = 1000 * 1000 + 2;
 
 constexpr let clockwise_char = 'R';
 constexpr let counterclockwise_char = 'L';
 constexpr let turn_clockwise = -1;
 constexpr let turn_counterclockwise = -2;
 
+using arrow_t = aoc::arrow_type<int>;
+
 fn parse_map(std::span<String> raw_map, point map_size) -> parsed_map_t {
   // Add empty space all around the map to remove the need for bounds checking
   map_size += {2, 2};
   parsed_map_t parsed_map{};
+  parsed_map.add_row(stdv::repeat(empty_char, map_size.x));
   for (String& line : raw_map) {
-    if (parsed_map.empty()) {
-      parsed_map.add_row(std::views::repeat(empty_char, map_size.x));
-    }
-    auto empty_suffix =
-        std::views::repeat(empty_char, map_size.x - line.size() - 1) |
-        aoc::ranges::to<String>();
+    auto empty_suffix = stdv::repeat(empty_char, map_size.x - line.size() - 1) |
+                        aoc::ranges::to<String>();
     parsed_map.add_row(empty_char + std::move(line) + std::move(empty_suffix));
   }
-  parsed_map.add_row(std::views::repeat(empty_char, map_size.x));
+  parsed_map.add_row(stdv::repeat(empty_char, map_size.x));
   return parsed_map;
 }
 
@@ -55,26 +45,23 @@ struct input_t {
 fn parse(String const& filename) -> input_t {
   auto steps = Vec<int>{};
   auto raw_map = Vec<String>{};
-  auto min_max = aoc::min_max_helper{};
 
-  bool parsing_steps = false;
-  for (int height = 1; String line : aoc::views::read_lines(
-                           filename, aoc::keep_empty{}, aoc::keep_spaces{})) {
+  auto parsing_steps = false;
+  for (String line : aoc::views::read_lines(filename, aoc::keep_empty{},
+                                            aoc::keep_spaces{})) {
     if (line.empty()) {
       parsing_steps = true;
       continue;
     }
     if (!parsing_steps) {
-      min_max.update(point(line.size(), height));
       raw_map.push_back(std::move(line));
-      ++height;
     } else {
-      int start = 0;
-      int size = 0;
+      auto start = 0;
+      auto size = 0;
       let get_step_size = [&]() {
         steps.push_back(aoc::to_number<int>(line.substr(start, size)));
       };
-      for (int i = 0; i < (int)line.size(); ++i) {
+      for (int i = 0; i < std::ssize(line); ++i) {
         let current = line[i];
         if (current == clockwise_char) {
           get_step_size();
@@ -94,106 +81,34 @@ fn parse(String const& filename) -> input_t {
     }
   }
 
-  return {parse_map(raw_map, min_max.max_value), std::move(steps)};
+  let max_width =
+      static_cast<int>(stdr::max_element(raw_map, {}, &String::size)->size());
+  let map_size = point{max_width, static_cast<int>(raw_map.size())};
+  return {parse_map(raw_map, map_size), std::move(steps)};
 }
 
-fn get_jungle(parsed_map_t const& parsed_map) -> jungle_t {
-  let num_rows = parsed_map.num_rows();
-  let num_columns = parsed_map.num_columns();
-  jungle_t jungle{empty_space, num_rows, num_columns};
-  let size = jungle.size();
-
-  let get_pos = [](int primary_index, int nested_index, bool is_row) {
-    point pos{primary_index, nested_index};
-    if (is_row) {
-      std::swap(pos.x, pos.y);
+fn find_start(parsed_map_t const& parsed_map) -> arrow_t {
+  let num_columns = static_cast<int>(parsed_map.num_columns());
+  for (int x = 1; x < num_columns; ++x) {
+    if (parsed_map.at(1, x) == tile_char) {
+      return {point{x, 1}, aoc::east};
     }
-    return pos;
-  };
-
-  let set_edge = [&](const point edge_pos, const int primary_index,
-                     const int nested_index, const bool is_row) {
-    let jump_pos = get_pos(primary_index, nested_index, is_row);
-    auto linear_index = jungle.linear_index(jump_pos.y, jump_pos.x);
-    if (is_row) {
-      linear_index *= size;
-    }
-    let edge_value = jungle.at(edge_pos.y, edge_pos.x);
-    if (edge_value != empty_space) {
-      // Edge has already been modified, so we need to add to it
-      // This happens in corners
-      linear_index += edge_value;
-    }
-    jungle.modify(linear_index, edge_pos.y, edge_pos.x);
-  };
-
-  using line_t = String;
-  let add_line = [&](line_t const& line, const int primary_index,
-                     const bool is_row) {
-    // Boundaries hold indexes to non-empty tiles
-    std::pair<int, int> empty_bounds{-1, -1};
-    auto it = std::ranges::begin(line);
-    for (int nested_index = 0; nested_index < line.size();
-         ++nested_index, ++it) {
-      let pos = get_pos(primary_index, nested_index, is_row);
-      let current = *it;
-      if (current != empty_char) {
-        if (empty_bounds.first == -1) {
-          // First non-empty tile is a boundary
-          empty_bounds.first = nested_index;
-          // This will be processed when we get to the end of non-empty tiles
-        }
-      } else if (empty_bounds.first > 0) {
-        if (empty_bounds.second == -1) {
-          // First empty tile after non-empty tiles is a boundary
-          empty_bounds.second = nested_index - 1;
-
-          // Process lower edge (we're currently here)
-          // Inner tile jumps to the upper edge
-          set_edge(pos, primary_index, empty_bounds.first, is_row);
-
-          // Process upper edge
-          // Upper edge jumps to the lower edge
-          // Minus 1 because we're modifying empty space before inner tiles
-          let upper_edge_pos =
-              get_pos(primary_index, empty_bounds.first - 1, is_row);
-          set_edge(upper_edge_pos, primary_index, empty_bounds.second, is_row);
-        } else {
-          // Just empty space
-        }
-      } else {
-        // Just empty space
-      }
-      if (current == tile_char) {
-        jungle.modify(empty_tile, pos.y, pos.x);
-      } else if (current == wall_char) {
-        jungle.modify(wall_tile, pos.y, pos.x);
-      }
-    }
-  };
-
-  // Iterate over rows and columns
-  // Skip the empty edges of the map
-  for (int index : std::views::iota(1, static_cast<int>(num_rows - 1))) {
-    add_line(parsed_map.row_view<line_t>(index), index, true);
   }
-  for (int index : std::views::iota(1, static_cast<int>(num_columns - 1))) {
-    add_line(parsed_map.column_view<line_t>(index), index, false);
-  }
-
-  return jungle;
+  return {{}, aoc::east};
 }
 
-using arrow_t = aoc::arrow_type<int>;
-
-fn walk_through(jungle_t const& jungle, std::span<const int> steps) -> arrow_t {
-  let size = jungle.size();
-  auto current = [&]() {
-    // Starting position is the left-most empty tile on the top (non-empty) row
-    auto it = std::ranges::find(jungle.row_view(1), empty_tile);
-    return arrow_t{point(std::ranges::distance(jungle.begin_row(1), it), 1),
-                   aoc::east};
-  }();
+/// Executes the step sequence:
+///   - turns rotate the arrow in place
+///   - move counts call step_fn(current) once per tile
+///
+/// step_fn returns false to stop early (hit a wall), true to continue.
+template <class StepFn>
+  requires requires(StepFn step_fn, arrow_t& arrow) {
+    { step_fn(arrow) } -> std::convertible_to<bool>;
+  }
+fn execute_steps(std::span<const int> steps, arrow_t start, StepFn step_fn)
+    -> arrow_t {
+  auto current = start;
   for (int step : steps) {
     if (step == turn_clockwise) {
       current.direction = aoc::clockwise_basic(current.direction);
@@ -201,232 +116,232 @@ fn walk_through(jungle_t const& jungle, std::span<const int> steps) -> arrow_t {
       current.direction = aoc::anticlockwise_basic(current.direction);
     }
     for (int i = 0; i < step; ++i) {
-      auto next_pos = current.position + aoc::get_diff(current.direction);
-      auto next_value = jungle.at(next_pos.y, next_pos.x);
-      if (next_value == wall_tile) {
+      if (!step_fn(current)) {
         break;
-      } else if (next_value == empty_tile) {
-        current.position = next_pos;
-      } else {
-        AOC_ASSERT(next_value != empty_space, "Should never reach empty space");
-        // next_value acts as a linear index in this case
-        auto index = next_value;
-        let dir = current.direction;
-        if ((dir == aoc::east) || (dir == aoc::west)) {
-          index = index / size;
-        } else {
-          index = index % size;
-        }
-
-        next_pos = jungle.position(index);
-        next_value = jungle.at(next_pos.y, next_pos.x);
-        if (next_value == wall_tile) {
-          break;
-        } else {
-          AOC_ASSERT(next_value == empty_tile,
-                     "Can only jump into inner tiles");
-        }
       }
-      current.position = next_pos;
     }
   }
   return current;
 }
 
-template <int cube_side>
-fn solve_case1(input_t const& input) -> int {
-  let[pos, facing] = walk_through(get_jungle(input.map), input.steps);
-  return 1000 * pos.y + 4 * pos.x + facing;
+fn password(arrow_t const& arr) -> int {
+  return 1000 * arr.position.y + 4 * arr.position.x + arr.direction;
 }
+
+fn solve_case1(input_t const& input) -> int {
+  let & [ parsed_map, steps ] = input;
+  let start = find_start(parsed_map);
+
+  let final_arrow = execute_steps(steps, start, [&](arrow_t& current) {
+    let diff = aoc::get_diff(current.direction);
+    auto next_pos = current.position + diff;
+    if (parsed_map.at(next_pos.y, next_pos.x) == empty_char) {
+      // Flat wrap: step back from current position to find the far edge
+      auto wrapped = current.position;
+      while (parsed_map.at((wrapped - diff).y, (wrapped - diff).x) !=
+             empty_char) {
+        wrapped = wrapped - diff;
+      }
+      next_pos = wrapped;
+    }
+    if (parsed_map.at(next_pos.y, next_pos.x) == wall_char) {
+      return false;
+    }
+    current.position = next_pos;
+    return true;
+  });
+
+  return password(final_arrow);
+}
+
+using vec3 = aoc::nd_point_type<int, 3>;
+struct face_info {
+  point pos;
+  vec3 normal;
+  vec3 right;
+  vec3 down;
+  constexpr bool operator==(const face_info&) const = default;
+  constexpr auto operator<=>(const face_info&) const = default;
+};
 
 template <int cube_side>
 fn solve_case2(input_t const& input) -> int {
-  let& parsed_map = input.map;
-  let num_rows = (int)parsed_map.num_rows();
-  let num_columns = (int)parsed_map.num_columns();
-
-  struct vec3 {
-    int x, y, z;
-    constexpr vec3 operator-() const { return {-x, -y, -z}; }
-    constexpr bool operator==(const vec3&) const = default;
-  };
-  struct face_info {
-    point pos;
-    vec3 normal, right, down;
-  };
+  let & [ parsed_map, steps ] = input;
+  let num_rows = static_cast<int>(parsed_map.num_rows());
+  let num_columns = static_cast<int>(parsed_map.num_columns());
 
   // BFS from the first face, assigning 3D orientations to all 6 cube faces
-  // Crossing a 2D edge transforms the orientation:
-  //   east:  { fi.right,  -fi.normal,  fi.down    }
-  //   west:  { -fi.right,  fi.normal,  fi.down    }
-  //   south: { fi.down,    fi.right,  -fi.normal  }
-  //   north: { -fi.down,   fi.right,   fi.normal  }
   let start_face = [&]() -> point {
-    for (int fy = 1; fy < num_rows - 1; fy += cube_side)
-      for (int fx = 1; fx < num_columns - 1; fx += cube_side)
-        if (parsed_map.at(fy, fx) != empty_char)
+    for (int fy = 1; fy < num_rows - 1; fy += cube_side) {
+      for (int fx = 1; fx < num_columns - 1; fx += cube_side) {
+        if (parsed_map.at(fy, fx) != empty_char) {
           return point{fx, fy};
-    return point{-1, -1};
-  }();
-
-  Vec<face_info> faces;
-  {
-    Vec<face_info> bfs;
-    bfs.push_back({start_face, {0, 0, 1}, {1, 0, 0}, {0, 1, 0}});
-    for (int qi = 0; qi < (int)bfs.size(); ++qi) {
-      auto fi = bfs[qi];
-      if (std::ranges::any_of(faces, [&](let& f) { return f.pos == fi.pos; }))
-        continue;
-      faces.push_back(fi);
-      for (auto dir : aoc::basic_sky_directions) {
-        auto d = aoc::get_diff(dir);
-        point np{fi.pos.x + d.x * cube_side, fi.pos.y + d.y * cube_side};
-        if (np.x < 1 ||
-            np.y < 1 ||
-            np.x >= num_columns - 1 ||
-            np.y >= num_rows - 1)
-          continue;
-        if (parsed_map.at(np.y, np.x) == empty_char)
-          continue;
-        if (std::ranges::any_of(bfs, [&](let& f) { return f.pos == np; }))
-          continue;
-        switch (dir) {
-          case aoc::east:
-            bfs.push_back({np, fi.right, -fi.normal, fi.down});
-            break;
-          case aoc::west:
-            bfs.push_back({np, -fi.right, fi.normal, fi.down});
-            break;
-          case aoc::south:
-            bfs.push_back({np, fi.down, fi.right, -fi.normal});
-            break;
-          case aoc::north:
-            bfs.push_back({np, -fi.down, fi.right, fi.normal});
-            break;
-          default:
-            break;
         }
       }
     }
-  }
-
-  let get_face = [&](point pos) -> const face_info& {
-    return *std::ranges::find_if(faces, [&](let& f) {
-      return pos.x >= f.pos.x &&
-             pos.x < f.pos.x + cube_side &&
-             pos.y >= f.pos.y &&
-             pos.y < f.pos.y + cube_side;
-    });
-  };
-  let find_face = [&](vec3 normal) -> const face_info& {
-    return *std::ranges::find_if(faces,
-                                 [&](let& f) { return f.normal == normal; });
-  };
-
-  // Given an arrow at a face boundary stepping into empty space,
-  // compute the cube-wrapped destination arrow
-  let cube_jump = [&](arrow_t arr) -> arrow_t {
-    let& fa = get_face(arr.position);
-
-    vec3 target_normal;
-    switch (arr.direction) {
-      case aoc::east:
-        target_normal = fa.right;
-        break;
-      case aoc::west:
-        target_normal = -fa.right;
-        break;
-      case aoc::south:
-        target_normal = fa.down;
-        break;
-      default:
-        target_normal = -fa.down;
-        break;
-    }
-    let& fb = find_face(target_normal);
-
-    // After folding across the edge,
-    // -fa.normal is the movement direction on the destination face
-    vec3 move_dir = -fa.normal;
-    aoc::facing_t new_facing;
-    int fixed_coord;
-    bool fixed_is_y;
-    vec3 free_dir_b;
-    if (move_dir == fb.right) {
-      new_facing = aoc::east;
-      fixed_coord = 0;
-      fixed_is_y = false;
-      free_dir_b = fb.down;
-    } else if (move_dir == -fb.right) {
-      new_facing = aoc::west;
-      fixed_coord = cube_side - 1;
-      fixed_is_y = false;
-      free_dir_b = fb.down;
-    } else if (move_dir == fb.down) {
-      new_facing = aoc::south;
-      fixed_coord = 0;
-      fixed_is_y = true;
-      free_dir_b = fb.right;
-    } else {
-      new_facing = aoc::north;
-      fixed_coord = cube_side - 1;
-      fixed_is_y = true;
-      free_dir_b = fb.right;
-    }
-
-    // The free coordinate runs along the edge:
-    //   east/west edge: runs in fa.down direction (varying y within face)
-    //   north/south edge: runs in fa.right direction (varying x within face)
-    bool is_ew = (arr.direction == aoc::east || arr.direction == aoc::west);
-    int free_a =
-        is_ew ? (arr.position.y - fa.pos.y) : (arr.position.x - fa.pos.x);
-    vec3 free_dir_a = is_ew ? fa.down : fa.right;
-    int free_b =
-        (free_dir_a == -free_dir_b) ? (cube_side - 1 - free_a) : free_a;
-
-    int x_in_b = fixed_is_y ? free_b : fixed_coord;
-    int y_in_b = fixed_is_y ? fixed_coord : free_b;
-    return {fb.pos + point(x_in_b, y_in_b), new_facing};
-  };
-
-  // Starting position: leftmost tile in row 1
-  auto current = [&]() -> arrow_t {
-    for (int x = 1; x < num_columns; ++x)
-      if (parsed_map.at(1, x) == tile_char)
-        return {point{x, 1}, aoc::east};
-    return {{}, aoc::east};
+    return point{-1, -1};
   }();
 
-  for (int step : input.steps) {
-    if (step == turn_clockwise) {
-      current.direction = aoc::clockwise_basic(current.direction);
-    } else if (step == turn_counterclockwise) {
-      current.direction = aoc::anticlockwise_basic(current.direction);
-    }
-    for (int i = 0; i < step; ++i) {
-      auto next_pos = current.position + aoc::get_diff(current.direction);
-      auto next_dir = current.direction;
-      if (parsed_map.at(next_pos.y, next_pos.x) == empty_char) {
-        auto [jp, jd] = cube_jump(current);
-        next_pos = jp;
-        next_dir = jd;
-      }
-      if (parsed_map.at(next_pos.y, next_pos.x) == wall_char)
-        break;
-      current.position = next_pos;
-      current.direction = next_dir;
-    }
+  // Crossing a 2D edge transforms the orientation:
+  //   east:  { face.right,  -face.normal,  face.down    }
+  //   west:  { -face.right,  face.normal,  face.down    }
+  //   south: { face.down,    face.right,  -face.normal  }
+  //   north: { -face.down,   face.right,   face.normal  }
+  let faces_map = aoc::shortest_distances_dijkstra(
+      face_info{
+          .pos = start_face,
+          .normal = {0, 0, 1},
+          .right = {1, 0, 0},
+          .down = {0, 1, 0},
+      },
+      [&](face_info const& face) {
+        // face == current face
+        auto neighbors = Vec<face_info>{};
+        for (let dir : aoc::basic_sky_directions) {
+          let diff = aoc::get_diff(dir);
+          let new_pos = point{(diff.x * cube_side) + face.pos.x,
+                              (diff.y * cube_side) + face.pos.y};
+          if ((new_pos.x < 1) ||
+              (new_pos.y < 1) ||
+              (new_pos.x >= (num_columns - 1)) ||
+              (new_pos.y >= (num_rows - 1))) {
+            continue;
+          }
+          if (parsed_map.at(new_pos.y, new_pos.x) == empty_char) {
+            continue;
+          }
+          neighbors.push_back([&] -> face_info {
+            switch (dir) {
+              case aoc::east:
+                return {new_pos, face.right, -face.normal, face.down};
+              case aoc::west:
+                return {new_pos, -face.right, face.normal, face.down};
+              case aoc::south:
+                return {new_pos, face.down, face.right, -face.normal};
+              case aoc::north:
+                return {new_pos, -face.down, face.right, face.normal};
+              default:
+                AOC_UNREACHABLE("Invalid direction");
+            }
+          }());
+        }
+        return aoc::dijkstra_uniform_neighbors(std::move(neighbors));
+      });
+  auto faces = Vec<face_info>{};
+  for (let& [ face, _ ] : faces_map) {
+    faces.push_back(face);
   }
 
-  return 1000 * current.position.y + 4 * current.position.x + current.direction;
+  // Find face by 2D position
+  let face_from_pos = [&](point pos) -> const face_info& {
+    return *stdr::find_if(faces, [&](let& f) {
+      return (pos.x >= f.pos.x) &&
+             (pos.x < (f.pos.x + cube_side)) &&
+             (pos.y >= f.pos.y) &&
+             (pos.y < (f.pos.y + cube_side));
+    });
+  };
+  // Find face by 3D normal
+  let face_from_normal = [&](vec3 normal) -> const face_info& {
+    return *stdr::find_if(faces, [&](let& f) { return f.normal == normal; });
+  };
+
+  // Given an arrow stepping off a face edge into empty space,
+  // compute the cube-wrapped destination arrow.
+  // Works purely from the 3D orientations (normal/right/down)
+  // assigned to each face during the BFS above.
+  let cube_jump = [&](const arrow_t arrow) -> arrow_t {
+    let& src = face_from_pos(arrow.position);
+
+    // Moving east/west/south/north on the 2D map corresponds to moving in the
+    // src.right / -src.right / src.down / -src.down directions in 3D.
+    // The destination face is the one whose normal points that way.
+    let dest_normal = [&] -> vec3 {
+      switch (arrow.direction) {
+        case aoc::east:
+          return src.right;
+        case aoc::west:
+          return -src.right;
+        case aoc::south:
+          return src.down;
+        default:
+          return -src.down;
+      }
+    }();
+    let& dest = face_from_normal(dest_normal);
+
+    // Folding across the shared edge, the src face's outward normal becomes
+    // the in-plane arrival direction on the destination face (reversed)
+    let arrival_dir = -src.normal;
+    auto new_facing = aoc::facing_t{};
+    auto entry_coord = 0; // value of the fixed axis on dest (0 or cube_side-1)
+    auto y_is_fixed = false;  // true when entering from north/south (y fixed)
+    auto dest_along = vec3{}; // dest axis running parallel to the entry edge
+    if (arrival_dir == dest.right) {
+      new_facing = aoc::east;
+      entry_coord = 0;
+      y_is_fixed = false;
+      dest_along = dest.down;
+    } else if (arrival_dir == -dest.right) {
+      new_facing = aoc::west;
+      entry_coord = cube_side - 1;
+      y_is_fixed = false;
+      dest_along = dest.down;
+    } else if (arrival_dir == dest.down) {
+      new_facing = aoc::south;
+      entry_coord = 0;
+      y_is_fixed = true;
+      dest_along = dest.right;
+    } else {
+      new_facing = aoc::north;
+      entry_coord = cube_side - 1;
+      y_is_fixed = true;
+      dest_along = dest.right;
+    }
+
+    // Measure how far along the src entry edge the arrow sits,
+    // then map it onto the destination edge.
+    // Reverse when the two edge axes are antiparallel.
+    let is_EW =
+        (arrow.direction == aoc::east) || (arrow.direction == aoc::west);
+    let src_along = is_EW ? src.down : src.right;
+    let src_offset =
+        is_EW ? (arrow.position.y - src.pos.y) : (arrow.position.x - src.pos.x);
+    let dest_offset =
+        (src_along == -dest_along) ? (cube_side - 1 - src_offset) : src_offset;
+
+    let x_in_dst = y_is_fixed ? dest_offset : entry_coord;
+    let y_in_dst = y_is_fixed ? entry_coord : dest_offset;
+    return {dest.pos + point(x_in_dst, y_in_dst), new_facing};
+  };
+
+  let start = find_start(parsed_map);
+
+  let final_arrow = execute_steps(steps, start, [&](arrow_t& current) {
+    auto next_pos = current.position + aoc::get_diff(current.direction);
+    auto next_dir = current.direction;
+    if (parsed_map.at(next_pos.y, next_pos.x) == empty_char) {
+      let next_arrow = cube_jump(current);
+      next_pos = next_arrow.position;
+      next_dir = next_arrow.direction;
+    }
+    if (parsed_map.at(next_pos.y, next_pos.x) == wall_char) {
+      return false;
+    }
+    current.position = next_pos;
+    current.direction = next_dir;
+    return true;
+  });
+
+  return password(final_arrow);
 }
 
 int main() {
   std::println("Part 1");
   let example = parse("day22.example");
-  AOC_EXPECT_RESULT(6032, (solve_case1<4>(example)));
+  AOC_EXPECT_RESULT(6032, solve_case1(example));
   let input = parse("day22.input");
-  AOC_EXPECT_RESULT(97356, (solve_case1<50>(input)));
+  AOC_EXPECT_RESULT(97356, solve_case1(input));
 
   std::println("Part 2");
   AOC_EXPECT_RESULT(5031, (solve_case2<4>(example)));
