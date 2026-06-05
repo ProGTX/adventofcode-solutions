@@ -3,6 +3,7 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#include <algorithm>
 #include <print>
 #include <ranges>
 #include <span>
@@ -96,7 +97,6 @@ fn parse(String const& filename) -> input_t {
   return {parse_map(raw_map, min_max.max_value), std::move(steps)};
 }
 
-template <bool is_cube>
 fn get_jungle(parsed_map_t const& parsed_map) -> jungle_t {
   let num_rows = parsed_map.num_rows();
   let num_columns = parsed_map.num_columns();
@@ -233,22 +233,204 @@ fn walk_through(jungle_t const& jungle, std::span<const int> steps) -> arrow_t {
   return current;
 }
 
-template <bool is_cube, int cube_side>
-fn solve_case(input_t const& input) -> int {
-  let[pos, facing] = walk_through(get_jungle<is_cube>(input.map), input.steps);
+template <int cube_side>
+fn solve_case1(input_t const& input) -> int {
+  let[pos, facing] = walk_through(get_jungle(input.map), input.steps);
   return 1000 * pos.y + 4 * pos.x + facing;
+}
+
+template <int cube_side>
+fn solve_case2(input_t const& input) -> int {
+  let& parsed_map = input.map;
+  let num_rows = (int)parsed_map.num_rows();
+  let num_columns = (int)parsed_map.num_columns();
+
+  struct vec3 {
+    int x, y, z;
+    constexpr vec3 operator-() const { return {-x, -y, -z}; }
+    constexpr bool operator==(const vec3&) const = default;
+  };
+  struct face_info {
+    point pos;
+    vec3 normal, right, down;
+  };
+
+  // BFS from the first face, assigning 3D orientations to all 6 cube faces
+  // Crossing a 2D edge transforms the orientation:
+  //   east:  { fi.right,  -fi.normal,  fi.down    }
+  //   west:  { -fi.right,  fi.normal,  fi.down    }
+  //   south: { fi.down,    fi.right,  -fi.normal  }
+  //   north: { -fi.down,   fi.right,   fi.normal  }
+  let start_face = [&]() -> point {
+    for (int fy = 1; fy < num_rows - 1; fy += cube_side)
+      for (int fx = 1; fx < num_columns - 1; fx += cube_side)
+        if (parsed_map.at(fy, fx) != empty_char)
+          return point{fx, fy};
+    return point{-1, -1};
+  }();
+
+  Vec<face_info> faces;
+  {
+    Vec<face_info> bfs;
+    bfs.push_back({start_face, {0, 0, 1}, {1, 0, 0}, {0, 1, 0}});
+    for (int qi = 0; qi < (int)bfs.size(); ++qi) {
+      auto fi = bfs[qi];
+      if (std::ranges::any_of(faces, [&](let& f) { return f.pos == fi.pos; }))
+        continue;
+      faces.push_back(fi);
+      for (auto dir : aoc::basic_sky_directions) {
+        auto d = aoc::get_diff(dir);
+        point np{fi.pos.x + d.x * cube_side, fi.pos.y + d.y * cube_side};
+        if (np.x < 1 ||
+            np.y < 1 ||
+            np.x >= num_columns - 1 ||
+            np.y >= num_rows - 1)
+          continue;
+        if (parsed_map.at(np.y, np.x) == empty_char)
+          continue;
+        if (std::ranges::any_of(bfs, [&](let& f) { return f.pos == np; }))
+          continue;
+        switch (dir) {
+          case aoc::east:
+            bfs.push_back({np, fi.right, -fi.normal, fi.down});
+            break;
+          case aoc::west:
+            bfs.push_back({np, -fi.right, fi.normal, fi.down});
+            break;
+          case aoc::south:
+            bfs.push_back({np, fi.down, fi.right, -fi.normal});
+            break;
+          case aoc::north:
+            bfs.push_back({np, -fi.down, fi.right, fi.normal});
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  let get_face = [&](point pos) -> const face_info& {
+    return *std::ranges::find_if(faces, [&](let& f) {
+      return pos.x >= f.pos.x &&
+             pos.x < f.pos.x + cube_side &&
+             pos.y >= f.pos.y &&
+             pos.y < f.pos.y + cube_side;
+    });
+  };
+  let find_face = [&](vec3 normal) -> const face_info& {
+    return *std::ranges::find_if(faces,
+                                 [&](let& f) { return f.normal == normal; });
+  };
+
+  // Given an arrow at a face boundary stepping into empty space,
+  // compute the cube-wrapped destination arrow
+  let cube_jump = [&](arrow_t arr) -> arrow_t {
+    let& fa = get_face(arr.position);
+
+    vec3 target_normal;
+    switch (arr.direction) {
+      case aoc::east:
+        target_normal = fa.right;
+        break;
+      case aoc::west:
+        target_normal = -fa.right;
+        break;
+      case aoc::south:
+        target_normal = fa.down;
+        break;
+      default:
+        target_normal = -fa.down;
+        break;
+    }
+    let& fb = find_face(target_normal);
+
+    // After folding across the edge,
+    // -fa.normal is the movement direction on the destination face
+    vec3 move_dir = -fa.normal;
+    aoc::facing_t new_facing;
+    int fixed_coord;
+    bool fixed_is_y;
+    vec3 free_dir_b;
+    if (move_dir == fb.right) {
+      new_facing = aoc::east;
+      fixed_coord = 0;
+      fixed_is_y = false;
+      free_dir_b = fb.down;
+    } else if (move_dir == -fb.right) {
+      new_facing = aoc::west;
+      fixed_coord = cube_side - 1;
+      fixed_is_y = false;
+      free_dir_b = fb.down;
+    } else if (move_dir == fb.down) {
+      new_facing = aoc::south;
+      fixed_coord = 0;
+      fixed_is_y = true;
+      free_dir_b = fb.right;
+    } else {
+      new_facing = aoc::north;
+      fixed_coord = cube_side - 1;
+      fixed_is_y = true;
+      free_dir_b = fb.right;
+    }
+
+    // The free coordinate runs along the edge:
+    //   east/west edge: runs in fa.down direction (varying y within face)
+    //   north/south edge: runs in fa.right direction (varying x within face)
+    bool is_ew = (arr.direction == aoc::east || arr.direction == aoc::west);
+    int free_a =
+        is_ew ? (arr.position.y - fa.pos.y) : (arr.position.x - fa.pos.x);
+    vec3 free_dir_a = is_ew ? fa.down : fa.right;
+    int free_b =
+        (free_dir_a == -free_dir_b) ? (cube_side - 1 - free_a) : free_a;
+
+    int x_in_b = fixed_is_y ? free_b : fixed_coord;
+    int y_in_b = fixed_is_y ? fixed_coord : free_b;
+    return {fb.pos + point(x_in_b, y_in_b), new_facing};
+  };
+
+  // Starting position: leftmost tile in row 1
+  auto current = [&]() -> arrow_t {
+    for (int x = 1; x < num_columns; ++x)
+      if (parsed_map.at(1, x) == tile_char)
+        return {point{x, 1}, aoc::east};
+    return {{}, aoc::east};
+  }();
+
+  for (int step : input.steps) {
+    if (step == turn_clockwise) {
+      current.direction = aoc::clockwise_basic(current.direction);
+    } else if (step == turn_counterclockwise) {
+      current.direction = aoc::anticlockwise_basic(current.direction);
+    }
+    for (int i = 0; i < step; ++i) {
+      auto next_pos = current.position + aoc::get_diff(current.direction);
+      auto next_dir = current.direction;
+      if (parsed_map.at(next_pos.y, next_pos.x) == empty_char) {
+        auto [jp, jd] = cube_jump(current);
+        next_pos = jp;
+        next_dir = jd;
+      }
+      if (parsed_map.at(next_pos.y, next_pos.x) == wall_char)
+        break;
+      current.position = next_pos;
+      current.direction = next_dir;
+    }
+  }
+
+  return 1000 * current.position.y + 4 * current.position.x + current.direction;
 }
 
 int main() {
   std::println("Part 1");
   let example = parse("day22.example");
-  AOC_EXPECT_RESULT(6032, (solve_case<false, 4>(example)));
+  AOC_EXPECT_RESULT(6032, (solve_case1<4>(example)));
   let input = parse("day22.input");
-  AOC_EXPECT_RESULT(97356, (solve_case<false, 50>(input)));
+  AOC_EXPECT_RESULT(97356, (solve_case1<50>(input)));
 
   std::println("Part 2");
-  // AOC_EXPECT_RESULT(5031, (solve_case<true, 4>(example)));
-  // AOC_EXPECT_RESULT(3229579395609, (solve_case<true, 50>(input)));
+  AOC_EXPECT_RESULT(5031, (solve_case2<4>(example)));
+  AOC_EXPECT_RESULT(120175, (solve_case2<50>(input)));
 
   AOC_RETURN_CHECK_RESULT();
 }
