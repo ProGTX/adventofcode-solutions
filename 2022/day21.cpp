@@ -1,23 +1,14 @@
 // https://adventofcode.com/2022/day/21
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <array>
-#include <cstdint>
 #include <functional>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
 #include <print>
-#include <ranges>
-#include <string>
-#include <string_view>
-#include <vector>
 
-using int_value_t = std::int64_t;
-using value_t = aoc::ratio<int_value_t>;
+using value_t = aoc::ratio<i64>;
 using operation_t = std::function<value_t(value_t, value_t)>;
 
 template <class index_t, class Operation = operation_t>
@@ -25,30 +16,50 @@ struct monkey_t {
   index_t index_lhs;
   index_t index_rhs;
 
-  std::optional<value_t> value_lhs;
-  std::optional<value_t> value_rhs;
+  Option<value_t> value_lhs;
+  Option<value_t> value_rhs;
   Operation operation;
 
-  constexpr bool is_operation_ready() const {
+  fn is_operation_ready() const -> bool {
     return value_lhs.has_value() && value_rhs.has_value();
   }
-  constexpr value_t apply_operation() const {
+  fn apply_operation() const -> value_t {
     return operation(value_lhs.value(), value_rhs.value());
   }
 };
 
-using parsing_monkey_t = monkey_t<std::string, char>;
-using parsed_monkeys_t = std::vector<std::pair<std::string, parsing_monkey_t>>;
-using monkeys_t = std::vector<monkey_t<int>>;
+using parsing_monkey_t = monkey_t<String, char>;
+using parsed_monkeys_t = Vec<std::pair<String, parsing_monkey_t>>;
+using monkeys_t = Vec<monkey_t<int>>;
 using monkey_it = monkeys_t::iterator;
 
-monkey_t<int> get_value_monkey(value_t lhs, value_t rhs) {
+constexpr let value_op = '@';
+
+fn parse(String const& filename) -> parsed_monkeys_t {
+  auto parsed_monkeys = parsed_monkeys_t{};
+  for (str line : aoc::views::read_lines(filename)) {
+    let[name, full_op] = aoc::split_once<String>(line, ':');
+    let[lhs, op, rhs] =
+        aoc::split<std::array<String, 3>>(full_op.substr(1), ' ');
+
+    if (op.empty()) {
+      value_t value = aoc::to_number<int>(lhs);
+      parsed_monkeys.emplace_back(name,
+                                  parsing_monkey_t{"", "", value, 0, value_op});
+      continue;
+    }
+
+    parsed_monkeys.emplace_back(name,
+                                parsing_monkey_t{lhs, rhs, None, None, op[0]});
+  }
+  return parsed_monkeys;
+}
+
+fn get_value_monkey(value_t lhs, value_t rhs) -> monkey_t<int> {
   return {-1, -1, lhs, rhs, std::plus{}};
 }
 
-inline constexpr char value_op = '@';
-
-value_t get_yelled_number(monkeys_t& monkeys, int current) {
+fn get_yelled_number(monkeys_t& monkeys, int current) -> value_t {
   auto& current_monkey = monkeys[current];
   if (current_monkey.is_operation_ready()) {
     return current_monkey.apply_operation();
@@ -60,13 +71,13 @@ value_t get_yelled_number(monkeys_t& monkeys, int current) {
   return current_monkey.apply_operation();
 }
 
-std::tuple<monkeys_t, int, int> transform_monkeys(
-    const parsed_monkeys_t& parsed_monkeys) {
+fn transform_monkeys(parsed_monkeys_t const& parsed_monkeys)
+    -> std::tuple<monkeys_t, int, int> {
   monkeys_t monkeys;
-  auto begin_it = std::begin(parsed_monkeys);
+  let begin_it = std::begin(parsed_monkeys);
   int root_index = 0;
   int human_index = 0;
-  for (int index = 0; const auto& [name, monkey] : parsed_monkeys) {
+  for (int index = 0; let& [ name, monkey ] : parsed_monkeys) {
     if (name == "root") {
       root_index = index;
     } else if (name == "humn") {
@@ -79,14 +90,12 @@ std::tuple<monkeys_t, int, int> transform_monkeys(
           get_value_monkey(monkey.value_lhs.value(), monkey.value_rhs.value()));
       continue;
     }
-    auto lhs_it =
-        std::ranges::find_if(parsed_monkeys, [&](const auto& monkey_pair) {
-          return monkey_pair.first == monkey.index_lhs;
-        });
-    auto rhs_it =
-        std::ranges::find_if(parsed_monkeys, [&](const auto& monkey_pair) {
-          return monkey_pair.first == monkey.index_rhs;
-        });
+    let lhs_it = std::ranges::find_if(parsed_monkeys, [&](let& monkey_pair) {
+      return monkey_pair.first == monkey.index_lhs;
+    });
+    let rhs_it = std::ranges::find_if(parsed_monkeys, [&](let& monkey_pair) {
+      return monkey_pair.first == monkey.index_rhs;
+    });
     monkeys.emplace_back(std::distance(begin_it, lhs_it),
                          std::distance(begin_it, rhs_it), monkey.value_lhs,
                          monkey.value_rhs,
@@ -95,19 +104,17 @@ std::tuple<monkeys_t, int, int> transform_monkeys(
   return {monkeys, root_index, human_index};
 }
 
-value_t solve_part1(const parsed_monkeys_t& parsed_monkeys) {
+fn solve_case1(parsed_monkeys_t const& parsed_monkeys) -> i64 {
   auto [monkeys, root_index, human_index] = transform_monkeys(parsed_monkeys);
-  return get_yelled_number(monkeys, root_index);
+  return static_cast<i64>(get_yelled_number(monkeys, root_index));
 }
 
-value_t solve_part2(const parsed_monkeys_t& parsed_monkeys) {
+fn solve_case2(parsed_monkeys_t const& parsed_monkeys) -> i64 {
   auto [monkeys, root_index, human_index] = transform_monkeys(parsed_monkeys);
 
-  // Transform the humn branch
-
   monkey_it begin_it = std::begin(monkeys);
-  auto begin_parsed_it = std::begin(parsed_monkeys);
-  const auto get_index = [&](auto it) {
+  let begin_parsed_it = std::begin(parsed_monkeys);
+  let get_index = [&](auto it) {
     if constexpr (std::same_as<decltype(it), monkey_it>) {
       return std::distance(begin_it, it);
     } else {
@@ -116,77 +123,62 @@ value_t solve_part2(const parsed_monkeys_t& parsed_monkeys) {
   };
 
   monkey_it current_it = begin_it + human_index;
-  while (true) {
-    auto current_index = get_index(current_it);
-    std::string_view current_name = parsed_monkeys[current_index].first;
+  loop {
+    let current_index = get_index(current_it);
+    str current_name = parsed_monkeys[current_index].first;
 
-    auto parsed_parent_it =
-        std::ranges::find_if(parsed_monkeys, [&](const auto& monkey_pair) {
+    let parsed_parent_it =
+        std::ranges::find_if(parsed_monkeys, [&](let& monkey_pair) {
           return (monkey_pair.second.index_lhs == current_name) ||
                  (monkey_pair.second.index_rhs == current_name);
         });
-    auto parent_index = get_index(parsed_parent_it);
+    let parent_index = get_index(parsed_parent_it);
     monkey_it parent_it = begin_it + parent_index;
 
-    current_it->index_lhs = parent_index;
-    if (parent_it->index_lhs == current_index) {
-      current_it->index_rhs = parent_it->index_rhs;
-    } else {
-      current_it->index_rhs = parent_it->index_lhs;
-    }
-    current_it->value_lhs = std::nullopt;
-    current_it->value_rhs = std::nullopt;
+    bool current_was_left = (parent_it->index_lhs == current_index);
+    let sibling_index =
+        current_was_left ? parent_it->index_rhs : parent_it->index_lhs;
+    char parent_op = parsed_parent_it->second.operation;
+
+    current_it->value_lhs = None;
+    current_it->value_rhs = None;
 
     if (parent_index == root_index) {
       *parent_it = get_value_monkey(0, 0);
+      current_it->index_lhs = parent_index;
+      current_it->index_rhs = sibling_index;
       current_it->operation = std::plus{};
       break;
-    } else {
-      current_it->operation = aoc::get_inverse_binary_op<value_t>(
-          parsed_parent_it->second.operation);
-      // Do not break
     }
+
+    // For non-commutative ops where current was on the right:
+    //   parent = sibling - current -> current = sibling - parent
+    //   parent = sibling / current -> current = sibling / parent
+    // Swap operand order and use the original op instead of its inverse.
+    bool swap_operands =
+        !current_was_left && (parent_op == '-' || parent_op == '/');
+    current_it->index_lhs = swap_operands ? sibling_index : parent_index;
+    current_it->index_rhs = swap_operands ? parent_index : sibling_index;
+    current_it->operation =
+        swap_operands ? aoc::get_binary_op<value_t>(parent_op)
+                      : aoc::get_inverse_binary_op<value_t>(parent_op);
 
     current_it = parent_it;
   }
 
-  return get_yelled_number(monkeys, human_index);
-}
-
-template <bool part2>
-int_value_t solve_case(const std::string& filename) {
-  parsed_monkeys_t parsed_monkeys;
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [name, full_op] = aoc::split_once<std::string>(line, ':');
-    auto [lhs, op, rhs] =
-        aoc::split<std::array<std::string, 3>>(full_op.substr(1), ' ');
-
-    if (op.empty()) {
-      value_t value = aoc::to_number<int>(lhs);
-      parsed_monkeys.emplace_back(name,
-                                  parsing_monkey_t{"", "", value, 0, value_op});
-      continue;
-    }
-
-    parsed_monkeys.emplace_back(
-        name, parsing_monkey_t{lhs, rhs, std::nullopt, std::nullopt, op[0]});
-  }
-
-  int_value_t number = 0;
-  if constexpr (!part2) {
-    number = static_cast<int_value_t>(solve_part1(parsed_monkeys));
-  } else {
-    number = static_cast<int_value_t>(solve_part2(parsed_monkeys));
-  }
-  return number;
+  return static_cast<i64>(get_yelled_number(monkeys, human_index));
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(152, (solve_case<false>("day21.example")));
-  AOC_EXPECT_RESULT(291425799367130, (solve_case<false>("day21.input")));
+  let example = parse("day21.example");
+  AOC_EXPECT_RESULT(152, solve_case1(example));
+  let input = parse("day21.input");
+  AOC_EXPECT_RESULT(291425799367130, solve_case1(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(301, (solve_case<true>("day21.example")));
-  AOC_EXPECT_RESULT(3219579395609, (solve_case<true>("day21.input")));
+  AOC_EXPECT_RESULT(301, solve_case2(example));
+  AOC_EXPECT_RESULT(3219579395609, solve_case2(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
