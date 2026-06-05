@@ -12,6 +12,7 @@ function(add_rust_source filename folder)
 endfunction()
 
 add_rust_source(dijkstra utils)
+add_rust_source(direction utils)
 add_rust_source(file utils)
 add_rust_source(grid utils)
 add_rust_source(iter utils)
