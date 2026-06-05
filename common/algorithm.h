@@ -76,7 +76,9 @@ template <class Node, class NeighborsFn,
           class PredecessorMap = predecessor_map<Node>>
   requires std::totally_ordered<Node> &&
            requires(Node node) {
-             { std::declval<EndReachedFn>()(node) } -> std::same_as<bool>;
+             {
+               std::declval<EndReachedFn>()(node)
+             } -> std::convertible_to<bool>;
              { std::declval<HeuristicFn>()(node) } -> std::convertible_to<int>;
            } &&
            contains_uncvref<PredecessorMap, predecessor_map<Node>,
