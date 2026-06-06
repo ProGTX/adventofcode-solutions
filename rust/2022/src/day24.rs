@@ -1,7 +1,9 @@
 use aoc::dijkstra::DijkstraState;
 use aoc::direction::{BASIC_DIRECTIONS, Direction};
 use aoc::grid::Grid;
+use aoc::math::lcm;
 use aoc::point::{Point, distance_manhattan};
+use arrayvec::ArrayVec;
 
 // Because the provided examples have a lot of blizzards,
 // we represent them in a compressed way.
@@ -69,31 +71,57 @@ fn move_blizzards(blizzards: &BlizzardGrid, dimensions: &Pos) -> BlizzardGrid {
     result
 }
 
+/// Pre-compute all blizzard snapshots for one full period.
+/// 
+/// E/W blizzards have a period of inner_width,
+/// N/S blizzards have a period of inner_height,
+/// lcm of those two periods gives us the total period where they repeat,
+/// so we just need to precompute all of the options.
+fn precompute_blizzards(initial: &BlizzardGrid, dimensions: &Pos) -> Vec<BlizzardGrid> {
+    let inner_width = (dimensions.x - 2) as i64;
+    let inner_height = (dimensions.y - 2) as i64;
+    let period = lcm(inner_width, inner_height) as usize;
+    let mut cache = Vec::with_capacity(period);
+    cache.push(initial.clone());
+    for _ in 1..period {
+        let next = move_blizzards(cache.last().unwrap(), dimensions);
+        cache.push(next);
+    }
+    return cache;
+}
+
+// State is just position + time mod period - no grid clone needed
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 struct SearchState {
     pos: Pos,
-    blizzards: BlizzardGrid,
+    time: u32,
 }
 
+/// Returns (end_time, distance).
+/// end_time is the time mod period at arrival,
+/// used to chain into the next leg.
 fn find_distance(
     dimensions: &Pos,
-    blizzards: &BlizzardGrid,
+    blizzard_cache: &[BlizzardGrid],
     start_pos: Pos,
     end_pos: Pos,
-) -> (BlizzardGrid, u32) {
+    start_time: u32,
+) -> (u32, u32) {
+    let period = blizzard_cache.len() as u32;
     let start = SearchState {
         pos: start_pos,
-        blizzards: blizzards.clone(),
+        time: start_time,
     };
     let distances = aoc::dijkstra::shortest_distances_astar(
         &start,
         |current| current.pos == end_pos,
         |current| {
-            let mut neighbors = Vec::new();
-            let new_blizzards = move_blizzards(&current.blizzards, dimensions);
+            let next_time = (current.time + 1) % period;
+            let new_blizzards = &blizzard_cache[next_time as usize];
             let on_blizzard =
                 |pos: Point<i32>| *new_blizzards.get(pos.y as usize, pos.x as usize) > 0;
             // Consider all possible directions
+            let mut neighbors = ArrayVec::<_, 5>::new();
             for dir in BASIC_DIRECTIONS {
                 let new_pos = current.pos + dir.diff();
                 // Position can go in the negative
@@ -107,9 +135,7 @@ fn find_distance(
                 {
                     continue;
                 }
-                if (!current
-                    .blizzards
-                    .in_bounds_signed(new_pos.y as isize, new_pos.x as isize)
+                if (!new_blizzards.in_bounds_signed(new_pos.y as isize, new_pos.x as isize)
                     || on_blizzard(new_pos))
                 {
                     continue;
@@ -117,7 +143,7 @@ fn find_distance(
                 neighbors.push(DijkstraState {
                     data: SearchState {
                         pos: new_pos,
-                        blizzards: new_blizzards.clone(),
+                        time: next_time,
                     },
                     distance: 1,
                 });
@@ -128,40 +154,42 @@ fn find_distance(
                 neighbors.push(DijkstraState {
                     data: SearchState {
                         pos: current.pos,
-                        blizzards: new_blizzards,
+                        time: next_time,
                     },
                     distance: 1,
                 });
             }
             return neighbors;
         },
-        |current| return distance_manhattan(current.pos, end_pos) as u32,
+        |current| distance_manhattan(current.pos, end_pos) as u32,
     );
     return distances
         .iter()
         .find(|(state, _)| state.pos == end_pos)
-        .map(|(state, distance)| (state.blizzards.clone(), *distance))
+        .map(|(state, distance)| (state.time, *distance))
         .unwrap();
 }
 
 fn solve_case1((dimensions, blizzards): &Input) -> u32 {
+    let blizzard_cache = precompute_blizzards(blizzards, dimensions);
     let start_pos = Pos { x: 1, y: 0 };
     let end_pos = Pos {
         x: dimensions.x - 2,
         y: dimensions.y - 1,
     };
-    find_distance(dimensions, blizzards, start_pos, end_pos).1
+    find_distance(dimensions, &blizzard_cache, start_pos, end_pos, 0).1
 }
 
 fn solve_case2((dimensions, blizzards): &Input) -> u32 {
+    let blizzard_cache = precompute_blizzards(blizzards, dimensions);
     let start_pos = Pos { x: 1, y: 0 };
     let end_pos = Pos {
         x: dimensions.x - 2,
         y: dimensions.y - 1,
     };
-    let (blizzards, d1) = find_distance(dimensions, blizzards, start_pos, end_pos);
-    let (blizzards, d2) = find_distance(dimensions, &blizzards, end_pos, start_pos);
-    let (_, d3) = find_distance(dimensions, &blizzards, start_pos, end_pos);
+    let (t1, d1) = find_distance(dimensions, &blizzard_cache, start_pos, end_pos, 0);
+    let (t2, d2) = find_distance(dimensions, &blizzard_cache, end_pos, start_pos, t1);
+    let (_, d3) = find_distance(dimensions, &blizzard_cache, start_pos, end_pos, t2);
     d1 + d2 + d3
 }
 
