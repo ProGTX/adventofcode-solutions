@@ -90,13 +90,7 @@ constexpr auto shortest_path(const racetrack_t& track, const point start_pos,
   }
 }
 
-struct segment_t {
-  point begin;
-  point end;
-
-  constexpr bool operator==(const segment_t&) const = default;
-  constexpr auto operator<=>(const segment_t&) const = default;
-};
+using segment_t = aoc::closed_range<point>;
 
 using cache_t = aoc::flat_map<segment_t, int>;
 constexpr const int max_normal_length = (1 << 20);
