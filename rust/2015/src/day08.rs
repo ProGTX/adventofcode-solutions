@@ -49,9 +49,9 @@ fn solve_case2(filename: &str) -> u32 {
 
 fn main() {
     println!("Part 1");
-    assert_eq!(12, solve_case1("day08.example"));
-    assert_eq!(1333, solve_case1("day08.input"));
+    aoc::expect_result!(12, solve_case1("day08.example"));
+    aoc::expect_result!(1333, solve_case1("day08.input"));
     println!("Part 2");
-    assert_eq!(19, solve_case2("day08.example"));
-    assert_eq!(2046, solve_case2("day08.input"));
+    aoc::expect_result!(19, solve_case2("day08.example"));
+    aoc::expect_result!(2046, solve_case2("day08.input"));
 }

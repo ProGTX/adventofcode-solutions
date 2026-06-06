@@ -67,11 +67,11 @@ fn main() {
     println!("Part 1");
 
     let example = parse("day20.example");
-    assert_eq!(35, solve_case::<2>(&example));
+    aoc::expect_result!(35, solve_case::<2>(&example));
     let input = parse("day20.input");
-    assert_eq!(5249, solve_case::<2>(&input));
+    aoc::expect_result!(5249, solve_case::<2>(&input));
 
     println!("Part 2");
-    assert_eq!(3351, solve_case::<50>(&example));
-    assert_eq!(15714, solve_case::<50>(&input));
+    aoc::expect_result!(3351, solve_case::<50>(&example));
+    aoc::expect_result!(15714, solve_case::<50>(&input));
 }

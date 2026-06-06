@@ -78,11 +78,11 @@ fn solve_case2(forrest: &Forrest) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day08.example");
-    assert_eq!(21, solve_case1(&example));
+    aoc::expect_result!(21, solve_case1(&example));
     let input = parse("day08.input");
-    assert_eq!(1681, solve_case1(&input));
+    aoc::expect_result!(1681, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(8, solve_case2(&example));
-    assert_eq!(201684, solve_case2(&input));
+    aoc::expect_result!(8, solve_case2(&example));
+    aoc::expect_result!(201684, solve_case2(&input));
 }

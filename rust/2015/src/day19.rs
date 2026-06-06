@@ -46,11 +46,11 @@ fn solve_case1(parse_input: &(ReplacementsT, String)) -> usize {
 fn main() {
     println!("Part 1");
     let example = parse("day19.example");
-    assert_eq!(4, solve_case1(&example));
+    aoc::expect_result!(4, solve_case1(&example));
     let input = parse("day19.input");
-    assert_eq!(576, solve_case1(&input));
+    aoc::expect_result!(576, solve_case1(&input));
 
     //println!("Part 2");
-    //assert_eq!(3, solve_case2(&example));
-    //assert_eq!(1257, solve_case2(&input));
+    //aoc::expect_result!(3, solve_case2(&example));
+    //aoc::expect_result!(1257, solve_case2(&input));
 }

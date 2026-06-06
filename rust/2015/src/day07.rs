@@ -172,9 +172,9 @@ fn solve_case2(filename: &str) -> StrictSignalT {
 
 fn main() {
     println!("Part 1");
-    assert_eq!(114, solve_case1("day07.example"));
-    assert_eq!(16076, solve_case1("day07.input"));
+    aoc::expect_result!(114, solve_case1("day07.example"));
+    aoc::expect_result!(16076, solve_case1("day07.input"));
     println!("Part 2");
-    assert_eq!(28, solve_case2("day07.example"));
-    assert_eq!(2797, solve_case2("day07.input"));
+    aoc::expect_result!(28, solve_case2("day07.example"));
+    aoc::expect_result!(2797, solve_case2("day07.input"));
 }

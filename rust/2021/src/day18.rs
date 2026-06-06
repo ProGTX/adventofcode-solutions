@@ -196,15 +196,15 @@ fn solve_case2(numbers: &[SFN]) -> u32 {
 fn main() {
     println!("Part 1");
 
-    assert_eq!(143, magnitude(&parse_sfn("[[1,2],[[3,4],5]]")));
-    assert_eq!(
+    aoc::expect_result!(143, magnitude(&parse_sfn("[[1,2],[[3,4],5]]")));
+    aoc::expect_result!(
         1384,
         magnitude(&parse_sfn("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]"))
     );
-    assert_eq!(445, magnitude(&parse_sfn("[[[[1,1],[2,2]],[3,3]],[4,4]]")));
-    assert_eq!(791, magnitude(&parse_sfn("[[[[3,0],[5,3]],[4,4]],[5,5]]")));
-    assert_eq!(1137, magnitude(&parse_sfn("[[[[5,0],[7,4]],[5,5]],[6,6]]")));
-    assert_eq!(
+    aoc::expect_result!(445, magnitude(&parse_sfn("[[[[1,1],[2,2]],[3,3]],[4,4]]")));
+    aoc::expect_result!(791, magnitude(&parse_sfn("[[[[3,0],[5,3]],[4,4]],[5,5]]")));
+    aoc::expect_result!(1137, magnitude(&parse_sfn("[[[[5,0],[7,4]],[5,5]],[6,6]]")));
+    aoc::expect_result!(
         3488,
         magnitude(&parse_sfn(
             "[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]"
@@ -212,11 +212,11 @@ fn main() {
     );
 
     let example = parse("day18.example");
-    assert_eq!(4140, solve_case1(&example));
+    aoc::expect_result!(4140, solve_case1(&example));
     let input = parse("day18.input");
-    assert_eq!(4207, solve_case1(&input));
+    aoc::expect_result!(4207, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(3993, solve_case2(&example));
-    assert_eq!(4635, solve_case2(&input));
+    aoc::expect_result!(3993, solve_case2(&example));
+    aoc::expect_result!(4635, solve_case2(&input));
 }

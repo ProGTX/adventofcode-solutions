@@ -56,14 +56,14 @@ fn solve_case<const NUM_STEPS: usize>(energy_levels: &EnergyLevels) -> usize {
 fn main() {
     println!("Part 1");
     let example = parse("day11.example");
-    assert_eq!(9, solve_case::<2>(&example));
+    aoc::expect_result!(9, solve_case::<2>(&example));
     let example2 = parse("day11.example2");
-    assert_eq!(1656, solve_case::<100>(&example2));
+    aoc::expect_result!(1656, solve_case::<100>(&example2));
     let input = parse("day11.input");
-    assert_eq!(1694, solve_case::<100>(&input));
+    aoc::expect_result!(1694, solve_case::<100>(&input));
 
     println!("Part 2");
-    assert_eq!(6, solve_case::<{ usize::MAX }>(&example));
-    assert_eq!(195, solve_case::<{ usize::MAX }>(&example2));
-    assert_eq!(346, solve_case::<{ usize::MAX }>(&input));
+    aoc::expect_result!(6, solve_case::<{ usize::MAX }>(&example));
+    aoc::expect_result!(195, solve_case::<{ usize::MAX }>(&example2));
+    aoc::expect_result!(346, solve_case::<{ usize::MAX }>(&input));
 }

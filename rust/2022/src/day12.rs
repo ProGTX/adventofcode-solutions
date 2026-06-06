@@ -76,11 +76,11 @@ fn solve_case2((heightmap, terminator): &Input) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day12.example");
-    assert_eq!(31, solve_case1(&example));
+    aoc::expect_result!(31, solve_case1(&example));
     let input = parse("day12.input");
-    assert_eq!(504, solve_case1(&input));
+    aoc::expect_result!(504, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(29, solve_case2(&example));
-    assert_eq!(500, solve_case2(&input));
+    aoc::expect_result!(29, solve_case2(&example));
+    aoc::expect_result!(500, solve_case2(&input));
 }

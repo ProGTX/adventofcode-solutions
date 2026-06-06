@@ -209,11 +209,11 @@ fn solve_case2(rooms: &Rooms) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day23.example");
-    assert_eq!(12521, solve_case1(&example));
+    aoc::expect_result!(12521, solve_case1(&example));
     let input = parse("day23.input");
-    assert_eq!(14350, solve_case1(&input));
+    aoc::expect_result!(14350, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(44169, solve_case2(&example));
-    assert_eq!(49742, solve_case2(&input));
+    aoc::expect_result!(44169, solve_case2(&example));
+    aoc::expect_result!(49742, solve_case2(&input));
 }

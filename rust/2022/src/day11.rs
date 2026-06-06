@@ -101,11 +101,11 @@ fn solve_case<const NUM_ROUNDS: usize, const RELIEF: u64>(monkeys: &Vec<Monkey>)
 fn main() {
     println!("Part 1");
     let example = parse("day11.example");
-    assert_eq!(10605, solve_case::<20, 3>(&example));
+    aoc::expect_result!(10605, solve_case::<20, 3>(&example));
     let input = parse("day11.input");
-    assert_eq!(98280, solve_case::<20, 3>(&input));
+    aoc::expect_result!(98280, solve_case::<20, 3>(&input));
 
     println!("Part 2");
-    assert_eq!(2713310158, solve_case::<10000, 1>(&example));
-    assert_eq!(17673687232, solve_case::<10000, 1>(&input));
+    aoc::expect_result!(2713310158, solve_case::<10000, 1>(&example));
+    aoc::expect_result!(17673687232, solve_case::<10000, 1>(&input));
 }

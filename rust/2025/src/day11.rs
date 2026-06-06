@@ -87,14 +87,14 @@ fn solve_case2((device_map, name_to_id): &Input) -> u64 {
 fn main() {
     println!("Part 1");
     let example = parse("day11.example");
-    assert_eq!(5, solve_case1(&example));
+    aoc::expect_result!(5, solve_case1(&example));
     let example2 = parse("day11.example2");
-    assert_eq!(8, solve_case1(&example2));
+    aoc::expect_result!(8, solve_case1(&example2));
     let input = parse("day11.input");
-    assert_eq!(523, solve_case1(&input));
+    aoc::expect_result!(523, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(2, solve_case2(&example2));
+    aoc::expect_result!(2, solve_case2(&example2));
     println!("Part 2 not done yet");
-    //assert_eq!(100011612, solve_case2(&input));
+    //aoc::expect_result!(100011612, solve_case2(&input));
 }

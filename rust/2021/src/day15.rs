@@ -94,11 +94,11 @@ fn solve_case2(grid: &Input) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day15.example");
-    assert_eq!(40, solve_case1(&example));
+    aoc::expect_result!(40, solve_case1(&example));
     let input = parse("day15.input");
-    assert_eq!(592, solve_case1(&input));
+    aoc::expect_result!(592, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(315, solve_case2(&example));
-    assert_eq!(2897, solve_case2(&input));
+    aoc::expect_result!(315, solve_case2(&example));
+    aoc::expect_result!(2897, solve_case2(&input));
 }

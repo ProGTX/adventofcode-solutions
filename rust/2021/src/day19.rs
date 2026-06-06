@@ -43,11 +43,11 @@ fn main() {
 
     println!("Part 1");
     let _example = parse("day19.example");
-    // assert_eq!(79, solve_case1(&_example));
+    // aoc::expect_result!(79, solve_case1(&_example));
     let _input = parse("day19.input");
-    // assert_eq!(XXX, solve_case1(&input));
+    // aoc::expect_result!(XXX, solve_case1(&input));
 
     println!("Part 2");
-    // assert_eq!(XXX, solve_case2(&example));
-    // assert_eq!(XXX, solve_case2(&input));
+    // aoc::expect_result!(XXX, solve_case2(&example));
+    // aoc::expect_result!(XXX, solve_case2(&input));
 }

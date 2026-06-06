@@ -59,11 +59,11 @@ fn solve_case2(navigation_lines: &[String]) -> usize {
 fn main() {
     println!("Part 1");
     let example = parse("day10.example");
-    assert_eq!(26397, solve_case1(&example));
+    aoc::expect_result!(26397, solve_case1(&example));
     let input = parse("day10.input");
-    assert_eq!(319233, solve_case1(&input));
+    aoc::expect_result!(319233, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(288957, solve_case2(&example));
-    assert_eq!(1118976874, solve_case2(&input));
+    aoc::expect_result!(288957, solve_case2(&example));
+    aoc::expect_result!(1118976874, solve_case2(&input));
 }

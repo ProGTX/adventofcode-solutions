@@ -44,7 +44,7 @@ fn solve_case<const RANGES: bool>(filename: &str) -> u32 {
 
 fn main() {
     println!("Part 1");
-    assert_eq!(373, solve_case::<false>("day16.input"));
+    aoc::expect_result!(373, solve_case::<false>("day16.input"));
     println!("Part 2");
-    assert_eq!(260, solve_case::<true>("day16.input"));
+    aoc::expect_result!(260, solve_case::<true>("day16.input"));
 }

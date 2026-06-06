@@ -100,11 +100,11 @@ fn solve_case1(input: &Input) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day10.example");
-    assert_eq!(7, solve_case1(&example));
+    aoc::expect_result!(7, solve_case1(&example));
     let input = parse("day10.input");
-    assert_eq!(535, solve_case1(&input));
+    aoc::expect_result!(535, solve_case1(&input));
 
     // println!("Part 2");
-    // assert_eq!(33, solve_case2(&example));
-    // assert_eq!(100011612, solve_case2(&input));
+    // aoc::expect_result!(33, solve_case2(&example));
+    // aoc::expect_result!(100011612, solve_case2(&input));
 }

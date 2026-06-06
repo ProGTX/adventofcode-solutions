@@ -70,11 +70,11 @@ fn solve_case<const START_A: u32>(instructions: &Instructions) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day23.example");
-    assert_eq!(2, solve_case::<0>(&example));
+    aoc::expect_result!(2, solve_case::<0>(&example));
     let input = parse("day23.input");
-    assert_eq!(255, solve_case::<0>(&input));
+    aoc::expect_result!(255, solve_case::<0>(&input));
 
     println!("Part 2");
-    assert_eq!(2, solve_case::<1>(&example));
-    assert_eq!(334, solve_case::<1>(&input));
+    aoc::expect_result!(2, solve_case::<1>(&example));
+    aoc::expect_result!(334, solve_case::<1>(&input));
 }

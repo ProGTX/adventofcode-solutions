@@ -149,11 +149,11 @@ fn solve_case<const WITH_GROUND: bool>(input: &[RockLine]) -> i32 {
 fn main() {
     println!("Part 1");
     let example = parse("day14.example");
-    assert_eq!(24, solve_case::<false>(&example));
+    aoc::expect_result!(24, solve_case::<false>(&example));
     let input = parse("day14.input");
-    assert_eq!(655, solve_case::<false>(&input));
+    aoc::expect_result!(655, solve_case::<false>(&input));
 
     println!("Part 2");
-    assert_eq!(93, solve_case::<true>(&example));
-    assert_eq!(26484, solve_case::<true>(&input));
+    aoc::expect_result!(93, solve_case::<true>(&example));
+    aoc::expect_result!(26484, solve_case::<true>(&input));
 }

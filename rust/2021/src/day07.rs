@@ -32,11 +32,11 @@ fn solve_case<const PROGRESSIVE_COST: bool>(positions: &[i32]) -> i32 {
 fn main() {
     println!("Part 1");
     let example = parse("day07.example");
-    assert_eq!(37, solve_case::<false>(&example));
+    aoc::expect_result!(37, solve_case::<false>(&example));
     let input = parse("day07.input");
-    assert_eq!(355592, solve_case::<false>(&input));
+    aoc::expect_result!(355592, solve_case::<false>(&input));
 
     println!("Part 2");
-    assert_eq!(168, solve_case::<true>(&example));
-    assert_eq!(101618069, solve_case::<true>(&input));
+    aoc::expect_result!(168, solve_case::<true>(&example));
+    aoc::expect_result!(101618069, solve_case::<true>(&input));
 }

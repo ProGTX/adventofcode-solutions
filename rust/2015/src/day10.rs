@@ -32,9 +32,9 @@ fn solve_case<const ITERATIONS: usize>(filename: &str) -> usize {
 
 fn main() {
     println!("Part 1");
-    assert_eq!(237746, solve_case::<40>("day10.example"));
-    assert_eq!(360154, solve_case::<40>("day10.input"));
+    aoc::expect_result!(237746, solve_case::<40>("day10.example"));
+    aoc::expect_result!(360154, solve_case::<40>("day10.input"));
     println!("Part 2");
-    assert_eq!(3369156, solve_case::<50>("day10.example"));
-    assert_eq!(5103798, solve_case::<50>("day10.input"));
+    aoc::expect_result!(3369156, solve_case::<50>("day10.example"));
+    aoc::expect_result!(5103798, solve_case::<50>("day10.input"));
 }

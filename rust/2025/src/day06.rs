@@ -79,11 +79,11 @@ fn solve_case2(char_grid: &CharGrid) -> u64 {
 fn main() {
     println!("Part 1");
     let example = parse("day06.example");
-    assert_eq!(4277556, solve_case1(&example));
+    aoc::expect_result!(4277556, solve_case1(&example));
     let input = parse("day06.input");
-    assert_eq!(5322004718681, solve_case1(&input));
+    aoc::expect_result!(5322004718681, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(3263827, solve_case2(&example));
-    assert_eq!(9876636978528, solve_case2(&input));
+    aoc::expect_result!(3263827, solve_case2(&example));
+    aoc::expect_result!(9876636978528, solve_case2(&input));
 }

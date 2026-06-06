@@ -56,10 +56,10 @@ fn solve_case<const STEPS: u32, const STUCK_CORNERS: bool>(original_lights: &Gri
 fn main() {
     println!("Part 1");
     let example = parse("day18.example");
-    assert_eq!(4, solve_case::<4, false>(&example));
+    aoc::expect_result!(4, solve_case::<4, false>(&example));
     let input = parse("day18.input");
-    assert_eq!(1061, solve_case::<100, false>(&input));
+    aoc::expect_result!(1061, solve_case::<100, false>(&input));
     println!("Part 2");
-    assert_eq!(17, solve_case::<5, true>(&example));
-    assert_eq!(1006, solve_case::<100, true>(&input));
+    aoc::expect_result!(17, solve_case::<5, true>(&example));
+    aoc::expect_result!(1006, solve_case::<100, true>(&input));
 }

@@ -41,9 +41,9 @@ fn solve_case<const LITERS: u32, const COUNT_WAYS: bool>(filename: &str) -> u32 
 
 fn main() {
     println!("Part 1");
-    assert_eq!(4, solve_case::<25, false>("day17.example"));
-    assert_eq!(1304, solve_case::<150, false>("day17.input"));
+    aoc::expect_result!(4, solve_case::<25, false>("day17.example"));
+    aoc::expect_result!(1304, solve_case::<150, false>("day17.input"));
     println!("Part 2");
-    assert_eq!(3, solve_case::<25, true>("day17.example"));
-    assert_eq!(18, solve_case::<150, true>("day17.input"));
+    aoc::expect_result!(3, solve_case::<25, true>("day17.example"));
+    aoc::expect_result!(18, solve_case::<150, true>("day17.input"));
 }

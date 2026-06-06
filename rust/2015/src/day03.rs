@@ -46,9 +46,9 @@ fn solve_case2(filename: &str) -> std::io::Result<i32> {
 
 fn main() {
     println!("Part 1");
-    assert_eq!(4, solve_case1("day03.example").unwrap());
-    assert_eq!(2565, solve_case1("day03.input").unwrap());
+    aoc::expect_result!(4, solve_case1("day03.example").unwrap());
+    aoc::expect_result!(2565, solve_case1("day03.input").unwrap());
     println!("Part 2");
-    assert_eq!(3, solve_case2("day03.example").unwrap());
-    assert_eq!(2639, solve_case2("day03.input").unwrap());
+    aoc::expect_result!(3, solve_case2("day03.example").unwrap());
+    aoc::expect_result!(2639, solve_case2("day03.input").unwrap());
 }

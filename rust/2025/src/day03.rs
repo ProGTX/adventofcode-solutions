@@ -40,11 +40,11 @@ fn solve_case<const TURN_NUM: usize>(batteries: &Batteries) -> u64 {
 fn main() {
     println!("Part 1");
     let example = parse("day03.example");
-    assert_eq!(357, solve_case::<2>(&example));
+    aoc::expect_result!(357, solve_case::<2>(&example));
     let input = parse("day03.input");
-    assert_eq!(17166, solve_case::<2>(&input));
+    aoc::expect_result!(17166, solve_case::<2>(&input));
 
     println!("Part 2");
-    assert_eq!(3121910778619, solve_case::<12>(&example));
-    assert_eq!(169077317650774, solve_case::<12>(&input));
+    aoc::expect_result!(3121910778619, solve_case::<12>(&example));
+    aoc::expect_result!(169077317650774, solve_case::<12>(&input));
 }

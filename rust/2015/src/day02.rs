@@ -39,9 +39,9 @@ fn solve_case2(filename: &str) -> io::Result<i32> {
 
 fn main() {
     println!("Part 1");
-    assert_eq!((58 + 43), solve_case1("day02.example").unwrap());
-    assert_eq!(1606483, solve_case1("day02.input").unwrap());
+    aoc::expect_result!((58 + 43), solve_case1("day02.example").unwrap());
+    aoc::expect_result!(1606483, solve_case1("day02.input").unwrap());
     println!("Part 2");
-    assert_eq!((34 + 14), solve_case2("day02.example").unwrap());
-    assert_eq!(3842356, solve_case2("day02.input").unwrap());
+    aoc::expect_result!((34 + 14), solve_case2("day02.example").unwrap());
+    aoc::expect_result!(3842356, solve_case2("day02.input").unwrap());
 }

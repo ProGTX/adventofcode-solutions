@@ -88,26 +88,26 @@ fn main() {
     println!("Part 1");
     let example = parse("day10.example");
     let (example_signal, example_monitor) = solve_case(&example);
-    assert_eq!(13140, example_signal);
+    aoc::expect_result!(13140, example_signal);
     let input = parse("day10.input");
     let (input_signal, input_monitor) = solve_case(&input);
-    assert_eq!(11820, input_signal);
+    aoc::expect_result!(11820, input_signal);
 
     println!("Part 2");
-    let expected_example_out = "\
+    const EXPECTED_EXAMPLE_OUT: &str = "\
 ##..##..##..##..##..##..##..##..##..##..\
 ###...###...###...###...###...###...###.\
 ####....####....####....####....####....\
 #####.....#####.....#####.....#####.....\
 ######......######......######......####\
 #######.......#######.......#######.....";
-    assert_eq!(expected_example_out, example_monitor);
-    let expected_input_out = "\
+    aoc::expect_result!(EXPECTED_EXAMPLE_OUT, example_monitor);
+    const EXPECTED_INPUT_OUT: &str = "\
 ####.###....##.###..###..#..#..##..#..#.\
 #....#..#....#.#..#.#..#.#.#..#..#.#..#.\
 ###..#..#....#.###..#..#.##...#..#.####.\
 #....###.....#.#..#.###..#.#..####.#..#.\
 #....#....#..#.#..#.#.#..#.#..#..#.#..#.\
 ####.#.....##..###..#..#.#..#.#..#.#..#.";
-    assert_eq!(expected_input_out, input_monitor);
+    aoc::expect_result!(EXPECTED_INPUT_OUT, input_monitor);
 }

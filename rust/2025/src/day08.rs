@@ -75,11 +75,11 @@ fn solve_case<const NUM_CONNECTIONS: usize>(boxes: &Boxes) -> usize {
 fn main() {
     println!("Part 1");
     let example = parse("day08.example");
-    assert_eq!(40, solve_case::<10>(&example));
+    aoc::expect_result!(40, solve_case::<10>(&example));
     let input = parse("day08.input");
-    assert_eq!(102816, solve_case::<1000>(&input));
+    aoc::expect_result!(102816, solve_case::<1000>(&input));
 
     println!("Part 2");
-    assert_eq!(25272, solve_case::<{ usize::MAX }>(&example));
-    assert_eq!(100011612, solve_case::<{ usize::MAX }>(&input));
+    aoc::expect_result!(25272, solve_case::<{ usize::MAX }>(&example));
+    aoc::expect_result!(100011612, solve_case::<{ usize::MAX }>(&input));
 }

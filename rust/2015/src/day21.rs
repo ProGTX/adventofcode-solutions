@@ -130,11 +130,11 @@ fn solve_case<const START_HP: u32, const PART2: bool>(input: &Entity) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day21.example");
-    assert_eq!(65, solve_case::<8, false>(&example));
+    aoc::expect_result!(65, solve_case::<8, false>(&example));
     let input = parse("day21.input");
-    assert_eq!(111, solve_case::<100, false>(&input));
+    aoc::expect_result!(111, solve_case::<100, false>(&input));
 
     println!("Part 2");
-    assert_eq!(188, solve_case::<8, true>(&example));
-    assert_eq!(188, solve_case::<100, true>(&input));
+    aoc::expect_result!(188, solve_case::<8, true>(&example));
+    aoc::expect_result!(188, solve_case::<100, true>(&input));
 }

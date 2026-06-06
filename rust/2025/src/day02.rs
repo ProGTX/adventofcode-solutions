@@ -84,11 +84,11 @@ fn solve_case2(ranges: &[Range]) -> u64 {
 fn main() {
     println!("Part 1");
     let example = parse("day02.example");
-    assert_eq!(1227775554, solve_case1(&example));
+    aoc::expect_result!(1227775554, solve_case1(&example));
     let input = parse("day02.input");
-    assert_eq!(30323879646, solve_case1(&input));
+    aoc::expect_result!(30323879646, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(4174379265, solve_case2(&example));
-    assert_eq!(43872163557, solve_case2(&input));
+    aoc::expect_result!(4174379265, solve_case2(&example));
+    aoc::expect_result!(43872163557, solve_case2(&input));
 }

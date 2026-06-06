@@ -63,11 +63,11 @@ fn solve_case<const STEPS: usize>((polymer, rules): &Input) -> usize {
 fn main() {
     println!("Part 1");
     let example = parse("day14.example");
-    assert_eq!(1588, solve_case::<10>(&example));
+    aoc::expect_result!(1588, solve_case::<10>(&example));
     let input = parse("day14.input");
-    assert_eq!(2703, solve_case::<10>(&input));
+    aoc::expect_result!(2703, solve_case::<10>(&input));
 
     println!("Part 2");
-    assert_eq!(2188189693529, solve_case::<40>(&example));
-    assert_eq!(2984946368465, solve_case::<40>(&input));
+    aoc::expect_result!(2188189693529, solve_case::<40>(&example));
+    aoc::expect_result!(2984946368465, solve_case::<40>(&input));
 }

@@ -107,17 +107,17 @@ fn main() {
     println!("Part 1");
 
     let example1 = parse("day12.example");
-    assert_eq!(10, solve_case::<false>(&example1));
+    aoc::expect_result!(10, solve_case::<false>(&example1));
     let example2 = parse("day12.example2");
-    assert_eq!(19, solve_case::<false>(&example2));
+    aoc::expect_result!(19, solve_case::<false>(&example2));
     let example3 = parse("day12.example3");
-    assert_eq!(226, solve_case::<false>(&example3));
+    aoc::expect_result!(226, solve_case::<false>(&example3));
     let input = parse("day12.input");
-    assert_eq!(4104, solve_case::<false>(&input));
+    aoc::expect_result!(4104, solve_case::<false>(&input));
 
     println!("Part 2");
-    assert_eq!(36, solve_case::<true>(&example1));
-    assert_eq!(103, solve_case::<true>(&example2));
-    assert_eq!(3509, solve_case::<true>(&example3));
-    assert_eq!(119760, solve_case::<true>(&input));
+    aoc::expect_result!(36, solve_case::<true>(&example1));
+    aoc::expect_result!(103, solve_case::<true>(&example2));
+    aoc::expect_result!(3509, solve_case::<true>(&example3));
+    aoc::expect_result!(119760, solve_case::<true>(&input));
 }

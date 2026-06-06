@@ -47,14 +47,14 @@ fn solve_case<const QUANTUM: bool>((manifolds, start_pos): &(Manifolds, Upos)) -
 fn main() {
     println!("Part 1");
     let example = parse("day07.example");
-    assert_eq!(21, solve_case::<false>(&example));
+    aoc::expect_result!(21, solve_case::<false>(&example));
     let example2 = parse("day07.example2");
-    assert_eq!(16, solve_case::<false>(&example2));
+    aoc::expect_result!(16, solve_case::<false>(&example2));
     let input = parse("day07.input");
-    assert_eq!(1560, solve_case::<false>(&input));
+    aoc::expect_result!(1560, solve_case::<false>(&input));
 
     println!("Part 2");
-    assert_eq!(40, solve_case::<true>(&example));
-    assert_eq!(26, solve_case::<true>(&example2));
-    assert_eq!(25592971184998, solve_case::<true>(&input));
+    aoc::expect_result!(40, solve_case::<true>(&example));
+    aoc::expect_result!(26, solve_case::<true>(&example2));
+    aoc::expect_result!(25592971184998, solve_case::<true>(&input));
 }

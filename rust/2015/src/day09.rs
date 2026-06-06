@@ -86,9 +86,9 @@ fn solve_case<const GREATER: bool>(filename: &str) -> u32 {
 
 fn main() {
     println!("Part 1");
-    assert_eq!(605, solve_case::<false>("day09.example"));
-    assert_eq!(141, solve_case::<false>("day09.input"));
+    aoc::expect_result!(605, solve_case::<false>("day09.example"));
+    aoc::expect_result!(141, solve_case::<false>("day09.input"));
     println!("Part 2");
-    assert_eq!(982, solve_case::<true>("day09.example"));
-    assert_eq!(736, solve_case::<true>("day09.input"));
+    aoc::expect_result!(982, solve_case::<true>("day09.example"));
+    aoc::expect_result!(736, solve_case::<true>("day09.input"));
 }

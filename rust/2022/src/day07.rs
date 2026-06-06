@@ -100,11 +100,11 @@ fn solve_case2((folders, file_sizes): &Filesystem) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day07.example");
-    assert_eq!(95437, solve_case1(&example));
+    aoc::expect_result!(95437, solve_case1(&example));
     let input = parse("day07.input");
-    assert_eq!(1453349, solve_case1(&input));
+    aoc::expect_result!(1453349, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(24933642, solve_case2(&example));
-    assert_eq!(2948823, solve_case2(&input));
+    aoc::expect_result!(24933642, solve_case2(&example));
+    aoc::expect_result!(2948823, solve_case2(&input));
 }

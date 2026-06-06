@@ -46,14 +46,14 @@ fn solve_case1((_, outputs): &(Vec<Pattern>, Vec<Output>)) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day08.example");
-    assert_eq!(0, solve_case1(&example));
+    aoc::expect_result!(0, solve_case1(&example));
     let example2 = parse("day08.example2");
-    assert_eq!(26, solve_case1(&example2));
+    aoc::expect_result!(26, solve_case1(&example2));
     let input = parse("day08.input");
-    assert_eq!(440, solve_case1(&input));
+    aoc::expect_result!(440, solve_case1(&input));
 
     // println!("Part 2");
-    // assert_eq!(5353, solve_case2(&example));
-    // assert_eq!(61229, solve_case2(&example2));
-    // assert_eq!(1046281, solve_case2(&input));
+    // aoc::expect_result!(5353, solve_case2(&example));
+    // aoc::expect_result!(61229, solve_case2(&example2));
+    // aoc::expect_result!(1046281, solve_case2(&input));
 }

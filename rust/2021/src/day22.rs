@@ -122,17 +122,17 @@ fn solve_case2(reboot_steps: &[Cuboid]) -> u64 {
 fn main() {
     println!("Part 1");
     let example = parse("day22.example");
-    assert_eq!(39, solve_case1(&example));
+    aoc::expect_result!(39, solve_case1(&example));
     let example2 = parse("day22.example2");
-    assert_eq!(590784, solve_case1(&example2));
+    aoc::expect_result!(590784, solve_case1(&example2));
     let example3 = parse("day22.example3");
-    assert_eq!(474140, solve_case1(&example3));
+    aoc::expect_result!(474140, solve_case1(&example3));
     let input = parse("day22.input");
-    assert_eq!(596989, solve_case1(&input));
+    aoc::expect_result!(596989, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(39, solve_case2(&example));
-    assert_eq!(39769202357779, solve_case2(&example2));
-    assert_eq!(2758514936282235, solve_case2(&example3));
-    assert_eq!(1160011199157381, solve_case2(&input));
+    aoc::expect_result!(39, solve_case2(&example));
+    aoc::expect_result!(39769202357779, solve_case2(&example2));
+    aoc::expect_result!(2758514936282235, solve_case2(&example3));
+    aoc::expect_result!(1160011199157381, solve_case2(&input));
 }

@@ -68,13 +68,13 @@ fn solve_case<const NUM_KNOTS: usize>(moves: &[Point]) -> usize {
 fn main() {
     println!("Part 1");
     let example = parse("day09.example");
-    assert_eq!(13, solve_case::<2>(&example));
+    aoc::expect_result!(13, solve_case::<2>(&example));
     let input = parse("day09.input");
-    assert_eq!(5695, solve_case::<2>(&input));
+    aoc::expect_result!(5695, solve_case::<2>(&input));
 
     println!("Part 2");
-    assert_eq!(1, solve_case::<10>(&example));
+    aoc::expect_result!(1, solve_case::<10>(&example));
     let example2 = parse("day09.example2");
-    assert_eq!(36, solve_case::<10>(&example2));
-    assert_eq!(2434, solve_case::<10>(&input));
+    aoc::expect_result!(36, solve_case::<10>(&example2));
+    aoc::expect_result!(2434, solve_case::<10>(&input));
 }

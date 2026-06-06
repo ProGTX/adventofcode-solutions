@@ -54,11 +54,11 @@ fn solve_case<const NUM_GROUPS: u32>(packages: &[u32]) -> u64 {
 fn main() {
     println!("Part 1");
     let example = parse("day24.example");
-    assert_eq!(99, solve_case::<3>(&example));
+    aoc::expect_result!(99, solve_case::<3>(&example));
     let input = parse("day24.input");
-    assert_eq!(10723906903, solve_case::<3>(&input));
+    aoc::expect_result!(10723906903, solve_case::<3>(&input));
 
     println!("Part 2");
-    assert_eq!(44, solve_case::<4>(&example));
-    assert_eq!(74850409, solve_case::<4>(&input));
+    aoc::expect_result!(44, solve_case::<4>(&example));
+    aoc::expect_result!(74850409, solve_case::<4>(&input));
 }

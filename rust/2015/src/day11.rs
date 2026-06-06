@@ -182,11 +182,11 @@ fn main() {
 
     println!("Part 1");
     let example_solved = solve_case("day11.example");
-    assert_eq!("ghjaabcc", &example_solved);
+    aoc::expect_result!("ghjaabcc", &example_solved);
     let input_solved = solve_case("day11.input");
-    assert_eq!("hxbxxyzz", &input_solved);
+    aoc::expect_result!("hxbxxyzz", &input_solved);
 
     println!("Part 2");
-    assert_eq!("ghjbbcdd", next_password_str(&example_solved));
-    assert_eq!("hxcaabcc", next_password_str(&input_solved));
+    aoc::expect_result!("ghjbbcdd", next_password_str(&example_solved));
+    aoc::expect_result!("hxcaabcc", next_password_str(&input_solved));
 }

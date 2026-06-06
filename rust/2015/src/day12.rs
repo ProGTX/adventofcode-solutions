@@ -94,9 +94,9 @@ fn solve_case2(filename: &str) -> i32 {
 
 fn main() {
     println!("Part 1");
-    assert_eq!(6, solve_case1("day12.example"));
-    assert_eq!(156366, solve_case1("day12.input"));
+    aoc::expect_result!(6, solve_case1("day12.example"));
+    aoc::expect_result!(156366, solve_case1("day12.input"));
     println!("Part 2");
-    assert_eq!(4, solve_case2("day12.example"));
-    assert_eq!(96852, solve_case2("day12.input"));
+    aoc::expect_result!(4, solve_case2("day12.example"));
+    aoc::expect_result!(96852, solve_case2("day12.input"));
 }

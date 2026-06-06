@@ -63,11 +63,11 @@ fn solve_case2(_seafloor: &Seafloor) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day25.example");
-    assert_eq!(58, solve_case1(&example));
+    aoc::expect_result!(58, solve_case1(&example));
     let input = parse("day25.input");
-    assert_eq!(329, solve_case1(&input));
+    aoc::expect_result!(329, solve_case1(&input));
 
     println!("Part 2");
-    // assert_eq!(XXX, solve_case2(&example));
-    // assert_eq!(XXX, solve_case2(&input));
+    // aoc::expect_result!(XXX, solve_case2(&example));
+    // aoc::expect_result!(XXX, solve_case2(&input));
 }

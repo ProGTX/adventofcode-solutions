@@ -90,11 +90,11 @@ fn solve_case<const GRAB_MULTIPLE: bool>(input: &Input) -> String {
 fn main() {
     println!("Part 1");
     let example = parse("day05.example");
-    assert_eq!("CMZ", solve_case::<false>(&example));
+    aoc::expect_result!("CMZ", solve_case::<false>(&example));
     let input = parse("day05.input");
-    assert_eq!("QGTHFZBHV", solve_case::<false>(&input));
+    aoc::expect_result!("QGTHFZBHV", solve_case::<false>(&input));
 
     println!("Part 2");
-    assert_eq!("MCD", solve_case::<true>(&example));
-    assert_eq!("MGDMPSZTM", solve_case::<true>(&input));
+    aoc::expect_result!("MCD", solve_case::<true>(&example));
+    aoc::expect_result!("MGDMPSZTM", solve_case::<true>(&input));
 }

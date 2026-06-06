@@ -66,11 +66,11 @@ fn solve_case2(report: &[Bitset]) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day03.example");
-    assert_eq!(198, solve_case1(&example));
+    aoc::expect_result!(198, solve_case1(&example));
     let input = parse("day03.input");
-    assert_eq!(4138664, solve_case1(&input));
+    aoc::expect_result!(4138664, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(230, solve_case2(&example));
-    assert_eq!(4273224, solve_case2(&input));
+    aoc::expect_result!(230, solve_case2(&example));
+    aoc::expect_result!(4273224, solve_case2(&input));
 }

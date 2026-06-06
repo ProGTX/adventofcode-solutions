@@ -49,7 +49,7 @@ fn solve_case((column, row): Coords) -> u64 {
 fn main() {
     println!("Part 1");
     let example = parse("day25.example");
-    assert_eq!(12231762, solve_case(example));
+    aoc::expect_result!(12231762, solve_case(example));
     let input = parse("day25.input");
-    assert_eq!(2650453, solve_case(input));
+    aoc::expect_result!(2650453, solve_case(input));
 }

@@ -137,29 +137,29 @@ fn solve_case2(hex_packet: &str) -> u64 {
 fn main() {
     println!("Part 1");
 
-    assert_eq!(6, solve_case1("D2FE28"));
-    assert_eq!(9, solve_case1("38006F45291200"));
-    assert_eq!(16, solve_case1("8A004A801A8002F478"));
-    assert_eq!(12, solve_case1("620080001611562C8802118E34"));
-    assert_eq!(23, solve_case1("C0015000016115A2E0802F182340"));
-    assert_eq!(31, solve_case1("A0016C880162017C3686B18A3D4780"));
+    aoc::expect_result!(6, solve_case1("D2FE28"));
+    aoc::expect_result!(9, solve_case1("38006F45291200"));
+    aoc::expect_result!(16, solve_case1("8A004A801A8002F478"));
+    aoc::expect_result!(12, solve_case1("620080001611562C8802118E34"));
+    aoc::expect_result!(23, solve_case1("C0015000016115A2E0802F182340"));
+    aoc::expect_result!(31, solve_case1("A0016C880162017C3686B18A3D4780"));
 
     let example = parse("day16.example");
-    assert_eq!(6, solve_case1(&example));
+    aoc::expect_result!(6, solve_case1(&example));
     let input = parse("day16.input");
-    assert_eq!(925, solve_case1(&input));
+    aoc::expect_result!(925, solve_case1(&input));
 
     println!("Part 2");
 
-    assert_eq!(3, solve_case2("C200B40A82"));
-    assert_eq!(54, solve_case2("04005AC33890"));
-    assert_eq!(7, solve_case2("880086C3E88112"));
-    assert_eq!(9, solve_case2("CE00C43D881120"));
-    assert_eq!(1, solve_case2("D8005AC2A8F0"));
-    assert_eq!(0, solve_case2("F600BC2D8F"));
-    assert_eq!(0, solve_case2("9C005AC2F8F0"));
-    assert_eq!(1, solve_case2("9C0141080250320F1802104A08"));
+    aoc::expect_result!(3, solve_case2("C200B40A82"));
+    aoc::expect_result!(54, solve_case2("04005AC33890"));
+    aoc::expect_result!(7, solve_case2("880086C3E88112"));
+    aoc::expect_result!(9, solve_case2("CE00C43D881120"));
+    aoc::expect_result!(1, solve_case2("D8005AC2A8F0"));
+    aoc::expect_result!(0, solve_case2("F600BC2D8F"));
+    aoc::expect_result!(0, solve_case2("9C005AC2F8F0"));
+    aoc::expect_result!(1, solve_case2("9C0141080250320F1802104A08"));
 
-    assert_eq!(2021, solve_case2(&example));
-    assert_eq!(342997120375, solve_case2(&input));
+    aoc::expect_result!(2021, solve_case2(&example));
+    aoc::expect_result!(342997120375, solve_case2(&input));
 }

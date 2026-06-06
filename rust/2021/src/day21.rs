@@ -128,11 +128,11 @@ fn solve_case2((p1, p2): (u32, u32)) -> usize {
 fn main() {
     println!("Part 1");
     let example = parse("day21.example");
-    assert_eq!(739785, solve_case1(example));
+    aoc::expect_result!(739785, solve_case1(example));
     let input = parse("day21.input");
-    assert_eq!(805932, solve_case1(input));
+    aoc::expect_result!(805932, solve_case1(input));
 
     println!("Part 2");
-    assert_eq!(444356092776315, solve_case2(example));
-    assert_eq!(133029050096658, solve_case2(input));
+    aoc::expect_result!(444356092776315, solve_case2(example));
+    aoc::expect_result!(133029050096658, solve_case2(input));
 }

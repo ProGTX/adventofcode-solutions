@@ -261,14 +261,14 @@ fn solve_case<const FULL_INPUT: bool, const HARD_MODE: bool>(boss_orig: &Boss) -
 fn main() {
     println!("Part 1");
     let example = parse("day22.example");
-    assert_eq!(226, solve_case::<false, false>(&example));
+    aoc::expect_result!(226, solve_case::<false, false>(&example));
     let example2 = parse("day22.example2");
-    assert_eq!(641, solve_case::<false, false>(&example2));
+    aoc::expect_result!(641, solve_case::<false, false>(&example2));
     let input = parse("day22.input");
-    assert_eq!(953, solve_case::<true, false>(&input));
+    aoc::expect_result!(953, solve_case::<true, false>(&input));
 
     println!("Part 2");
-    assert_eq!(226, solve_case::<false, true>(&example));
-    assert_eq!(588, solve_case::<false, true>(&example2));
-    assert_eq!(1289, solve_case::<true, true>(&input));
+    aoc::expect_result!(226, solve_case::<false, true>(&example));
+    aoc::expect_result!(588, solve_case::<false, true>(&example2));
+    aoc::expect_result!(1289, solve_case::<true, true>(&input));
 }

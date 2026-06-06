@@ -63,9 +63,9 @@ fn solve_case2<const SECONDS: u32>(filename: &str) -> u32 {
 
 fn main() {
     println!("Part 1");
-    assert_eq!(1120, solve_case1::<1000>("day14.example"));
-    assert_eq!(2660, solve_case1::<2503>("day14.input"));
+    aoc::expect_result!(1120, solve_case1::<1000>("day14.example"));
+    aoc::expect_result!(2660, solve_case1::<2503>("day14.input"));
     println!("Part 2");
-    assert_eq!(689, solve_case2::<1000>("day14.example"));
-    assert_eq!(1256, solve_case2::<2503>("day14.input"));
+    aoc::expect_result!(689, solve_case2::<1000>("day14.example"));
+    aoc::expect_result!(1256, solve_case2::<2503>("day14.input"));
 }

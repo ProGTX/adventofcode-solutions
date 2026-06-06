@@ -93,9 +93,9 @@ fn solve_case<const KCAL_500: bool>(filename: &str) -> u32 {
 
 fn main() {
     println!("Part 1");
-    assert_eq!(62842880, solve_case::<false>("day15.example"));
-    assert_eq!(21367368, solve_case::<false>("day15.input"));
+    aoc::expect_result!(62842880, solve_case::<false>("day15.example"));
+    aoc::expect_result!(21367368, solve_case::<false>("day15.input"));
     println!("Part 2");
-    assert_eq!(57600000, solve_case::<true>("day15.example"));
-    assert_eq!(1766400, solve_case::<true>("day15.input"));
+    aoc::expect_result!(57600000, solve_case::<true>("day15.example"));
+    aoc::expect_result!(1766400, solve_case::<true>("day15.input"));
 }

@@ -87,28 +87,28 @@ fn main() {
     println!("Part 1");
 
     let example = parse("day13.example");
-    assert_eq!(17, solve_case1(&example));
+    aoc::expect_result!(17, solve_case1(&example));
     let input = parse("day13.input");
-    assert_eq!(785, solve_case1(&input));
+    aoc::expect_result!(785, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(
-        dots_to_string(&solve_case2(&example)),
+    aoc::expect_result!(
         "\
 #####
 #...#
 #...#
 #...#
-#####"
+#####",
+        dots_to_string(&solve_case2(&example))
     );
-    assert_eq!(
-        dots_to_string(&solve_case2(&input)),
+    aoc::expect_result!(
         "\
 ####...##..##..#..#...##..##...##..#..#
 #.......#.#..#.#..#....#.#..#.#..#.#..#
 ###.....#.#..#.####....#.#....#..#.####
 #.......#.####.#..#....#.#.##.####.#..#
 #....#..#.#..#.#..#.#..#.#..#.#..#.#..#
-#.....##..#..#.#..#..##...###.#..#.#..#"
+#.....##..#..#.#..#..##...###.#..#.#..#",
+        dots_to_string(&solve_case2(&input))
     );
 }

@@ -42,11 +42,11 @@ fn solve_case2(directions: &[Direction]) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day02.example");
-    assert_eq!(150, solve_case1(&example));
+    aoc::expect_result!(150, solve_case1(&example));
     let input = parse("day02.input");
-    assert_eq!(2120749, solve_case1(&input));
+    aoc::expect_result!(2120749, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(900, solve_case2(&example));
-    assert_eq!(2138382217, solve_case2(&input));
+    aoc::expect_result!(900, solve_case2(&example));
+    aoc::expect_result!(2138382217, solve_case2(&input));
 }

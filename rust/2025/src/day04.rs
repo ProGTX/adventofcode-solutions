@@ -45,11 +45,11 @@ fn solve_case2(input: &PaperRolls) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day04.example");
-    assert_eq!(13, solve_case1(&example));
+    aoc::expect_result!(13, solve_case1(&example));
     let input = parse("day04.input");
-    assert_eq!(1553, solve_case1(&input));
+    aoc::expect_result!(1553, solve_case1(&input));
 
     println!("Part 2");
-    assert_eq!(43, solve_case2(&example));
-    assert_eq!(8442, solve_case2(&input));
+    aoc::expect_result!(43, solve_case2(&example));
+    aoc::expect_result!(8442, solve_case2(&input));
 }

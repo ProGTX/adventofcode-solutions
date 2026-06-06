@@ -32,12 +32,12 @@ fn solve_case<const NUM_DAYS: u32>(school: &School) -> u64 {
 fn main() {
     println!("Part 1");
     let example = parse("day06.example");
-    assert_eq!(26, solve_case::<18>(&example));
-    assert_eq!(5934, solve_case::<80>(&example));
+    aoc::expect_result!(26, solve_case::<18>(&example));
+    aoc::expect_result!(5934, solve_case::<80>(&example));
     let input = parse("day06.input");
-    assert_eq!(371379, solve_case::<80>(&input));
+    aoc::expect_result!(371379, solve_case::<80>(&input));
 
     println!("Part 2");
-    assert_eq!(26984457539, solve_case::<256>(&example));
-    assert_eq!(1674303997472, solve_case::<256>(&input));
+    aoc::expect_result!(26984457539, solve_case::<256>(&example));
+    aoc::expect_result!(1674303997472, solve_case::<256>(&input));
 }

@@ -110,11 +110,11 @@ fn main() {
     println!("Part 1");
 
     let example = parse("day24.example");
-    assert_eq!(0, solve_case1(&example));
+    aoc::expect_result!(0, solve_case1(&example));
     let _input = parse("day24.input");
-    // assert_eq!(XXX, solve_case1(&_input));
+    // aoc::expect_result!(XXX, solve_case1(&_input));
 
     println!("Part 2");
-    // assert_eq!(XXX, solve_case2(&example));
-    // assert_eq!(XXX, solve_case2(&input));
+    // aoc::expect_result!(XXX, solve_case2(&example));
+    // aoc::expect_result!(XXX, solve_case2(&input));
 }

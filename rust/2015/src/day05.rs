@@ -56,9 +56,9 @@ fn solve_case2(filename: &str) -> io::Result<i32> {
 
 fn main() {
     println!("Part 1");
-    assert_eq!(2, solve_case1("day05.example").unwrap());
-    assert_eq!(258, solve_case1("day05.input").unwrap());
+    aoc::expect_result!(2, solve_case1("day05.example").unwrap());
+    aoc::expect_result!(258, solve_case1("day05.input").unwrap());
     println!("Part 2");
-    assert_eq!(1, solve_case2("day05.example").unwrap());
-    assert_eq!(53, solve_case2("day05.input").unwrap());
+    aoc::expect_result!(1, solve_case2("day05.example").unwrap());
+    aoc::expect_result!(53, solve_case2("day05.input").unwrap());
 }
