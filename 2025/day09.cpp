@@ -114,29 +114,34 @@ fn edges_intersect(Polygon const& polygon, Rectangle const& rectangle) -> bool {
 }
 
 fn solve_case2(Polygon const& polygon) -> u64 {
-  return stdr::max( //
-      stdv::cartesian_product(polygon, polygon) |
-      stdv::transform([&](auto&& pair) -> u64 {
-        let & [ p1, p2 ] = pair;
-        if (p1 >= p2) {
-          return 0;
-        }
-        let xmin = std::min(p1.x, p2.x);
-        let xmax = std::max(p1.x, p2.x);
-        let ymin = std::min(p1.y, p2.y);
-        let ymax = std::max(p1.y, p2.y);
-        let corners = Rectangle{
-            Point{xmin, ymin},
-            Point{xmin, ymax},
-            Point{xmax, ymin},
-            Point{xmax, ymax},
-        };
-        if (!corners_inside(polygon, corners) ||
-            edges_intersect(polygon, corners)) {
-          return 0;
-        }
-        return area(p1, p2);
-      }));
+  auto pairs = stdv::cartesian_product(polygon, polygon) |
+               stdv::filter([](auto&& pair) {
+                 let & [ p1, p2 ] = pair;
+                 return p1 < p2;
+               }) |
+               aoc::ranges::to<Vec<std::pair<Point, Point>>>();
+  stdr::sort(pairs, [](auto&& a, auto&& b) {
+    let & [ a1, a2 ] = a;
+    let & [ b1, b2 ] = b;
+    return area(a1, a2) > area(b1, b2);
+  });
+  for (let& [ p1, p2 ] : pairs) {
+    let xmin = std::min(p1.x, p2.x);
+    let xmax = std::max(p1.x, p2.x);
+    let ymin = std::min(p1.y, p2.y);
+    let ymax = std::max(p1.y, p2.y);
+    let corners = Rectangle{
+        Point{xmin, ymin},
+        Point{xmin, ymax},
+        Point{xmax, ymin},
+        Point{xmax, ymax},
+    };
+    if (corners_inside(polygon, corners) &&
+        !edges_intersect(polygon, corners)) {
+      return area(p1, p2);
+    }
+  }
+  return 0;
 }
 
 int main() {

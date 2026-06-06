@@ -119,13 +119,16 @@ fn edges_intersect(polygon: &Polygon, rectangle: &Rectangle) -> bool {
 }
 
 fn solve_case2(polygon: &Polygon) -> u64 {
-    polygon
+    let mut pairs: Vec<(Point, Point)> = polygon
         .iter()
         .cartesian_product(polygon.iter())
-        .map(|(&p1, &p2)| {
-            if (p1 >= p2) {
-                return 0;
-            }
+        .filter(|(p1, p2)| p1 < p2)
+        .map(|(&p1, &p2)| (p1, p2))
+        .collect();
+    pairs.sort_unstable_by_key(|(p1, p2)| std::cmp::Reverse(area(p1, p2)));
+    pairs
+        .into_iter()
+        .find_map(|(p1, p2)| {
             let (xmin, xmax) = (p1.x.min(p2.x), p1.x.max(p2.x));
             let (ymin, ymax) = (p1.y.min(p2.y), p1.y.max(p2.y));
             let corners = [
@@ -134,12 +137,11 @@ fn solve_case2(polygon: &Polygon) -> u64 {
                 Point::new(xmax, ymin),
                 Point::new(xmax, ymax),
             ];
-            if (!corners_inside(polygon, &corners) || edges_intersect(polygon, &corners)) {
-                return 0;
+            if !corners_inside(polygon, &corners) || edges_intersect(polygon, &corners) {
+                return None;
             }
-            return area(&p1, &p2);
+            return Some(area(&p1, &p2));
         })
-        .max()
         .unwrap()
 }
 
