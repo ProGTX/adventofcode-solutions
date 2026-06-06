@@ -17,10 +17,10 @@ fn solve_case(String const& filename) -> u32 {
   };
 
   for (let&& [ index, line ] :
-       aoc::views::read_lines(filename) | std::views::enumerate) {
+       aoc::views::read_lines(filename) | stdv::enumerate) {
     let all_info = aoc::split_once(line, ": ");
     let split_info = aoc::split_to_array<3>(all_info[1], ", ");
-    let matches = std::ranges::all_of(split_info, [&](str info) {
+    let matches = stdr::all_of(split_info, [&](str info) {
       let[key, value] = aoc::split_once(info, ": ");
       let required = generous_sue.at(key);
       let actual = aoc::to_number<u32>(value);

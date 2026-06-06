@@ -13,15 +13,14 @@ auto parse(String const& filename) -> Vec<u32> {
 }
 
 fn solve_case1(std::span<const u32> depths) -> usize {
-  return std::ranges::count_if(
-      depths | std::views::slide(2),
-      [](auto&& window) { return window[1] > window[0]; });
+  return stdr::count_if(depths | stdv::slide(2),
+                        [](auto&& window) { return window[1] > window[0]; });
 }
 
 fn solve_case2(std::span<const u32> depths) -> usize {
   return solve_case1(depths |
-                     std::views::slide(3) |
-                     std::views::transform([](auto&& window) {
+                     stdv::slide(3) |
+                     stdv::transform([](auto&& window) {
                        return aoc::ranges::accumulate(window, 0u);
                      }) |
                      aoc::ranges::to<Vec<u32>>());

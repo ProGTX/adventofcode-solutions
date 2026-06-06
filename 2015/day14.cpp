@@ -15,7 +15,7 @@ struct Reindeer {
 
 auto parse(String const& filename) -> Vec<Reindeer> {
   return aoc::views::read_lines(filename) |
-         std::views::transform([](str line) {
+         stdv::transform([](str line) {
            let words = aoc::split_to_array<14>(line, ' ');
            return Reindeer{
                .kms = aoc::to_number<u32>(words[3]),
@@ -28,8 +28,8 @@ auto parse(String const& filename) -> Vec<Reindeer> {
 
 template <u32 SECONDS>
 fn solve_case1(String const& filename) -> u32 {
-  return std::ranges::max(
-      parse(filename) | std::views::transform([](Reindeer const& reindeer) {
+  return stdr::max(
+      parse(filename) | stdv::transform([](Reindeer const& reindeer) {
         let cycle_time = reindeer.fly + reindeer.rest;
         let num_cycles = SECONDS / cycle_time;
         let remainder = SECONDS % cycle_time;
@@ -45,9 +45,9 @@ fn solve_case2(String const& filename) -> u32 {
   auto distances = std::array<u32, 9>{};
   auto score = std::array<u32, 9>{};
   AOC_ASSERT(flock.size() <= score.size(), "Too many reindeer");
-  for (let second : std::views::iota(0u, SECONDS)) {
+  for (let second : stdv::iota(0u, SECONDS)) {
     // Move each reindeer
-    for (let[index, reindeer] : flock | std::views::enumerate) {
+    for (let[index, reindeer] : flock | stdv::enumerate) {
       let cycle_time = reindeer.fly + reindeer.rest;
       let flying = (second % cycle_time) < reindeer.fly;
       distances[index] += static_cast<u32>(flying) * reindeer.kms;
@@ -55,10 +55,9 @@ fn solve_case2(String const& filename) -> u32 {
     // Award the farthest reindeer
     using index_dist_t = std::pair<usize, u32>;
     auto distances_sorted = distances |
-                            std::views::enumerate |
+                            stdv::enumerate |
                             aoc::ranges::to<std::vector<index_dist_t>>();
-    std::ranges::sort(distances_sorted, std::ranges::greater{},
-                      &index_dist_t::second);
+    stdr::sort(distances_sorted, stdr::greater{}, &index_dist_t::second);
     let farthest_dist = distances_sorted.front().second;
     for (let[index, dist] : distances_sorted) {
       if (dist == farthest_dist) {
@@ -68,7 +67,7 @@ fn solve_case2(String const& filename) -> u32 {
       }
     }
   }
-  return std::ranges::max(score);
+  return stdr::max(score);
 }
 
 int main() {

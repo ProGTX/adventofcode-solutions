@@ -48,12 +48,11 @@ int count_easy(input_t const& input) {
   int count = 0;
   constexpr auto easy_digits = std::array{1, 4, 7, 8};
   for (input_line_t const& line : input) {
-    count +=
-        std::ranges::count_if(line.output, [&](std::string_view digit_str) {
-          return std::ranges::any_of(easy_digits, [&](int digit) {
-            return digit_str.size() == digit_wires[digit].size();
-          });
-        });
+    count += stdr::count_if(line.output, [&](std::string_view digit_str) {
+      return stdr::any_of(easy_digits, [&](int digit) {
+        return digit_str.size() == digit_wires[digit].size();
+      });
+    });
   }
   return count;
 }
@@ -80,8 +79,7 @@ using segment_set_t = std::array<wire_set_t, original_map.size()>;
 
 constexpr wire_set_t pattern_to_set(std::string_view wire) {
   wire_set_t set;
-  std::ranges::transform(wire, std::back_inserter(set),
-                         [](char c) { return c; });
+  stdr::transform(wire, std::back_inserter(set), [](char c) { return c; });
   return set;
 }
 
@@ -91,13 +89,13 @@ std::string get_mapping(input_line_t::signal_patterns_t const& patterns) {
   constexpr auto max_set_size = original_map.size();
   const auto full_wire_set = std::invoke([&]() {
     wire_set_t wire_set{};
-    std::ranges::copy(std::views::iota('a') | std::views::take(max_set_size),
-                      std::back_inserter(wire_set));
+    stdr::copy(stdv::iota('a') | stdv::take(max_set_size),
+               std::back_inserter(wire_set));
     return wire_set;
   });
 
   auto segment_set = segment_set_t{};
-  std::ranges::fill(segment_set, full_wire_set);
+  stdr::fill(segment_set, full_wire_set);
   wire_set_t invalid_set;
   wire_set_t new_set;
   wire_set_t union_set;
@@ -108,28 +106,27 @@ std::string get_mapping(input_line_t::signal_patterns_t const& patterns) {
 
     wire_set_t valid_set = pattern_to_set(patterns[p]);
     // Sorting is required for the set algorithms
-    std::ranges::sort(valid_set);
+    stdr::sort(valid_set);
 
     invalid_set.clear();
-    std::ranges::set_difference(full_wire_set, valid_set,
-                                std::back_inserter(invalid_set));
+    stdr::set_difference(full_wire_set, valid_set,
+                         std::back_inserter(invalid_set));
 
     for (int w = 0; w < max_set_size; ++w) {
       union_set.clear();
       for (auto digit : combination) {
         auto digit_wire = digit_wires[digit];
         const auto& intersecting_set =
-            std::ranges::contains(digit_wire, static_cast<char>(w + 'a'))
+            stdr::contains(digit_wire, static_cast<char>(w + 'a'))
                 ? valid_set
                 : invalid_set;
 
         new_set.clear();
-        std::ranges::set_intersection(segment_set[w], intersecting_set,
-                                      std::back_inserter(new_set));
+        stdr::set_intersection(segment_set[w], intersecting_set,
+                               std::back_inserter(new_set));
 
         new_union_set.clear();
-        std::ranges::set_union(union_set, new_set,
-                               std::back_inserter(new_union_set));
+        stdr::set_union(union_set, new_set, std::back_inserter(new_union_set));
         union_set = new_union_set;
       }
       segment_set[w] = union_set;
@@ -144,8 +141,8 @@ std::string get_mapping(input_line_t::signal_patterns_t const& patterns) {
           continue;
         }
         new_set.clear();
-        std::ranges::set_difference(segment_set[w2], segment_set[w],
-                                    std::back_inserter(new_set));
+        stdr::set_difference(segment_set[w2], segment_set[w],
+                             std::back_inserter(new_set));
         segment_set[w2] = new_set;
       }
     }
@@ -161,10 +158,10 @@ int output_to_number(std::string_view out, std::string_view mapping) {
   for (char c : out) {
     wire_set.push_back(original_map[mapping.find(c)]);
   }
-  std::ranges::sort(wire_set);
+  stdr::sort(wire_set);
 
   for (int w = 0; w < digit_wires.size(); ++w) {
-    if (std::ranges::equal(wire_set, pattern_to_set(digit_wires[w]))) {
+    if (stdr::equal(wire_set, pattern_to_set(digit_wires[w]))) {
       return w;
     }
   }
@@ -176,7 +173,7 @@ int solve_line(input_line_t const& line) {
 
   int multiplier = 1;
   int number = 0;
-  for (auto const& output_digit : line.output | std::views::reverse) {
+  for (auto const& output_digit : line.output | stdv::reverse) {
     number += output_to_number(output_digit, new_map) * multiplier;
     multiplier *= 10;
   }

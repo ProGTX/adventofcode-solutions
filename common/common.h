@@ -13,6 +13,8 @@
 
 import aoc;
 
+#include <ranges>
+
 #else
 
 // Include same headers as the module
@@ -32,11 +34,14 @@ import aoc;
 #include "timer.h"
 #include "utility.h"
 
-// We're using std::print in this file
+// We're using std::print and ranges in this file
 #include <print>
+#include <ranges>
 
 #endif
 
+namespace stdr = std::ranges;
+namespace stdv = std::views;
 using point = aoc::point_type<int>;
 
 static bool g_success = true;

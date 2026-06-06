@@ -54,8 +54,8 @@ static_assert(15273692 == next_secret_repeat(100));
 static_assert(8667524 == next_secret_repeat(2024));
 
 constexpr int_t sum_secrets(std::span<const int> secrets) {
-  return aoc::ranges::accumulate(
-      secrets | std::views::transform(&next_secret_repeat), int_t{0});
+  return aoc::ranges::accumulate(secrets | stdv::transform(&next_secret_repeat),
+                                 int_t{0});
 }
 
 constexpr int get_pattern(const std::array<int, 4>& diffs) {
@@ -98,7 +98,7 @@ constexpr int most_bananas(std::span<const int> secrets) {
       previous = current;
     }
   }
-  return std::ranges::max(value_total);
+  return stdr::max(value_total);
 }
 
 template <bool change_sequence>

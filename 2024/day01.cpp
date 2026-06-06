@@ -13,8 +13,8 @@
 constexpr int sum_diffs(std::vector<int> left_list,
                         std::vector<int> right_list) {
   AOC_ASSERT(left_list.size() == right_list.size(), "Lists must be same size");
-  std::ranges::sort(left_list);
-  std::ranges::sort(right_list);
+  stdr::sort(left_list);
+  stdr::sort(right_list);
 
   int sum = 0;
   for (int i = 0; i < left_list.size(); ++i) {
@@ -28,8 +28,8 @@ static_assert(sum_diffs({3, 4, 2, 1, 3, 3}, {4, 3, 5, 3, 9, 3}) == 11);
 
 constexpr int similarity_score(std::vector<int> left_list,
                                std::vector<int> right_list) {
-  std::ranges::sort(left_list);
-  std::ranges::sort(right_list);
+  stdr::sort(left_list);
+  stdr::sort(right_list);
 
   int previous = 0;
   int multiplier = 0;
@@ -44,7 +44,7 @@ constexpr int similarity_score(std::vector<int> left_list,
       continue;
     }
 
-    auto match_it = std::ranges::find(right_start_it, right_end_it, current);
+    auto match_it = stdr::find(right_start_it, right_end_it, current);
     multiplier = 0;
     while (match_it != right_end_it) {
       if (*match_it != current) {

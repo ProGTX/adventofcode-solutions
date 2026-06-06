@@ -30,19 +30,19 @@ fn solve_case(grid_t current_lights) -> u32 {
     }
   }
   auto next_lights = current_lights;
-  for (let _ : std::views::iota(0u, STEPS)) {
+  for (let _ : stdv::iota(0u, STEPS)) {
     // TODO Trying to use std::transform instead of this for loop doesn't work,
     // likely an issue with grid iterators somewhere.
-    for (let[index, light] : current_lights | std::views::enumerate) {
+    for (let[index, light] : current_lights | stdv::enumerate) {
       let pos = current_lights.position(index);
       if constexpr (STUCK_CORNERS) {
-        if (std::ranges::contains(corners, pos)) {
+        if (stdr::contains(corners, pos)) {
           continue;
         }
       }
       let next = [&] {
-        let num_on_neighbors = std::ranges::count(
-            current_lights.all_neighbor_values(pos), light_on);
+        let num_on_neighbors =
+            stdr::count(current_lights.all_neighbor_values(pos), light_on);
         if (light == light_on) {
           return ((num_on_neighbors == 2) || (num_on_neighbors == 3))
                      ? light_on
@@ -55,7 +55,7 @@ fn solve_case(grid_t current_lights) -> u32 {
     }
     std::swap(current_lights, next_lights);
   }
-  return std::ranges::count(current_lights, light_on);
+  return stdr::count(current_lights, light_on);
 }
 
 int main() {

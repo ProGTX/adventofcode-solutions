@@ -12,8 +12,8 @@ template <u32 LITERS, bool COUNT_WAYS>
 fn solve_case(String const& filename) -> u32 {
   let containers = [&] {
     auto array = std::array<u32, (LITERS > 25) ? 20 : 5>{};
-    std::ranges::copy(aoc::views::read_numbers<u32>(filename),
-                      aoc::inserter_it(array));
+    stdr::copy(aoc::views::read_numbers<u32>(filename),
+               aoc::inserter_it(array));
     return array;
   }();
   let size = containers.size();
@@ -31,7 +31,7 @@ fn solve_case(String const& filename) -> u32 {
   if constexpr (!COUNT_WAYS) {
     return count[0];
   } else {
-    return *std::ranges::find_if(count, aoc::not_equal_to_value<u32>{0});
+    return *stdr::find_if(count, aoc::not_equal_to_value<u32>{0});
   }
 }
 

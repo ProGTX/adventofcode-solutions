@@ -21,7 +21,7 @@ fn solve_case1(Input const& grid) -> int {
       start,
       [&](point current) {
         return grid.basic_neighbor_positions(current) |
-               std::views::transform([&](point neighbor) {
+               stdv::transform([&](point neighbor) {
                  return aoc::dijkstra_neighbor_t{
                      neighbor, grid.at(neighbor.y, neighbor.x) - '0'};
                });
@@ -64,7 +64,7 @@ fn solve_case2(Input const& grid) -> int {
       start,
       [&](point current) {
         return virtual_neighbors(current, rows, cols) |
-               std::views::transform([&](point neighbor) {
+               stdv::transform([&](point neighbor) {
                  return aoc::dijkstra_neighbor_t{neighbor,
                                                  virtual_cost(grid, neighbor)};
                });

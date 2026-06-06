@@ -30,7 +30,7 @@ fn find_marker(str s) -> i32 {
 template <u32 WINDOW_SIZE>
 fn solve_case(String const& filename) -> Vec<i32> {
   return aoc::views::read_lines(filename) |
-         std::views::transform(
+         stdv::transform(
              [](str line) { return find_marker<WINDOW_SIZE>(line); }) |
          aoc::ranges::to<Vec<i32>>();
 }

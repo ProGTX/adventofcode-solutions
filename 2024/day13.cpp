@@ -110,7 +110,7 @@ int_t solve_case(const std::string& filename) {
 
   int_t sum = 0;
   sum = aoc::ranges::accumulate(
-      machines | std::views::transform(&claw_machine::lowest_cost), int_t{0});
+      machines | stdv::transform(&claw_machine::lowest_cost), int_t{0});
 
   return sum;
 }

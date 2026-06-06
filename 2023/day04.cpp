@@ -25,8 +25,8 @@ struct card_type {
   constexpr card_type(winning_t winning_, actual_t actual_)
       : winning{winning_}, actual{actual_} {
     // Cards need to be sorted in order for intersection to work
-    std::ranges::sort(winning);
-    std::ranges::sort(actual);
+    stdr::sort(winning);
+    stdr::sort(actual);
   }
 
   winning_t winning;
@@ -38,10 +38,9 @@ template <int num_winning, int num_actual>
 constexpr int num_matching(const card_type<num_winning, num_actual>& card) {
   using intersection_t = typename card_type<num_winning, num_actual>::winning_t;
   intersection_t intersection{};
-  std::ranges::fill(intersection, 0);
-  std::ranges::set_intersection(card.winning, card.actual,
-                                std::begin(intersection));
-  return std::ranges::count_if(intersection, std::identity{});
+  stdr::fill(intersection, 0);
+  stdr::set_intersection(card.winning, card.actual, std::begin(intersection));
+  return stdr::count_if(intersection, std::identity{});
 }
 
 template <int num_winning, int num_actual>

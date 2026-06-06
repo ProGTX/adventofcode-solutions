@@ -8,9 +8,6 @@
 #include <ranges>
 #include <span>
 
-namespace stdv = std::views;
-namespace stdr = std::ranges;
-
 using parsed_map_t = aoc::char_grid<>;
 constexpr let empty_char = ' ';
 constexpr let tile_char = '.';

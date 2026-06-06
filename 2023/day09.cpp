@@ -31,8 +31,7 @@ constexpr int predict_value(std::vector<int> reading) {
     for (int i = 0; i < size - 1; ++i) {
       next_reading.push_back(reading[i + 1] - reading[i]);
     }
-    if (std::ranges::all_of(next_reading,
-                            [](int value) { return value == 0; })) {
+    if (stdr::all_of(next_reading, [](int value) { return value == 0; })) {
       break;
     }
     std::swap(next_reading, reading);
@@ -55,7 +54,7 @@ static_assert(5 == predict_value<-1>({10, 13, 16, 21, 30, 45}));
 template <int multiplier>
 constexpr int sum_predictions(const std::vector<std::vector<int>>& values) {
   return aoc::ranges::accumulate(
-      values | std::views::transform([](const std::vector<int>& reading) {
+      values | stdv::transform([](const std::vector<int>& reading) {
         return predict_value<multiplier>(reading);
       }),
       int_t{0});

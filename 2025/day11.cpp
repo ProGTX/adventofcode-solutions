@@ -11,9 +11,6 @@
 using Outputs = aoc::static_vector<usize, 20>;
 using Input = std::pair<Vec<Outputs>, aoc::name_to_id>;
 
-namespace stdv = std::views;
-namespace stdr = std::ranges;
-
 auto parse(String const& filename) -> Input {
   auto result = Vec<Outputs>{};
   auto name_to_id = aoc::name_to_id{};

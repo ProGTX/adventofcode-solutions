@@ -71,8 +71,8 @@ class board : public aoc::array_grid<int, 5> {
     {
       int row_num = position / 5;
       const auto begin = std::begin(markers) + row_num * 5;
-      bool bingo = std::ranges::all_of(std::ranges::subrange(begin, begin + 5),
-                                       std::identity{});
+      bool bingo =
+          stdr::all_of(stdr::subrange(begin, begin + 5), std::identity{});
       if (bingo) {
         return true;
       }

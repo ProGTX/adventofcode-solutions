@@ -20,7 +20,7 @@ static constexpr char empty_char = '?';
 static constexpr auto xmas_str = "XMAS"sv;
 static constexpr auto xmas_rstr = "SAMX"sv;
 
-constexpr int count_xmas(std::ranges::input_range auto&& range) {
+constexpr int count_xmas(stdr::input_range auto&& range) {
   // Much faster if we convert the range to a string first
   auto range_str = range | aoc::ranges::to<std::string>();
   return aoc::count_substrings(range_str, xmas_str) +
@@ -42,11 +42,10 @@ constexpr int count_xmas_vertical(const word_board_t& board) {
   const auto num_columns = board.num_columns();
   int sum = 0;
   for (int column = 0; column < num_columns; ++column) {
-    sum +=
-        count_xmas(board |
-                   std::views::drop(column) |
-                   std::views::stride(num_columns) |
-                   std::views::take_while(aoc::not_equal_to_value{empty_char}));
+    sum += count_xmas(board |
+                      stdv::drop(column) |
+                      stdv::stride(num_columns) |
+                      stdv::take_while(aoc::not_equal_to_value{empty_char}));
   }
   return sum;
 }
@@ -80,34 +79,26 @@ constexpr int count_xmas_diagonal(const word_board_t& board) {
                  (board.at(num_rows - 1, num_columns - 1) == empty_char) &&
                  (board.at(num_rows - 1, num_columns / 2) == empty_char),
              "Board requires terminators at the bottom");
-  const auto right_diag_view = [&]() {
-    return std::views::stride(num_columns + 1);
-  };
-  const auto left_diag_view = [&]() {
-    return std::views::stride(num_columns - 1);
-  };
+  const auto right_diag_view = [&]() { return stdv::stride(num_columns + 1); };
+  const auto left_diag_view = [&]() { return stdv::stride(num_columns - 1); };
   const auto stop_at_terminator = [&]() {
-    return std::views::take_while(aoc::not_equal_to_value{empty_char});
+    return stdv::take_while(aoc::not_equal_to_value{empty_char});
   };
   int sum = 0;
   // Count diagonals along the top
   // Skip first and last column because they contain empty terminators
   for (int column = 1; column < num_columns - 1; ++column) {
-    sum += count_xmas(board |
-                      std::views::drop(column) |
-                      right_diag_view() |
-                      stop_at_terminator());
-    sum += count_xmas(board |
-                      std::views::drop(column) |
-                      left_diag_view() |
-                      stop_at_terminator());
+    sum += count_xmas(
+        board | stdv::drop(column) | right_diag_view() | stop_at_terminator());
+    sum += count_xmas(
+        board | stdv::drop(column) | left_diag_view() | stop_at_terminator());
   }
   // Count right diagonals along the left edge
   // Skip the first row because it was already counted in the first loop
   // Skip last row because it contais empty terminators
   for (int row = 1; row < num_rows - 1; ++row) {
     sum += count_xmas(board |
-                      std::views::drop(board.linear_index(row, 1)) |
+                      stdv::drop(board.linear_index(row, 1)) |
                       right_diag_view() |
                       stop_at_terminator());
   }
@@ -117,7 +108,7 @@ constexpr int count_xmas_diagonal(const word_board_t& board) {
   for (int column = board.num_columns() - 2, row = 1; row < num_rows - 1;
        ++row) {
     sum += count_xmas(board |
-                      std::views::drop(board.linear_index(row, column)) |
+                      stdv::drop(board.linear_index(row, column)) |
                       left_diag_view() |
                       stop_at_terminator());
   }
@@ -162,26 +153,26 @@ constexpr std::string normalize_local_grid(std::string_view row1,
 
 static constexpr auto x_mas_string_storage = []() {
   std::array<std::array<char, normalized_str_size>, 4> result;
-  std::ranges::copy(normalize_local_grid("M.S", //
-                                         ".A.", //
-                                         "M.S"  //
-                                         ),
-                    std::begin(result[0]));
-  std::ranges::copy(normalize_local_grid("M.M", //
-                                         ".A.", //
-                                         "S.S"  //
-                                         ),
-                    std::begin(result[1]));
-  std::ranges::copy(normalize_local_grid("S.S", //
-                                         ".A.", //
-                                         "M.M"  //
-                                         ),
-                    std::begin(result[2]));
-  std::ranges::copy(normalize_local_grid("S.M", //
-                                         ".A.", //
-                                         "S.M"  //
-                                         ),
-                    std::begin(result[3]));
+  stdr::copy(normalize_local_grid("M.S", //
+                                  ".A.", //
+                                  "M.S"  //
+                                  ),
+             std::begin(result[0]));
+  stdr::copy(normalize_local_grid("M.M", //
+                                  ".A.", //
+                                  "S.S"  //
+                                  ),
+             std::begin(result[1]));
+  stdr::copy(normalize_local_grid("S.S", //
+                                  ".A.", //
+                                  "M.M"  //
+                                  ),
+             std::begin(result[2]));
+  stdr::copy(normalize_local_grid("S.M", //
+                                  ".A.", //
+                                  "S.M"  //
+                                  ),
+             std::begin(result[3]));
   return result;
 }();
 
@@ -214,7 +205,7 @@ static constexpr int count_x_mas_crosses(const word_board_t& board) {
                                            get_substr(row, col - 1),
                                            get_substr(row + 1, col - 1));
       count += static_cast<int>(
-          std::ranges::contains(x_mas_strings, std::string_view{area_str}));
+          stdr::contains(x_mas_strings, std::string_view{area_str}));
     }
   }
   return count;
@@ -230,7 +221,7 @@ int solve_case(const std::string& filename) {
   for (std::string line : aoc::views::read_lines(filename)) {
     board.add_row(empty_char + std::move(line) + empty_char);
   }
-  board.add_row(std::views::repeat(empty_char, board.row_length()));
+  board.add_row(stdv::repeat(empty_char, board.row_length()));
 
   int sum = 0;
   if constexpr (x_mas) {

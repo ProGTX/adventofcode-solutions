@@ -13,8 +13,6 @@
 #include <string_view>
 #include <vector>
 
-namespace stdv = std::views;
-
 struct Valve {
   Vec<usize> tunnels;
   u8 flow_rate;

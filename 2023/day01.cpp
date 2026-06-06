@@ -13,12 +13,11 @@
 #include <vector>
 
 static constexpr auto numbers_view =
-    std::views::iota('0', static_cast<char>('9' + 1));
+    stdv::iota('0', static_cast<char>('9' + 1));
 
 constexpr int find_number(std::string_view str) {
-  auto first_it = std::ranges::find_first_of(str, numbers_view);
-  auto last_it =
-      std::ranges::find_first_of(str | std::views::reverse, numbers_view);
+  auto first_it = stdr::find_first_of(str, numbers_view);
+  auto last_it = stdr::find_first_of(str | stdv::reverse, numbers_view);
   int number =
       static_cast<int>(*first_it - '0') * 10 + static_cast<int>(*last_it - '0');
   return number;

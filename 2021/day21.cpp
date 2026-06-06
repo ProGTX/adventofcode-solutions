@@ -9,8 +9,6 @@
 #include <string>
 #include <vector>
 
-namespace stdv = std::views;
-
 using Input = std::pair<u32, u32>;
 
 fn parse(String const& filename) -> Input {

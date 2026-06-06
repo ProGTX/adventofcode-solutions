@@ -10,8 +10,6 @@
 #include <string>
 #include <vector>
 
-namespace stdv = std::views;
-
 using RangeInclusive = aoc::closed_range<i32>;
 
 struct Cuboid {

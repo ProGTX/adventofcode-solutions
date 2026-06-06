@@ -39,19 +39,19 @@ constexpr int get_score(const top_map_t& top_map, point trailhead) {
     const auto current_height = top_map.at(current.y, current.x);
     if (current_height == (trail_end - 1)) {
       // Neighbors would finish search
-      std::ranges::copy(
-          aoc::basic_neighbor_diffs | std::views::transform([&](point diff) {
+      stdr::copy( //
+          aoc::basic_neighbor_diffs | stdv::transform([&](point diff) {
             return current + diff;
-          }) | std::views::filter([&](point neighbor) {
+          }) | stdv::filter([&](point neighbor) {
             return top_map.at(neighbor.y, neighbor.x) == trail_end;
           }),
           aoc::inserter_it(end_points));
     } else {
       // Neighbors might progress search
-      std::ranges::copy(
-          aoc::basic_neighbor_diffs | std::views::transform([&](point diff) {
+      stdr::copy( //
+          aoc::basic_neighbor_diffs | stdv::transform([&](point diff) {
             return current + diff;
-          }) | std::views::filter([&](point neighbor) {
+          }) | stdv::filter([&](point neighbor) {
             return top_map.at(neighbor.y, neighbor.x) == current_height + 1;
           }),
           aoc::inserter_it(unvisited));
@@ -63,7 +63,7 @@ constexpr int get_score(const top_map_t& top_map, point trailhead) {
 constexpr int score_trailheads(const top_map_t& top_map,
                                std::span<const point> trailheads) {
   return aoc::ranges::accumulate(
-      trailheads | std::views::transform([&](point trailhead) {
+      trailheads | stdv::transform([&](point trailhead) {
         return get_score(top_map, trailhead);
       }),
       0);
@@ -78,26 +78,24 @@ int solve_case(const std::string& filename) {
   for (int row_id = 1;
        std::string_view line : aoc::views::read_lines(filename)) {
     if (top_map.empty()) {
-      top_map.add_row(std::views::repeat(edge, line.size() + 2));
+      top_map.add_row(stdv::repeat(edge, line.size() + 2));
     }
     std::vector<int> row;
     row.push_back(edge);
-    std::ranges::copy(
-        line |
-            std::views::enumerate |
-            std::views::transform([&](auto&& current) {
-              auto [col_id, c] = current;
-              if (c == trailhead_char) {
-                trailheads.push_back({static_cast<int>(col_id) + 1, row_id});
-              }
-              return aoc::to_number<int>(c);
-            }),
+    stdr::copy( //
+        line | stdv::enumerate | stdv::transform([&](auto&& current) {
+          auto [col_id, c] = current;
+          if (c == trailhead_char) {
+            trailheads.push_back({static_cast<int>(col_id) + 1, row_id});
+          }
+          return aoc::to_number<int>(c);
+        }),
         std::back_inserter(row));
     row.push_back(edge);
     top_map.add_row(std::move(row));
     ++row_id;
   }
-  top_map.add_row(std::views::repeat(edge, top_map.row_length()));
+  top_map.add_row(stdv::repeat(edge, top_map.row_length()));
 
   int sum = 0;
   sum = score_trailheads(top_map, trailheads);

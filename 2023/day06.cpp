@@ -30,10 +30,9 @@ static_assert(10 == calculate_distance(7, 2));
 static_assert(12 == calculate_distance(7, 3));
 
 constexpr int_t num_ways_to_win(int_t total_time, int_t record_distance) {
-  return std::ranges::count_if(
-      std::views::iota(1, total_time), [&](int_t button_time) {
-        return calculate_distance(total_time, button_time) > record_distance;
-      });
+  return stdr::count_if(stdv::iota(1, total_time), [&](int_t button_time) {
+    return calculate_distance(total_time, button_time) > record_distance;
+  });
 }
 
 static_assert(4 == num_ways_to_win(7, 9));
@@ -70,7 +69,7 @@ int_t solve_case(const std::string& filename) {
       container = std::move(tmp_container);
     } else {
       auto full_str =
-          std::views::join(tmp_container) | aoc::ranges::to<std::string>();
+          stdv::join(tmp_container) | aoc::ranges::to<std::string>();
       container.push_back(aoc::to_number<int_t>(full_str));
     }
     ++linenum;

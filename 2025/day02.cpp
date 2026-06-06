@@ -13,7 +13,7 @@ using range_t = Range<u64, u64>;
 auto parse(String const& filename) -> Vec<range_t> {
   using Point = aoc::point_type<u64>;
   return aoc::split(aoc::trim(aoc::read_file(filename)), ",") |
-         std::views::transform([](str range) {
+         stdv::transform([](str range) {
            let point = aoc::split<Point>(range, "-");
            return range_t(point.x, (point.y + 1));
          }) |
@@ -22,9 +22,9 @@ auto parse(String const& filename) -> Vec<range_t> {
 
 fn solve_case1(std::span<const range_t> ranges) -> u64 {
   return aoc::ranges::accumulate(
-      ranges | std::views::transform([](range_t range) {
+      ranges | stdv::transform([](range_t range) {
         return aoc::ranges::accumulate(
-            range | std::views::filter([](u64 id) {
+            range | stdv::filter([](u64 id) {
               let id_str = std::to_string(id);
               let s = str{id_str};
               let half = s.size() / 2;
@@ -48,28 +48,25 @@ fn solve_case2(std::span<const range_t> ranges) -> u64 {
     return divisors;
   }();
   return aoc::ranges::accumulate(
-      ranges | std::views::transform([&](range_t range) {
+      ranges | stdv::transform([&](range_t range) {
         return aoc::ranges::accumulate(
-            range | std::views::filter([&](u64 id) {
+            range | stdv::filter([&](u64 id) {
               let id_str = std::to_string(id);
               let s = str{id_str};
               let size = s.size();
               let& divisors = all_divisors[size];
               // Skip 1
-              return std::ranges::any_of(
-                  divisors | std::views::drop(1), [&](u64 divisor) {
-                    let chunks = s | std::views::chunk(size / (divisor));
-                    auto chunks_it = std::begin(chunks);
-                    let first = str{std::ranges::begin(*chunks_it),
-                                    std::ranges::end(*chunks_it)};
-                    ++chunks_it;
-                    return std::ranges::all_of(
-                        chunks_it, std::end(chunks), [&](auto&& chunk) {
-                          let current = str{std::ranges::begin(chunk),
-                                            std::ranges::end(chunk)};
-                          return current == first;
-                        });
-                  });
+              return stdr::any_of(divisors | stdv::drop(1), [&](u64 divisor) {
+                let chunks = s | stdv::chunk(size / (divisor));
+                auto chunks_it = std::begin(chunks);
+                let first = str{stdr::begin(*chunks_it), stdr::end(*chunks_it)};
+                ++chunks_it;
+                return stdr::all_of(
+                    chunks_it, std::end(chunks), [&](auto&& chunk) {
+                      let current = str{stdr::begin(chunk), stdr::end(chunk)};
+                      return current == first;
+                    });
+              });
             }),
             u64{});
       }),

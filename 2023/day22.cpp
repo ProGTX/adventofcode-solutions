@@ -68,10 +68,8 @@ constexpr inline auto name_chars = []() {
   // 38 is required to name all the bricks from the input
   // 38*38 > 1394
   std::array<char, 38> chars{};
-  std::ranges::copy(std::views::iota('A') | std::views::take(26),
-                    chars.begin());
-  std::ranges::copy(std::views::iota('0') | std::views::take(10),
-                    chars.begin() + 26);
+  stdr::copy(stdv::iota('A') | stdv::take(26), chars.begin());
+  stdr::copy(stdv::iota('0') | stdv::take(10), chars.begin() + 26);
   chars[36] = '$';
   chars[37] = '&';
   return chars;
@@ -79,8 +77,7 @@ constexpr inline auto name_chars = []() {
 
 constexpr inline auto height_chars = []() {
   std::array<char, 10> chars{};
-  std::ranges::copy(std::views::iota('0') | std::views::take(10),
-                    chars.begin());
+  stdr::copy(stdv::iota('0') | stdv::take(10), chars.begin());
   return chars;
 }();
 #endif
@@ -157,7 +154,7 @@ void print_tower([[maybe_unused]] const brick_list_t& bricks) {
   tower.print_all();
 
   tower.clear();
-  std::ranges::fill(tower, ' ');
+  stdr::fill(tower, ' ');
 
   // Then print the tower as yz
   for (const auto& brick : bricks) {
@@ -173,7 +170,7 @@ void print_tower([[maybe_unused]] const brick_list_t& bricks) {
 constexpr inline auto down_diff = coord_t{0, 0, -1};
 
 brick_list_t fall_down(brick_list_t bricks) {
-  std::ranges::sort(bricks);
+  stdr::sort(bricks);
 
   const auto bricks_end = bricks.end();
   // Move the lower bricks first
@@ -205,7 +202,7 @@ brick_list_t fall_down(brick_list_t bricks) {
     brick = current;
   }
 
-  std::ranges::sort(bricks);
+  stdr::sort(bricks);
   return bricks;
 }
 

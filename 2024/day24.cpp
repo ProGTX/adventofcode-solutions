@@ -96,7 +96,7 @@ int_t solve_case(const std::string& filename) {
       } else {
         ++wire_id;
       }
-      wires.resize(std::ranges::max(static_cast<int>(wires.size()), id + 1),
+      wires.resize(stdr::max(static_cast<int>(wires.size()), id + 1),
                    uninit_wire);
       wire_ids[name] = id;
     }
@@ -137,7 +137,7 @@ int_t solve_case(const std::string& filename) {
         return uninit_wire;
       }();
 
-      outputs.resize(std::ranges::max(outputs.size(), wires.size()));
+      outputs.resize(stdr::max(outputs.size(), wires.size()));
       outputs[wire_ids[output_name]] =
           gate_t{wire_ids[lhs_name], wire_ids[rhs_name], op_id};
     }

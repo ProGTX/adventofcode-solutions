@@ -18,8 +18,6 @@ using Resources = std::array<u8, NUM_RESOURCES>;
 using Blueprint = std::array<Resources, NUM_ROBOTS>;
 using Time = u8;
 
-namespace stdv = std::views;
-
 constexpr let GEODE_ID = NUM_ROBOTS - 1;
 
 fn parse(String const& filename) -> Vec<Blueprint> {
@@ -257,7 +255,7 @@ fn solve_case2(Vec<Blueprint> const& blueprints) -> u16 {
       return max_open_geodes(blueprint, 32);
     }));
   }
-  return std::ranges::fold_left(
+  return stdr::fold_left(
       futures | stdv::transform([](auto& f) { return f.get(); }), u16{1},
       std::multiplies{});
 }

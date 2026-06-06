@@ -35,7 +35,7 @@ constexpr std::optional<int> shortest_path(const memspace_t& memspace) {
       start_pos,
       [&](const point current) {
         return memspace.basic_neighbor_positions(current) |
-               std::views::filter([&](point neighbor) {
+               stdv::filter([&](point neighbor) {
                  return memspace.at(neighbor.y, neighbor.x) != corrupted;
                }) |
                aoc::dijkstra_uniform_neighbors_view();
@@ -75,7 +75,7 @@ auto solve_case(const std::string& filename) {
     falling_bytes.push_back(aoc::split<point>(line, ','));
   }
 
-  memspace_t memspace{std::views::repeat(empty, grid_size.y * grid_size.x) |
+  memspace_t memspace{stdv::repeat(empty, grid_size.y * grid_size.x) |
                           aoc::ranges::to<std::string>(),
                       grid_size.y, grid_size.x};
 

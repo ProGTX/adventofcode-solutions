@@ -8,7 +8,6 @@
 #include <ranges>
 #include <string>
 
-namespace stdv = std::views;
 using Input = std::pair<point, point>;
 
 auto parse(String const& filename) -> Input {
@@ -61,7 +60,7 @@ fn solve_case2(Input const& rectangle) -> i32 {
   let min_dy = bottom_right.y;
   let max_dy = -bottom_right.y - 1; // From part 1
 
-  return std::ranges::count_if(
+  return stdr::count_if( //
       stdv::cartesian_product(stdv::iota(min_dx, max_dx + 1),
                               stdv::iota(min_dy, max_dy + 1)),
       [&](let& pair) {

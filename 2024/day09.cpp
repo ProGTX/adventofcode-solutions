@@ -29,14 +29,14 @@ constexpr filesystem_t expand(std::string_view disk_map) {
       ++id;
     }
     auto repeated =
-        std::views::repeat(current, num) | aoc::ranges::to<filesystem_t>();
+        stdv::repeat(current, num) | aoc::ranges::to<filesystem_t>();
     filesystem.insert(filesystem.end(), repeated.begin(), repeated.end());
     is_empty = !is_empty;
   }
   return filesystem;
 }
 
-static_assert(std::ranges::equal( // "0..111....22222"
+static_assert(stdr::equal( // "0..111....22222"
     std::array{0, -1, -1, 1, 1, 1, -1, -1, -1, -1, 2, 2, 2, 2, 2},
     expand("12345")));
 
@@ -54,7 +54,7 @@ constexpr filesystem_t compact(filesystem_t filesystem) {
     if (rit == rend) {
       break;
     }
-    it = std::ranges::find(it, end, empty_space);
+    it = stdr::find(it, end, empty_space);
     if ((it == end) || (it >= rit.base())) {
       break;
     }
@@ -69,7 +69,7 @@ constexpr filesystem_t compact(filesystem_t filesystem) {
 constexpr filesystem_t compact_nonfragment(filesystem_t filesystem) {
   // 9 because that's the highest number possible
   std::array<int, 9> max_empty_range;
-  std::ranges::fill(max_empty_range, empty_space);
+  stdr::fill(max_empty_range, empty_space);
   const auto max_empty_range_begin = max_empty_range.begin();
   using iterator = filesystem_t::iterator;
   const auto begin = filesystem.begin();
@@ -104,8 +104,7 @@ constexpr filesystem_t compact_nonfragment(filesystem_t filesystem) {
     // before the forward iterator
     rit = std::reverse_iterator(current_range_begin + 1);
 
-    auto current_range =
-        std::ranges::subrange(current_range_begin, current_range_end);
+    auto current_range = stdr::subrange(current_range_begin, current_range_end);
     const auto current_size = current_range.size();
 
     // Find an empty range that can fit the current range
@@ -117,8 +116,7 @@ constexpr filesystem_t compact_nonfragment(filesystem_t filesystem) {
     }
 
     // Swap the current range with the empty space
-    std::ranges::swap_ranges(std::ranges::subrange(it, it + current_size),
-                             current_range);
+    stdr::swap_ranges(stdr::subrange(it, it + current_size), current_range);
   }
   return filesystem;
 }
@@ -126,8 +124,8 @@ constexpr filesystem_t compact_nonfragment(filesystem_t filesystem) {
 constexpr int_t checksum(std::span<const int> filesystem) {
   return aoc::ranges::accumulate(
       filesystem |
-          std::views::enumerate |
-          std::views::transform([](auto&& current) -> int_t {
+          stdv::enumerate |
+          stdv::transform([](auto&& current) -> int_t {
             auto [position, id] = current;
             if (id == empty_space) {
               return 0;

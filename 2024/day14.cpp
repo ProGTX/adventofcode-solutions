@@ -48,8 +48,8 @@ constexpr int safety_factor(std::span<const robot_t> robots) {
     }();
     ++quadrants[quadrant_id];
   }
-  return std::ranges::fold_left(std::span{quadrants}.subspan(0, 4), 1,
-                                std::multiplies{});
+  return stdr::fold_left(std::span{quadrants}.subspan(0, 4), 1,
+                         std::multiplies{});
 }
 
 template <point grid_size, int seconds>

@@ -33,7 +33,7 @@ using plot_ids_t = aoc::flat_map<point, int>;
 
 constexpr auto get_neighbors(point position) {
   return aoc::basic_sky_directions |
-         std::views::transform([&](aoc::facing_t facing) {
+         stdv::transform([&](aoc::facing_t facing) {
            return position + aoc::get_diff(facing);
          }) |
          aoc::ranges::to<aoc::static_vector<point, 4>>();
@@ -91,7 +91,7 @@ constexpr plots_t get_plots(const garden_t& garden) {
 
 template <bool reduced>
 constexpr int get_price(const plots_t& plots) {
-  return aoc::ranges::accumulate(plots | std::views::transform([]() {
+  return aoc::ranges::accumulate(plots | stdv::transform([]() {
                                    if constexpr (!reduced) {
                                      return &garden_plot_t::price;
                                    } else {

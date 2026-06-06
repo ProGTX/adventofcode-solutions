@@ -11,7 +11,7 @@
 auto parse(String const& filename) -> Vec<u32> {
   auto packages =
       aoc::views::read_numbers<u32>(filename) | aoc::ranges::to<Vec<u32>>();
-  std::ranges::reverse(packages);
+  stdr::reverse(packages);
   return packages;
 }
 
@@ -19,7 +19,7 @@ auto parse(String const& filename) -> Vec<u32> {
 using Group = Vec<u32>;
 
 fn qe(std::span<const u32> group) -> u64 {
-  return std::ranges::fold_left(group, u64{1}, std::multiplies{});
+  return stdr::fold_left(group, u64{1}, std::multiplies{});
 }
 
 template <u32 NUM_GROUPS>
@@ -42,11 +42,11 @@ fn solve_case(std::span<const u32> packages) -> u64 {
   for (let index : Range{num_packages - 1, size}) {
     possible = packages |
                aoc::views::combinations(index + 1) |
-               std::views::filter([&](let& combo) {
+               stdv::filter([&](let& combo) {
                  return aoc::ranges::dot_product(packages, combo) ==
                         target_group_weight;
                }) |
-               std::views::transform([&](let& combo) {
+               stdv::transform([&](let& combo) {
                  let neighbor = aoc::binary_select_from_combination<Group>(
                      packages, combo);
                  return neighbor;
@@ -56,7 +56,7 @@ fn solve_case(std::span<const u32> packages) -> u64 {
       break;
     }
   }
-  std::ranges::sort(possible, [](Group const& lhs, Group const& rhs) {
+  stdr::sort(possible, [](Group const& lhs, Group const& rhs) {
     if (lhs.size() == rhs.size()) {
       return qe(lhs) < qe(rhs);
     }

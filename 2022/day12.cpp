@@ -10,9 +10,6 @@
 using Terminator = aoc::closed_range<point>;
 using Input = std::pair<aoc::char_grid<>, Terminator>;
 
-namespace stdv = std::views;
-namespace stdr = std::ranges;
-
 auto parse(String const& filename) -> Input {
   auto [heightmap, config] =
       aoc::read_char_grid(filename, aoc::char_grid_config_input{

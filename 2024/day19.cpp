@@ -75,7 +75,7 @@ template <bool all_options>
 constexpr int_t check_all_designs(std::span<const std::string> designs,
                                   std::span<const std::string> patterns) {
   return aoc::ranges::accumulate(
-      designs | std::views::transform([&](std::string_view design) {
+      designs | stdv::transform([&](std::string_view design) {
         return num_possible_designs<all_options>(design, patterns);
       }),
       int_t{0});

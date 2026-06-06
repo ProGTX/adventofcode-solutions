@@ -71,14 +71,14 @@ unsigned solve_case(const std::string& filename) {
     const auto end = aoc::split<point>(boundaries[1], ',');
     for (int row = begin.y; row <= end.y; ++row) {
       for (cell_t& c : lights.row_view(row) |
-                           std::views::drop(begin.x) |
-                           std::views::take(end.x - begin.x + 1)) {
+                           stdv::drop(begin.x) |
+                           stdv::take(end.x - begin.x + 1)) {
         c = operation(c);
       }
     }
   }
   if constexpr (!brightness) {
-    return std::ranges::count(lights, static_cast<cell_t>(1));
+    return stdr::count(lights, static_cast<cell_t>(1));
   } else {
     return aoc::ranges::accumulate(lights, 0u);
   }

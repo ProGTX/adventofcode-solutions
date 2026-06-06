@@ -7,9 +7,6 @@
 #include <print>
 #include <ranges>
 
-namespace stdv = std::views;
-namespace stdr = std::ranges;
-
 using Input = Vec<i64>;
 
 fn parse(String const& filename) -> Input {

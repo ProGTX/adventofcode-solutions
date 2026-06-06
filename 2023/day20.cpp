@@ -66,8 +66,8 @@ struct conjunction_t final : public module_t {
   using module_t::module_t;
 
   virtual std::optional<signal_t> process() override {
-    return !std::ranges::all_of(
-        m_inputs, [](auto&& input_pair) { return input_pair.second; });
+    return !stdr::all_of(m_inputs,
+                         [](auto&& input_pair) { return input_pair.second; });
   }
 };
 
@@ -140,7 +140,7 @@ int_t solve_case(const std::string& filename) {
     auto [from, to] = aoc::split_once<std::string>(line, " -> ");
     auto name = ((from[0] == '%') || (from[0] == '&')) ? from.substr(1) : from;
     auto outputs = aoc::split<outputs_t>(to, ", ");
-    std::ranges::copy(outputs, std::back_inserter(output_list));
+    stdr::copy(outputs, std::back_inserter(output_list));
     for (const auto& out : outputs) {
       input_map[out].push_back(name);
     }

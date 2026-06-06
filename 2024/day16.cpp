@@ -59,7 +59,7 @@ constexpr auto get_distances(const maze_t& maze, point start_pos,
 
 constexpr auto get_end_arrows(point end_pos) {
   return std::array{aoc::east, aoc::north} |
-         std::views::transform([&](const aoc::facing_t facing) {
+         stdv::transform([&](const aoc::facing_t facing) {
            return arrow_t{end_pos, facing};
          }) |
          aoc::ranges::to<aoc::static_vector<arrow_t, 2>>();

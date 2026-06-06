@@ -125,7 +125,7 @@ constexpr platform_t test_platform() {
 }
 
 #if 0
-static_assert(std::ranges::equal(platform_t{std::string{"OOOO.#.O.."
+static_assert(stdr::equal(platform_t{std::string{"OOOO.#.O.."
                                                         "OO..#....#"
                                                         "OO..O##..O"
                                                         "O..#.OO..."

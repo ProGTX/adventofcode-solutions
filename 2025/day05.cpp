@@ -15,8 +15,8 @@ auto parse(String const& filename) -> Input {
   auto lines = aoc::views::read_lines(filename, aoc::keep_empty{});
 
   auto ranges = lines |
-                std::views::take_while([](str line) { return !line.empty(); }) |
-                std::views::transform([&](str range) {
+                stdv::take_while([](str line) { return !line.empty(); }) |
+                stdv::transform([&](str range) {
                   let point = aoc::split<Point>(range, "-");
                   return range_t{
                       .x = point.x,
@@ -24,7 +24,7 @@ auto parse(String const& filename) -> Input {
                   };
                 }) |
                 aoc::ranges::to<Vec<range_t>>();
-  std::ranges::sort(ranges, {}, &range_t::x);
+  stdr::sort(ranges, {}, &range_t::x);
 
   // Remove overlap from ranges
   // Needed by part 2, but also helps part 1 be faster
@@ -45,15 +45,15 @@ auto parse(String const& filename) -> Input {
   }();
 
   auto ids = lines | aoc::views::to_number<u64>() | aoc::ranges::to<Vec<u64>>();
-  std::ranges::sort(ids);
+  stdr::sort(ids);
 
   return {std::move(ranges), std::move(ids)};
 }
 
 fn solve_case1(Input const& input) -> usize {
   let & [ ranges, ids ] = input;
-  return std::ranges::count_if(ids, [&](u64 id) {
-    return std::ranges::any_of(ranges, [&](range_t range) {
+  return stdr::count_if(ids, [&](u64 id) {
+    return stdr::any_of(ranges, [&](range_t range) {
       return (id >= range.x) && (id < range.y);
     });
   });
@@ -62,8 +62,7 @@ fn solve_case1(Input const& input) -> usize {
 fn solve_case2(Input const& input) -> usize {
   let & [ ranges, _ ] = input;
   return aoc::ranges::accumulate( //
-      ranges |
-          std::views::transform([](let& range) { return (range.y - range.x); }),
+      ranges | stdv::transform([](let& range) { return (range.y - range.x); }),
       usize{});
 }
 

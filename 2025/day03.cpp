@@ -20,8 +20,8 @@ struct index_value {
 };
 
 fn index_of_max(str row) -> usize {
-  let max = std::ranges::max(
-      row | std::views::enumerate | std::views::transform([](auto&& tuple) {
+  let max = stdr::max( //
+      row | stdv::enumerate | stdv::transform([](auto&& tuple) {
         let[index, value] = tuple;
         return index_value{.index = static_cast<usize>(index), .value = value};
       }),
@@ -39,13 +39,13 @@ fn index_of_max(str row) -> usize {
 template <usize TURN_NUM>
 fn solve_case(Batteries const& batteries) -> u64 {
   return aoc::ranges::accumulate(
-      Range{0uz, batteries.num_rows()} | std::views::transform([&](usize row) {
+      Range{0uz, batteries.num_rows()} | stdv::transform([&](usize row) {
         let current = batteries.row_view(row);
         let size = current.size();
         auto indexes = aoc::static_vector<usize, TURN_NUM>{};
         indexes.push_back(
             index_of_max(current.substr(0, size - (TURN_NUM - 1))));
-        for (let tail : Range{0uz, (TURN_NUM - 1)} | std::views::reverse) {
+        for (let tail : Range{0uz, (TURN_NUM - 1)} | stdv::reverse) {
           let offset = indexes.back();
           indexes.push_back( //
               offset +
@@ -54,8 +54,8 @@ fn solve_case(Batteries const& batteries) -> u64 {
                   current.substr(offset + 1, size - tail - offset - 1)));
         }
         using pair = aoc::point_type<u64>;
-        let result = std::ranges::fold_left(
-            indexes | std::views::reverse, pair{0, 1},
+        let result = stdr::fold_left(
+            indexes | stdv::reverse, pair{0, 1},
             [&](pair acc_pair, usize index) {
               let[acc, multiplier] = acc_pair;
               return pair{

@@ -78,7 +78,7 @@ constexpr map_t move_robot(map_t map, point robot_pos,
 
 constexpr directions_storage parse_directions(std::string_view directions) {
   return directions |
-         std::views::transform(&aoc::to_facing) |
+         stdv::transform(&aoc::to_facing) |
          aoc::ranges::to<directions_storage>();
 }
 
@@ -109,8 +109,8 @@ int solve_case(const std::string& filename) {
     if (line.empty()) {
       continue;
     }
-    if (std::ranges::contains(std::array{up, down, left, right}, line[0])) {
-      std::ranges::copy(parse_directions(line), std::back_inserter(directions));
+    if (stdr::contains(std::array{up, down, left, right}, line[0])) {
+      stdr::copy(parse_directions(line), std::back_inserter(directions));
     } else {
       auto robot_x = line.find(robot);
       if (robot_x != std::string::npos) {

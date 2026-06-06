@@ -123,7 +123,7 @@ struct GameState {
     }
     let possible_plays =
         SPELLS |
-        std::views::filter([&](Spell const& spell) {
+        stdv::filter([&](Spell const& spell) {
           return (static_cast<u32>(spell.cost) < self.player.mana)
                  // Pruning based on lowest_mana is key to solving this
                  // in a reasonable amount of time
@@ -144,7 +144,7 @@ struct GameState {
                    }
                  }();
         }) |
-        std::views::transform([&](Spell const& spell) {
+        stdv::transform([&](Spell const& spell) {
           auto new_state = self;
           new_state.mana_spent += static_cast<u32>(spell.cost);
           new_state.player.mana -= static_cast<u32>(spell.cost);
@@ -194,7 +194,7 @@ struct GameState {
 
 auto parse(String const& filename) -> Boss {
   auto lines_view = aoc::views::read_lines(filename);
-  auto line_it = std::ranges::begin(lines_view);
+  auto line_it = stdr::begin(lines_view);
   let parse_line = [&] {
     let[_, value_str] = aoc::split_once(*line_it, ": ");
     let value = aoc::to_number<u16>(value_str);

@@ -13,7 +13,7 @@
 constexpr bool contains_three_vowels(std::string_view str) {
   int count = 0;
   for (char c : str) {
-    count += static_cast<int>(std::ranges::contains("aeiou", c));
+    count += static_cast<int>(stdr::contains("aeiou", c));
     if (count >= 3) {
       return true;
     }
@@ -26,9 +26,9 @@ static constexpr std::array bad_strings = {"ab"sv, "cd"sv, "pq"sv, "xy"sv};
 
 constexpr bool double_letters_ok(std::string_view str) {
   bool repeated = false;
-  for (auto&& pair_raw : str | std::views::slide(2)) {
+  for (auto&& pair_raw : str | stdv::slide(2)) {
     const auto pair = std::string_view{pair_raw};
-    if (std::ranges::contains(bad_strings, pair)) {
+    if (stdr::contains(bad_strings, pair)) {
       return false;
     }
     repeated |= (pair[0] == pair[1]);
@@ -45,7 +45,7 @@ constexpr bool is_nice2(const std::string_view str) {
   bool letter_repeats = false;
   // Skip last char
   for (const auto [index, c] :
-       str.substr(0, str.size() - 1) | std::views::enumerate) {
+       str.substr(0, str.size() - 1) | stdv::enumerate) {
     const auto pair = str.substr(index, 2);
     const auto rest = str.substr(index + 2);
     pair_repeats |= rest.contains(pair);
@@ -60,11 +60,11 @@ static_assert(!is_nice2("uurcxstgmygtbstg"));
 static_assert(!is_nice2("ieodomkazucvgmuy"));
 
 int solve_case1(const std::string& filename) {
-  return std::ranges::count_if(aoc::views::read_lines(filename), &is_nice1);
+  return stdr::count_if(aoc::views::read_lines(filename), &is_nice1);
 }
 
 int solve_case2(const std::string& filename) {
-  return std::ranges::count_if(aoc::views::read_lines(filename), &is_nice2);
+  return stdr::count_if(aoc::views::read_lines(filename), &is_nice2);
 }
 
 int main() {

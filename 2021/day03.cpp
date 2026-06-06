@@ -13,7 +13,7 @@ using Counter = aoc::static_vector<i16, 12>;
 
 auto parse(String const& filename) -> Vec<Bitset> {
   return aoc::views::read_lines(filename) |
-         std::views::transform([](str line) {
+         stdv::transform([](str line) {
            return line |
                   aoc::views::to_number<u8>() |
                   aoc::ranges::to<Bitset>();
@@ -23,9 +23,9 @@ auto parse(String const& filename) -> Vec<Bitset> {
 
 fn count_bits(std::span<const Bitset> report) -> Counter {
   let init = Counter(report[0].size(), 0);
-  return std::ranges::fold_left(report, init, [](let& acc, let& bitset) {
-    return std::views::zip(acc, bitset) |
-           std::views::transform([](let&& zip_it) {
+  return stdr::fold_left(report, init, [](let& acc, let& bitset) {
+    return stdv::zip(acc, bitset) |
+           stdv::transform([](let&& zip_it) {
              let[count, bit] = zip_it;
              return count + static_cast<i16>(bit) - static_cast<i16>(bit == 0);
            }) |
@@ -34,16 +34,16 @@ fn count_bits(std::span<const Bitset> report) -> Counter {
 }
 
 fn to_decimal(Bitset const& bitset) -> u32 {
-  return aoc::binary_to_number(bitset | std::views::reverse);
+  return aoc::binary_to_number(bitset | stdv::reverse);
 }
 
 fn solve_case1(std::span<const Bitset> report) -> u32 {
-  let gamma = count_bits(report) |
-              std::views::transform(
-                  [](let count) { return static_cast<u8>(count > 0); }) |
-              aoc::ranges::to<Bitset>();
+  let gamma =
+      count_bits(report) |
+      stdv::transform([](let count) { return static_cast<u8>(count > 0); }) |
+      aoc::ranges::to<Bitset>();
   let epsilon = gamma |
-                std::views::transform(aoc::equal_to_value{0}) |
+                stdv::transform(aoc::equal_to_value{0}) |
                 aoc::views::transform_cast<u8>() |
                 aoc::ranges::to<Bitset>();
   return to_decimal(gamma) * to_decimal(epsilon);
@@ -57,7 +57,7 @@ fn solve_case2(std::span<const Bitset> report) -> u32 {
     if (oxy_gen.size() > 1) {
       let oxy_count = count_bits(oxy_gen);
       oxy_gen = oxy_gen |
-                std::views::filter([&](let& bitset) {
+                stdv::filter([&](let& bitset) {
                   return (oxy_count[index] >= 0) == (bitset[index] > 0);
                 }) |
                 aoc::ranges::to<Report>();
@@ -65,7 +65,7 @@ fn solve_case2(std::span<const Bitset> report) -> u32 {
     if (co2_scrubber.size() > 1) {
       let co2_count = count_bits(co2_scrubber);
       co2_scrubber = co2_scrubber |
-                     std::views::filter([&](let& bitset) {
+                     stdv::filter([&](let& bitset) {
                        return (co2_count[index] >= 0) != (bitset[index] > 0);
                      }) |
                      aoc::ranges::to<Report>();

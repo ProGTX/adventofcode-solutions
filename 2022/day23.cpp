@@ -10,9 +10,6 @@
 #include <print>
 #include <ranges>
 
-namespace stdv = std::views;
-namespace stdr = std::ranges;
-
 using elf_t = point;
 using elves_t = Vec<elf_t>;
 

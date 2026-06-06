@@ -9,9 +9,6 @@
 #include <ranges>
 #include <variant>
 
-namespace stdv = std::views;
-namespace stdr = std::ranges;
-
 struct Packet;
 using PacketList = Vec<Packet>;
 using PacketPair = aoc::point_type<Packet>;

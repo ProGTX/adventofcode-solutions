@@ -37,7 +37,7 @@ fn parse_instruction(str line) -> Instruction {
 
 auto parse(String const& filename) -> Instructions {
   return aoc::views::read_lines(filename) |
-         std::views::transform(parse_instruction) |
+         stdv::transform(parse_instruction) |
          aoc::ranges::to<Instructions>();
 }
 

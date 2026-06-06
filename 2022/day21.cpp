@@ -90,10 +90,10 @@ fn transform_monkeys(parsed_monkeys_t const& parsed_monkeys)
           get_value_monkey(monkey.value_lhs.value(), monkey.value_rhs.value()));
       continue;
     }
-    let lhs_it = std::ranges::find_if(parsed_monkeys, [&](let& monkey_pair) {
+    let lhs_it = stdr::find_if(parsed_monkeys, [&](let& monkey_pair) {
       return monkey_pair.first == monkey.index_lhs;
     });
-    let rhs_it = std::ranges::find_if(parsed_monkeys, [&](let& monkey_pair) {
+    let rhs_it = stdr::find_if(parsed_monkeys, [&](let& monkey_pair) {
       return monkey_pair.first == monkey.index_rhs;
     });
     monkeys.emplace_back(std::distance(begin_it, lhs_it),
@@ -127,11 +127,10 @@ fn solve_case2(parsed_monkeys_t const& parsed_monkeys) -> i64 {
     let current_index = get_index(current_it);
     str current_name = parsed_monkeys[current_index].first;
 
-    let parsed_parent_it =
-        std::ranges::find_if(parsed_monkeys, [&](let& monkey_pair) {
-          return (monkey_pair.second.index_lhs == current_name) ||
-                 (monkey_pair.second.index_rhs == current_name);
-        });
+    let parsed_parent_it = stdr::find_if(parsed_monkeys, [&](let& monkey_pair) {
+      return (monkey_pair.second.index_lhs == current_name) ||
+             (monkey_pair.second.index_rhs == current_name);
+    });
     let parent_index = get_index(parsed_parent_it);
     monkey_it parent_it = begin_it + parent_index;
 

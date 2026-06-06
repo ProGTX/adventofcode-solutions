@@ -97,12 +97,12 @@ constexpr auto run_program(std::span<const int> program,
 }
 
 static_assert(1 == run_program(std::array{2, 6}, {0, 0, 9}).second[1]);
-static_assert(std::ranges::equal(
-    results_t{0, 1, 2},
-    run_program(std::array{5, 0, 5, 1, 5, 4}, {10, 0, 0}).first));
-static_assert(std::ranges::equal(
-    results_t{4, 2, 5, 6, 7, 7, 7, 7, 3, 1, 0},
-    run_program(std::array{0, 1, 5, 4, 3, 0}, {2024, 0, 0}).first));
+static_assert(
+    stdr::equal(results_t{0, 1, 2},
+                run_program(std::array{5, 0, 5, 1, 5, 4}, {10, 0, 0}).first));
+static_assert(
+    stdr::equal(results_t{4, 2, 5, 6, 7, 7, 7, 7, 3, 1, 0},
+                run_program(std::array{0, 1, 5, 4, 3, 0}, {2024, 0, 0}).first));
 static_assert(
     0 == run_program(std::array{0, 1, 5, 4, 3, 0}, {2024, 0, 0}).second[0]);
 static_assert(26 == run_program(std::array{1, 7}, {0, 29, 0}).second[1]);
@@ -129,10 +129,10 @@ std::string solve_case(const std::string& filename) {
 
   auto [results, new_registers] = run_program(program, registers);
   auto result_str = results |
-                    std::views::transform([](int value) {
+                    stdv::transform([](int value) {
                       return std::string(1, '0' + static_cast<char>(value));
                     }) |
-                    std::views::join_with(',') |
+                    stdv::join_with(',') |
                     aoc::ranges::to<std::string>();
   return result_str;
 }

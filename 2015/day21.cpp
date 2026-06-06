@@ -44,7 +44,7 @@ fn play_game(Entity& player, Entity& boss) -> bool {
 
 auto parse(String const& filename) -> Entity {
   auto lines_view = aoc::views::read_lines(filename);
-  auto line_it = std::ranges::begin(lines_view);
+  auto line_it = stdr::begin(lines_view);
   let parse_line = [&] {
     let[_, value_str] = aoc::split_once(*line_it, ": ");
     let value = aoc::to_number<u32>(value_str);

@@ -22,8 +22,7 @@ constexpr int get_operation_id(unsigned evaluation_id, int bit_pos) {
 }
 
 constexpr auto bit_pos_view(unsigned max_operators) {
-  return std::views::iota(0, static_cast<int>(max_operators)) |
-         std::views::reverse;
+  return stdv::iota(0, static_cast<int>(max_operators)) | stdv::reverse;
 }
 
 template <bool concat>

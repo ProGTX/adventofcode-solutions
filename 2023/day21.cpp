@@ -64,10 +64,10 @@ positions_t move_one(const garden_t& garden, const positions_t& starting) {
   }
 
   // Sort the final positions in ascending order.
-  std::ranges::sort(ending, std::less<>{});
+  stdr::sort(ending, std::less<>{});
 
   // Remove any duplicate positions.
-  auto [non_unique_begin, non_unique_end] = std::ranges::unique(ending);
+  auto [non_unique_begin, non_unique_end] = stdr::unique(ending);
   ending.resize(std::distance(std::begin(ending), non_unique_begin));
 
   // Return the final positions of the pots.

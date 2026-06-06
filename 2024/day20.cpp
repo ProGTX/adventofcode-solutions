@@ -118,11 +118,11 @@ constexpr int count_cheats(const racetrack_t& track, const point start_pos,
   aoc::flat_set<segment_t> cheats;
   cache_t cache;
   const auto time_limit = (track.row_length() < 20) ? 50 : 100;
-  for (int path_length = 0; const node_t& node : path | std::views::reverse) {
+  for (int path_length = 0; const node_t& node : path | stdv::reverse) {
     cache[segment_t{node.pos, end_pos}] = standard_length - path_length;
     ++path_length;
   }
-  for (int path_length = 0; const node_t& node : path | std::views::reverse) {
+  for (int path_length = 0; const node_t& node : path | stdv::reverse) {
     // end_pos doesn't matter here
     const auto cheat_points =
         shortest_path<max_cheat_length, true>(track, node.pos, {});

@@ -10,7 +10,7 @@
 
 auto parse(String const& filename) -> Vec<std::pair<char, char>> {
   return aoc::views::read_lines(filename) |
-         std::views::transform([](std::string_view line) {
+         stdv::transform([](std::string_view line) {
            auto [a, b] = aoc::split_once(line, ' ');
            return std::pair{a.at(0), b.at(0)};
          }) |

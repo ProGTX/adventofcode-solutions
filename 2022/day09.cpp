@@ -30,7 +30,7 @@ fn parse_move(str line) -> point {
 
 auto parse(String const& filename) -> Moves {
   return aoc::views::read_lines(filename) |
-         std::views::transform(parse_move) |
+         stdv::transform(parse_move) |
          aoc::ranges::to<Moves>();
 }
 

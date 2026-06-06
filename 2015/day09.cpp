@@ -42,15 +42,15 @@ constexpr int best_distance(const connections_t& connections) {
   }();
   auto current_path = aoc::flat_set<int>{};
   let on_path = [&](const int id) { return current_path.contains(id); };
-  for (let& [ from_id, place ] : connections | std::views::enumerate) {
-    AOC_ASSERT(std::ranges::is_sorted(place, compare, &link_t::distance),
+  for (let& [ from_id, place ] : connections | stdv::enumerate) {
+    AOC_ASSERT(stdr::is_sorted(place, compare, &link_t::distance),
                "Destinations must be sorted by distance");
     auto current_link = place;
     current_path.clear();
     current_path.insert(from_id);
     auto current_distance = 0;
     while (current_path.size() < connections.size()) {
-      let it = std::ranges::find_if_not(current_link, on_path, &link_t::to_id);
+      let it = stdr::find_if_not(current_link, on_path, &link_t::to_id);
       AOC_ASSERT(it != std::end(current_link), "Graph must be fully connected");
       current_path.insert(it->to_id);
       current_distance += it->distance;
@@ -67,17 +67,17 @@ template <auto compare>
 int solve_case(const std::string& filename) {
   auto connections = parse(filename);
   for (auto& place : connections) {
-    std::ranges::sort(place, compare, &link_t::distance);
+    stdr::sort(place, compare, &link_t::distance);
   }
   return best_distance<compare>(connections);
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(605, solve_case<std::ranges::less{}>("day09.example"));
-  AOC_EXPECT_RESULT(141, solve_case<std::ranges::less{}>("day09.input"));
+  AOC_EXPECT_RESULT(605, solve_case<stdr::less{}>("day09.example"));
+  AOC_EXPECT_RESULT(141, solve_case<stdr::less{}>("day09.input"));
   std::println("Part 2");
-  AOC_EXPECT_RESULT(982, solve_case<std::ranges::greater{}>("day09.example"));
-  AOC_EXPECT_RESULT(736, solve_case<std::ranges::greater{}>("day09.input"));
+  AOC_EXPECT_RESULT(982, solve_case<stdr::greater{}>("day09.example"));
+  AOC_EXPECT_RESULT(736, solve_case<stdr::greater{}>("day09.input"));
   AOC_RETURN_CHECK_RESULT();
 }

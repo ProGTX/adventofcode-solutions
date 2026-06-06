@@ -24,7 +24,7 @@ space_t expand_space(const std::vector<std::string>& space_rows,
                      const std::vector<bool>& row_populated,
                      const std::vector<bool>& column_populated) {
   AOC_ASSERT(space_rows.size() > 1, "Cannot construct space from no rows");
-  const auto num_empty_columns = std::ranges::count(column_populated, false);
+  const auto num_empty_columns = stdr::count(column_populated, false);
   const auto orig_row_size = space_rows[0].size();
   const auto num_columns = orig_row_size + num_empty_columns;
   auto space = space_t(space_rows.size(), num_columns);
@@ -72,8 +72,8 @@ int_t solve_case(const std::string& filename) {
     if (empty_row.empty()) {
       empty_row.reserve(size);
       column_populated.reserve(size);
-      std::ranges::fill_n(std::back_inserter(empty_row), size, empty_space);
-      std::ranges::fill_n(std::back_inserter(column_populated), size, false);
+      stdr::fill_n(std::back_inserter(empty_row), size, empty_space);
+      stdr::fill_n(std::back_inserter(column_populated), size, false);
     }
     row_populated.push_back(line != empty_row);
     for (int i = 0; i < size; ++i) {

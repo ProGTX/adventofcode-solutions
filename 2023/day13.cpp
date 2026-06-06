@@ -36,7 +36,7 @@ constexpr bool check_index(unsigned number, unsigned index) {
     return true;
   }
   unsigned number_size = transformed_number_size(number);
-  auto sub_size = std::ranges::min(index, number_size - index);
+  auto sub_size = stdr::min(index, number_size - index);
   unsigned mask_lhs = 1 << (index - 1);
   unsigned mask_rhs = mask_lhs << 1;
   for (unsigned offset = 0; offset < sub_size; ++offset) {
@@ -68,7 +68,7 @@ constexpr return_t reflection_points(unsigned number) {
   if constexpr (aoc::is_specialization_of_v<return_t, std::vector>) {
     refl_points.resize(number_size);
   }
-  std::ranges::fill(refl_points, 0);
+  stdr::fill(refl_points, 0);
   for (int index = 1; index < number_size; ++index) {
     if (check_index(number, index)) {
       ++refl_points[index];
@@ -118,8 +118,8 @@ constexpr int reflection_point(const num_pattern_t& pattern) {
   for (int index = 0; index < number_size; ++index) {
     refl_map.emplace_back(index, refl_points[index]);
   }
-  std::ranges::sort(refl_map, std::greater<>{},
-                    &std::pair<unsigned, unsigned>::second);
+  stdr::sort(refl_map, std::greater<>{},
+             &std::pair<unsigned, unsigned>::second);
   if (refl_map[0].second < pattern.size()) {
     return 0;
   }
@@ -139,8 +139,8 @@ constexpr int reflection_point(const num_pattern_t& pattern) {
 constexpr num_pattern_t to_numbers(const pattern_t& pattern) {
   num_pattern_t numbers;
   numbers.reserve(pattern.size());
-  std::ranges::copy(pattern | std::views::transform(transform_to_number),
-                    std::back_inserter(numbers));
+  stdr::copy(pattern | stdv::transform(transform_to_number),
+             std::back_inserter(numbers));
   return numbers;
 }
 

@@ -8,9 +8,6 @@
 #include <print>
 #include <ranges>
 
-namespace stdv = std::views;
-namespace stdr = std::ranges;
-
 fn parse(String const& filename) -> Vec<String> {
   return aoc::views::read_lines(filename) | aoc::ranges::to<Vec<String>>();
 }

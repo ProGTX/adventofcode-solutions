@@ -13,7 +13,7 @@ using Input = aoc::flat_set<Droplet>;
 
 fn parse(String const& filename) -> Input {
   return aoc::views::read_lines(filename) |
-         std::views::transform(
+         stdv::transform(
              [](str line) { return aoc::split<Droplet>(line, ','); }) |
          aoc::ranges::to<Input>();
 }

@@ -12,10 +12,10 @@ void look_and_say(Vec<u32> const& input, Vec<u32>& output) {
   auto index = 0u;
   while (index < input.size()) {
     let current = input[index];
-    let count = static_cast<u32>(std::ranges::distance(
-        input |
-        std::views::drop(index) |
-        std::views::take_while(aoc::equal_to_value{current})));
+    let count = static_cast<u32>(
+        stdr::distance(input |
+                       stdv::drop(index) |
+                       stdv::take_while(aoc::equal_to_value{current})));
     output.push_back(count);
     output.push_back(current);
     index += count;
@@ -29,7 +29,7 @@ int solve_case(const std::string& filename) {
                aoc::views::to_number<u32>() |
                aoc::ranges::to<std::vector<u32>>();
   auto output = decltype(input){};
-  for ([[maybe_unused]] auto index : std::views::iota(0, iterations)) {
+  for ([[maybe_unused]] auto index : stdv::iota(0, iterations)) {
     look_and_say(input, output);
     std::swap(input, output);
   }

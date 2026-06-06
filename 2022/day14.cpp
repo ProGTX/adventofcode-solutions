@@ -7,8 +7,6 @@
 #include <print>
 #include <ranges>
 
-namespace stdv = std::views;
-
 enum SpecialChar : char {
   empty = '.',
   rock = '#',

@@ -40,7 +40,7 @@ constexpr int_t get_score(std::string_view navigation_line) {
   }
   int_t score = 0;
   if constexpr (autocomplete) {
-    for (const char brace : closing_braces_stack | std::views::reverse) {
+    for (const char brace : closing_braces_stack | stdv::reverse) {
       score *= 5;
       score += closing_braces.find(brace) + 1;
     }
@@ -57,14 +57,13 @@ int_t solve_case(const std::string& filename) {
 
   int_t sum = 0;
   auto scores = navigation_lines |
-                std::views::transform(&get_score<autocomplete>) |
+                stdv::transform(&get_score<autocomplete>) |
                 aoc::ranges::to<std::vector<int_t>>();
   if constexpr (!autocomplete) {
     sum = aoc::ranges::accumulate(scores, 0);
   } else {
-    std::ranges::sort(scores);
-    const auto non_zero_it =
-        std::ranges::find_if(scores, aoc::not_equal_to_value{0});
+    stdr::sort(scores);
+    const auto non_zero_it = stdr::find_if(scores, aoc::not_equal_to_value{0});
     const auto offset = std::distance(std::begin(scores), non_zero_it);
     sum = scores[offset + (scores.size() - offset) / 2];
   }

@@ -14,7 +14,7 @@ using Segments = Vec<std::pair<Point, Point>>;
 auto parse(String const& filename) -> std::pair<Segments, Point> {
   auto dimensions = Point{};
   auto segments = aoc::views::read_lines(filename) |
-                  std::views::transform([&](str line) {
+                  stdv::transform([&](str line) {
                     let[begin, end] = aoc::split_once(line, " -> ");
                     let segment = std::pair{aoc::split<Point>(begin, ","),
                                             aoc::split<Point>(end, ",")};
@@ -48,7 +48,7 @@ fn solve_case(let& segment_pair) -> u32 {
     auto& current = intersections.at(pos.y, pos.x);
     current += 1;
   }
-  return std::ranges::count_if(intersections, [](u32 v) { return v > 1; });
+  return stdr::count_if(intersections, [](u32 v) { return v > 1; });
 }
 
 int main() {

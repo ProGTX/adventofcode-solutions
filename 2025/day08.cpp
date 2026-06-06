@@ -14,7 +14,7 @@ constexpr let usize_max = std::numeric_limits<usize>::max();
 
 auto parse(String const& filename) -> Boxes {
   return aoc::views::read_lines(filename) |
-         std::views::transform(
+         stdv::transform(
              [](str line) { return aoc::split_to_array<3, i64>(line, ','); }) |
          aoc::ranges::to<Boxes>();
 }
@@ -28,13 +28,13 @@ struct DistanceEntry {
 template <usize NUM_CONNECTIONS>
 fn solve_case(Boxes const& boxes) -> usize {
   auto distances =
-      std::views::cartesian_product(boxes | std::views::enumerate,
-                                    boxes | std::views::enumerate) |
-      std::views::filter([](auto&& ab) {
+      stdv::cartesian_product(boxes | stdv::enumerate,
+                              boxes | stdv::enumerate) |
+      stdv::filter([](auto&& ab) {
         let & [ a, b ] = ab;
         return std::get<0>(a) < std::get<0>(b);
       }) |
-      std::views::transform([](auto&& ab) {
+      stdv::transform([](auto&& ab) {
         let & [ a, b ] = ab;
         let & [ index_p, p ] = a;
         let & [ index_q, q ] = b;
@@ -47,11 +47,11 @@ fn solve_case(Boxes const& boxes) -> usize {
         };
       }) |
       aoc::ranges::to<Vec<DistanceEntry>>();
-  std::ranges::sort(distances, {}, &DistanceEntry::distance);
+  stdr::sort(distances, {}, &DistanceEntry::distance);
   // In the beginning each box is its own circuit
   auto circuit_map = Range{0uz, boxes.size()} | aoc::ranges::to<Vec<usize>>();
-  for (let& de : distances | std::views::take(
-                                 std::min(NUM_CONNECTIONS, distances.size()))) {
+  for (let& de :
+       distances | stdv::take(std::min(NUM_CONNECTIONS, distances.size()))) {
     let from = circuit_map[de.from];
     let to = circuit_map[de.to];
     if (from == to) {
@@ -83,7 +83,7 @@ fn solve_case(Boxes const& boxes) -> usize {
   for (let circuit : circuit_map) {
     circuit_sizes[circuit] += 1;
   }
-  std::ranges::sort(circuit_sizes, std::ranges::greater{});
+  stdr::sort(circuit_sizes, stdr::greater{});
   return circuit_sizes[0] * circuit_sizes[1] * circuit_sizes[2];
 }
 

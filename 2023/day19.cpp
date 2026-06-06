@@ -54,10 +54,10 @@ bool check_part(const part_t& part, const workflow_map_t& workflows) {
 
 int_t sort_parts(const std::vector<part_t>& parts,
                  const workflow_map_t& workflows) {
-  return aoc::ranges::accumulate(
-      parts | std::views::filter([&](const part_t& part) {
+  return aoc::ranges::accumulate( //
+      parts | stdv::filter([&](const part_t& part) {
         return check_part(part, workflows);
-      }) | std::views::transform(&part_t::sum),
+      }) | stdv::transform(&part_t::sum),
       int_t{0});
 }
 

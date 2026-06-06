@@ -28,19 +28,17 @@ fn solve_case1(CharGrid const& char_grid) -> u64 {
   }();
   let operations =
       char_grid.row_view(char_grid.num_rows() - 1) |
-      std::views::filter([](char c) { return (c == '+') || (c == '*'); }) |
+      stdv::filter([](char c) { return (c == '+') || (c == '*'); }) |
       aoc::ranges::to<String>();
   return aoc::ranges::accumulate( //
-      Range{0uz, numbers.num_columns()} |
-          std::views::transform([&](let column_id) {
-            let add = (operations[column_id] == '+');
-            let init = add ? u64{} : 1;
-            return std::ranges::fold_left( //
-                numbers.column_view(column_id), init,
-                [&](u64 acc, u64 current) {
-                  return add ? (acc + current) : (acc * current);
-                });
-          }),
+      Range{0uz, numbers.num_columns()} | stdv::transform([&](let column_id) {
+        let add = (operations[column_id] == '+');
+        let init = add ? u64{} : 1;
+        return stdr::fold_left( //
+            numbers.column_view(column_id), init, [&](u64 acc, u64 current) {
+              return add ? (acc + current) : (acc * current);
+            });
+      }),
       u64{});
 }
 
@@ -48,11 +46,10 @@ fn solve_case2(CharGrid const& char_grid) -> u64 {
   auto result = u64{};
   auto current = Vec<u64>{};
   constexpr let EMPTY = ' ';
-  for (let column_id :
-       Range{0uz, char_grid.num_columns()} | std::views::reverse) {
+  for (let column_id : Range{0uz, char_grid.num_columns()} | stdv::reverse) {
     auto number = 0;
     for (let value_char : char_grid.column_view(column_id) |
-                              std::views::take(char_grid.num_rows() - 1)) {
+                              stdv::take(char_grid.num_rows() - 1)) {
       if (value_char == EMPTY) {
         continue;
       }
@@ -68,7 +65,7 @@ fn solve_case2(CharGrid const& char_grid) -> u64 {
     }
     let add = (op == '+');
     let init = add ? u64{} : 1;
-    result += std::ranges::fold_left( //
+    result += stdr::fold_left( //
         current, init, [&](u64 acc, u64 current) {
           return add ? (acc + current) : (acc * current);
         });

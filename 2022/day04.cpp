@@ -19,7 +19,7 @@ using Input = Vec<std::pair<range, range>>;
 
 auto parse(String const& filename) -> Input {
   return aoc::views::read_lines(filename) |
-         std::views::transform([](std::string_view line) {
+         stdv::transform([](std::string_view line) {
            auto [firstElfStr, secondElfStr] = aoc::split_once(line, ',');
            return std::pair{range{aoc::split_once<int>(firstElfStr, '-')},
                             range{aoc::split_once<int>(secondElfStr, '-')}};

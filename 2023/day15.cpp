@@ -16,20 +16,21 @@
 // Set the current value to itself multiplied by 17.
 // Set the current value to the remainder of dividing itself by 256.
 constexpr int hash_alg(std::string_view str) {
-  return std::ranges::fold_left(str | aoc::views::transform_cast<int>(), 0,
-                                [](int current_value, int ascii) {
-                                  current_value += ascii;
-                                  current_value *= 17;
-                                  current_value %= 256;
-                                  return current_value;
-                                });
+  return stdr::fold_left( //
+      str | aoc::views::transform_cast<int>(), 0,
+      [](int current_value, int ascii) {
+        current_value += ascii;
+        current_value *= 17;
+        current_value %= 256;
+        return current_value;
+      });
 }
 static_assert(hash_alg("HASH") == 52);
 
 using steps_t = std::vector<std::string>;
 
 constexpr int sum_steps(const steps_t& steps) {
-  return aoc::ranges::accumulate(steps | std::views::transform(hash_alg), 0);
+  return aoc::ranges::accumulate(steps | stdv::transform(hash_alg), 0);
 }
 
 constexpr steps_t test_case() {
@@ -59,7 +60,7 @@ constexpr boxes_t sort_boxes(const instructions_t& instructions) {
 
   for (auto&& [name, number] : instructions) {
     auto& box = boxes[hash_alg(name)];
-    auto it = std::ranges::find(box, name, &lens_t::first);
+    auto it = stdr::find(box, name, &lens_t::first);
     if (it != std::end(box)) {
       if (number < 0) {
         box.erase(it);
@@ -78,7 +79,7 @@ constexpr boxes_t sort_boxes(const instructions_t& instructions) {
 
 constexpr int focusing_power(const box_t& box) {
   int multiplier = 1;
-  return std::ranges::fold_left(box, 0, [&](int power, const lens_t& lens) {
+  return stdr::fold_left(box, 0, [&](int power, const lens_t& lens) {
     power += multiplier * lens.second;
     ++multiplier;
     return power;
@@ -87,7 +88,7 @@ constexpr int focusing_power(const box_t& box) {
 
 constexpr int sum_boxes(const boxes_t& boxes) {
   int multiplier = 1;
-  return std::ranges::fold_left(boxes, 0, [&](int sum, const box_t& box) {
+  return stdr::fold_left(boxes, 0, [&](int sum, const box_t& box) {
     sum += multiplier * focusing_power(box);
     ++multiplier;
     return sum;

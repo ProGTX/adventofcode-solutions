@@ -10,9 +10,6 @@
 #include <print>
 #include <ranges>
 
-namespace stdr = std::ranges;
-namespace stdv = std::views;
-
 using rock_index_t = i64;
 using Input = Vec<int>;
 using grid_point = aoc::point_type<rock_index_t>;

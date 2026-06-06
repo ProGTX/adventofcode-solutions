@@ -11,9 +11,6 @@
 #include <string>
 #include <variant>
 
-namespace stdr = std::ranges;
-namespace stdv = std::views;
-
 // Snailfish number
 struct SFN {
   struct Pair {

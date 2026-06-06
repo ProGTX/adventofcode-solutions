@@ -76,7 +76,7 @@ fn parse_monkey(str block) -> Monkey {
 
 auto parse(String const& filename) -> Monkeys {
   return aoc::split(aoc::trim(aoc::read_file(filename)), "\n\n") |
-         std::views::transform(parse_monkey) |
+         stdv::transform(parse_monkey) |
          aoc::ranges::to<Monkeys>();
 }
 
@@ -121,7 +121,7 @@ fn solve_case(Monkeys const& input) -> Item {
     }
   }
 
-  std::ranges::sort(num_inspected, std::greater{});
+  stdr::sort(num_inspected, std::greater{});
   return num_inspected[0] * num_inspected[1];
 }
 

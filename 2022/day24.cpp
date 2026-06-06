@@ -8,9 +8,6 @@
 #include <print>
 #include <ranges>
 
-namespace stdv = std::views;
-namespace stdr = std::ranges;
-
 // Each cell stores a bitmask of which blizzard directions are present.
 // Bit index = static_cast<int>(facing_t): east=0, south=1, west=2, north=3.
 using blizzard_grid_t = aoc::grid<u8>;

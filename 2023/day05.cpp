@@ -51,9 +51,8 @@ constexpr range_t map_single(const range_t& seed, const single_mapping_t& map) {
 constexpr seeds_t apply_mapping(seeds_t current_seeds,
                                 const std::vector<single_mapping_t>& mapping) {
   // We want all the ranges to be sorted to simplify the algorithm
-  AOC_ASSERT(
-      std::ranges::is_sorted(mapping, std::less<>{}, &single_mapping_t::src),
-      "mapping not presorted");
+  AOC_ASSERT(stdr::is_sorted(mapping, std::less<>{}, &single_mapping_t::src),
+             "mapping not presorted");
 
   seeds_t next_seeds;
   next_seeds.reserve(current_seeds.size());
@@ -156,7 +155,7 @@ constexpr seeds_t apply_mapping(seeds_t current_seeds,
     apply_map_to_seeds();
   }
 
-  std::ranges::sort(next_seeds, std::less<>{});
+  stdr::sort(next_seeds, std::less<>{});
   return next_seeds;
 }
 
@@ -184,7 +183,7 @@ int_t solve_case(const std::string& filename) {
 
   for (std::string_view line : aoc::views::read_lines(file)) {
     if (!aoc::is_number(line[0])) {
-      std::ranges::sort(mapping, std::less<>{}, &single_mapping_t::src);
+      stdr::sort(mapping, std::less<>{}, &single_mapping_t::src);
       current_seeds = apply_mapping(current_seeds, mapping);
       mapping.clear();
       continue;
@@ -196,7 +195,7 @@ int_t solve_case(const std::string& filename) {
   }
 
   // Have to run this one last time
-  std::ranges::sort(mapping, std::less<>{}, &single_mapping_t::src);
+  stdr::sort(mapping, std::less<>{}, &single_mapping_t::src);
   current_seeds = apply_mapping(current_seeds, mapping);
 
   int_t lowest_location = current_seeds[0].begin;

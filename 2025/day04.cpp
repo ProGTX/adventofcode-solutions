@@ -16,16 +16,16 @@ constexpr let EMPTY = '.';
 fn accessible_indexes(PaperRolls const& paper_rolls) -> Vec<usize> {
   return //
       paper_rolls |
-      std::views::enumerate |
-      std::views::filter([&](auto&& tuple) {
+      stdv::enumerate |
+      stdv::filter([&](auto&& tuple) {
         let[linear_index, current] = tuple;
         return //
             (current == PAPER) &&
-            (4 > std::ranges::count_if(paper_rolls.all_neighbor_values(
-                                           paper_rolls.position(linear_index)),
-                                       aoc::equal_to_value{PAPER}));
+            (4 > stdr::count_if(paper_rolls.all_neighbor_values(
+                                    paper_rolls.position(linear_index)),
+                                aoc::equal_to_value{PAPER}));
       }) |
-      std::views::keys |
+      stdv::keys |
       aoc::ranges::to<Vec<usize>>();
 }
 
@@ -43,7 +43,7 @@ fn solve_case2(PaperRolls const& input) -> u32 {
   auto total = 0;
   while (!indexes.empty()) {
     total += indexes.size();
-    for (let pos : indexes | std::views::transform([&](usize index) {
+    for (let pos : indexes | stdv::transform([&](usize index) {
                      return input.position(index);
                    })) {
       paper_rolls.modify(EMPTY, pos.y, pos.x);

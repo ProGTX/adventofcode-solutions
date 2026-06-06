@@ -69,9 +69,9 @@ fn solve_case(Input const& input) -> usize {
     }
   }
   counts[polymer.back() - 'A'] += 1;
-  let max = *std::ranges::max_element(counts);
-  auto nonzero = counts | std::views::filter([](usize c) { return c > 0; });
-  let min = *std::ranges::min_element(nonzero);
+  let max = *stdr::max_element(counts);
+  auto nonzero = counts | stdv::filter([](usize c) { return c > 0; });
+  let min = *stdr::min_element(nonzero);
   return max - min;
 }
 

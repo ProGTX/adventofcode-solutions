@@ -41,7 +41,7 @@ constexpr int_t num_steps(const std::vector<node_t>& directions,
   int_t steps = 0;
   int inst_index = 0;
   while (true) {
-    if (std::ranges::contains(end_indexes, start_index)) {
+    if (stdr::contains(end_indexes, start_index)) {
       break;
     }
     auto inst = instructions[inst_index];
@@ -63,8 +63,8 @@ constexpr int_t num_steps(const std::vector<node_t>& directions,
                           const std::vector<node_select_func_t>& instructions,
                           const std::vector<int>& start_indexes,
                           const std::vector<int>& end_indexes) {
-  return aoc::ranges::lcm(
-      start_indexes | std::views::transform([&](int start_index) {
+  return aoc::ranges::lcm( //
+      start_indexes | stdv::transform([&](int start_index) {
         return num_steps(directions, instructions, start_index, end_indexes);
       }));
 }
@@ -73,7 +73,7 @@ template <bool all_paths>
 int_t solve_case(const std::string& filename) {
   std::ifstream file{filename};
   auto instructions = aoc::read_line(file) |
-                      std::views::transform(get_direction) |
+                      stdv::transform(get_direction) |
                       aoc::ranges::to<std::vector<node_select_func_t>>();
 
   std::map<std::string, int> name_to_index;

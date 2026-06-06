@@ -40,7 +40,7 @@ fn score_column(const usize column, RowIt&& row_it, const u32 score_init,
 
 fn solve_case1(Forrest const& forrest) -> u32 {
   auto visibility = Score{0, forrest.num_rows(), forrest.num_columns()};
-  for (let[index, tree_height] : forrest | std::views::enumerate) {
+  for (let[index, tree_height] : forrest | stdv::enumerate) {
     let position = forrest.position(index);
     let tree_column = static_cast<usize>(position.x);
     let tree_row = static_cast<usize>(position.y);
@@ -54,12 +54,12 @@ fn solve_case1(Forrest const& forrest) -> u32 {
     let visible =
         (score_row(tree_row, Range{tree_column + 1, forrest.num_columns()}, 1,
                    check) > 0) ||
-        (score_row(tree_row, Range{0uz, tree_column} | std::views::reverse, 1,
+        (score_row(tree_row, Range{0uz, tree_column} | stdv::reverse, 1,
                    check) > 0) ||
         (score_column(tree_column, Range{tree_row + 1, forrest.num_rows()}, 1,
                       check) > 0) ||
-        (score_column(tree_column, Range{0uz, tree_row} | std::views::reverse,
-                      1, check) > 0);
+        (score_column(tree_column, Range{0uz, tree_row} | stdv::reverse, 1,
+                      check) > 0);
     visibility.modify(static_cast<u32>(visible), tree_row, tree_column);
   }
   return aoc::ranges::accumulate(visibility, 0);
@@ -67,7 +67,7 @@ fn solve_case1(Forrest const& forrest) -> u32 {
 
 fn solve_case2(Forrest const& forrest) -> u32 {
   auto score = Score{0, forrest.num_rows(), forrest.num_columns()};
-  for (let[index, tree_height] : forrest | std::views::enumerate) {
+  for (let[index, tree_height] : forrest | stdv::enumerate) {
     let position = forrest.position(index);
     let tree_column = static_cast<usize>(position.x);
     let tree_row = static_cast<usize>(position.y);
@@ -81,15 +81,14 @@ fn solve_case2(Forrest const& forrest) -> u32 {
     let tree_score =
         score_row(tree_row, Range{tree_column + 1, forrest.num_columns()}, 0,
                   check) *
-        score_row(tree_row, Range{0uz, tree_column} | std::views::reverse, 0,
-                  check) *
+        score_row(tree_row, Range{0uz, tree_column} | stdv::reverse, 0, check) *
         score_column(tree_column, Range{tree_row + 1, forrest.num_rows()}, 0,
                      check) *
-        score_column(tree_column, Range{0uz, tree_row} | std::views::reverse, 0,
+        score_column(tree_column, Range{0uz, tree_row} | stdv::reverse, 0,
                      check);
     score.modify(tree_score, tree_row, tree_column);
   }
-  return std::ranges::max(score);
+  return stdr::max(score);
 }
 
 int main() {

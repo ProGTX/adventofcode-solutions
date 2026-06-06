@@ -10,8 +10,7 @@
 
 fn to_numbers(str const& s) -> Vec<u32> {
   return s |
-         std::views::transform(
-             [](char c) { return static_cast<u32>(c - 'a'); }) |
+         stdv::transform([](char c) { return static_cast<u32>(c - 'a'); }) |
          aoc::ranges::to<Vec<u32>>();
 }
 constexpr const auto I_NUMBER = static_cast<u32>('i' - 'a');
@@ -21,12 +20,12 @@ constexpr const auto Y_NUMBER = static_cast<u32>('y' - 'a');
 constexpr const auto Z_NUMBER = static_cast<u32>('z' - 'a');
 
 fn is_invalid_number(u32 n) -> bool {
-  return std::ranges::contains(std::array{I_NUMBER, L_NUMBER, O_NUMBER}, n);
+  return stdr::contains(std::array{I_NUMBER, L_NUMBER, O_NUMBER}, n);
 }
 
 fn to_string(std::span<const u32> numbers) -> String {
   return numbers |
-         std::views::transform([](u32 n) {
+         stdv::transform([](u32 n) {
            AOC_ASSERT(n <= Z_NUMBER, "Number does not represent a letter");
            return n + 'a';
          }) |
@@ -35,7 +34,7 @@ fn to_string(std::span<const u32> numbers) -> String {
 
 // After calling this function we know we don't have any invalid letters
 fn remove_initial_invalid(std::span<u32> password) -> bool {
-  let invalid_it = std::ranges::find_if(password, &is_invalid_number);
+  let invalid_it = stdr::find_if(password, &is_invalid_number);
   if (invalid_it == std::end(password)) {
     // Nothing to do
     return false;
@@ -46,7 +45,7 @@ fn remove_initial_invalid(std::span<u32> password) -> bool {
   password[invalid_index] += 1;
   AOC_ASSERT(!is_invalid_number(password[invalid_index]),
              "Invalid letters must be at least 1 apart");
-  std::ranges::fill(password.subspan(invalid_index + 1), 0);
+  stdr::fill(password.subspan(invalid_index + 1), 0);
   return true;
 }
 
@@ -57,13 +56,13 @@ fn increasing_straight_index(std::span<const u32> password)
   }
   auto index = 0u;
   auto size = 0u;
-  for (let i : std::views::iota(0u, password.size())) {
+  for (let i : stdv::iota(0u, password.size())) {
     auto current_letter = password[i];
-    if (std::ranges::contains(std::array{Y_NUMBER, Z_NUMBER}, current_letter)) {
+    if (stdr::contains(std::array{Y_NUMBER, Z_NUMBER}, current_letter)) {
       continue;
     }
     auto current_size = 1;
-    for (let j : std::views::iota(i + 1, password.size())) {
+    for (let j : stdv::iota(i + 1, password.size())) {
       current_letter += 1;
       if (current_letter != password[j]) {
         break;
@@ -95,7 +94,7 @@ fn has_letter_pairs(std::span<const u32> password) -> bool {
   let letter_pair_index = [](std::span<const u32> password,
                              usize start) -> Option<usize> {
     AOC_ASSERT(start < password.size() - 1, "Can't search for pairs");
-    for (let index : std::views::iota(start, password.size() - 1)) {
+    for (let index : stdv::iota(start, password.size() - 1)) {
       if (password[index] == password[index + 1]) {
         return index;
       }
@@ -135,7 +134,7 @@ fn next_password(Vec<u32> password) -> Vec<u32> {
   let size = password.size();
   let increase_by_one = [&](std::span<u32> next) {
     // Try increasing by one at the end of the password
-    for (let index : std::views::iota(0u, size) | std::views::reverse) {
+    for (let index : stdv::iota(0u, size) | stdv::reverse) {
       if (next[index] != Z_NUMBER) {
         // Increase the letter by at least one
         next[index] += 1 + static_cast<u32>(is_invalid_number(next[index]));

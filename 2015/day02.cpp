@@ -16,7 +16,7 @@ int solve_case1(const std::string& filename) {
   for (std::string_view line : aoc::views::read_lines(filename)) {
     auto box = aoc::split<dims_t>(line, 'x');
     auto sides = dims_t{box[0] * box[1], box[0] * box[2], box[1] * box[2]};
-    sum += sides.dot(dims_t{2, 2, 2}) + std::ranges::min(sides);
+    sum += sides.dot(dims_t{2, 2, 2}) + stdr::min(sides);
   }
   return sum;
 }
@@ -25,7 +25,7 @@ int solve_case2(const std::string& filename) {
   int ribbon = 0;
   for (std::string_view line : aoc::views::read_lines(filename)) {
     auto box = aoc::split<std::array<int, 3>>(line, 'x');
-    std::ranges::sort(box);
+    stdr::sort(box);
     ribbon += 2 * (box[0] + box[1]) + box[0] * box[1] * box[2];
   }
   return ribbon;

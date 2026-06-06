@@ -68,7 +68,7 @@ struct hand_type {
   cards_t cards;
 
   constexpr hand_type(std::string_view cards_str) {
-    std::ranges::transform(cards_str, cards.begin(), &card_to_number<joker>);
+    stdr::transform(cards_str, cards.begin(), &card_to_number<joker>);
   }
 
   constexpr hand_type(const cards_t& cards_) : cards{cards_} {}
@@ -89,7 +89,7 @@ struct hand_type {
         ++card_map[c - 2];
       }
     }
-    std::ranges::sort(card_map, std::greater<>{});
+    stdr::sort(card_map, std::greater<>{});
     if constexpr (joker) {
       card_map[0] += num_jokers;
     }

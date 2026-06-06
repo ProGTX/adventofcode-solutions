@@ -19,7 +19,7 @@ fn parse_property(str property) -> i32 {
 
 auto parse(String const& filename) -> Vec<Ingredient> {
   return aoc::views::read_lines(filename) |
-         std::views::transform([](str line) {
+         stdv::transform([](str line) {
            let properties = aoc::split_to_array<5>(line, ", ");
            return Ingredient{
                .properties =
@@ -39,10 +39,10 @@ template <bool KCAL_500>
 fn score_cookie(std::span<const Ingredient> ingredients,
                 std::span<const u32> teaspoon_stack) -> u32 {
   auto result = Ingredient{};
-  for (let[index, teaspoon_u32] : teaspoon_stack | std::views::enumerate) {
+  for (let[index, teaspoon_u32] : teaspoon_stack | stdv::enumerate) {
     let teaspoon = static_cast<i32>(teaspoon_u32);
     for (auto&& [res_prop, cookie_prop] :
-         std::views::zip(result.properties, ingredients[index].properties)) {
+         stdv::zip(result.properties, ingredients[index].properties)) {
       res_prop += cookie_prop * teaspoon;
     }
     if constexpr (KCAL_500) {
@@ -54,8 +54,8 @@ fn score_cookie(std::span<const Ingredient> ingredients,
       return 0;
     }
   }
-  return std::ranges::fold_left(
-      result.properties | std::views::transform([](i32& prop) {
+  return stdr::fold_left( //
+      result.properties | stdv::transform([](i32& prop) {
         return static_cast<u32>(std::max(prop, 0));
       }),
       1, std::multiplies{});

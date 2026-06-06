@@ -14,8 +14,6 @@ using Algorithm = Vec<u8>;
 using Image = aoc::grid<u8>;
 using Input = std::pair<Algorithm, Image>;
 
-namespace stdv = std::views;
-
 static constexpr usize PADDING = 3;
 
 fn to_bit(char c) -> u8 { return static_cast<u8>(c == '#'); }

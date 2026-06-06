@@ -68,11 +68,11 @@ int solve_case(const std::string& filename) {
     if (!number) {
       return;
     }
-    auto it = std::ranges::find(all_numbers, *number, &number_pair_t::first);
+    auto it = stdr::find(all_numbers, *number, &number_pair_t::first);
     if (it != std::end(all_numbers)) {
       if constexpr (check_gears) {
-        if (!std::ranges::contains(current_numbers, it->first,
-                                   &number_pair_t::first)) {
+        if (!stdr::contains(current_numbers, it->first,
+                            &number_pair_t::first)) {
           current_numbers.emplace_back(it->first, it->second);
         }
       }
@@ -82,8 +82,7 @@ int solve_case(const std::string& filename) {
         aoc::to_number<int>(line.substr(number->column, number->size));
     all_numbers.emplace_back(*number, number_value);
     if constexpr (check_gears) {
-      if (!std::ranges::contains(current_numbers, *number,
-                                 &number_pair_t::first)) {
+      if (!stdr::contains(current_numbers, *number, &number_pair_t::first)) {
         current_numbers.emplace_back(*number, number_value);
       }
     }
@@ -139,7 +138,7 @@ int solve_case(const std::string& filename) {
   int sum = 0;
   if constexpr (!check_gears) {
     sum = aoc::ranges::accumulate(
-        all_numbers | std::views::transform(&number_pair_t::second), 0);
+        all_numbers | stdv::transform(&number_pair_t::second), 0);
   } else {
     sum = aoc::ranges::accumulate(gear_ratios, 0);
   }

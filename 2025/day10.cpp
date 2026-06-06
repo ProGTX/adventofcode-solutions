@@ -14,9 +14,6 @@ using Buttons = aoc::static_vector<Button, 13>;
 using Joltage = aoc::static_vector<u16, 10>;
 using Input = Vec<std::tuple<Lights, Buttons, Joltage>>;
 
-namespace stdv = std::views;
-namespace stdr = std::ranges;
-
 auto parse(String const& filename) -> Input {
   using tuple = Input::value_type;
   return //

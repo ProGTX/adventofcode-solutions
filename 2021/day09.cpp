@@ -21,7 +21,7 @@ constexpr std::vector<point> find_low_points(const heightmap_t& heightmap) {
     for (int col = 0; col < heightmap.num_columns(); ++col) {
       const auto current_point = point{col, row};
       const auto current_height = heightmap.at(row, col);
-      if (std::ranges::all_of(
+      if (stdr::all_of(
               heightmap.basic_neighbor_values({col, row}),
               [&](const char neighbor) { return current_height < neighbor; })) {
         low_points.push_back(current_point);
@@ -34,7 +34,7 @@ constexpr std::vector<point> find_low_points(const heightmap_t& heightmap) {
 constexpr int sum_risk_levels(const heightmap_t& heightmap) {
   const auto low_points = find_low_points(heightmap);
   return aoc::ranges::accumulate(
-      low_points | std::views::transform([&](const point lp) {
+      low_points | stdv::transform([&](const point lp) {
         return aoc::to_number<int>(heightmap.at(lp.y, lp.x)) + 1;
       }),
       0);
@@ -63,12 +63,10 @@ constexpr int find_basin(const heightmap_t& heightmap, const point low_point) {
 constexpr int largest_basins(const heightmap_t& heightmap) {
   const auto low_points = find_low_points(heightmap);
   std::vector<int> basins;
-  std::ranges::transform(
-      low_points, aoc::inserter_it(basins),
-      [&](const point lp) { return find_basin(heightmap, lp); });
-  std::ranges::partial_sort(basins, std::begin(basins) + 3, std::greater{});
-  return std::ranges::fold_left(std::span{basins}.subspan(0, 3), 1,
-                                std::multiplies{});
+  stdr::transform(low_points, aoc::inserter_it(basins),
+                  [&](const point lp) { return find_basin(heightmap, lp); });
+  stdr::partial_sort(basins, std::begin(basins) + 3, std::greater{});
+  return stdr::fold_left(std::span{basins}.subspan(0, 3), 1, std::multiplies{});
 }
 
 template <bool basin>

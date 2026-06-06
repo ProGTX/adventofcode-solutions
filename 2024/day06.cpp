@@ -65,7 +65,7 @@ constexpr std::conditional_t<interfere, bool, int> follow_guard(
     pos = new_pos;
   }
   if constexpr (!interfere) {
-    return std::ranges::count(lab_map, visited_space);
+    return stdr::count(lab_map, visited_space);
   } else {
     return false;
   }
@@ -90,7 +90,7 @@ constexpr int interfere_with_guard(lab_map_t& lab_map, const point start_pos) {
         ++count;
       }
       lab_map.at(pos.y, pos.x) = empty_space;
-      std::ranges::replace(lab_map, visited_space, empty_space);
+      stdr::replace(lab_map, visited_space, empty_space);
     }
   }
   return count;
@@ -135,7 +135,7 @@ void test_interference(point extra_obstacle) {
   constexpr point start_pos{5, 7};
   auto lab_map = test_map();
   std::println("TESTING",
-               std::views::repeat('~', 64) | aoc::ranges::to<std::string>());
+               stdv::repeat('~', 64) | aoc::ranges::to<std::string>());
   lab_map.at(extra_obstacle.y, extra_obstacle.x) = obstacle;
   std::println("Check", follow_guard<true>(lab_map, start_pos));
   lab_map.at(extra_obstacle.y, extra_obstacle.x) = 'O';

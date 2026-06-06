@@ -40,22 +40,21 @@ int_t calc_cost(crabs_t const& crabs, const int position) {
 
 int_t lowest_fuel_deltas(crabs_t const& crabs) {
   static constexpr bool progressive_cost = false;
-  AOC_ASSERT(std::ranges::is_sorted(crabs), "Crab positions must be sorted!");
+  AOC_ASSERT(stdr::is_sorted(crabs), "Crab positions must be sorted!");
 
   // We don't need to calculate the cost for each position,
   // we can just apply deltas from the first one
-  int best_pos = *std::ranges::begin(crabs | std::views::keys);
+  int best_pos = *stdr::begin(crabs | stdv::keys);
   int_t lowest_cost = calc_cost<progressive_cost>(crabs, best_pos);
   const int_t num_all_crabs = std::invoke([&] {
-    auto crab_values = crabs | std::views::values;
+    auto crab_values = crabs | stdv::values;
     return std::accumulate(crab_values.begin(), crab_values.end(), int_t{0});
   });
 
   int crabs_left = crabs.at(best_pos);
   int crabs_right = num_all_crabs - crabs_left;
 
-  const auto last_pos =
-      *std::ranges::begin(crabs | std::views::keys | std::views::reverse);
+  const auto last_pos = *stdr::begin(crabs | stdv::keys | stdv::reverse);
   for (int pos = best_pos + 1; pos < last_pos + 1; ++pos) {
     auto crab_it = crabs.find(pos);
     const int num_crabs = (crab_it == crabs.end()) ? 0 : crab_it->second;
@@ -78,13 +77,12 @@ int_t lowest_fuel_deltas(crabs_t const& crabs) {
 
 int_t lowest_fuel_all(crabs_t const& crabs) {
   static constexpr bool progressive_cost = true;
-  AOC_ASSERT(std::ranges::is_sorted(crabs), "Crab positions must be sorted!");
+  AOC_ASSERT(stdr::is_sorted(crabs), "Crab positions must be sorted!");
 
-  int best_pos = *std::ranges::begin(crabs | std::views::keys);
+  int best_pos = *stdr::begin(crabs | stdv::keys);
   int_t lowest_cost = calc_cost<progressive_cost>(crabs, best_pos);
 
-  const auto last_pos =
-      *std::ranges::begin(crabs | std::views::keys | std::views::reverse);
+  const auto last_pos = *stdr::begin(crabs | stdv::keys | stdv::reverse);
   for (int pos = best_pos + 1; pos < last_pos + 1; ++pos) {
     int_t new_cost = calc_cost<progressive_cost>(crabs, pos);
 

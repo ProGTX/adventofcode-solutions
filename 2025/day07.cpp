@@ -27,7 +27,7 @@ fn solve_case(Input const& input) -> u64 {
   for (let row :
        Range{static_cast<usize>(start_pos.y + 1), manifolds.num_rows()}) {
     auto next_timelines = Vec(manifolds.num_columns(), u64{});
-    for (let[column, timelines] : row_timelines | std::views::enumerate) {
+    for (let[column, timelines] : row_timelines | stdv::enumerate) {
       let value = manifolds.at(row, column);
       switch (value) {
         case empty:

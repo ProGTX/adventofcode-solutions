@@ -25,7 +25,7 @@ fn solve_case(EnergyLevels const& energy_levels) -> usize {
     auto visited = std::set<usize>{};
 
     // Increase level by 1
-    for (auto&& [index, energy] : current_levels | std::views::enumerate) {
+    for (auto&& [index, energy] : current_levels | stdv::enumerate) {
       energy += 1;
       if (energy > '9') {
         unvisited.push_back(index);

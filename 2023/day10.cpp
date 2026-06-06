@@ -56,7 +56,7 @@ constexpr std::vector<int> get_pipe_loop(const field_t& field,
     AOC_ASSERT(
         value != tile_t::start,
         "Something went wrong, cannot use start as neighbor at this point");
-    if (!std::ranges::contains(valid_values, value)) {
+    if (!stdr::contains(valid_values, value)) {
       return;
     }
     start_neighbor_diffs.push_back(diff);
@@ -76,11 +76,11 @@ constexpr std::vector<int> get_pipe_loop(const field_t& field,
     add_starting_neighbor(pos_2d, east_diff, east_allowed);
 
     auto start_neighbor_indexes =
-        std::views::transform(start_neighbor_diffs,
-                              [&](point diff) {
-                                auto pos = pos_2d + diff;
-                                return field.linear_index(pos.y, pos.x);
-                              }) |
+        stdv::transform(start_neighbor_diffs,
+                        [&](point diff) {
+                          auto pos = pos_2d + diff;
+                          return field.linear_index(pos.y, pos.x);
+                        }) |
         aoc::ranges::to<aoc::static_vector<int, 2>>();
     loop_indexes.push_back(start_neighbor_indexes[0]);
   }
@@ -144,8 +144,8 @@ constexpr auto test_field() {
 };
 
 static_assert(4 == get_num_steps(test_field(), 6));
-static_assert(std::ranges::equal(get_pipe_loop(test_field(), 6),
-                                 std::array{6, 11, 16, 17, 18, 13, 8, 7}));
+static_assert(stdr::equal(get_pipe_loop(test_field(), 6),
+                          std::array{6, 11, 16, 17, 18, 13, 8, 7}));
 
 // https://www.reddit.com/r/adventofcode/comments/18fgddy/2023_day_10_part_2_using_a_rendering_algorithm_to/
 // https://en.wikipedia.org/wiki/Point_in_polygon

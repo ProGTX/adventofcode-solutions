@@ -7,9 +7,6 @@
 #include <print>
 #include <ranges>
 
-namespace stdv = std::views;
-namespace stdr = std::ranges;
-
 using Point = aoc::point_type<i64>;
 using Segment = aoc::closed_range<Point>;
 using Polygon = Vec<Point>;

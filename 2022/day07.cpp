@@ -11,9 +11,6 @@ using Folder = aoc::static_vector<usize, 11>;
 using Filesystem = std::pair<Vec<Folder>, Vec<u32>>;
 constexpr let FILE_ID_START = usize{1} << 16;
 
-namespace stdv = std::views;
-namespace stdr = std::ranges;
-
 auto parse(String const& filename) -> Filesystem {
   auto folder_ids = aoc::name_to_id{};
   auto file_ids = aoc::name_to_id{FILE_ID_START};

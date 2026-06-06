@@ -55,8 +55,8 @@ constexpr std::pair<state_t, char> advance_state(
             // If there are, the arrangement is invalid.
             // Otherwise, the arrangement is valid.
             auto num_damaged_after =
-                std::ranges::count(std::begin(state.arr) + state.arr_pos + 1,
-                                   std::end(state.arr), damaged);
+                stdr::count(std::begin(state.arr) + state.arr_pos + 1,
+                            std::end(state.arr), damaged);
             return {state, (num_damaged_after == 0) ? operational : damaged};
           }
         }
@@ -138,23 +138,23 @@ constexpr std::pair<std::string, std::vector<int>> unfold(
   std::vector<int> new_groups;
   new_springs.reserve(springs.size() * factor + (factor - 1));
   new_groups.reserve(spring_groups.size() * factor);
-  std::ranges::copy(spring_groups, std::back_inserter(new_groups));
+  stdr::copy(spring_groups, std::back_inserter(new_groups));
   for (int i = 1; i < factor; ++i) {
     new_springs.append("?");
     new_springs.append(springs);
-    std::ranges::copy(spring_groups, std::back_inserter(new_groups));
+    stdr::copy(spring_groups, std::back_inserter(new_groups));
   }
   return {new_springs, new_groups};
 }
 
 static_assert(".#?.#?.#?.#?.#" == unfold<5>(".#", std::array{1}).first);
-static_assert(std::ranges::equal(std::array{1, 1, 1, 1, 1},
-                                 unfold<5>(".#", std::array{1}).second));
+static_assert(stdr::equal(std::array{1, 1, 1, 1, 1},
+                          unfold<5>(".#", std::array{1}).second));
 static_assert("???.###????.###????.###????.###????.###" ==
               unfold<5>("???.###", std::array{1, 1, 3}).first);
-static_assert(
-    std::ranges::equal(std::array{1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3},
-                       unfold<5>("???.###", std::array{1, 1, 3}).second));
+static_assert(stdr::equal(std::array{1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1,
+                                     3},
+                          unfold<5>("???.###", std::array{1, 1, 3}).second));
 
 template <int factor>
 int solve_case(const std::string& filename) {

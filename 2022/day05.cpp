@@ -48,7 +48,7 @@ auto parse(String const& filename) -> Input {
         num_stacks =
             aoc::to_number<int>(stack_numbers[stack_numbers.size() - 2].at(0));
         for (int i = 0; i < num_stacks; ++i) {
-          std::ranges::reverse(temp_stacks[i]);
+          stdr::reverse(temp_stacks[i]);
         }
       }
     } else {

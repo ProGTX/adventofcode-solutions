@@ -39,13 +39,13 @@ constexpr int energize(const machine_t& machine, beam_t start) {
     std::swap(direction.x, direction.y);
     // Create a new beam as-if mirror_right
     beam_t beam2{pos - direction, -direction};
-    if (!std::ranges::contains(beams_tracker, beam2)) {
+    if (!stdr::contains(beams_tracker, beam2)) {
       beams_tracker.push_back(beam2);
       beams.push_back(std::move(beam2));
     }
     // Modify current beam as-if mirror_left
     beam_t beam1{pos + direction, direction};
-    if (!std::ranges::contains(beams_tracker, beam1)) {
+    if (!stdr::contains(beams_tracker, beam1)) {
       beams_tracker.push_back(std::move(beam1));
       return direction;
     }
@@ -97,7 +97,7 @@ constexpr int energize(const machine_t& machine, beam_t start) {
     }
   }
 
-  return std::ranges::count(energized_machine, energized);
+  return stdr::count(energized_machine, energized);
 }
 
 template <bool optimize>
@@ -119,10 +119,9 @@ int solve_case(const std::string& filename) {
       beams.emplace_back(point{i, 0}, aoc::get_diff(aoc::south));
       beams.emplace_back(point{i, n - 1}, aoc::get_diff(aoc::north));
     }
-    sum =
-        std::ranges::max(beams | std::views::transform([&](const beam_t& beam) {
-                           return energize(machine, beam);
-                         }));
+    sum = stdr::max(beams | stdv::transform([&](const beam_t& beam) {
+                      return energize(machine, beam);
+                    }));
   }
   return sum;
 }

@@ -8,9 +8,6 @@
 #include <print>
 #include <ranges>
 
-namespace stdv = std::views;
-namespace stdr = std::ranges;
-
 struct Sensor {
   point pos;
   int range;
