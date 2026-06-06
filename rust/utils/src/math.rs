@@ -44,6 +44,10 @@ pub fn gcd<T: Numeric>(a: T, b: T) -> T {
     if b == zero { a } else { gcd(b, a % b) }
 }
 
+pub fn lcm<T: Numeric>(a: T, b: T) -> T {
+    a / gcd(a, b) * b
+}
+
 pub fn prime_factors<T: Numeric>(n: T) -> Vec<T> {
     let mut result = Vec::new();
     let mut n = n;
