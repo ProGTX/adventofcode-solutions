@@ -1,25 +1,21 @@
 // https://adventofcode.com/2022/day/25
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
 #include <print>
 #include <ranges>
-#include <string>
-#include <string_view>
-#include <vector>
 
-using int_t = std::int64_t;
-using input_t = std::vector<std::string>;
+namespace stdv = std::views;
+namespace stdr = std::ranges;
 
-constexpr int snafu_char_to_int(char value) {
+fn parse(String const& filename) -> Vec<String> {
+  return aoc::views::read_lines(filename) | aoc::ranges::to<Vec<String>>();
+}
+
+fn snafu_char_to_int(char value) -> int {
   switch (value) {
     case '-':
       return -1;
@@ -32,7 +28,7 @@ constexpr int snafu_char_to_int(char value) {
   }
 }
 
-constexpr char int_to_snafu_char(int value) {
+fn int_to_snafu_char(int value) -> char {
   switch (value) {
     case -1:
       return '-';
@@ -45,90 +41,75 @@ constexpr char int_to_snafu_char(int value) {
 }
 
 template <int base>
-constexpr int_t to_decimal(std::string_view snafu) {
-  int_t sum = 0;
-  for (int_t multiplier = 1;
-       int_t value : snafu |
-                         std::views::reverse |
-                         std::views::transform(&snafu_char_to_int)) {
-    sum += value * multiplier;
+fn to_decimal(str snafu) -> i64 {
+  i64 total = 0;
+  for (i64 multiplier = 1;
+       i64 digit :
+       snafu | stdv::reverse | stdv::transform(&snafu_char_to_int)) {
+    total += digit * multiplier;
     multiplier *= base;
   }
-  return sum;
+  return total;
 }
 
 template <int base>
-constexpr std::string sum_snafus(std::string_view lhs, std::string_view rhs) {
-  std::string output;
+fn sum_snafus(str lhs, str rhs) -> String {
+  auto output = String{};
   output.resize(lhs.size() + rhs.size() + 1);
-  std::ranges::fill(output, '0');
-  std::ranges::view auto lhsr = lhs | std::views::reverse;
-  std::ranges::view auto rhsr = rhs | std::views::reverse;
-  std::ranges::view auto outr = output | std::views::reverse;
-  int min = std::min(lhs.size(), rhs.size());
-  int max = std::max(lhs.size(), rhs.size());
+  stdr::fill(output, '0');
+  let lhs_reversed = lhs | stdv::reverse;
+  let rhs_reversed = rhs | stdv::reverse;
+  auto output_reversed = output | stdv::reverse;
+  let min_len = static_cast<int>(std::min(lhs.size(), rhs.size()));
+  let max_len = static_cast<int>(std::max(lhs.size(), rhs.size()));
   int carry = 0;
-  int i = 0;
-  for (; i < min; ++i) {
-    int sum = snafu_char_to_int(lhsr[i]) + snafu_char_to_int(rhsr[i]) + carry;
-    carry = std::lround(static_cast<double>(sum) / base);
-    outr[i] = int_to_snafu_char(sum - (carry * base));
+  int idx = 0;
+  for (; idx < min_len; ++idx) {
+    int digit_sum = snafu_char_to_int(lhs_reversed[idx]) +
+                    snafu_char_to_int(rhs_reversed[idx]) +
+                    carry;
+    carry =
+        static_cast<int>(std::lround(static_cast<double>(digit_sum) / base));
+    output_reversed[idx] = int_to_snafu_char(digit_sum - (carry * base));
   }
-  std::ranges::view auto maxr = (lhs.size() == max) ? lhsr : rhsr;
-  for (; i < max; ++i) {
-    int sum = snafu_char_to_int(maxr[i]) + carry;
-    carry = std::lround(static_cast<double>(sum) / base);
-    outr[i] = int_to_snafu_char(sum - (carry * base));
+  let longer_reversed =
+      (lhs.size() >= rhs.size()) ? lhs_reversed : rhs_reversed;
+  for (; idx < max_len; ++idx) {
+    int digit_sum = snafu_char_to_int(longer_reversed[idx]) + carry;
+    carry =
+        static_cast<int>(std::lround(static_cast<double>(digit_sum) / base));
+    output_reversed[idx] = int_to_snafu_char(digit_sum - (carry * base));
   }
-  outr[i] = int_to_snafu_char(carry);
-  output = std::string{aoc::ltrim(output, "0")};
+  output_reversed[idx] = int_to_snafu_char(carry);
+  output = String{aoc::ltrim(output, "0")};
   return output;
 }
 
 template <int base>
-constexpr int_t sum_input(input_t const& input) {
-  auto snafu_view = input | std::views::transform([](std::string_view snafu) {
-                      return to_decimal<base>(snafu);
-                    });
-  return std::accumulate(std::begin(snafu_view), std::end(snafu_view), 0);
-}
-
-template <int base>
-constexpr std::string sum_input_as_snafus(input_t const& input) {
-  return std::accumulate(std::begin(input) + 1, std::end(input), input[0],
-                         [](std::string_view lhs, std::string_view rhs) {
-                           return sum_snafus<base>(lhs, rhs);
-                         });
-}
-
-template <int base>
-constexpr std::string to_snafu(const int_t number) {
+fn to_snafu(const i64 number) -> String {
   int size = aoc::num_digits(number);
-  int_t multiplier = aoc::pown<int_t>(base, size - 1);
+  i64 multiplier = aoc::pown<i64>(base, size - 1);
   do {
     ++size;
     multiplier *= base;
   } while ((number / multiplier) > 0);
 
-  std::string snafu;
+  auto snafu = String{};
   snafu.resize(size);
 
-  int_t current = number;
-  for (auto& value : snafu) {
-    int multiple = std::lround(static_cast<double>(current) / multiplier);
-    value = int_to_snafu_char(multiple);
-    current = current - (multiple * multiplier);
+  i64 remaining = number;
+  for (auto& output_char : snafu) {
+    let digit = static_cast<int>(
+        std::lround(static_cast<double>(remaining) / multiplier));
+    output_char = int_to_snafu_char(digit);
+    remaining -= digit * multiplier;
     multiplier /= base;
   }
-  return std::string{aoc::ltrim(snafu, "0")};
+  return String{aoc::ltrim(snafu, "0")};
 }
 
-template <int base, bool execute_long>
-std::string solve_case(std::string const& filename) {
-  auto snafu = sum_input_as_snafus<base>(aoc::views::read_lines(filename) |
-                                         aoc::ranges::to<input_t>());
-
-  return snafu;
+fn solve(Vec<String> const& input) -> String {
+  return stdr::fold_left(input | stdv::drop(1), input[0], sum_snafus<5>);
 }
 
 #define AOC_EXPECT_SAME_CONVERSION(base, decimal, snafu)                       \
@@ -158,11 +139,10 @@ int main() {
   AOC_EXPECT_SAME_CONVERSION(5, 37, "122");
 
   std::println("Part 1");
-  AOC_EXPECT_RESULT("2=-1=0", (solve_case<5, false>("day25.example")));
-  AOC_EXPECT_RESULT("2-=12=2-2-2-=0012==2",
-                    (solve_case<5, false>("day25.input")));
-  // std::println("Part 2");
-  // AOC_EXPECT_RESULT("2=-1=0", (solve_case<5, true>("day25.example")));
-  // AOC_EXPECT_RESULT("2=-1=0", (solve_case<5, true>("day25.input")));
+  let example = parse("day25.example");
+  AOC_EXPECT_RESULT("2=-1=0", solve(example));
+  let input = parse("day25.input");
+  AOC_EXPECT_RESULT("2-=12=2-2-2-=0012==2", solve(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
