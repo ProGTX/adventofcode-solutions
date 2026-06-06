@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
@@ -24,6 +25,52 @@ impl<T: Ord> PartialOrd for DijkstraState<T> {
     }
 }
 
+pub fn shortest_distances_astar<T, GetEndF, GetNeighborsF, NeighborIter, HeuristicF>(
+    start: &T,
+    is_end: GetEndF,
+    get_neighbors: GetNeighborsF,
+    heuristic: HeuristicF,
+) -> HashMap<T, u32>
+where
+    T: Clone + Ord + Hash,
+    GetEndF: Fn(&T) -> bool,
+    NeighborIter: IntoIterator<Item = DijkstraState<T>>,
+    GetNeighborsF: Fn(&T) -> NeighborIter,
+    HeuristicF: Fn(&T) -> u32,
+{
+    let mut distances: HashMap<T, u32> = HashMap::new();
+    // Heap entries: (Reverse(f), g, data) — sorted by f = g + h, min-first.
+    let mut unvisited: BinaryHeap<(Reverse<u32>, u32, T)> = BinaryHeap::new();
+    distances.insert(start.clone(), 0_u32);
+    unvisited.push((Reverse(heuristic(start)), 0, start.clone()));
+    while let Some((_, g, data)) = unvisited.pop() {
+        if (is_end(&data)) {
+            break;
+        }
+        if (g > *distances.get(&data).unwrap()) {
+            continue;
+        }
+        for neighbor in get_neighbors(&data) {
+            let next_g = g + neighbor.distance;
+            match distances.entry(neighbor.data.clone()) {
+                Entry::Vacant(e) => {
+                    e.insert(next_g);
+                    let next_f = next_g + heuristic(&neighbor.data);
+                    unvisited.push((Reverse(next_f), next_g, neighbor.data));
+                }
+                Entry::Occupied(mut e) => {
+                    if (next_g < *e.get()) {
+                        *e.get_mut() = next_g;
+                        let next_f = next_g + heuristic(&neighbor.data);
+                        unvisited.push((Reverse(next_f), next_g, neighbor.data));
+                    }
+                }
+            }
+        }
+    }
+    return distances;
+}
+
 pub fn shortest_distances<T, GetEndF, GetNeighborsF, NeighborIter>(
     start: &T,
     is_end: GetEndF,
@@ -35,40 +82,7 @@ where
     NeighborIter: IntoIterator<Item = DijkstraState<T>>,
     GetNeighborsF: Fn(&T) -> NeighborIter,
 {
-    let mut distances = HashMap::new();
-    let mut unvisited = BinaryHeap::new();
-    distances.insert(start.clone(), 0_u32);
-    unvisited.push(DijkstraState {
-        distance: 0,
-        data: start.clone(),
-    });
-    while (!unvisited.is_empty()) {
-        let current = unvisited.pop().unwrap();
-        if (is_end(&current.data)) {
-            break;
-        }
-        if (current.distance > *distances.get(&current.data).unwrap()) {
-            continue;
-        }
-        for mut neighbor in get_neighbors(&current.data) {
-            let next_distance = current.distance + neighbor.distance;
-            match distances.entry(neighbor.data.clone()) {
-                Entry::Vacant(e) => {
-                    e.insert(next_distance);
-                    neighbor.distance = next_distance;
-                    unvisited.push(neighbor);
-                }
-                Entry::Occupied(mut e) => {
-                    if (next_distance < *e.get()) {
-                        *e.get_mut() = next_distance;
-                        neighbor.distance = next_distance;
-                        unvisited.push(neighbor);
-                    }
-                }
-            }
-        }
-    }
-    return distances;
+    shortest_distances_astar(start, is_end, get_neighbors, |_| 0)
 }
 
 pub trait DijkstraNeighborView: Iterator {
