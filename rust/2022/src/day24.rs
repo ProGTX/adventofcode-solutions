@@ -5,26 +5,18 @@ use aoc::math::lcm;
 use aoc::point::{Point, distance_manhattan};
 use arrayvec::ArrayVec;
 
-// Because the provided examples have a lot of blizzards,
-// we represent them in a compressed way.
-// Each position in a grid can store multiple blizzards -
-// this is done by flipping bits of an integer.
-// And because each blizzard can have one of 4 directions,
-// two bits are needed per blizzard.
-// We also count the number of blizzards in this position
-// in the lowest bits -
-// 2 bits for now to allow up to 3 blizzards per position.
-type BlizzardGrid = Grid<u16>;
-const BLIZ_COUNT_NUM_BITS: usize = 4;
-const BLIZ_COUNT_MASK: u16 = (1 << BLIZ_COUNT_NUM_BITS) - 1;
+// Each cell stores a bitmask of which blizzard directions are present.
+// Bit index = dir as usize: East=0, South=1, West=2, North=3.
+type BlizzardGrid = Grid<u8>;
+type BlizzardCache = Vec<BlizzardGrid>;
 
 type Pos = Point<i32>;
-type Input = (Pos, BlizzardGrid);
+type Input = (Pos, BlizzardCache);
 
 fn parse(filename: &str) -> Input {
     let grid = Grid::<char>::from_file(filename);
     let dims = Pos::new(grid.num_columns as i32, grid.num_rows as i32);
-    let mut blizzards = Grid::new(0u16, grid.num_rows, grid.num_columns);
+    let mut blizzards = Grid::new(0u8, grid.num_rows, grid.num_columns);
     for row in 0..grid.num_rows {
         for col in 0..grid.num_columns {
             let dir = match grid.get(row, col) {
@@ -35,16 +27,17 @@ fn parse(filename: &str) -> Input {
                 _ => None,
             };
             if let Some(dir) = dir {
-                *blizzards.get_mut(row, col) |= 1 << (BLIZ_COUNT_NUM_BITS + dir as usize);
+                *blizzards.get_mut(row, col) |= 1 << dir as usize;
             }
         }
     }
-    (dims, blizzards)
+    let blizzard_cache = precompute_blizzards(&blizzards, &dims);
+    (dims, blizzard_cache)
 }
 
 fn move_blizzards(blizzards: &BlizzardGrid, dimensions: &Pos) -> BlizzardGrid {
     let inner = Pos::new(dimensions.x - 2, dimensions.y - 2);
-    let mut result = Grid::new(0u16, blizzards.num_rows, blizzards.num_columns);
+    let mut result = Grid::new(0u8, blizzards.num_rows, blizzards.num_columns);
     for row in 0..blizzards.num_rows {
         for col in 0..blizzards.num_columns {
             let cell = *blizzards.get(row, col);
@@ -52,18 +45,12 @@ fn move_blizzards(blizzards: &BlizzardGrid, dimensions: &Pos) -> BlizzardGrid {
                 continue;
             }
             for dir in BASIC_DIRECTIONS {
-                let bit = 1u16 << (BLIZ_COUNT_NUM_BITS + dir as usize);
+                let bit = 1u8 << dir as usize;
                 if cell & bit != 0 {
                     let diff = dir.diff();
                     let new_col = (col as i32 - 1 + diff.x).rem_euclid(inner.x) + 1;
                     let new_row = (row as i32 - 1 + diff.y).rem_euclid(inner.y) + 1;
-                    let new_cell = result.get_mut(new_row as usize, new_col as usize);
-                    debug_assert!(
-                        *new_cell & BLIZ_COUNT_MASK < BLIZ_COUNT_MASK,
-                        "Too many blizzards at ({new_col}, {new_row})"
-                    );
-                    *new_cell += 1;
-                    *new_cell |= bit;
+                    *result.get_mut(new_row as usize, new_col as usize) |= bit;
                 }
             }
         }
@@ -72,12 +59,12 @@ fn move_blizzards(blizzards: &BlizzardGrid, dimensions: &Pos) -> BlizzardGrid {
 }
 
 /// Pre-compute all blizzard snapshots for one full period.
-/// 
+///
 /// E/W blizzards have a period of inner_width,
 /// N/S blizzards have a period of inner_height,
 /// lcm of those two periods gives us the total period where they repeat,
 /// so we just need to precompute all of the options.
-fn precompute_blizzards(initial: &BlizzardGrid, dimensions: &Pos) -> Vec<BlizzardGrid> {
+fn precompute_blizzards(initial: &BlizzardGrid, dimensions: &Pos) -> BlizzardCache {
     let inner_width = (dimensions.x - 2) as i64;
     let inner_height = (dimensions.y - 2) as i64;
     let period = lcm(inner_width, inner_height) as usize;
@@ -170,18 +157,16 @@ fn find_distance(
         .unwrap();
 }
 
-fn solve_case1((dimensions, blizzards): &Input) -> u32 {
-    let blizzard_cache = precompute_blizzards(blizzards, dimensions);
+fn solve_case1((dimensions, blizzard_cache): &Input) -> u32 {
     let start_pos = Pos { x: 1, y: 0 };
     let end_pos = Pos {
         x: dimensions.x - 2,
         y: dimensions.y - 1,
     };
-    find_distance(dimensions, &blizzard_cache, start_pos, end_pos, 0).1
+    find_distance(dimensions, blizzard_cache, start_pos, end_pos, 0).1
 }
 
-fn solve_case2((dimensions, blizzards): &Input) -> u32 {
-    let blizzard_cache = precompute_blizzards(blizzards, dimensions);
+fn solve_case2((dimensions, blizzard_cache): &Input) -> u32 {
     let start_pos = Pos { x: 1, y: 0 };
     let end_pos = Pos {
         x: dimensions.x - 2,
