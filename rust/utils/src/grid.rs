@@ -4,7 +4,7 @@ use arrayvec::ArrayVec;
 pub type Ipos = Point<isize>;
 pub type Upos = Point<usize>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Grid<T> {
     pub data: Vec<T>,
     pub num_rows: usize,
