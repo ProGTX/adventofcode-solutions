@@ -1,7 +1,7 @@
 use aoc::dijkstra::DijkstraState;
 use aoc::direction::{BASIC_DIRECTIONS, Direction};
 use aoc::grid::Grid;
-use aoc::point::Point;
+use aoc::point::{Point, distance_manhattan};
 
 // Because the provided examples have a lot of blizzards,
 // we represent them in a compressed way.
@@ -75,16 +75,17 @@ struct SearchState {
     blizzards: BlizzardGrid,
 }
 
-fn solve_case1((dimensions, blizzards): &Input) -> u32 {
+fn find_distance(
+    dimensions: &Pos,
+    blizzards: &BlizzardGrid,
+    start_pos: Pos,
+    end_pos: Pos,
+) -> (BlizzardGrid, u32) {
     let start = SearchState {
-        pos: Pos { x: 1, y: 0 },
+        pos: start_pos,
         blizzards: blizzards.clone(),
     };
-    let end_pos = Pos {
-        x: dimensions.x - 2,
-        y: dimensions.y - 1,
-    };
-    let distances = aoc::dijkstra::shortest_distances(
+    let distances = aoc::dijkstra::shortest_distances_astar(
         &start,
         |current| current.pos == end_pos,
         |current| {
@@ -96,8 +97,9 @@ fn solve_case1((dimensions, blizzards): &Input) -> u32 {
             for dir in BASIC_DIRECTIONS {
                 let new_pos = current.pos + dir.diff();
                 // Position can go in the negative
-                // when modifying the start position
-                if ((new_pos != end_pos)
+                // when modifying the start/end position
+                if ((new_pos != start_pos)
+                    && (new_pos != end_pos)
                     && ((new_pos.x <= 0)
                         || (new_pos.y <= 0)
                         || (new_pos.x == dimensions.x - 1)
@@ -105,7 +107,11 @@ fn solve_case1((dimensions, blizzards): &Input) -> u32 {
                 {
                     continue;
                 }
-                if (on_blizzard(new_pos)) {
+                if (!current
+                    .blizzards
+                    .in_bounds_signed(new_pos.y as isize, new_pos.x as isize)
+                    || on_blizzard(new_pos))
+                {
                     continue;
                 }
                 neighbors.push(DijkstraState {
@@ -129,12 +135,34 @@ fn solve_case1((dimensions, blizzards): &Input) -> u32 {
             }
             return neighbors;
         },
+        |current| return distance_manhattan(current.pos, end_pos) as u32,
     );
-    return *distances
+    return distances
         .iter()
         .find(|(state, _)| state.pos == end_pos)
-        .unwrap()
-        .1;
+        .map(|(state, distance)| (state.blizzards.clone(), *distance))
+        .unwrap();
+}
+
+fn solve_case1((dimensions, blizzards): &Input) -> u32 {
+    let start_pos = Pos { x: 1, y: 0 };
+    let end_pos = Pos {
+        x: dimensions.x - 2,
+        y: dimensions.y - 1,
+    };
+    find_distance(dimensions, blizzards, start_pos, end_pos).1
+}
+
+fn solve_case2((dimensions, blizzards): &Input) -> u32 {
+    let start_pos = Pos { x: 1, y: 0 };
+    let end_pos = Pos {
+        x: dimensions.x - 2,
+        y: dimensions.y - 1,
+    };
+    let (blizzards, d1) = find_distance(dimensions, blizzards, start_pos, end_pos);
+    let (blizzards, d2) = find_distance(dimensions, &blizzards, end_pos, start_pos);
+    let (_, d3) = find_distance(dimensions, &blizzards, start_pos, end_pos);
+    d1 + d2 + d3
 }
 
 fn main() {
@@ -147,4 +175,7 @@ fn main() {
     aoc::expect_result!(228, solve_case1(&input));
 
     println!("Part 2");
+    aoc::expect_result!(30, solve_case2(&example));
+    aoc::expect_result!(54, solve_case2(&example2));
+    aoc::expect_result!(723, solve_case2(&input));
 }
