@@ -65,7 +65,7 @@ pub const ALL_SKY_DIRECTIONS: [Direction; 8] = [
     Direction::Northeast,
 ];
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Arrow {
     pub pos: Pos,
     pub dir: Direction,
