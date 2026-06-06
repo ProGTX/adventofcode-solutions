@@ -80,6 +80,14 @@ impl<T> Point<T> {
         *self / self.abs()
     }
 
+    pub fn orientation(&self, q: &Self, r: &Self) -> std::cmp::Ordering
+    where
+        T: Sub<Output = T> + Mul<Output = T> + Ord + Copy + Default,
+    {
+        let val = (q.y - self.y) * (r.x - q.x) - (q.x - self.x) * (r.y - q.y);
+        val.cmp(&T::default())
+    }
+
     pub fn safe_divide(self, rhs: Self, default: T) -> Self
     where
         T: PartialEq + Default + Div<Output = T> + Copy,
