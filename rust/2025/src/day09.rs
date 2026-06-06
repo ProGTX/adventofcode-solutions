@@ -1,7 +1,11 @@
+use std::cmp::Ordering;
+
 use itertools::Itertools;
 
 type Point = aoc::point::Point<i64>;
+type Segment = (Point, Point);
 type Polygon = Vec<Point>;
+type Rectangle = [Point; 4];
 
 fn parse(filename: &str) -> Polygon {
     let parse = |s: &str| s.parse::<i64>().unwrap();
@@ -29,14 +33,11 @@ fn solve_case1(polygon: &Polygon) -> u64 {
         .unwrap()
 }
 
-type Rectangle = [aoc::point::Point<i64>; 4];
-
-fn point_on_segment(point: &Point, seg_start: &Point, seg_end: &Point) -> bool {
+fn point_on_segment(point: &Point, segment: &Segment) -> bool {
+    let (seg_start, seg_end) = segment;
     // Check collinearity via cross product
-    let cross = (seg_end.x - seg_start.x) * (point.y - seg_start.y)
-        - (seg_end.y - seg_start.y) * (point.x - seg_start.x);
     // Bounds check coordinates
-    cross == 0
+    seg_start.orientation(seg_end, point) == Ordering::Equal
         && point.x >= seg_start.x.min(seg_end.x)
         && point.x <= seg_start.x.max(seg_end.x)
         && point.y >= seg_start.y.min(seg_end.y)
@@ -49,7 +50,7 @@ fn point_inside_polygon(polygon: &Polygon, point: &Point) -> bool {
     let mut prev_idx = vertex_count - 1;
     for curr_idx in 0..vertex_count {
         let (curr_vertex, prev_vertex) = (&polygon[curr_idx], &polygon[prev_idx]);
-        if point_on_segment(point, curr_vertex, prev_vertex) {
+        if point_on_segment(point, &(*curr_vertex, *prev_vertex)) {
             // The boundary is inside
             return true;
         }
@@ -77,27 +78,18 @@ fn corners_inside(polygon: &Polygon, rectangle: &Rectangle) -> bool {
         .all(|corner| point_inside_polygon(polygon, corner))
 }
 
-fn cross2d(from: &Point, to: &Point, point: &Point) -> i64 {
-    (to.x - from.x) * (point.y - from.y) - (to.y - from.y) * (point.x - from.x)
-}
-
-fn segments_cross(
-    seg1_start: &Point,
-    seg1_end: &Point,
-    seg2_start: &Point,
-    seg2_end: &Point,
-) -> bool {
-    let seg1_start_side = cross2d(seg2_start, seg2_end, seg1_start);
-    let seg1_end_side = cross2d(seg2_start, seg2_end, seg1_end);
-    let seg2_start_side = cross2d(seg1_start, seg1_end, seg2_start);
-    let seg2_end_side = cross2d(seg1_start, seg1_end, seg2_end);
+fn segments_cross(seg1: &Segment, seg2: &Segment) -> bool {
+    let o1 = seg2.0.orientation(&seg2.1, &seg1.0);
+    let o2 = seg2.0.orientation(&seg2.1, &seg1.1);
     // Collinear: shared boundary segment, not a proper intersection
-    if seg1_start_side == 0 && seg1_end_side == 0 {
+    if o1 == Ordering::Equal && o2 == Ordering::Equal {
         return false;
     }
+    let o3 = seg1.0.orientation(&seg1.1, &seg2.0);
+    let o4 = seg1.0.orientation(&seg1.1, &seg2.1);
     // Proper crossing: each segment strictly straddles the other's line
-    return (seg1_start_side > 0 && seg1_end_side < 0 || seg1_start_side < 0 && seg1_end_side > 0)
-        && (seg2_start_side > 0 && seg2_end_side < 0 || seg2_start_side < 0 && seg2_end_side > 0);
+    (o1 != o2 && o1 != Ordering::Equal && o2 != Ordering::Equal)
+        && (o3 != o4 && o3 != Ordering::Equal && o4 != Ordering::Equal)
 }
 
 /// For each polygon edge check whether it properly
@@ -106,18 +98,18 @@ fn segments_cross(
 /// returns false.
 fn edges_intersect(polygon: &Polygon, rectangle: &Rectangle) -> bool {
     // rectangle indices: 0=(xmin,ymin), 1=(xmin,ymax), 2=(xmax,ymin), 3=(xmax,ymax)
-    let rect_edges: [(&Point, &Point); 4] = [
-        (&rectangle[0], &rectangle[1]), // left
-        (&rectangle[2], &rectangle[3]), // right
-        (&rectangle[0], &rectangle[2]), // bottom
-        (&rectangle[1], &rectangle[3]), // top
+    let rect_edges: [Segment; 4] = [
+        (rectangle[0], rectangle[1]), // left
+        (rectangle[2], rectangle[3]), // right
+        (rectangle[0], rectangle[2]), // bottom
+        (rectangle[1], rectangle[3]), // top
     ];
     let edge_count = polygon.len();
     let mut prev_idx = edge_count - 1;
     for curr_idx in 0..edge_count {
-        let (poly_start, poly_end) = (&polygon[curr_idx], &polygon[prev_idx]);
-        for &(rect_start, rect_end) in &rect_edges {
-            if segments_cross(poly_start, poly_end, rect_start, rect_end) {
+        let poly_segment = (polygon[curr_idx], polygon[prev_idx]);
+        for rect_segment in &rect_edges {
+            if segments_cross(&poly_segment, rect_segment) {
                 return true;
             }
         }
