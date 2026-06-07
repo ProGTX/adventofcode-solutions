@@ -27,29 +27,59 @@ auto parse(String const& filename) -> Input {
   return {std::move(result), std::move(name_to_id)};
 }
 
-fn search(Vec<usize>& unvisited, Vec<Outputs> const& device_map, usize start,
-          usize end) -> u64 {
-  unvisited.push_back(start);
-  auto num_paths = u64{};
-  while (!unvisited.empty()) {
-    let current = aoc::pop_stack(unvisited);
-    if (current == end) {
-      num_paths += 1;
-      continue;
-    }
-    aoc::ranges::extend(unvisited, device_map[current]);
+using cache_t = Vec<Option<u64>>;
+
+fn count_paths(Vec<Outputs> const& device_map, usize current, usize end,
+               cache_t& cache) -> u64 {
+  if (current == end) {
+    // Reached the destination: one complete path found
+    return 1;
   }
-  return num_paths;
+  if (cache[current].has_value()) {
+    return *cache[current];
+  }
+
+  // Total paths from here = sum of paths from each outgoing neighbor
+  let result = aoc::ranges::accumulate( //
+      device_map[current] | stdv::transform([&](let& out) {
+        return count_paths(device_map, out, end, cache);
+      }),
+      u64{});
+  cache[current] = result;
+  return result;
+}
+
+fn search(Vec<Outputs> const& device_map, usize start, usize end) -> u64 {
+  auto cache = cache_t(device_map.size(), None);
+  return count_paths(device_map, start, end, cache);
 }
 
 fn solve_case1(Input const& input) -> u64 {
   let & [ device_map, name_to_id ] = input;
-  auto unvisited = Vec<usize>{};
-  return search(unvisited, device_map,
+  return search(device_map,
                 name_to_id.get("you")
                     .or_else([&] { return name_to_id.get("svr"); })
                     .value(),
                 name_to_id.expect("out"));
+}
+
+fn solve_case2(Input const& input) -> u64 {
+  let & [ device_map, name_to_id ] = input;
+
+  let svr = name_to_id.expect("svr");
+  let dac = name_to_id.expect("dac");
+  let fft = name_to_id.expect("fft");
+  let out = name_to_id.expect("out");
+
+  let svr_dac = search(device_map, svr, dac);
+  let dac_fft = search(device_map, dac, fft);
+  let fft_out = search(device_map, fft, out);
+
+  let svr_fft = search(device_map, svr, fft);
+  let fft_dac = search(device_map, fft, dac);
+  let dac_out = search(device_map, dac, out);
+
+  return (svr_dac * dac_fft * fft_out) + (svr_fft * fft_dac * dac_out);
 }
 
 int main() {
@@ -61,9 +91,9 @@ int main() {
   let input = parse("day11.input");
   AOC_EXPECT_RESULT(523, solve_case1(input));
 
-  // std::println("Part 2");
-  // AOC_EXPECT_RESULT(2, solve_case2(example2));
-  // AOC_EXPECT_RESULT(100011612, solve_case2(input));
+  std::println("Part 2");
+  AOC_EXPECT_RESULT(2, solve_case2(example2));
+  AOC_EXPECT_RESULT(517315308154944, solve_case2(input));
 
   AOC_RETURN_CHECK_RESULT();
 }

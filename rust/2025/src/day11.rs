@@ -1,6 +1,5 @@
 use aoc::string::NameToId;
 use arrayvec::ArrayVec;
-use std::collections::HashSet;
 
 type Outputs = ArrayVec<usize, 20>;
 type Input = (Vec<Outputs>, NameToId);
@@ -21,39 +20,36 @@ fn parse(filename: &str) -> Input {
     return (result, name_to_id);
 }
 
-fn search(
-    unvisited: &mut Vec<(usize, HashSet<usize>)>,
+fn count_paths(
     device_map: &Vec<Outputs>,
-    start: usize,
+    current: usize,
     end: usize,
+    cache: &mut Vec<Option<u64>>,
 ) -> u64 {
-    println!("{} -> {}", start, end);
-    unvisited.push((start, HashSet::from([start])));
-    let mut num_paths = 0;
-    while (!unvisited.is_empty()) {
-        let (current, visited) = unvisited.pop().unwrap();
-        if (current == end) {
-            num_paths += 1;
-            continue;
-        }
-        unvisited.extend(
-            device_map[current]
-                .iter()
-                .filter(|&out| !visited.contains(out))
-                .map(|&out| {
-                    let mut new_visited = visited.clone();
-                    new_visited.insert(out);
-                    (out, new_visited)
-                }),
-        );
+    if current == end {
+        // Reached the destination: one complete path found
+        return 1;
     }
-    println!("  => {}", num_paths);
-    return num_paths;
+    if let Some(result) = cache[current] {
+        return result;
+    }
+
+    // Total paths from here = sum of paths from each outgoing neighbor
+    let result = device_map[current]
+        .iter()
+        .map(|&out| count_paths(device_map, out, end, cache))
+        .sum();
+    cache[current] = Some(result);
+    result
+}
+
+fn search(device_map: &Vec<Outputs>, start: usize, end: usize) -> u64 {
+    let mut cache = vec![None; device_map.len()];
+    return count_paths(device_map, start, end, &mut cache);
 }
 
 fn solve_case1((device_map, name_to_id): &Input) -> u64 {
     search(
-        &mut Vec::new(),
         device_map,
         *name_to_id
             .get("you")
@@ -68,18 +64,14 @@ fn solve_case2((device_map, name_to_id): &Input) -> u64 {
     let dac = name_to_id.expect("dac");
     let fft = name_to_id.expect("fft");
     let out = name_to_id.expect("out");
-    println!("device_map size {}", device_map.len());
-    println!("svr: {}, dac: {}, fft: {}, out: {}", svr, dac, fft, out);
 
-    let mut unvisited = Vec::new();
+    let svr_dac = search(device_map, svr, dac);
+    let dac_fft = search(device_map, dac, fft);
+    let fft_out = search(device_map, fft, out);
 
-    let svr_dac = search(&mut unvisited, device_map, svr, dac);
-    let dac_fft = search(&mut unvisited, device_map, dac, fft);
-    let fft_out = search(&mut unvisited, device_map, fft, out);
-
-    let svr_fft = search(&mut unvisited, device_map, svr, fft);
-    let fft_dac = search(&mut unvisited, device_map, fft, dac);
-    let dac_out = search(&mut unvisited, device_map, dac, out);
+    let svr_fft = search(device_map, svr, fft);
+    let fft_dac = search(device_map, fft, dac);
+    let dac_out = search(device_map, dac, out);
 
     return (svr_dac * dac_fft * fft_out) + (svr_fft * fft_dac * dac_out);
 }
@@ -95,6 +87,5 @@ fn main() {
 
     println!("Part 2");
     aoc::expect_result!(2, solve_case2(&example2));
-    println!("Part 2 not done yet");
-    //aoc::expect_result!(100011612, solve_case2(&input));
+    aoc::expect_result!(517315308154944, solve_case2(&input));
 }
