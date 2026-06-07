@@ -162,6 +162,22 @@ class static_vector {
     AOC_ASSERT(m_size > 0, "No element to pop");
     --m_size;
   }
+
+  constexpr iterator erase(const_iterator position) {
+    auto nc_pos = begin() + std::distance(cbegin(), position);
+    std::ranges::move(nc_pos + 1, end(), nc_pos);
+    --m_size;
+    return nc_pos;
+  }
+
+  constexpr iterator erase(const_iterator first, const_iterator last) {
+    auto nc_first = begin() + std::distance(cbegin(), first);
+    auto nc_last = begin() + std::distance(cbegin(), last);
+    std::ranges::move(nc_last, end(), nc_first);
+    m_size -= static_cast<size_type>(nc_last - nc_first);
+    return nc_first;
+  }
+
   constexpr void clear() noexcept { m_size = 0; }
 
   constexpr iterator insert(const_iterator pos, const T& value) {
@@ -198,6 +214,31 @@ static_assert(std::ranges::equal(std::array{42, 2, 4, 6}, impl_test_insert(0)));
 static_assert(std::ranges::equal(std::array{2, 42, 4, 6}, impl_test_insert(1)));
 static_assert(std::ranges::equal(std::array{2, 4, 42, 6}, impl_test_insert(2)));
 static_assert(std::ranges::equal(std::array{2, 4, 6, 42}, impl_test_insert(3)));
+
+constexpr auto impl_test_erase_single(int pos) {
+  auto vec = static_vector<int, 4>{2, 4, 6, 8};
+  vec.erase(vec.begin() + pos);
+  return vec;
+}
+constexpr auto impl_test_erase_range(int first, int last) {
+  auto vec = static_vector<int, 4>{2, 4, 6, 8};
+  vec.erase(vec.begin() + first, vec.begin() + last);
+  return vec;
+}
+static_assert(std::ranges::equal(std::array{4, 6, 8},
+                                 impl_test_erase_single(0)));
+static_assert(std::ranges::equal(std::array{2, 6, 8},
+                                 impl_test_erase_single(1)));
+static_assert(std::ranges::equal(std::array{2, 4, 8},
+                                 impl_test_erase_single(2)));
+static_assert(std::ranges::equal(std::array{2, 4, 6},
+                                 impl_test_erase_single(3)));
+static_assert(std::ranges::equal(std::array{6, 8},
+                                 impl_test_erase_range(0, 2)));
+static_assert(std::ranges::equal(std::array{2, 8},
+                                 impl_test_erase_range(1, 3)));
+static_assert(std::ranges::equal(std::array{2, 4},
+                                 impl_test_erase_range(2, 4)));
 #endif
 
 namespace detail {
