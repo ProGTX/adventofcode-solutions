@@ -24,14 +24,14 @@ fn parse(filename: &str) -> (Vec<Pattern>, Vec<Output>) {
 }
 
 const SEGMENT_LENGTHS: [u32; 10] = [6, 2, 5, 5, 4, 5, 6, 3, 7, 6];
+const UNIQUE_SEGMENTS: [u32; 4] = [
+    SEGMENT_LENGTHS[1],
+    SEGMENT_LENGTHS[4],
+    SEGMENT_LENGTHS[7],
+    SEGMENT_LENGTHS[8],
+];
 
 fn solve_case1((_, outputs): &(Vec<Pattern>, Vec<Output>)) -> u32 {
-    const UNIQUE_SEGMENTS: [u32; 4] = [
-        SEGMENT_LENGTHS[1],
-        SEGMENT_LENGTHS[4],
-        SEGMENT_LENGTHS[7],
-        SEGMENT_LENGTHS[8],
-    ];
     outputs
         .iter()
         .map(|output| {

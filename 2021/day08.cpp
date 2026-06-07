@@ -1,222 +1,69 @@
 // https://adventofcode.com/2021/day/8
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <array>
-#include <cstdint>
-#include <functional>
-#include <iterator>
-#include <map>
-#include <numeric>
 #include <print>
 #include <ranges>
-#include <string>
-#include <string_view>
-#include <vector>
 
-using int_t = std::int64_t;
+using Segment = aoc::static_vector<u32, 7>;
+using Pattern = std::array<Segment, 10>;
+using Output = std::array<Segment, 4>;
+using Input = std::pair<Vec<Pattern>, Vec<Output>>;
 
-struct input_line_t {
-  using signal_patterns_t = std::array<std::string, 10>;
-  using output_t = std::array<std::string, 4>;
+fn parse_segment(str s) -> Segment {
+  return s |
+         stdv::transform([](char c) { return static_cast<u32>(c - 'a'); }) |
+         aoc::ranges::to<Segment>();
+}
 
-  signal_patterns_t signal_patterns;
-  output_t output;
+auto parse(String const& filename) -> Input {
+  auto patterns = Vec<Pattern>{};
+  auto outputs = Vec<Output>{};
+  constexpr let skip_empty = true;
+  for (str line : aoc::views::read_lines(filename)) {
+    let[pattern_str, output_str] = aoc::split_once(line, '|');
+    auto pat = Pattern{};
+    stdr::transform(aoc::split_to_array<10, str, skip_empty>(pattern_str, ' '),
+                    pat.begin(), parse_segment);
+    patterns.push_back(std::move(pat));
+    auto out = Output{};
+    stdr::transform(aoc::split_to_array<4, str, skip_empty>(output_str, ' '),
+                    out.begin(), parse_segment);
+    outputs.push_back(std::move(out));
+  }
+  return {patterns, outputs};
+}
+
+constexpr let segment_lengths = std::array{6, 2, 5, 5, 4, 5, 6, 3, 7, 6};
+constexpr let unique_lengths = std::array{
+    segment_lengths[1],
+    segment_lengths[4],
+    segment_lengths[7],
+    segment_lengths[8],
 };
 
-using input_t = std::vector<input_line_t>;
-
-constexpr inline auto digit_wires = std::invoke([] {
-  std::array<std::string_view, 10> wires;
-  wires[0] = "abcefg";
-  wires[1] = "cf";
-  wires[2] = "acdeg";
-  wires[3] = "acdfg";
-  wires[4] = "bcdf";
-  wires[5] = "abdfg";
-  wires[6] = "abdefg";
-  wires[7] = "acf";
-  wires[8] = "abcdefg";
-  wires[9] = "abcdfg";
-  return wires;
-});
-// 8 includes all segments
-constexpr inline auto original_map = digit_wires[8];
-
-int count_easy(input_t const& input) {
-  int count = 0;
-  constexpr auto easy_digits = std::array{1, 4, 7, 8};
-  for (input_line_t const& line : input) {
-    count += stdr::count_if(line.output, [&](std::string_view digit_str) {
-      return stdr::any_of(easy_digits, [&](int digit) {
-        return digit_str.size() == digit_wires[digit].size();
-      });
-    });
-  }
-  return count;
-}
-
-using digit_possibility_t = aoc::static_vector<int, digit_wires.size()>;
-using digit_combinations_t =
-    std::array<digit_possibility_t, digit_wires.size()>;
-
-digit_combinations_t get_digit_combinations(
-    input_line_t::signal_patterns_t const& patterns) {
-  digit_combinations_t digit_combinations;
-  for (int p = 0; p < patterns.size(); ++p) {
-    for (int w = 0; w < digit_wires.size(); ++w) {
-      if (patterns[p].size() == digit_wires[w].size()) {
-        digit_combinations[p].push_back(w);
-      }
-    }
-  }
-  return digit_combinations;
-}
-
-using wire_set_t = aoc::static_vector<char, original_map.size()>;
-using segment_set_t = std::array<wire_set_t, original_map.size()>;
-
-constexpr wire_set_t pattern_to_set(std::string_view wire) {
-  wire_set_t set;
-  stdr::transform(wire, std::back_inserter(set), [](char c) { return c; });
-  return set;
-}
-
-std::string get_mapping(input_line_t::signal_patterns_t const& patterns) {
-  digit_combinations_t digit_combinations = get_digit_combinations(patterns);
-
-  constexpr auto max_set_size = original_map.size();
-  const auto full_wire_set = std::invoke([&]() {
-    wire_set_t wire_set{};
-    stdr::copy(stdv::iota('a') | stdv::take(max_set_size),
-               std::back_inserter(wire_set));
-    return wire_set;
-  });
-
-  auto segment_set = segment_set_t{};
-  stdr::fill(segment_set, full_wire_set);
-  wire_set_t invalid_set;
-  wire_set_t new_set;
-  wire_set_t union_set;
-  wire_set_t new_union_set;
-
-  for (int p = 0; p < patterns.size(); ++p) {
-    auto combination = digit_combinations[p];
-
-    wire_set_t valid_set = pattern_to_set(patterns[p]);
-    // Sorting is required for the set algorithms
-    stdr::sort(valid_set);
-
-    invalid_set.clear();
-    stdr::set_difference(full_wire_set, valid_set,
-                         std::back_inserter(invalid_set));
-
-    for (int w = 0; w < max_set_size; ++w) {
-      union_set.clear();
-      for (auto digit : combination) {
-        auto digit_wire = digit_wires[digit];
-        const auto& intersecting_set =
-            stdr::contains(digit_wire, static_cast<char>(w + 'a'))
-                ? valid_set
-                : invalid_set;
-
-        new_set.clear();
-        stdr::set_intersection(segment_set[w], intersecting_set,
-                               std::back_inserter(new_set));
-
-        new_union_set.clear();
-        stdr::set_union(union_set, new_set, std::back_inserter(new_union_set));
-        union_set = new_union_set;
-      }
-      segment_set[w] = union_set;
-    }
-  }
-
-  auto new_map = std::string{original_map};
-  for (int w = 0; w < max_set_size; ++w) {
-    if (segment_set[w].size() == 1) {
-      for (int w2 = 0; w2 < max_set_size; ++w2) {
-        if (w == w2) {
-          continue;
-        }
-        new_set.clear();
-        stdr::set_difference(segment_set[w2], segment_set[w],
-                             std::back_inserter(new_set));
-        segment_set[w2] = new_set;
-      }
-    }
-  }
-  for (int w = 0; w < max_set_size; ++w) {
-    new_map[w] = segment_set[w][0];
-  }
-  return new_map;
-}
-
-int output_to_number(std::string_view out, std::string_view mapping) {
-  wire_set_t wire_set;
-  for (char c : out) {
-    wire_set.push_back(original_map[mapping.find(c)]);
-  }
-  stdr::sort(wire_set);
-
-  for (int w = 0; w < digit_wires.size(); ++w) {
-    if (stdr::equal(wire_set, pattern_to_set(digit_wires[w]))) {
-      return w;
-    }
-  }
-  throw std::runtime_error("Invalid wire set given");
-}
-
-int solve_line(input_line_t const& line) {
-  auto new_map = get_mapping(line.signal_patterns);
-
-  int multiplier = 1;
-  int number = 0;
-  for (auto const& output_digit : line.output | stdv::reverse) {
-    number += output_to_number(output_digit, new_map) * multiplier;
-    multiplier *= 10;
-  }
-  return number;
-}
-
-int_t sum_outputs(input_t const& input) {
-  int_t sum = 0;
-  for (input_line_t const& line : input) {
-    sum += solve_line(line);
-  }
-  return sum;
-}
-
-template <bool deduce>
-int_t solve_case(const std::string& filename) {
-  input_t input;
-
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [signal_patterns_str, output_str] = aoc::split_once(line, '|');
-    input.emplace_back(
-        aoc::split<typename input_line_t::signal_patterns_t>(
-            signal_patterns_str, ' '),
-        aoc::split<typename input_line_t::output_t>(output_str, ' '));
-  }
-
-  int_t count = 0;
-  if constexpr (!deduce) {
-    count = count_easy(input);
-  } else {
-    count = sum_outputs(input);
-  }
-  return count;
+fn solve_case1(Input const& input) -> u32 {
+  let& outputs = input.second;
+  return aoc::ranges::accumulate(
+      outputs | stdv::transform([&](Output const& output) {
+        return static_cast<u32>(stdr::count_if(output, [&](Segment const& seg) {
+          return stdr::contains(unique_lengths, static_cast<u32>(seg.size()));
+        }));
+      }),
+      0u);
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(0, (solve_case<false>("day08.example")));
-  AOC_EXPECT_RESULT(26, (solve_case<false>("day08.example2")));
-  AOC_EXPECT_RESULT(440, (solve_case<false>("day08.input")));
-  std::println("Part 2");
-  AOC_EXPECT_RESULT(5353, (solve_case<true>("day08.example")));
-  AOC_EXPECT_RESULT(61229, (solve_case<true>("day08.example2")));
-  AOC_EXPECT_RESULT(1046281, (solve_case<true>("day08.input")));
+  let example = parse("day08.example");
+  AOC_EXPECT_RESULT(0, solve_case1(example));
+  let example2 = parse("day08.example2");
+  AOC_EXPECT_RESULT(26, solve_case1(example2));
+  let input = parse("day08.input");
+  AOC_EXPECT_RESULT(440, solve_case1(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
