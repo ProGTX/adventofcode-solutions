@@ -4,7 +4,7 @@ set(rust_local_sources "")
 add_rust_test(day01 ${year})
 add_rust_test(day02 ${year})
 add_rust_test(day03 ${year})
-# Not computing MD5 hashes for day04
+add_rust_test(day04 ${year})
 add_rust_test(day05 ${year})
 add_rust_test(day06 ${year})
 add_rust_test(day07 ${year})
