@@ -4,7 +4,6 @@
 #include "../common/rust.h"
 
 #include <algorithm>
-#include <map>
 #include <print>
 #include <ranges>
 
@@ -111,44 +110,42 @@ fn solve_case1(Input const& input) -> i64 {
 
 fn find_distress_beacon(Vec<Sensor> const& sensors, Bounds const& bounds)
     -> Beacon {
-  std::map<int, aoc::flat_set<Bounds>> row_exclusions;
-
-  let add_exclusion = [&](int row, Sensor const& sensor, int width) {
-    if ((row < bounds.min) || (row > bounds.max)) {
-      return;
-    }
-    let exclusion = Bounds{std::max(sensor.pos.x - width, bounds.min),
-                           std::min(sensor.pos.x + width, bounds.max)};
-    if (exclusion.min > exclusion.max) {
-      return;
-    }
-    row_exclusions[row].insert(exclusion);
-  };
-
-  // Collect exclusion zones for each row
+  // Rotate coords: u = x+y, v = x-y.
+  // Each diamond becomes an axis-aligned square.
+  // The uncovered point lies at the intersection
+  // of boundary lines from two sensors.
+  auto u_lines = Vec<int>{};
+  auto v_lines = Vec<int>{};
   for (let& sensor : sensors) {
-    for (int row = sensor.pos.y - sensor.range, width = 0; row < sensor.pos.y;
-         ++row, ++width) {
-      add_exclusion(row, sensor, width);
-    }
-    for (int row = sensor.pos.y, width = sensor.range;
-         row <= sensor.pos.y + sensor.range; ++row, --width) {
-      add_exclusion(row, sensor, width);
-    }
+    let u_center = sensor.pos.x + sensor.pos.y;
+    let v_center = sensor.pos.x - sensor.pos.y;
+    let outer_range = sensor.range + 1;
+    u_lines.push_back(u_center + outer_range);
+    u_lines.push_back(u_center - outer_range);
+    v_lines.push_back(v_center + outer_range);
+    v_lines.push_back(v_center - outer_range);
   }
-
-  // Try to find a gap in the exclusion zones
-  for (let& [ row, exclusions ] : row_exclusions) {
-    auto previous = Bounds{bounds.min, bounds.min};
-    for (let& row_exclusion : exclusions) {
-      if (row_exclusion.min - previous.max > 0) {
-        return point{previous.max + 1, row};
+  for (let u : u_lines) {
+    for (let v : v_lines) {
+      if ((u + v) % 2 != 0) {
+        continue;
       }
-      previous =
-          Bounds{row_exclusion.min, std::max(row_exclusion.max, previous.max)};
+      let x = (u + v) / 2;
+      let y = (u - v) / 2;
+      if (x < bounds.min ||
+          x > bounds.max ||
+          y < bounds.min ||
+          y > bounds.max) {
+        continue;
+      }
+      let candidate = point{x, y};
+      if (stdr::all_of(sensors, [&](Sensor const& sensor) {
+            return distance_manhattan(sensor.pos, candidate) > sensor.range;
+          })) {
+        return candidate;
+      }
     }
   }
-
   return {};
 }
 

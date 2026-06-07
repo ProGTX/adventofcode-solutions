@@ -1,5 +1,3 @@
-use std::collections::{BTreeMap, BTreeSet};
-
 use aoc::point::distance_manhattan;
 
 type Point = aoc::point::Point<i32>;
@@ -83,45 +81,40 @@ fn solve_case1<const INSPECT_ROW: i32>(input: &Input) -> i64 {
 }
 
 fn find_distress_beacon(sensors: &[Sensor], bounds: Bounds) -> Point {
-    let mut row_exclusions: BTreeMap<i32, BTreeSet<Bounds>> = BTreeMap::new();
-    let mut add_exclusion = |row: i32, sensor: &Sensor, width: i32| {
-        if row < bounds.min || row > bounds.max {
-            return;
-        }
-        let excl = Bounds {
-            min: (sensor.pos.x - width).max(bounds.min),
-            max: (sensor.pos.x + width).min(bounds.max),
-        };
-        if excl.min > excl.max {
-            return;
-        }
-        row_exclusions.entry(row).or_default().insert(excl);
-    };
-    // Collect exclusion zones for each row
+    // Rotate coords: u = x+y, v = x-y.
+    // Each diamond becomes an axis-aligned square.
+    // The uncovered point lies at the intersection
+    // of boundary lines from two sensors.
+    // Each sensor contributes u = (sx+sy) +/- (range+1)
+    // and v = (sx-sy) +/- (range+1).
+    let mut u_lines = Vec::new();
+    let mut v_lines = Vec::new();
     for sensor in sensors {
-        for (row, width) in ((sensor.pos.y - sensor.range)..sensor.pos.y).zip(0..) {
-            add_exclusion(row, sensor, width);
-        }
-        for (row, width) in
-            (sensor.pos.y..=(sensor.pos.y + sensor.range)).zip((0..=sensor.range).rev())
-        {
-            add_exclusion(row, sensor, width);
-        }
+        let u_center = sensor.pos.x + sensor.pos.y;
+        let v_center = sensor.pos.x - sensor.pos.y;
+        let outer_range = sensor.range + 1;
+        u_lines.push(u_center + outer_range);
+        u_lines.push(u_center - outer_range);
+        v_lines.push(v_center + outer_range);
+        v_lines.push(v_center - outer_range);
     }
-    // Try to find a gap in the exclusion zones
-    for (row, exclusions) in &row_exclusions {
-        let mut previous = Bounds {
-            min: bounds.min,
-            max: bounds.min,
-        };
-        for &excl in exclusions {
-            if excl.min - previous.max > 0 {
-                return Point::new(previous.max + 1, *row);
+    for &u in &u_lines {
+        for &v in &v_lines {
+            if (u + v) % 2 != 0 {
+                continue;
             }
-            previous = Bounds {
-                min: excl.min,
-                max: excl.max.max(previous.max),
-            };
+            let x = (u + v) / 2;
+            let y = (u - v) / 2;
+            if x < bounds.min || x > bounds.max || y < bounds.min || y > bounds.max {
+                continue;
+            }
+            let candidate = Point::new(x, y);
+            if sensors
+                .iter()
+                .all(|s| distance_manhattan(s.pos, candidate) > s.range)
+            {
+                return candidate;
+            }
         }
     }
     unreachable!("no distress beacon found")
