@@ -96,23 +96,35 @@ fn try_align(all_beacons: &HashSet<Point3D>, scanner: &Scanner) -> Option<(Scann
 // and removes it from the unaligned set.
 // Scanners that can't yet match (no direct overlap with scanner 0)
 // will eventually match once an intermediate scanner has been merged.
+// All unaligned scanners are tried in parallel each round via scoped threads.
 fn align_all(scanners: &[Scanner]) -> (HashSet<Point3D>, Vec<Point3D>) {
     let mut all_beacons: HashSet<Point3D> = scanners[0].iter().copied().collect();
     let mut scanner_positions: Vec<Point3D> = vec![Point3D { data: [0, 0, 0] }];
     let mut unaligned: Vec<usize> = (1..scanners.len()).collect();
 
+    let parallelism = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4);
     while !unaligned.is_empty() {
-        let mut progress = false;
-        for i in 0..unaligned.len() {
-            if let Some((aligned, pos)) = try_align(&all_beacons, &scanners[unaligned[i]]) {
-                all_beacons.extend(aligned);
-                scanner_positions.push(pos);
-                unaligned.remove(i);
-                progress = true;
-                break;
+        let beacons = &all_beacons;
+        let result = std::thread::scope(|scope| {
+            for chunk in unaligned.chunks(parallelism) {
+                let handles: Vec<_> = chunk
+                    .iter()
+                    .map(|&s| scope.spawn(move || try_align(beacons, &scanners[s]).map(|r| (s, r))))
+                    .collect();
+                if let Some(r) = //
+                    handles.into_iter().find_map(|h| h.join().unwrap())
+                {
+                    return Some(r);
+                }
             }
-        }
-        debug_assert!(progress, "No scanner aligned this round");
+            None
+        });
+        let (s, (aligned, pos)) = result.expect("no scanner aligned this round — bug");
+        all_beacons.extend(aligned);
+        scanner_positions.push(pos);
+        unaligned.retain(|&i| i != s);
     }
 
     (all_beacons, scanner_positions)
