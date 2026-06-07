@@ -94,11 +94,13 @@ function(add_sample sample_name year)
   add_dependencies(year_${year} ${target})
 
   if (AOC_MODULE_SUPPORT)
-    target_link_libraries(${target} aoc aoc.std)
+    target_link_libraries(${target} PRIVATE aoc aoc.std)
   endif()
 
   add_test(NAME ${target} COMMAND ${target})
 endfunction()
+
+add_subdirectory(external)
 
 find_program(CARGO_EXECUTABLE cargo)
 if(NOT CARGO_EXECUTABLE)

@@ -8,7 +8,7 @@ define_property(GLOBAL PROPERTY RUST_SOURCES BRIEF_DOCS "List of all Rust source
 # Create a dummy target that the tests can depend on
 # Tests cannot depend on this stamp directly (for some CMake reason)
 add_custom_target(rust_build ALL
-    DEPENDS ${RUST_BUILD_STAMP}
+    DEPENDS "${RUST_BUILD_STAMP}"
 )
 
 function(add_rust_test sample_name year)
@@ -19,8 +19,10 @@ function(add_rust_test sample_name year)
 
     add_test(NAME ${year}_${sample_name}_rust
         COMMAND ${RUST_BUILD_DIR_EXPR}/${year}_${sample_name}
-        DEPENDS rust_build
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/${year}"
+    )
+    set_tests_properties(${year}_${sample_name}_rust PROPERTIES
+        DEPENDS rust_build
     )
 
     # rust_local_sources is needed by generate_cargo_toml
@@ -61,10 +63,12 @@ add_subdirectory(2025)
 get_property(rust_sources GLOBAL PROPERTY RUST_SOURCES)
 add_custom_command(
     OUTPUT ${RUST_BUILD_STAMP}
-    COMMAND "${CARGO_EXECUTABLE}" build
+    COMMAND ${CMAKE_COMMAND} -E env
+        "MD5_LIB=$<TARGET_FILE:md5>"
+        "${CARGO_EXECUTABLE}" build
         $<${AOC_RELEASE_CHECK_EXPR}:--release>
     COMMAND ${CMAKE_COMMAND} -E touch ${RUST_BUILD_STAMP}
     WORKING_DIRECTORY "${RUST_DIR}"
-    DEPENDS "${RUST_DIR}/Cargo.toml" "${RUST_DIR}/utils/Cargo.toml" "${rust_sources}" 
+    DEPENDS "${RUST_DIR}/Cargo.toml" "${RUST_DIR}/utils/Cargo.toml" "${rust_sources}" md5
     COMMENT "Building all Rust workspaces"
 )

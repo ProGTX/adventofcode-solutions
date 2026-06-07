@@ -25,6 +25,7 @@ import aoc;
 #include "flat.h"
 #include "grid.h"
 #include "math.h"
+#include "md5.h"
 #include "point.h"
 #include "range_to.h"
 #include "ranges.h"
