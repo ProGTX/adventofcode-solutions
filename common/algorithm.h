@@ -174,6 +174,109 @@ constexpr flat_map<Node, int> shortest_distances_dijkstra(
   return distances;
 }
 
+/// Bidirectional A* for a single start/end pair.
+///
+/// get_reachable_neighbors walks forward edges,
+/// and get_backward_neighbors walks reverse edges.
+/// Both neighbor ranges use dijkstra_neighbor_t<Node> costs.
+/// Heuristics must be admissible in their respective directions.
+template <class Node, class ForwardNeighborsFn, class BackwardNeighborsFn,
+          class ForwardHeuristicFn = constant_value<int>,
+          class BackwardHeuristicFn = constant_value<int>>
+  requires std::totally_ordered<Node> && requires(Node node) {
+    { std::declval<ForwardHeuristicFn>()(node) } -> std::convertible_to<int>;
+    { std::declval<BackwardHeuristicFn>()(node) } -> std::convertible_to<int>;
+  }
+constexpr std::optional<int> shortest_distance_bidirectional_astar(
+    Node start_node, Node end_node, ForwardNeighborsFn&& get_forward_neighbors,
+    BackwardNeighborsFn&& get_backward_neighbors,
+    ForwardHeuristicFn&& forward_heuristic = {},
+    BackwardHeuristicFn&& backward_heuristic = {}) {
+  if (start_node == end_node) {
+    return 0;
+  }
+
+  using entry_t = std::tuple<int, int, Node>;
+  auto forward_unvisited = priority_queue<entry_t, std::greater<entry_t>>{};
+  auto backward_unvisited = priority_queue<entry_t, std::greater<entry_t>>{};
+  auto forward_distances = flat_map<Node, int>{};
+  auto backward_distances = flat_map<Node, int>{};
+
+  forward_distances.emplace(start_node, 0);
+  backward_distances.emplace(end_node, 0);
+  forward_unvisited.emplace(static_cast<int>(forward_heuristic(start_node)), 0,
+                            start_node);
+  backward_unvisited.emplace(static_cast<int>(backward_heuristic(end_node)), 0,
+                             end_node);
+
+  auto best_distance = std::optional<int>{};
+
+  auto remove_stale = [](auto& unvisited, const auto& distances) {
+    while (!unvisited.empty()) {
+      const auto& [_, g_enqueued, current] = unvisited.top();
+      if (distances.find(current)->second >= g_enqueued) {
+        break;
+      }
+      unvisited.pop();
+    }
+  };
+
+  auto search_direction = [&](auto& own_unvisited, auto& own_distances,
+                              auto& other_distances, auto&& get_neighbors,
+                              auto&& heuristic) {
+    auto [_, g_enqueued, current] = own_unvisited.top();
+    own_unvisited.pop();
+
+    for (const auto& neighbor : get_neighbors(current)) {
+      const int tentative_g = g_enqueued + neighbor.distance;
+      auto [own_it, inserted] =
+          own_distances.try_emplace(neighbor.node, tentative_g);
+      if (!inserted && tentative_g >= own_it->second) {
+        continue;
+      }
+      own_it->second = tentative_g;
+      own_unvisited.emplace(
+          tentative_g + static_cast<int>(heuristic(neighbor.node)), tentative_g,
+          neighbor.node);
+
+      if (const auto other_it = other_distances.find(neighbor.node);
+          other_it != std::end(other_distances)) {
+        const int total_distance = tentative_g + other_it->second;
+        if (!best_distance || total_distance < *best_distance) {
+          best_distance = total_distance;
+        }
+      }
+    }
+  };
+
+  while (!forward_unvisited.empty() && !backward_unvisited.empty()) {
+    remove_stale(forward_unvisited, forward_distances);
+    remove_stale(backward_unvisited, backward_distances);
+    if (forward_unvisited.empty() || backward_unvisited.empty()) {
+      break;
+    }
+
+    const auto& [forward_f, _, __] = forward_unvisited.top();
+    const auto& [backward_f, ___, ____] = backward_unvisited.top();
+    if (best_distance &&
+        (forward_f >= *best_distance) &&
+        (backward_f >= *best_distance)) {
+      break;
+    }
+
+    if (forward_f <= backward_f) {
+      search_direction(forward_unvisited, forward_distances, backward_distances,
+                       get_forward_neighbors, forward_heuristic);
+    } else {
+      search_direction(backward_unvisited, backward_distances,
+                       forward_distances, get_backward_neighbors,
+                       backward_heuristic);
+    }
+  }
+
+  return best_distance;
+}
+
 template <std::totally_ordered Node>
 class all_nodes_encountered {
  public:
@@ -273,6 +376,19 @@ constexpr auto shortest_distances_dijkstra(
       std::forward<EndReachedFn>(end_reached), predecessors_out);
 }
 
+template <class Node, class ForwardNeighborsFn, class BackwardNeighborsFn>
+constexpr auto shortest_distance_bidirectional_dijkstra(
+    Node&& start_node, Node&& end_node,
+    ForwardNeighborsFn&& get_forward_neighbors,
+    BackwardNeighborsFn&& get_backward_neighbors) {
+  using node_t = std::remove_cvref_t<Node>;
+  return shortest_distance_bidirectional_astar(
+      node_t{std::forward<Node>(start_node)},
+      node_t{std::forward<Node>(end_node)},
+      std::forward<ForwardNeighborsFn>(get_forward_neighbors),
+      std::forward<BackwardNeighborsFn>(get_backward_neighbors));
+}
+
 // A* convenience overloads (caller-supplied heuristic)
 
 template <class Node, class NeighborsFn, class HeuristicFn,
@@ -301,6 +417,24 @@ constexpr auto shortest_distances_astar(
       std::forward<NeighborsFn>(get_reachable_neighbors),
       std::forward<HeuristicFn>(heuristic),
       std::forward<EndReachedFn>(end_reached), predecessors_out);
+}
+
+template <class Node, class ForwardNeighborsFn, class BackwardNeighborsFn,
+          class ForwardHeuristicFn, class BackwardHeuristicFn>
+constexpr auto shortest_distance_bidirectional_astar(
+    Node&& start_node, Node&& end_node,
+    ForwardNeighborsFn&& get_forward_neighbors,
+    BackwardNeighborsFn&& get_backward_neighbors,
+    ForwardHeuristicFn&& forward_heuristic,
+    BackwardHeuristicFn&& backward_heuristic) {
+  using node_t = std::remove_cvref_t<Node>;
+  return shortest_distance_bidirectional_astar(
+      node_t{std::forward<Node>(start_node)},
+      node_t{std::forward<Node>(end_node)},
+      std::forward<ForwardNeighborsFn>(get_forward_neighbors),
+      std::forward<BackwardNeighborsFn>(get_backward_neighbors),
+      std::forward<ForwardHeuristicFn>(forward_heuristic),
+      std::forward<BackwardHeuristicFn>(backward_heuristic));
 }
 
 template <class Node>
