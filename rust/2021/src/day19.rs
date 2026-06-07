@@ -1,4 +1,4 @@
-use aoc::nd_point::NDPoint;
+use aoc::nd_point::{NDPoint, distance_manhattan};
 use std::collections::{HashMap, HashSet};
 
 type Point3D = NDPoint<i32, 3>;
@@ -71,9 +71,10 @@ fn rotations(scanner: &Scanner) -> impl Iterator<Item = Scanner> + '_ {
 // offset (known_beacon - rotated_beacon) appears.
 // If any offset is seen >=12 times, at least 12 beacons coincide,
 // so the scanners overlap.
-// Return the rotated+translated beacons in world coordinates,
+// Return the rotated+translated beacons in world coordinates
+// and the scanner's world-space position,
 // or None if no match found.
-fn try_align(all_beacons: &HashSet<Point3D>, scanner: &Scanner) -> Option<Scanner> {
+fn try_align(all_beacons: &HashSet<Point3D>, scanner: &Scanner) -> Option<(Scanner, Point3D)> {
     for rotated in rotations(scanner) {
         let mut offset_counts: HashMap<Point3D, usize> = HashMap::new();
         for &a in all_beacons {
@@ -81,46 +82,56 @@ fn try_align(all_beacons: &HashSet<Point3D>, scanner: &Scanner) -> Option<Scanne
                 *offset_counts.entry(a - b).or_insert(0) += 1;
             }
         }
-        if let Some((offset, _)) = //
+        if let Some((&offset, _)) = //
             offset_counts.iter().find(|(_, c)| **c >= 12)
         {
-            return Some(rotated.iter().map(|&p| p + *offset).collect());
+            return Some((rotated.iter().map(|&p| p + offset).collect(), offset));
         }
     }
     None
 }
 
-fn solve_case1(scanners: &[Scanner]) -> usize {
-    // Repeatedly try to align each unaligned scanner
-    // against the growing beacon cloud.
-    // Each successful match merges that scanner's beacons into the cloud
-    // and removes it from the unaligned set.
-    // Scanners that can't yet match (no direct overlap with scanner 0)
-    // will eventually match once an intermediate scanner has been merged.
+// Repeatedly try to align each unaligned scanner against the growing beacon cloud.
+// Each successful match merges that scanner's beacons into the cloud
+// and removes it from the unaligned set.
+// Scanners that can't yet match (no direct overlap with scanner 0)
+// will eventually match once an intermediate scanner has been merged.
+fn align_all(scanners: &[Scanner]) -> (HashSet<Point3D>, Vec<Point3D>) {
     let mut all_beacons: HashSet<Point3D> = scanners[0].iter().copied().collect();
+    let mut scanner_positions: Vec<Point3D> = vec![Point3D { data: [0, 0, 0] }];
     let mut unaligned: Vec<usize> = (1..scanners.len()).collect();
 
     while !unaligned.is_empty() {
         let mut progress = false;
         for i in 0..unaligned.len() {
-            if let Some(aligned) = //
-                try_align(&all_beacons, &scanners[unaligned[i]])
-            {
+            if let Some((aligned, pos)) = try_align(&all_beacons, &scanners[unaligned[i]]) {
                 all_beacons.extend(aligned);
+                scanner_positions.push(pos);
                 unaligned.remove(i);
                 progress = true;
                 break;
             }
         }
-        debug_assert!(progress, "no scanner aligned this round — bug");
+        debug_assert!(progress, "No scanner aligned this round");
     }
 
-    all_beacons.len()
+    (all_beacons, scanner_positions)
 }
 
-fn solve_case2(scanners: &[Scanner]) -> usize {
-    // TODO: Implement Part 2
-    0
+fn solve_case1(scanners: &[Scanner]) -> usize {
+    align_all(scanners).0.len()
+}
+
+fn solve_case2(scanners: &[Scanner]) -> u32 {
+    let scanners = align_all(scanners).1;
+    let n = scanners.len();
+    (0..n)
+        .flat_map(|i| {
+            return (0..n).filter(move |j| i < *j).map(move |j| (i, j));
+        })
+        .map(|(i, j)| distance_manhattan(scanners[i], scanners[j]) as u32)
+        .max()
+        .unwrap()
 }
 
 fn main() {
@@ -131,6 +142,6 @@ fn main() {
     aoc::expect_result!(372, solve_case1(&input));
 
     println!("Part 2");
-    // aoc::expect_result!(XXX, solve_case2(&example));
-    // aoc::expect_result!(XXX, solve_case2(&input));
+    aoc::expect_result!(3621, solve_case2(&example));
+    aoc::expect_result!(12241, solve_case2(&input));
 }
