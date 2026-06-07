@@ -4,52 +4,35 @@
 #include "../common/rust.h"
 
 #include <algorithm>
-#include <cmath>
 #include <print>
 #include <ranges>
 
-template <u32 target>
-fn solve_case1() -> u32 {
-  static_assert(target > 10);
-  auto divisors = Vec<u32>{};
-  for (let house : Range{2u}) {
-    divisors.clear();
-    aoc::divisors<false>(divisors, house);
-    let presents = 10 * aoc::ranges::accumulate(divisors, 0u);
-    if (presents >= target) {
-      return house;
+template <u32 target, bool Part2>
+fn solve_case() -> u32 {
+  constexpr let multiplier = Part2 ? 11u : 10u;
+  constexpr let size = static_cast<size_t>(target / multiplier);
+  auto presents = Vec<u32>(size + 1, 0u);
+  for (let elf : Range{1uz, size + 1}) {
+    let last = Part2 ? std::min(elf * 50uz, size) : size;
+    auto house = elf;
+    while (house <= last) {
+      presents[house] += static_cast<u32>(elf) * multiplier;
+      house += elf;
     }
   }
-  AOC_UNREACHABLE("House should have been found in infinite loop");
-}
-
-fn num_presents(u32 house_id) -> u32 {
-  return 11 * //
-         aoc::ranges::accumulate(
-             aoc::divisors(house_id) | stdv::filter([house_id](u32 divisor) {
-               return house_id <= 50 * divisor;
-             }),
-             0u);
-}
-
-template <u32 target>
-fn solve_case2() -> u32 {
-  for (let house : Range{2u}) {
-    if (num_presents(house) >= target) {
-      return house;
-    }
-  }
-  AOC_UNREACHABLE("House should have been found in infinite loop");
+  return std::get<0>(*stdr::find_if(
+      presents | stdv::enumerate | stdv::drop(1),
+      [](let& house_pair) { return std::get<1>(house_pair) >= target; }));
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(8, solve_case1<150>());
-  AOC_EXPECT_RESULT(831600, solve_case1<36'000'000>());
+  AOC_EXPECT_RESULT(8, (solve_case<150, false>()));
+  AOC_EXPECT_RESULT(831600, (solve_case<36'000'000, false>()));
 
   std::println("Part 2");
-  AOC_EXPECT_RESULT(8, solve_case2<150>());
-  AOC_EXPECT_RESULT(884520, solve_case2<36'000'000>());
+  AOC_EXPECT_RESULT(8, (solve_case<150, true>()));
+  AOC_EXPECT_RESULT(884520, (solve_case<36'000'000, true>()));
 
   AOC_RETURN_CHECK_RESULT();
 }
