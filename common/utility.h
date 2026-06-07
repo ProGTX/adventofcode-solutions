@@ -50,8 +50,12 @@ struct sorted_unique_t {
 };
 inline constexpr sorted_unique_t sorted_unique{};
 
+/// Returns the maximum number of elements possible for a container.
+///
+/// For fixed size containers, this is their static size.
+/// For dynamic containers, it's `npos`.
 template <class output_t>
-constexpr size_t max_container_elems() {
+constexpr size_t static_size() {
   if constexpr (requires {
                   std::tuple_size<std::remove_cvref_t<output_t>>::value;
                 }) {
@@ -60,7 +64,7 @@ constexpr size_t max_container_elems() {
     return std::string::npos;
   }
 }
-static_assert(4 == max_container_elems<std::array<int, 4>>());
+static_assert(4 == static_size<std::array<int, 4>>());
 
 template <class output_t>
 constexpr auto inserter_it(output_t& elems) {
@@ -79,7 +83,7 @@ template <class output_t>
 constexpr auto insertion_end_it(output_t& elems) {
   if constexpr (specialization_of<output_t, std::optional>) {
     return std::addressof(elems) + 1;
-  } else if constexpr (const auto N = max_container_elems<output_t>();
+  } else if constexpr (const auto N = static_size<output_t>();
                        N != std::string::npos) {
     return std::begin(elems) + N;
   } else {

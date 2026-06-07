@@ -468,7 +468,7 @@ constexpr auto get_empty_combination(ElementsR&& elements,
       return elements;
     };
   }());
-  if constexpr (const auto N = max_container_elems<underlying_type>();
+  if constexpr (const auto N = static_size<underlying_type>();
                 N != std::string::npos) {
     return static_vector<counter_type, N>(std::ranges::size(elements),
                                           single_min);

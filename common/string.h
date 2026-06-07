@@ -337,7 +337,7 @@ constexpr auto split(R&& r, Pattern&& delimiter, Proj proj = {}) {
       return r | std::views::split(delimiter);
     }
   }();
-  constexpr const auto fixed_capacity = max_container_elems<decltype(out)>();
+  constexpr const auto fixed_capacity = static_size<decltype(out)>();
 
   int count = 0;
   for (auto out_it = inserter_it(out); auto&& v : split_view) {

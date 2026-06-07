@@ -226,7 +226,7 @@ struct tuple_size<aoc::static_vector<T, N>>
 
 AOC_EXPORT_NAMESPACE(aoc) {
 
-static_assert(4 == max_container_elems<static_vector<int, 4>>());
+static_assert(4 == static_size<static_vector<int, 4>>());
 
 }
 
