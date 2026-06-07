@@ -1,15 +1,19 @@
 use aoc::nd_point::{NDPoint, distance_manhattan};
+use arrayvec::ArrayVec;
 use std::collections::{HashMap, HashSet};
 
-type Point3D = NDPoint<i32, 3>;
-type Scanner = Vec<Point3D>;
+const MAX_SCANNERS: usize = 32;
+const MAX_BEACONS: usize = 32;
 
-fn parse(filename: &str) -> Vec<Scanner> {
-    let mut scanners = Vec::new();
-    let mut current = Vec::new();
+type Point3D = NDPoint<i32, 3>;
+type Scanner = ArrayVec<Point3D, MAX_BEACONS>;
+
+fn parse(filename: &str) -> ArrayVec<Scanner, MAX_SCANNERS> {
+    let mut scanners = ArrayVec::new();
+    let mut current = Scanner::new();
     for line in aoc::file::read_lines(filename) {
         if line.starts_with("---") {
-            current = Vec::new();
+            current = Scanner::new();
         } else if line.is_empty() {
             scanners.push(current.clone());
         } else {
@@ -97,21 +101,28 @@ fn try_align(all_beacons: &HashSet<Point3D>, scanner: &Scanner) -> Option<(Scann
 // Scanners that can't yet match (no direct overlap with scanner 0)
 // will eventually match once an intermediate scanner has been merged.
 // All unaligned scanners are tried in parallel each round via scoped threads.
-fn align_all(scanners: &[Scanner]) -> (HashSet<Point3D>, Vec<Point3D>) {
+fn align_all(scanners: &[Scanner]) -> (HashSet<Point3D>, ArrayVec<Point3D, MAX_SCANNERS>) {
     let mut all_beacons: HashSet<Point3D> = scanners[0].iter().copied().collect();
-    let mut scanner_positions: Vec<Point3D> = vec![Point3D { data: [0, 0, 0] }];
-    let mut unaligned: Vec<usize> = (1..scanners.len()).collect();
+    let mut scanner_positions: ArrayVec<Point3D, MAX_SCANNERS> =
+        [Point3D { data: [0, 0, 0] }].into_iter().collect();
+    let mut unaligned: ArrayVec<u8, MAX_SCANNERS> = (1..scanners.len()).map(|i| i as u8).collect();
 
+    const MAX_PARALLELISM: usize = 16;
     let parallelism = std::thread::available_parallelism()
         .map(|n| n.get())
-        .unwrap_or(4);
+        .unwrap_or(4)
+        .min(MAX_PARALLELISM);
     while !unaligned.is_empty() {
         let beacons = &all_beacons;
         let result = std::thread::scope(|scope| {
             for chunk in unaligned.chunks(parallelism) {
-                let handles: Vec<_> = chunk
+                let handles: ArrayVec<_, MAX_PARALLELISM> = chunk
                     .iter()
-                    .map(|&s| scope.spawn(move || try_align(beacons, &scanners[s]).map(|r| (s, r))))
+                    .map(|&s| {
+                        scope.spawn(move || {
+                            try_align(beacons, &scanners[s as usize]).map(|r| (s, r))
+                        })
+                    })
                     .collect();
                 if let Some(r) = //
                     handles.into_iter().find_map(|h| h.join().unwrap())
@@ -124,7 +135,7 @@ fn align_all(scanners: &[Scanner]) -> (HashSet<Point3D>, Vec<Point3D>) {
         let (s, (aligned, pos)) = result.expect("no scanner aligned this round — bug");
         all_beacons.extend(aligned);
         scanner_positions.push(pos);
-        unaligned.retain(|&i| i != s);
+        unaligned.retain(|i| *i != s);
     }
 
     (all_beacons, scanner_positions)
