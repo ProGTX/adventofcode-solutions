@@ -3,8 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
-#include <format>
+#include <atomic>
+#include <charconv>
+#include <cstring>
+#include <limits>
 #include <print>
+#include <thread>
+#include <vector>
 
 auto parse(String const& filename) -> String {
   return String{aoc::trim(aoc::read_file(filename))};
@@ -12,18 +17,40 @@ auto parse(String const& filename) -> String {
 
 template <bool Part2>
 fn solve_case(str key) -> u32 {
-  for (u32 n = 0;; ++n) {
-    let full_key = std::format("{}{}", key, n);
-    let hash = aoc::md5(full_key);
-    if (hash[0] == 0 && hash[1] == 0 && (hash[2] & 0xF0u) == 0) {
-      if constexpr (Part2) {
-        if ((hash[2] & 0x0Fu) > 0) {
-          continue;
+  let num_threads = std::max(1u, std::thread::hardware_concurrency());
+  auto result = std::atomic<u32>{std::numeric_limits<u32>::max()};
+
+  auto search = [&, key](u32 start) {
+    char buf[64];
+    std::memcpy(buf, key.data(), key.size());
+    for (auto n = start; n < result.load(std::memory_order_relaxed);
+         n += num_threads) {
+      let[end, _] = std::to_chars(buf + key.size(), buf + sizeof(buf), n);
+      let hash = aoc::md5(str{buf, end});
+      if (hash[0] == 0 && hash[1] == 0 && (hash[2] & 0xF0u) == 0) {
+        if constexpr (Part2) {
+          if ((hash[2] & 0x0Fu) > 0) {
+            continue;
+          }
         }
+        auto current = result.load(std::memory_order_relaxed);
+        while ((n < current) && !result.compare_exchange_weak(
+                                    current, n, std::memory_order_relaxed))
+          ;
+        return;
       }
-      return n;
     }
-  }
+  };
+
+  {
+    auto threads = std::vector<std::jthread>{};
+    threads.reserve(num_threads);
+    for (u32 i = 0; i < num_threads; ++i) {
+      threads.emplace_back(search, i);
+    }
+  } // all threads join here
+
+  return result.load();
 }
 
 int main() {
