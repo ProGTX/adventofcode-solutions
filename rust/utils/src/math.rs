@@ -39,6 +39,29 @@ impl<T> Numeric for T where
 {
 }
 
+pub trait AbsDiff {
+    fn abs_diff(self, other: Self) -> Self;
+}
+
+macro_rules! impl_abs_diff {
+    ($($type:ty),* $(,)?) => {
+        $(
+            impl AbsDiff for $type {
+                fn abs_diff(self, other: Self) -> Self {
+                    if self >= other {
+                        self - other
+                    } else {
+                        other - self
+                    }
+                }
+            }
+        )*
+    };
+}
+
+impl_abs_diff!(u8, u16, u32, u64, u128, usize);
+impl_abs_diff!(i8, i16, i32, i64, i128, isize);
+
 pub fn gcd<T: Numeric>(a: T, b: T) -> T {
     let zero = T::from(0u32);
     if b == zero { a } else { gcd(b, a % b) }

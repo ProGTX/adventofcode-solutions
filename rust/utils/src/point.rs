@@ -1,3 +1,4 @@
+use crate::math::AbsDiff;
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -213,10 +214,9 @@ where
 
 pub fn distance_manhattan<T>(a: Point<T>, b: Point<T>) -> T
 where
-    T: Add<Output = T> + Sub<Output = T> + Neg<Output = T> + PartialOrd + Default + Copy,
+    T: AbsDiff + Add<Output = T> + Copy,
 {
-    let diff = (b - a).abs();
-    diff.x + diff.y
+    a.x.abs_diff(b.x) + a.y.abs_diff(b.y)
 }
 
 impl<T> Hash for Point<T>
