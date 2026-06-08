@@ -1,6 +1,6 @@
-use std::{array, collections::HashSet};
-
 use itertools::Itertools;
+use rustc_hash::FxHashSet;
+use std::array;
 
 #[derive(Clone, Copy, Debug)]
 enum Reg {
@@ -105,7 +105,7 @@ fn to_number(digits: &[i64]) -> u64 {
 }
 
 const NUM_BLOCKS: usize = 14;
-type ZOutputCache = [HashSet<i64>; NUM_BLOCKS];
+type ZOutputCache = [FxHashSet<i64>; NUM_BLOCKS];
 
 fn solve_case<const SMALLEST: bool>(
     instructions: &[Instr],
@@ -130,7 +130,7 @@ fn solve_case<const SMALLEST: bool>(
     let valid_z_output = if let Some(vzo) = valid_z_output_cache.as_ref() {
         vzo.clone()
     } else {
-        let mut valid_z_output = array::from_fn(|_| HashSet::new());
+        let mut valid_z_output = array::from_fn(|_| FxHashSet::default());
 
         // This limit is somewhat arbitrary, it happens to work for my input
         // Could be slightly lower, but this is a nice number
@@ -139,7 +139,7 @@ fn solve_case<const SMALLEST: bool>(
         // Find valid z outputs for each block
         valid_z_output[NUM_BLOCKS - 1].insert(0);
         for (block_id, block) in blocks.iter().enumerate().rev() {
-            let valid_z_input = (1..=9)
+            let valid_z_input: FxHashSet<i64> = (1..=9)
                 .cartesian_product(0..Z_LIMIT)
                 .filter_map(|(input, z)| {
                     let mut regs = Registers::default();
