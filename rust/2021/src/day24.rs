@@ -1,13 +1,16 @@
+use std::{array, collections::HashSet};
+
+use itertools::Itertools;
+
 #[derive(Clone, Copy, Debug)]
 enum Reg {
-    X = 0,
-    Y = 1,
-    Z = 2,
-    W = 3,
+    W = 0,
+    X = 1,
+    Y = 2,
+    Z = 3,
 }
 
 #[derive(Clone, Copy, Debug)]
-#[allow(dead_code)]
 enum Operand {
     Reg(Reg),
     Num(i64),
@@ -24,7 +27,6 @@ enum Op {
 }
 
 #[derive(Clone, Copy, Debug)]
-#[allow(dead_code)]
 struct Instr {
     op: Op,
     dst: Reg,
@@ -41,15 +43,8 @@ fn parse_reg(s: &str) -> Reg {
     }
 }
 
-fn parse_operand(s: &str) -> Operand {
-    match s {
-        "w" | "x" | "y" | "z" => Operand::Reg(parse_reg(s)),
-        _ => Operand::Num(s.parse().expect("expected number")),
-    }
-}
-
-fn parse(filename: &str) -> Vec<Instr> {
-    aoc::file::read_lines(filename)
+fn parse_program(lines: &[&str]) -> Vec<Instr> {
+    lines
         .iter()
         .filter(|line| !line.is_empty())
         .map(|line| {
@@ -67,15 +62,25 @@ fn parse(filename: &str) -> Vec<Instr> {
             let src = if matches!(op, Op::Inp) {
                 Operand::Num(0)
             } else {
-                parse_operand(parts[2])
+                let p2 = parts[2];
+                match p2 {
+                    "w" | "x" | "y" | "z" => Operand::Reg(parse_reg(p2)),
+                    _ => Operand::Num(p2.parse().expect("Expected number")),
+                }
             };
             Instr { op, dst, src }
         })
         .collect()
 }
 
-#[allow(dead_code)]
-fn execute(mut regs: [i64; 4], instructions: &[Instr], input: &[i64]) -> [i64; 4] {
+fn parse(filename: &str) -> Vec<Instr> {
+    let lines = aoc::file::read_lines(filename);
+    parse_program(&lines.iter().map(|s| s.as_str()).collect::<Vec<_>>())
+}
+
+type Registers = [i64; 4];
+
+fn execute(mut regs: Registers, instructions: &[Instr], input: &[i64]) -> [i64; 4] {
     let mut input = input.iter().copied();
     for instr in instructions {
         let d = instr.dst as usize;
@@ -95,26 +100,129 @@ fn execute(mut regs: [i64; 4], instructions: &[Instr], input: &[i64]) -> [i64; 4
     regs
 }
 
-fn solve_case1(_instructions: &[Instr]) -> u64 {
-    // TODO: Implement Part 1
-    0
+fn to_number(digits: &[i64]) -> u64 {
+    digits.iter().fold(0u64, |acc, &d| acc * 10 + d as u64)
 }
 
-#[allow(dead_code)]
-fn solve_case2(_instructions: &[Instr]) -> u64 {
-    // TODO: Implement Part 2
-    0
+const NUM_BLOCKS: usize = 14;
+type ZOutputCache = [HashSet<i64>; NUM_BLOCKS];
+
+fn solve_case<const SMALLEST: bool>(
+    instructions: &[Instr],
+    valid_z_output_cache: &mut Option<ZOutputCache>,
+) -> u64 {
+    // Split the instructions into blocks
+    let starts: Vec<usize> = instructions
+        .iter()
+        .enumerate()
+        .filter(|(_, instr)| matches!(instr.op, Op::Inp))
+        .map(|(i, _)| i)
+        .collect();
+    let blocks: Vec<&[Instr]> = starts
+        .windows(2)
+        .map(|w| &instructions[w[0]..w[1]])
+        .chain(std::iter::once(&instructions[*starts.last().unwrap()..]))
+        .collect();
+
+    // The following algorithm works based on this post:
+    // https://www.reddit.com/r/adventofcode/comments/rnqabd/comment/hpu9wk3/
+
+    let valid_z_output = if let Some(vzo) = valid_z_output_cache.as_ref() {
+        vzo.clone()
+    } else {
+        let mut valid_z_output = array::from_fn(|_| HashSet::new());
+
+        // This limit is somewhat arbitrary, it happens to work for my input
+        // Could be slightly lower, but this is a nice number
+        const Z_LIMIT: i64 = 314159;
+
+        // Find valid z outputs for each block
+        valid_z_output[NUM_BLOCKS - 1].insert(0);
+        for (block_id, block) in blocks.iter().enumerate().rev() {
+            let valid_z_input = (1..=9)
+                .cartesian_product(0..Z_LIMIT)
+                .filter_map(|(input, z)| {
+                    let mut regs = Registers::default();
+                    regs[Reg::Z as usize] = z;
+                    let regs = execute(regs, &block, &[input]);
+                    return if valid_z_output[block_id].contains(&regs[Reg::Z as usize]) {
+                        Some(z)
+                    } else {
+                        None
+                    };
+                })
+                .collect();
+            if (block_id > 0) {
+                valid_z_output[block_id - 1] = valid_z_input;
+            }
+        }
+        *valid_z_output_cache = Some(valid_z_output);
+        valid_z_output_cache.as_ref().unwrap().clone()
+    };
+
+    // For each block, find the first input that produces a valid z.
+    // Carry over the computed z between blocks.
+    let mut max_input = <[i64; NUM_BLOCKS]>::default();
+    let mut z = 0;
+    for (block_id, block) in blocks.iter().enumerate() {
+        max_input[block_id] = (1..=9)
+            .map(|input| if SMALLEST { input } else { 10 - input })
+            .find(|input| {
+                let mut regs = Registers::default();
+                regs[Reg::Z as usize] = z;
+                let regs = execute(regs, &block, &[*input]);
+                return if valid_z_output[block_id].contains(&regs[Reg::Z as usize]) {
+                    z = regs[Reg::Z as usize];
+                    true
+                } else {
+                    false
+                };
+            })
+            .unwrap();
+    }
+
+    return to_number(&max_input);
+}
+
+fn test(lines: &[&str], input: &[i64]) -> u64 {
+    to_number(&execute(
+        Registers::default(),
+        &parse_program(&lines),
+        &input,
+    ))
 }
 
 fn main() {
-    println!("Part 1");
+    println!("Unit tests");
+    aoc::expect_result!(200, test(&["inp x", "mul x -1"], &[-2]));
+    aoc::expect_result!(
+        901,
+        test(&["inp z", "inp x", "mul z 3", "eql z x"], &[3, 9])
+    );
+    aoc::expect_result!(
+        1101,
+        test(
+            &[
+                "inp w", "add z w", "mod z 2", "div w 2", "add y w", "mod y 2", "div w 2",
+                "add x w", "mod x 2", "div w 2", "mod w 2",
+            ],
+            &[13]
+        )
+    );
 
-    let example = parse("day24.example");
-    aoc::expect_result!(0, solve_case1(&example));
-    let _input = parse("day24.input");
-    // aoc::expect_result!(XXX, solve_case1(&_input));
+    // valid_z_output is shared between cases to speed up computation
+    let mut valid_z_output = None;
+
+    println!("Part 1");
+    let input = parse("day24.input");
+    aoc::expect_result!(
+        99919765949498,
+        solve_case::<false>(&input, &mut valid_z_output)
+    );
 
     println!("Part 2");
-    // aoc::expect_result!(XXX, solve_case2(&example));
-    // aoc::expect_result!(XXX, solve_case2(&input));
+    aoc::expect_result!(
+        24913111616151,
+        solve_case::<true>(&input, &mut valid_z_output)
+    );
 }
