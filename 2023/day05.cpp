@@ -1,42 +1,60 @@
 // https://adventofcode.com/2023/day/5
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <array>
-#include <map>
 #include <print>
 #include <ranges>
-#include <string>
-#include <string_view>
-#include <vector>
 
-using namespace std::string_view_literals;
-
-using int_t = long;
-struct range_t : public aoc::closed_range<int_t> {
-  using base_t = aoc::closed_range<int_t>;
-  constexpr range_t(int_t begin_, size_t size_)
-      : base_t(begin_, begin_ + size_), size{size_} {}
-
-  size_t size;
-};
+using range_t = aoc::closed_range<i64>;
 
 struct single_mapping_t {
   range_t src;
   range_t dst;
 
-  constexpr bool in_source_range(int_t value) const {
-    return (value >= src.begin) && (value < (src.begin + src.size));
+  fn in_source_range(i64 value) const -> bool {
+    return (value >= src.begin) && (value < src.end);
   }
 };
 
-using seeds_t = std::vector<range_t>;
+struct Input {
+  Vec<i64> seed_ints;
+  Vec<Vec<single_mapping_t>> mappings;
+};
 
-inline constexpr int_t invalid = -1;
+auto parse(String const& filename) -> Input {
+  Input result;
+  std::ifstream file{filename};
 
-constexpr range_t map_single(const range_t& seed, const single_mapping_t& map) {
-  return range_t{map.dst.begin - map.src.begin + seed.begin, seed.size};
+  let line = aoc::read_line(file);
+  result.seed_ints = aoc::split_to_vec<i64>(line.substr(sizeof("seeds:")), ' ');
+
+  Vec<single_mapping_t> mapping;
+  for (str line : aoc::views::read_lines(file)) {
+    if (!aoc::is_number(line[0])) {
+      stdr::sort(mapping, std::less<>{}, &single_mapping_t::src);
+      result.mappings.push_back(std::move(mapping));
+      mapping.clear();
+      continue;
+    }
+    let[dest_start, source_start, range] =
+        aoc::split<std::array<i64, 3>>(line, ' ');
+    mapping.emplace_back(range_t{source_start, source_start + range},
+                         range_t{dest_start, dest_start + range});
+  }
+  stdr::sort(mapping, std::less<>{}, &single_mapping_t::src);
+  result.mappings.push_back(std::move(mapping));
+
+  return result;
+}
+
+using seeds_t = Vec<range_t>;
+
+fn map_single(range_t const& seed, single_mapping_t const& map) -> range_t {
+  let offset = map.dst.begin - map.src.begin;
+  return {seed.begin + offset, seed.end + offset};
 }
 
 // Diagram for the explanation of how an individual map applies to a seed range
@@ -48,8 +66,8 @@ constexpr range_t map_single(const range_t& seed, const single_mapping_t& map) {
 // (a,x,b,y) - (x+b)(b+1-y)
 // (x,a,y,b) - (x-a-1)(a+y)
 // (a,x,y,b) - (x+y)
-constexpr seeds_t apply_mapping(seeds_t current_seeds,
-                                const std::vector<single_mapping_t>& mapping) {
+fn apply_mapping(seeds_t current_seeds, Vec<single_mapping_t> const& mapping)
+    -> seeds_t {
   // We want all the ranges to be sorted to simplify the algorithm
   AOC_ASSERT(stdr::is_sorted(mapping, std::less<>{}, &single_mapping_t::src),
              "mapping not presorted");
@@ -106,21 +124,21 @@ constexpr seeds_t apply_mapping(seeds_t current_seeds,
       }
       // Note that end() points to 1 beyond the last element,
       // so we decrement by one
-      const auto a = map_it->src.begin;
-      const auto b = map_it->src.end - 1;
-      const auto x = seed_it->begin;
-      const auto y = seed_it->end - 1;
+      let a = map_it->src.begin;
+      let b = map_it->src.end - 1;
+      let x = seed_it->begin;
+      let y = seed_it->end - 1;
       if (seed_it->contains(map_it->src)) {
         // (x-a-1)(a+b)(b+1-y)
         if ((a - x) > 1) {
           // (x-a-1)
-          next_seeds.emplace_back(x, a - x);
+          next_seeds.emplace_back(x, a);
         }
         // (a+b)
         next_seeds.push_back(map_single(map_it->src, *map_it));
         if ((y - b) > 0) {
           // (b+1-y)
-          split_seed_range(range_t(x, b - x + 2), range_t(b + 1, y - b));
+          split_seed_range({x, b + 2}, {b + 1, y + 1});
           // Important to break the loop after the split
           // because the map doesn't apply anymore
           break;
@@ -131,18 +149,18 @@ constexpr seeds_t apply_mapping(seeds_t current_seeds,
       } else if ((x >= a) && (b <= y)) {
         // (a,x,b,y) - (x+b)(b+1-y)
         // (x+b)
-        next_seeds.push_back(map_single(range_t(x, b - x + 1), *map_it));
+        next_seeds.push_back(map_single({x, b + 1}, *map_it));
         // (b+1-y)
-        split_seed_range(range_t(x, b - x + 2), range_t(b + 1, y - b));
+        split_seed_range({x, b + 2}, {b + 1, y + 1});
         // Important to break the loop after the split
         // because the map doesn't apply anymore
         break;
       } else {
         // (x,a,y,b) - (x-a-1)(a+y)
         // (x-a-1)
-        next_seeds.emplace_back(x, a - x);
+        next_seeds.emplace_back(x, a);
         // (a+y)
-        next_seeds.push_back(map_single(range_t(a, y - a + 1), *map_it));
+        next_seeds.push_back(map_single({a, y + 1}, *map_it));
       }
     }
   };
@@ -160,54 +178,36 @@ constexpr seeds_t apply_mapping(seeds_t current_seeds,
 }
 
 template <bool full_ranges>
-int_t solve_case(const std::string& filename) {
+fn solve_case(Input const& input) -> i64 {
   seeds_t current_seeds;
-  std::vector<single_mapping_t> mapping;
-
-  std::ifstream file{filename};
-
-  // read_first_line
-  [&]() {
-    auto line = aoc::read_line(file);
-    const auto seeds_ints =
-        aoc::split_to_vec<int_t>(line.substr(sizeof("seeds:")), ' ');
-    for (int i = 0; i < seeds_ints.size(); i += 2) {
-      if constexpr (!full_ranges) {
-        current_seeds.emplace_back(seeds_ints[i], 1);
-        current_seeds.emplace_back(seeds_ints[i + 1], 1);
-      } else {
-        current_seeds.emplace_back(seeds_ints[i], seeds_ints[i + 1]);
-      }
+  for (usize i = 0; i + 1 < input.seed_ints.size(); i += 2) {
+    let v0 = input.seed_ints[i];
+    let v1 = input.seed_ints[i + 1];
+    if constexpr (!full_ranges) {
+      current_seeds.emplace_back(v0, v0 + 1);
+      current_seeds.emplace_back(v1, v1 + 1);
+    } else {
+      current_seeds.emplace_back(v0, v0 + v1);
     }
-  }();
-
-  for (std::string_view line : aoc::views::read_lines(file)) {
-    if (!aoc::is_number(line[0])) {
-      stdr::sort(mapping, std::less<>{}, &single_mapping_t::src);
-      current_seeds = apply_mapping(current_seeds, mapping);
-      mapping.clear();
-      continue;
-    }
-    auto [dest_start, source_start, range] =
-        aoc::split<std::array<int_t, 3>>(line, ' ');
-    mapping.emplace_back(range_t(source_start, range),
-                         range_t(dest_start, range));
   }
 
-  // Have to run this one last time
-  stdr::sort(mapping, std::less<>{}, &single_mapping_t::src);
-  current_seeds = apply_mapping(current_seeds, mapping);
+  for (let& mapping : input.mappings) {
+    current_seeds = apply_mapping(current_seeds, mapping);
+  }
 
-  int_t lowest_location = current_seeds[0].begin;
-  return lowest_location;
+  return current_seeds[0].begin;
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(35, (solve_case<false>("day05.example")));
-  AOC_EXPECT_RESULT(486613012, (solve_case<false>("day05.input")));
+  let example = parse("day05.example");
+  AOC_EXPECT_RESULT(35, (solve_case<false>(example)));
+  let input = parse("day05.input");
+  AOC_EXPECT_RESULT(486613012, (solve_case<false>(input)));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(46, (solve_case<true>("day05.example")));
-  AOC_EXPECT_RESULT(56931769, (solve_case<true>("day05.input")));
+  AOC_EXPECT_RESULT(46, (solve_case<true>(example)));
+  AOC_EXPECT_RESULT(56931769, (solve_case<true>(input)));
+
   AOC_RETURN_CHECK_RESULT();
 }
