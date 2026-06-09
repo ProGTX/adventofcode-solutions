@@ -1,83 +1,77 @@
 // https://adventofcode.com/2023/day/9
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <print>
-#include <ranges>
+#include <span>
 #include <string>
-#include <string_view>
-#include <vector>
 
-using namespace std::string_view_literals;
-using int_t = int;
+using Reading = Vec<i32>;
+using Input = Vec<Reading>;
 
-template <int multiplier = 1>
-constexpr int predict_value(std::vector<int> reading) {
+fn parse(String const& filename) -> Input {
+  return aoc::views::read_lines(filename) |
+         stdv::transform(
+             [](str line) { return aoc::split_to_vec<i32>(line, ' '); }) |
+         aoc::collect_vec<Reading>();
+}
+
+template <int multiplier>
+fn predict_value(Reading reading) -> i32 {
   static_assert(multiplier != 0);
 
-  std::vector<int> edge_values;
-  std::vector<int> next_reading = reading;
-  int size = reading.size();
-  edge_values.reserve(size);
+  auto edge_values = Vec<i32>{};
+  auto next_reading = Vec<i32>{};
 
-  while (size > 0) {
+  for (let _ : Range{0uz, reading.size()}) {
     if constexpr (multiplier > 0) {
       edge_values.push_back(reading.back());
     } else {
       edge_values.push_back(reading.front());
     }
-    next_reading.clear();
-    for (int i = 0; i < size - 1; ++i) {
-      next_reading.push_back(reading[i + 1] - reading[i]);
-    }
-    if (stdr::all_of(next_reading, [](int value) { return value == 0; })) {
+    auto next_reading = //
+        reading |
+        stdv::adjacent<2> |
+        stdv::transform([](auto const& ab) {
+          let[a, b] = ab;
+          return b - a;
+        }) |
+        aoc::collect_vec<i32>();
+    if (stdr::all_of(next_reading, aoc::equal_to_value(0))) {
       break;
     }
     std::swap(next_reading, reading);
-    --size;
   }
-  int prediction = 0;
-  for (int i = edge_values.size() - 1; i >= 0; --i) {
-    prediction = edge_values[i] + prediction * multiplier;
-  }
-  return prediction;
+  return stdr::fold_right(edge_values, i32{0}, [](i32 element, i32 acc) {
+    return element + acc * multiplier;
+  });
 }
 
-static_assert(18 == predict_value({0, 3, 6, 9, 12, 15}));
-static_assert(28 == predict_value({1, 3, 6, 10, 15, 21}));
-static_assert(68 == predict_value({10, 13, 16, 21, 30, 45}));
+static_assert(18 == predict_value<1>({0, 3, 6, 9, 12, 15}));
+static_assert(28 == predict_value<1>({1, 3, 6, 10, 15, 21}));
+static_assert(68 == predict_value<1>({10, 13, 16, 21, 30, 45}));
 static_assert(-3 == predict_value<-1>({0, 3, 6, 9, 12, 15}));
 static_assert(0 == predict_value<-1>({1, 3, 6, 10, 15, 21}));
 static_assert(5 == predict_value<-1>({10, 13, 16, 21, 30, 45}));
 
 template <int multiplier>
-constexpr int sum_predictions(const std::vector<std::vector<int>>& values) {
+fn solve_case(Input const& input) -> i32 {
   return aoc::ranges::accumulate(
-      values | stdv::transform([](const std::vector<int>& reading) {
-        return predict_value<multiplier>(reading);
-      }),
-      int_t{0});
-}
-
-template <int multiplier>
-int solve_case(const std::string& filename) {
-  std::vector<std::vector<int>> values;
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    values.push_back(aoc::split_to_vec<int>(line, ' '));
-  }
-
-  int sum = sum_predictions<multiplier>(values);
-
-  return sum;
+      input | stdv::transform(predict_value<multiplier>), 0);
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(114, (solve_case<1>("day09.example")));
-  AOC_EXPECT_RESULT(1980437560, (solve_case<1>("day09.input")));
+  let example = parse("day09.example");
+  AOC_EXPECT_RESULT(114, solve_case<1>(example));
+  let input = parse("day09.input");
+  AOC_EXPECT_RESULT(1980437560, solve_case<1>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(2, (solve_case<-1>("day09.example")));
-  AOC_EXPECT_RESULT(977, (solve_case<-1>("day09.input")));
+  AOC_EXPECT_RESULT(2, solve_case<-1>(example));
+  AOC_EXPECT_RESULT(977, solve_case<-1>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
