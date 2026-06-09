@@ -165,9 +165,12 @@ int main() {
   // https://www.reddit.com/r/adventofcode/comments/1hgyuqm/2024_day_16_part_1/
   AOC_EXPECT_RESULT(5027, solve_case<false>("day16.example4"));
   AOC_EXPECT_RESULT(94436, solve_case<false>("day16.input"));
+
   std::println("Part 2");
+  aoc::return_incomplete();
   AOC_EXPECT_RESULT(45, solve_case<true>("day16.example"));
   // AOC_EXPECT_RESULT(64, solve_case<true>("day16.example2"));
   AOC_EXPECT_RESULT(481, solve_case<true>("day16.input"));
+
   AOC_RETURN_CHECK_RESULT();
 }

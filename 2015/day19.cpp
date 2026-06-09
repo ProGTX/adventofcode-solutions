@@ -53,7 +53,8 @@ int main() {
   let input = parse("day19.input");
   AOC_EXPECT_RESULT(576, solve_case1(input));
 
-  // std::println("Part 2");
+  std::println("Part 2");
+  aoc::return_incomplete();
   // AOC_EXPECT_RESULT(3, solve_case2(example));
   // AOC_EXPECT_RESULT(1257, solve_case2(input));
 

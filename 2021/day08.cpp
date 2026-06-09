@@ -65,5 +65,8 @@ int main() {
   let input = parse("day08.input");
   AOC_EXPECT_RESULT(440, solve_case1(input));
 
+  std::println("Part 2");
+  aoc::return_incomplete();
+
   AOC_RETURN_CHECK_RESULT();
 }

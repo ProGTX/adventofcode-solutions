@@ -72,6 +72,7 @@ int main() {
   AOC_EXPECT_RESULT(329, solve_case1(input));
 
   std::println("Part 2");
+  aoc::return_incomplete();
   // AOC_EXPECT_RESULT(XXX, solve_case2(example));
   // AOC_EXPECT_RESULT(XXX, solve_case2(input));
 

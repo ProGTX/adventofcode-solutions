@@ -104,7 +104,8 @@ fn main() {
     let input = parse("day10.input");
     aoc::expect_result!(535, solve_case1(&input));
 
-    // println!("Part 2");
+    println!("Part 2");
+    aoc::return_incomplete();
     // aoc::expect_result!(33, solve_case2(&example));
     // aoc::expect_result!(100011612, solve_case2(&input));
 }

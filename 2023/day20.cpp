@@ -185,8 +185,11 @@ int main() {
   AOC_EXPECT_RESULT(32000000, (solve_case<false>("day20.example")));
   AOC_EXPECT_RESULT(11687500, (solve_case<false>("day20.example2")));
   AOC_EXPECT_RESULT(814934624, (solve_case<false>("day20.input")));
-  // std::println("Part 2");
+
+  std::println("Part 2");
+  aoc::return_incomplete();
   // AOC_EXPECT_RESULT(952408144115, (solve_case<true>("day20.example")));
   // AOC_EXPECT_RESULT(90111113594927, (solve_case<true>("day20.input")));
+
   AOC_RETURN_CHECK_RESULT();
 }

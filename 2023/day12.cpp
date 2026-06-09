@@ -173,8 +173,11 @@ int main() {
   std::println("Part 1");
   AOC_EXPECT_RESULT(21, (solve_case<1>("day12.example")));
   AOC_EXPECT_RESULT(7379, (solve_case<1>("day12.input")));
+
   std::println("Part 2");
   AOC_EXPECT_RESULT(525152, (solve_case<5>("day12.example")));
+  aoc::return_incomplete();
   // AOC_EXPECT_RESULT(525152, (solve_case<5>("day12.input")));
+
   AOC_RETURN_CHECK_RESULT();
 }

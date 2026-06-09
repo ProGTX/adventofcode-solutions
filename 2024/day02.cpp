@@ -51,8 +51,11 @@ int main() {
   std::println("Part 1");
   AOC_EXPECT_RESULT(2, solve_case<false>("day02.example"));
   AOC_EXPECT_RESULT(502, solve_case<false>("day02.input"));
-  // std::println("Part 2");
+
+  std::println("Part 2");
+  aoc::return_incomplete();
   // AOC_EXPECT_RESULT(281, solve_case<true>("day02.example"));
   // AOC_EXPECT_RESULT(53515, solve_case<true>("day02.input"));
+
   AOC_RETURN_CHECK_RESULT();
 }

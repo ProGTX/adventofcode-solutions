@@ -50,7 +50,8 @@ fn main() {
     let input = parse("day19.input");
     aoc::expect_result!(576, solve_case1(&input));
 
-    //println!("Part 2");
+    println!("Part 2");
+    aoc::return_incomplete();
     //aoc::expect_result!(3, solve_case2(&example));
     //aoc::expect_result!(1257, solve_case2(&input));
 }

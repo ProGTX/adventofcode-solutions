@@ -155,6 +155,7 @@ int main() {
 
   std::println("Part 2");
   AOC_EXPECT_RESULT(33, solve_case2(example));
+  aoc::return_incomplete();
   // Dijkstra is too slow for part 2 :(
   // AOC_EXPECT_RESULT(100011612, solve_case2(input));
 

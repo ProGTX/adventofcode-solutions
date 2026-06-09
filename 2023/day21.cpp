@@ -100,15 +100,18 @@ int main() {
   std::println("Part 1");
   AOC_EXPECT_RESULT(16, (solve_case<6, false>("day21.example")));
   AOC_EXPECT_RESULT(3646, (solve_case<64, false>("day21.input")));
-  // std::println("Part 2");
+
+  std::println("Part 2");
   AOC_EXPECT_RESULT(16, (solve_case<6, true>("day21.example")));
   AOC_EXPECT_RESULT(50, (solve_case<10, true>("day21.example")));
   AOC_EXPECT_RESULT(1594, (solve_case<50, true>("day21.example")));
   AOC_EXPECT_RESULT(6536, (solve_case<100, true>("day21.example")));
   AOC_EXPECT_RESULT(167004, (solve_case<500, true>("day21.example")));
   AOC_EXPECT_RESULT(668697, (solve_case<1000, true>("day21.example")));
+  aoc::return_incomplete();
   // AOC_EXPECT_RESULT(16733044, (solve_case<5000, true>("day21.example")));
   // AOC_EXPECT_RESULT(90111113594927, (solve_case<26501365,
   // true>("day21.input")));
+
   AOC_RETURN_CHECK_RESULT();
 }

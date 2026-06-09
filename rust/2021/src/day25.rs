@@ -68,6 +68,7 @@ fn main() {
     aoc::expect_result!(329, solve_case1(&input));
 
     println!("Part 2");
+    aoc::return_incomplete();
     // aoc::expect_result!(XXX, solve_case2(&example));
     // aoc::expect_result!(XXX, solve_case2(&input));
 }
