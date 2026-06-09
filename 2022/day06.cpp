@@ -32,7 +32,7 @@ fn solve_case(String const& filename) -> Vec<i32> {
   return aoc::views::read_lines(filename) |
          stdv::transform(
              [](str line) { return find_marker<WINDOW_SIZE>(line); }) |
-         aoc::ranges::to<Vec<i32>>();
+         aoc::collect_vec<i32>();
 }
 
 int main() {

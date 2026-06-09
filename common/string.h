@@ -27,6 +27,8 @@ AOC_EXPORT_NAMESPACE(aoc) {
 
 using namespace std::string_view_literals;
 
+constexpr auto collect_string() { return ranges::to<std::string>(); }
+
 template <class value_type, std::ranges::range R>
 constexpr value_type construct_string(R&& r) {
   // https://stackoverflow.com/a/68121694
@@ -269,7 +271,7 @@ template <class... Args>
 constexpr std::vector<std::string> read_lines(const std::string& filename,
                                               Args... args) {
   return views::read_lines(filename, std::forward<Args>(args)...) |
-         ranges::to<std::vector<std::string>>();
+         collect_vec<std::string>();
 }
 
 template <class value_type, std::ranges::range R>
@@ -491,7 +493,7 @@ template <class value_type = std::string>
 constexpr std::vector<value_type> split_sstream(std::string s) {
   auto stream = std::istringstream{s};
   return std::views::istream<value_type>(stream) |
-         aoc::ranges::to<std::vector<value_type>>();
+         aoc::collect_vec<value_type>();
 }
 template <class value_type = std::string>
 constexpr auto split_sstream(std::string_view s) {
@@ -543,7 +545,7 @@ constexpr int count_substrings(const std::string& haystack,
 constexpr int count_substrings(std::ranges::input_range auto&& haystack,
                                std::string_view needle) {
   // Much faster if we convert the haystack to a string first
-  auto haystack_str = haystack | ranges::to<std::string>();
+  auto haystack_str = haystack | collect_string();
   return count_substrings(std::string_view{haystack_str}, needle);
 }
 
@@ -600,7 +602,7 @@ template <std::ranges::viewable_range R>
            std::same_as<
                std::ranges::range_value_t<std::ranges::range_value_t<R>>, char>
 constexpr std::string join(R&& r, char delimiter) {
-  return r | std::views::join_with(delimiter) | aoc::ranges::to<std::string>();
+  return r | std::views::join_with(delimiter) | aoc::collect_string();
 }
 
 } // namespace ranges

@@ -26,7 +26,7 @@ template <int iterations>
 int solve_case(const std::string& filename) {
   auto input = aoc::read_single_line(filename) |
                aoc::views::to_number<u32>() |
-               aoc::ranges::to<std::vector<u32>>();
+               aoc::collect_vec<u32>();
   auto output = decltype(input){};
   for ([[maybe_unused]] auto index : stdv::iota(0, iterations)) {
     look_and_say(input, output);

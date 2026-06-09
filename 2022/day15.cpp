@@ -69,12 +69,12 @@ fn find_positions(Vec<Sensor> const& sensors, Vec<Beacon> const& beacons,
                        stdv::filter([&](Sensor const& sensor) {
                          return sensor.pos.y == inspect_row;
                        }) |
-                       aoc::ranges::to<Vec<Sensor>>();
+                       aoc::collect_vec<Sensor>();
   let beacons_on_row = beacons |
                        stdv::filter([&](Beacon const& beacon) {
                          return beacon.y == inspect_row;
                        }) |
-                       aoc::ranges::to<Vec<Beacon>>();
+                       aoc::collect_vec<Beacon>();
   return //
       Range{bounds.min, bounds.max + 1} |
       stdv::transform([&](int column) { return point{column, inspect_row}; }) |
@@ -91,7 +91,7 @@ fn find_positions(Vec<Sensor> const& sensors, Vec<Beacon> const& beacons,
           return beacon.x == current.x;
         });
       }) |
-      aoc::ranges::to<Vec<point>>();
+      aoc::collect_vec<point>();
 }
 
 template <int inspect_row>

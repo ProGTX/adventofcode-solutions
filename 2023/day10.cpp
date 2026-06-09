@@ -81,7 +81,7 @@ constexpr std::vector<int> get_pipe_loop(const field_t& field,
                           auto pos = pos_2d + diff;
                           return field.linear_index(pos.y, pos.x);
                         }) |
-        aoc::ranges::to<aoc::static_vector<int, 2>>();
+        aoc::collect_static_vec<int, 2>();
     loop_indexes.push_back(start_neighbor_indexes[0]);
   }
 

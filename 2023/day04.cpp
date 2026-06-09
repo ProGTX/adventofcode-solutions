@@ -33,7 +33,7 @@ auto parse(String const& filename) -> Vec<CardStrings> {
            let[winning_str, actual_str] = aoc::split_once(numbers, '|');
            return {String{winning_str}, String{actual_str}};
          }) |
-         aoc::ranges::to<Vec<CardStrings>>();
+         aoc::collect_vec<CardStrings>();
 }
 
 // Requires the card to be sorted

@@ -133,7 +133,7 @@ std::string solve_case(const std::string& filename) {
                       return std::string(1, '0' + static_cast<char>(value));
                     }) |
                     stdv::join_with(',') |
-                    aoc::ranges::to<std::string>();
+                    aoc::collect_string();
   return result_str;
 }
 

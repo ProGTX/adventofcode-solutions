@@ -22,7 +22,7 @@ static constexpr auto xmas_rstr = "SAMX"sv;
 
 constexpr int count_xmas(stdr::input_range auto&& range) {
   // Much faster if we convert the range to a string first
-  auto range_str = range | aoc::ranges::to<std::string>();
+  auto range_str = range | aoc::collect_string();
   return aoc::count_substrings(range_str, xmas_str) +
          aoc::count_substrings(range_str, xmas_rstr);
 }

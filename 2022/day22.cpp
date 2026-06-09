@@ -27,7 +27,7 @@ fn parse_map(std::span<String> raw_map, point map_size) -> parsed_map_t {
   parsed_map.add_row(stdv::repeat(empty_char, map_size.x));
   for (String& line : raw_map) {
     auto empty_suffix = stdv::repeat(empty_char, map_size.x - line.size() - 1) |
-                        aoc::ranges::to<String>();
+                        aoc::collect_string();
     parsed_map.add_row(empty_char + std::move(line) + std::move(empty_suffix));
   }
   parsed_map.add_row(stdv::repeat(empty_char, map_size.x));

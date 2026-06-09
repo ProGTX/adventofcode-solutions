@@ -11,7 +11,7 @@
 fn to_numbers(str const& s) -> Vec<u32> {
   return s |
          stdv::transform([](char c) { return static_cast<u32>(c - 'a'); }) |
-         aoc::ranges::to<Vec<u32>>();
+         aoc::collect_vec<u32>();
 }
 constexpr const auto I_NUMBER = static_cast<u32>('i' - 'a');
 constexpr const auto L_NUMBER = static_cast<u32>('l' - 'a');
@@ -29,7 +29,7 @@ fn to_string(std::span<const u32> numbers) -> String {
            AOC_ASSERT(n <= Z_NUMBER, "Number does not represent a letter");
            return n + 'a';
          }) |
-         aoc::ranges::to<String>();
+         aoc::collect_string();
 }
 
 // After calling this function we know we don't have any invalid letters

@@ -119,7 +119,7 @@ fn solve_case2(Polygon const& polygon) -> u64 {
                  let & [ p1, p2 ] = pair;
                  return p1 < p2;
                }) |
-               aoc::ranges::to<Vec<std::pair<Point, Point>>>();
+               aoc::collect_vec<std::pair<Point, Point>>();
   stdr::sort(pairs, [](auto&& a, auto&& b) {
     let & [ a1, a2 ] = a;
     let & [ b1, b2 ] = b;

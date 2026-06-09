@@ -280,6 +280,11 @@ constexpr auto to(Rng&& rng, Args&&... args) -> Cont {
 
 } // namespace ranges
 
+template <class T, class... Args>
+constexpr auto collect_vec(Args&&... args) {
+  return ranges::to<std::vector<T>, Args...>(std::forward<Args>(args)...);
+}
+
 } // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_RANGE_TO_H

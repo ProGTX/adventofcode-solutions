@@ -3,6 +3,7 @@
 
 #include "assert.h"
 #include "compiler.h"
+#include "range_to.h"
 #include "ranges.h"
 #include "utility.h"
 
@@ -254,6 +255,11 @@ struct is_static_vector<static_vector<T, N>> : std::true_type {};
 template <class T>
 concept is_static_vector =
     detail::is_static_vector<std::remove_cvref_t<T>>::value;
+
+template <class T, size_t N>
+constexpr auto collect_static_vec() {
+  return ranges::to<static_vector<T, N>>();
+}
 
 } // AOC_EXPORT_NAMESPACE(aoc)
 

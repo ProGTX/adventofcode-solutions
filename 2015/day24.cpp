@@ -10,7 +10,7 @@
 
 auto parse(String const& filename) -> Vec<u32> {
   auto packages =
-      aoc::views::read_numbers<u32>(filename) | aoc::ranges::to<Vec<u32>>();
+      aoc::views::read_numbers<u32>(filename) | aoc::collect_vec<u32>();
   stdr::reverse(packages);
   return packages;
 }
@@ -51,7 +51,7 @@ fn solve_case(std::span<const u32> packages) -> u64 {
                      packages, combo);
                  return neighbor;
                }) |
-               aoc::ranges::to<Vec<Group>>();
+               aoc::collect_vec<Group>();
     if (!possible.empty()) {
       break;
     }

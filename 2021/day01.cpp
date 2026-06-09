@@ -9,7 +9,7 @@
 #include <span>
 
 auto parse(String const& filename) -> Vec<u32> {
-  return aoc::views::read_numbers<u32>(filename) | aoc::ranges::to<Vec<u32>>();
+  return aoc::views::read_numbers<u32>(filename) | aoc::collect_vec<u32>();
 }
 
 fn solve_case1(std::span<const u32> depths) -> usize {
@@ -23,7 +23,7 @@ fn solve_case2(std::span<const u32> depths) -> usize {
                      stdv::transform([](auto&& window) {
                        return aoc::ranges::accumulate(window, 0u);
                      }) |
-                     aoc::ranges::to<Vec<u32>>());
+                     aoc::collect_vec<u32>());
 }
 
 int main() {

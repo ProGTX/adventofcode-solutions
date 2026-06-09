@@ -46,10 +46,10 @@ fn solve_case(Boxes const& boxes) -> usize {
             .to = static_cast<usize>(index_q),
         };
       }) |
-      aoc::ranges::to<Vec<DistanceEntry>>();
+      aoc::collect_vec<DistanceEntry>();
   stdr::sort(distances, {}, &DistanceEntry::distance);
   // In the beginning each box is its own circuit
-  auto circuit_map = Range{0uz, boxes.size()} | aoc::ranges::to<Vec<usize>>();
+  auto circuit_map = Range{0uz, boxes.size()} | aoc::collect_vec<usize>();
   for (let& de :
        distances | stdv::take(std::min(NUM_CONNECTIONS, distances.size()))) {
     let from = circuit_map[de.from];

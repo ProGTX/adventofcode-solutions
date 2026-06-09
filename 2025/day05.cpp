@@ -23,7 +23,7 @@ auto parse(String const& filename) -> Input {
                       .y = (point.y + 1),
                   };
                 }) |
-                aoc::ranges::to<Vec<range_t>>();
+                aoc::collect_vec<range_t>();
   stdr::sort(ranges, {}, &range_t::x);
 
   // Remove overlap from ranges
@@ -44,7 +44,7 @@ auto parse(String const& filename) -> Input {
     return ranges2;
   }();
 
-  auto ids = lines | aoc::views::to_number<u64>() | aoc::ranges::to<Vec<u64>>();
+  auto ids = lines | aoc::views::to_number<u64>() | aoc::collect_vec<u64>();
   stdr::sort(ids);
 
   return {std::move(ranges), std::move(ids)};

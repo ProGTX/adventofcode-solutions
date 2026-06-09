@@ -45,7 +45,7 @@ fn parse(String const& filename) -> Vec<Blueprint> {
                Resources{n(geo_cost[0]), 0, n(geo_cost[3]), 0},
            };
          }) |
-         aoc::ranges::to<Vec<Blueprint>>();
+         aoc::collect_vec<Blueprint>();
 }
 
 /// robots and time_left are packed into a u32:

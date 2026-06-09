@@ -166,7 +166,7 @@ struct GameState {
           }
           return new_state;
         }) |
-        aoc::ranges::to<Vec<GameState>>();
+        aoc::collect_vec<GameState>();
     if (possible_plays.empty()) {
       return PlayerTurnResult::GameEnded(TurnWinner::Boss);
     } else {

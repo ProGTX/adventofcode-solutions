@@ -23,7 +23,7 @@ auto parse(String const& filename) -> Vec<Reindeer> {
                .rest = aoc::to_number<u32>(words[13]),
            };
          }) |
-         aoc::ranges::to<Vec<Reindeer>>();
+         aoc::collect_vec<Reindeer>();
 }
 
 template <u32 SECONDS>
@@ -54,9 +54,8 @@ fn solve_case2(String const& filename) -> u32 {
     }
     // Award the farthest reindeer
     using index_dist_t = std::pair<usize, u32>;
-    auto distances_sorted = distances |
-                            stdv::enumerate |
-                            aoc::ranges::to<std::vector<index_dist_t>>();
+    auto distances_sorted =
+        distances | stdv::enumerate | aoc::collect_vec<index_dist_t>();
     stdr::sort(distances_sorted, stdr::greater{}, &index_dist_t::second);
     let farthest_dist = distances_sorted.front().second;
     for (let[index, dist] : distances_sorted) {

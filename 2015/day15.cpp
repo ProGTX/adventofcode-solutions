@@ -32,7 +32,7 @@ auto parse(String const& filename) -> Vec<Ingredient> {
                .calories = static_cast<u32>(parse_property(properties[4])),
            };
          }) |
-         aoc::ranges::to<Vec<Ingredient>>();
+         aoc::collect_vec<Ingredient>();
 }
 
 template <bool KCAL_500>

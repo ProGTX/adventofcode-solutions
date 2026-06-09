@@ -75,9 +75,9 @@ auto solve_case(const std::string& filename) {
     falling_bytes.push_back(aoc::split<point>(line, ','));
   }
 
-  memspace_t memspace{stdv::repeat(empty, grid_size.y * grid_size.x) |
-                          aoc::ranges::to<std::string>(),
-                      grid_size.y, grid_size.x};
+  memspace_t memspace{
+      stdv::repeat(empty, grid_size.y * grid_size.x) | aoc::collect_string(),
+      grid_size.y, grid_size.x};
 
   auto result = std::conditional_t<check_closed, point, int>{};
   if constexpr (!check_closed) {

@@ -102,7 +102,7 @@ fn solve_case1(Input const& input) -> u32 {
 }
 
 fn solve_case2(Input const& input) -> u32 {
-  auto packets = input | stdv::join | aoc::ranges::to<Vec<Packet>>();
+  auto packets = input | stdv::join | aoc::collect_vec<Packet>();
   let p2 = parse_list_inner("[2]");
   let p6 = parse_list_inner("[6]");
   packets.push_back(p2);

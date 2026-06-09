@@ -14,7 +14,7 @@ auto parse(String const& filename) -> Vec<u32> {
            return aoc::ranges::accumulate(aoc::split_to_vec<u32>(food, '\n'),
                                           0u);
          }) |
-         aoc::ranges::to<Vec<u32>>();
+         aoc::collect_vec<u32>();
 }
 
 fn solve_case1(std::span<const u32> elves) -> u32 { return stdr::max(elves); }

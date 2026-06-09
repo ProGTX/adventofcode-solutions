@@ -103,8 +103,8 @@ constexpr int most_bananas(std::span<const int> secrets) {
 
 template <bool change_sequence>
 int_t solve_case(const std::string& filename) {
-  auto buyer_starters = aoc::views::read_numbers<int>(filename) |
-                        aoc::ranges::to<std::vector<int>>();
+  auto buyer_starters =
+      aoc::views::read_numbers<int>(filename) | aoc::collect_vec<int>();
 
   int_t sum = 0;
   if constexpr (!change_sequence) {

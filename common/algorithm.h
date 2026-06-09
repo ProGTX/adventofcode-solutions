@@ -283,7 +283,7 @@ class all_nodes_encountered {
   constexpr all_nodes_encountered(std::span<Node> nodes)
       : all_nodes_encountered{std::span<const Node>(nodes)} {}
   constexpr all_nodes_encountered(std::span<const Node> nodes)
-      : m_searched_nodes{nodes | ranges::to<std::vector<Node>>()} {}
+      : m_searched_nodes{nodes | collect_vec<Node>()} {}
 
   constexpr bool operator()(Node node) {
     if (std::ranges::contains(m_searched_nodes, node)) {

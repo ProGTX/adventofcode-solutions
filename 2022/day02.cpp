@@ -14,7 +14,7 @@ auto parse(String const& filename) -> Vec<std::pair<char, char>> {
            auto [a, b] = aoc::split_once(line, ' ');
            return std::pair{a.at(0), b.at(0)};
          }) |
-         aoc::ranges::to<Vec<std::pair<char, char>>>();
+         aoc::collect_vec<std::pair<char, char>>();
 }
 
 enum hand {

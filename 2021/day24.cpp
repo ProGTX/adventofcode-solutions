@@ -94,7 +94,7 @@ fn parse(String const& filename) -> Vec<Instr> {
   return parse_program(
       strings |
       stdv::transform([](const String& s) -> str { return s; }) |
-      aoc::ranges::to<Vec<str>>());
+      aoc::collect_vec<str>());
 }
 
 using Registers = std::array<i64, 4>;
@@ -144,7 +144,7 @@ fn solve_case(std::span<const Instr> instructions,
   let starts =
       Range{0uz, instructions.size()} |
       stdv::filter([&](usize i) { return instructions[i].op == Op::Inp; }) |
-      aoc::ranges::to<Vec<usize>>();
+      aoc::collect_vec<usize>();
   auto blocks = Vec<std::span<const Instr>>{};
   for (let i : Range{0uz, starts.size() - 1}) {
     blocks.push_back(

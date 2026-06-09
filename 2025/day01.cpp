@@ -17,7 +17,7 @@ auto parse(String const& filename) -> Vec<i32> {
            }
            return distance;
          }) |
-         aoc::ranges::to<Vec<i32>>();
+         aoc::collect_vec<i32>();
 }
 
 fn solve_case1(std::span<const i32> sequence) -> i32 {

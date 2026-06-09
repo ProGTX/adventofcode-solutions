@@ -62,7 +62,7 @@ constexpr auto get_end_arrows(point end_pos) {
          stdv::transform([&](const aoc::facing_t facing) {
            return arrow_t{end_pos, facing};
          }) |
-         aoc::ranges::to<aoc::static_vector<arrow_t, 2>>();
+         aoc::collect_static_vec<arrow_t, 2>();
 }
 
 constexpr int lowest_score(const maze_t& maze, point start_pos, point end_pos) {

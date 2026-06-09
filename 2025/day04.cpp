@@ -26,7 +26,7 @@ fn accessible_indexes(PaperRolls const& paper_rolls) -> Vec<usize> {
                                 aoc::equal_to_value{PAPER}));
       }) |
       stdv::keys |
-      aoc::ranges::to<Vec<usize>>();
+      aoc::collect_vec<usize>();
 }
 
 auto parse(String const& filename) -> PaperRolls {

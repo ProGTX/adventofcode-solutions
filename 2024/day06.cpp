@@ -134,8 +134,7 @@ int solve_case(const std::string& filename) {
 void test_interference(point extra_obstacle) {
   constexpr point start_pos{5, 7};
   auto lab_map = test_map();
-  std::println("TESTING",
-               stdv::repeat('~', 64) | aoc::ranges::to<std::string>());
+  std::println("TESTING", stdv::repeat('~', 64) | aoc::collect_string());
   lab_map.at(extra_obstacle.y, extra_obstacle.x) = obstacle;
   std::println("Check", follow_guard<true>(lab_map, start_pos));
   lab_map.at(extra_obstacle.y, extra_obstacle.x) = 'O';

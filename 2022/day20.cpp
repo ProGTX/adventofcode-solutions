@@ -26,7 +26,7 @@ fn reorder_list(OGList&& original_list) -> Vec<i64> {
                   let[i, v] = pair;
                   return {i, v};
                 }) |
-                aoc::ranges::to<Vec<IndexedNum>>();
+                aoc::collect_vec<IndexedNum>();
   auto mixed = numbers;
 
   for (let _ : Range{0uz, num_mixings}) {
@@ -56,9 +56,7 @@ fn reorder_list(OGList&& original_list) -> Vec<i64> {
     }
   }
 
-  return mixed |
-         stdv::transform(&IndexedNum::value) |
-         aoc::ranges::to<Vec<i64>>();
+  return mixed | stdv::transform(&IndexedNum::value) | aoc::collect_vec<i64>();
 }
 
 fn sum_numbers(Vec<i64> const& list) -> i64 {

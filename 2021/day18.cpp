@@ -60,7 +60,7 @@ fn parse_sfn(str s) -> SFN { return parse_sfn_inner(s).first; }
 auto parse(String const& filename) -> Vec<SFN> {
   return aoc::views::read_lines(filename) |
          stdv::transform(parse_sfn) |
-         aoc::ranges::to<Vec<SFN>>();
+         aoc::collect_vec<SFN>();
 }
 
 enum class Direction {

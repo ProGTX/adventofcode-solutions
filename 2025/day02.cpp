@@ -17,7 +17,7 @@ auto parse(String const& filename) -> Vec<range_t> {
            let point = aoc::split<Point>(range, "-");
            return range_t(point.x, (point.y + 1));
          }) |
-         aoc::ranges::to<Vec<range_t>>();
+         aoc::collect_vec<range_t>();
 }
 
 fn solve_case1(std::span<const range_t> ranges) -> u64 {

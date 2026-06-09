@@ -51,7 +51,7 @@ auto parse(const String& filename) -> Input {
     }
     let tunnels = aoc::split(neighbors_str, ',', aoc::trimmer{}) |
                   stdv::transform([&](str n) { return name_to_id.expect(n); }) |
-                  aoc::ranges::to<Vec<usize>>();
+                  aoc::collect_vec<usize>();
 
     valves[id] = Valve{
         .tunnels = std::move(tunnels),
@@ -92,7 +92,7 @@ fn compress_graph(Valves const& valves, usize aa_id)
   let all_distances =
       Range{0uz, valves.size()} |
       stdv::transform([&](usize i) { return bfs_distances(valves, i); }) |
-      aoc::ranges::to<Vec<Vec<u8>>>();
+      aoc::collect_vec<Vec<u8>>();
 
   // Collect useful valves (AA + flow > 0)
   auto nodes = Vec<usize>{};

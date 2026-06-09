@@ -20,7 +20,7 @@ fn to_bit(char c) -> u8 { return static_cast<u8>(c == '#'); }
 
 fn parse(String const& filename) -> Input {
   let lines =
-      aoc::views::read_lines(filename) | aoc::ranges::to<Vec<std::string>>();
+      aoc::views::read_lines(filename) | aoc::collect_vec<std::string>();
   auto algorithm =
       lines[0] | stdv::transform(to_bit) | aoc::ranges::to<Algorithm>();
   constexpr let skip_lines = 1; // read_lines already skips empty lines

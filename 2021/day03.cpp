@@ -18,7 +18,7 @@ auto parse(String const& filename) -> Vec<Bitset> {
                   aoc::views::to_number<u8>() |
                   aoc::ranges::to<Bitset>();
          }) |
-         aoc::ranges::to<Vec<Bitset>>();
+         aoc::collect_vec<Bitset>();
 }
 
 fn count_bits(std::span<const Bitset> report) -> Counter {

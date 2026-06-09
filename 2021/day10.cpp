@@ -57,7 +57,7 @@ int_t solve_case(const std::string& filename) {
   int_t sum = 0;
   auto scores = navigation_lines |
                 stdv::transform(&get_score<autocomplete>) |
-                aoc::ranges::to<std::vector<int_t>>();
+                aoc::collect_vec<int_t>();
   if constexpr (!autocomplete) {
     sum = aoc::ranges::accumulate(scores, 0);
   } else {

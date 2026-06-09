@@ -16,7 +16,7 @@ auto parse(String const& filename) -> Vec<Game> {
            let[_, game_str] = aoc::split_once(line, ':');
            return aoc::split_to_vec<String>(game_str, ';');
          }) |
-         aoc::ranges::to<Vec<Game>>();
+         aoc::collect_vec<Game>();
 }
 
 struct cube_config_t {
@@ -82,9 +82,8 @@ template <cube_config_t config>
 fn solve_case(Vec<Game> const& games) -> i32 {
   auto sum = i32{};
   for (let[id, rounds] : games | stdv::enumerate) {
-    let rounds_sv = rounds |
-                    aoc::views::transform_cast<str>() |
-                    aoc::ranges::to<Vec<str>>();
+    let rounds_sv =
+        rounds | aoc::views::transform_cast<str>() | aoc::collect_vec<str>();
     auto power = cube_power<config>(std::span<const str>{rounds_sv});
     if constexpr (config != config2) {
       power *= id + 1;

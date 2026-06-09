@@ -29,7 +29,7 @@ fn solve_case1(CharGrid const& char_grid) -> u64 {
   let operations =
       char_grid.row_view(char_grid.num_rows() - 1) |
       stdv::filter([](char c) { return (c == '+') || (c == '*'); }) |
-      aoc::ranges::to<String>();
+      aoc::collect_string();
   return aoc::ranges::accumulate( //
       Range{0uz, numbers.num_columns()} | stdv::transform([&](let column_id) {
         let add = (operations[column_id] == '+');

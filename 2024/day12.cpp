@@ -36,7 +36,7 @@ constexpr auto get_neighbors(point position) {
          stdv::transform([&](aoc::facing_t facing) {
            return position + aoc::get_diff(facing);
          }) |
-         aoc::ranges::to<aoc::static_vector<point, 4>>();
+         aoc::collect_static_vec<point, 4>();
 }
 
 constexpr void add_neighbors(const char name, const point position,
