@@ -1,19 +1,23 @@
 // https://adventofcode.com/2023/day/2
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
-#include <array>
-#include <iterator>
-#include <numeric>
 #include <print>
 #include <ranges>
 #include <span>
-#include <string>
-#include <string_view>
-#include <vector>
 
-using namespace std::string_view_literals;
+using Game = Vec<String>;
+
+auto parse(String const& filename) -> Vec<Game> {
+  return aoc::views::read_lines(filename) |
+         stdv::transform([](str line) {
+           let[_, game_str] = aoc::split_once(line, ':');
+           return aoc::split_to_vec<String>(game_str, ';');
+         }) |
+         aoc::ranges::to<Vec<Game>>();
+}
 
 struct cube_config_t {
   int red{0};
@@ -40,19 +44,19 @@ inline constexpr cube_config_t config2{0, 0, 0};
 
 /// Returns 1 if game possible, 0 if not (part 1)
 /// Returns > 1 if config == {0,0,0} (part 2)
-template <cube_config_t config, std::size_t Extent>
-int cube_power(std::span<const std::string_view, Extent> games) {
+template <cube_config_t config>
+fn cube_power(std::span<const str> games) -> i32 {
   static constexpr bool part2 = (config == config2);
   cube_config_t max_config{1, 1, 1};
-  for (auto game_str : games) {
+  for (let game_str : games) {
     auto cubes_str = aoc::split_to_array<3>(game_str, ',');
     cube_config_t current_config;
-    for (auto cube_config : cubes_str) {
-      if (cube_config.empty()) {
+    for (let cube_str : cubes_str) {
+      if (cube_str.empty()) {
         continue;
       }
-      auto [number_str, color] = aoc::split_once(aoc::trim(cube_config), ' ');
-      auto number = aoc::to_number<int>(number_str);
+      let[number_str, color] = aoc::split_once(aoc::trim(cube_str), ' ');
+      let number = aoc::to_number<i32>(number_str);
       if (color == "red") {
         current_config.red = number;
       } else if (color == "green") {
@@ -75,45 +79,44 @@ int cube_power(std::span<const std::string_view, Extent> games) {
 }
 
 template <cube_config_t config>
-int solve_case(const std::string& filename) {
-  int sum = 0;
-
-  for (int id = 1; std::string_view line : aoc::views::read_lines(filename)) {
-    auto [prefix, game_str] = aoc::split_once(line, ':');
-    auto games = aoc::split_to_vec(game_str, ';');
-    int power = cube_power<config>(std::span<const std::string_view>{games});
+fn solve_case(Vec<Game> const& games) -> i32 {
+  auto sum = i32{};
+  for (let[id, rounds] : games | stdv::enumerate) {
+    let rounds_sv = rounds |
+                    aoc::views::transform_cast<str>() |
+                    aoc::ranges::to<Vec<str>>();
+    auto power = cube_power<config>(std::span<const str>{rounds_sv});
     if constexpr (config != config2) {
-      power *= id;
+      power *= id + 1;
     }
     sum += power;
-    ++id;
   }
-
   return sum;
 }
 
-int main() {
-  std::println("Asserts");
-  AOC_EXPECT_RESULT(
-      1, (cube_power<config1>(std::span<const std::string_view>{
-             {"3 blue, 4 red"sv, "1 red, 2 green, 6 blue"sv, "2 green"sv}})));
-  AOC_EXPECT_RESULT(
-      0, (cube_power<config1>(std::span<const std::string_view>{
-             {"8 green, 6 blue, 20 red"sv, "5 blue, 4 red, 13 green"sv,
-              "5 green, 1 red"sv}})));
-  AOC_EXPECT_RESULT(
-      48, (cube_power<config2>(std::span<const std::string_view>{
-              {"3 blue, 4 red"sv, "1 red, 2 green, 6 blue"sv, "2 green"sv}})));
-  AOC_EXPECT_RESULT(
-      1560, (cube_power<config2>(std::span<const std::string_view>{
-                {"8 green, 6 blue, 20 red"sv, "5 blue, 4 red, 13 green"sv,
-                 "5 green, 1 red"sv}})));
+static_assert(1 ==
+              cube_power<config1>(std::span<const str>{
+                  {"3 blue, 4 red", "1 red, 2 green, 6 blue", "2 green"}}));
+static_assert(0 == cube_power<config1>(std::span<const str>{
+                       {"8 green, 6 blue, 20 red", "5 blue, 4 red, 13 green",
+                        "5 green, 1 red"}}));
+static_assert(48 ==
+              cube_power<config2>(std::span<const str>{
+                  {"3 blue, 4 red", "1 red, 2 green, 6 blue", "2 green"}}));
+static_assert(1560 == cube_power<config2>(std::span<const str>{
+                          {"8 green, 6 blue, 20 red", "5 blue, 4 red, 13 green",
+                           "5 green, 1 red"}}));
 
+int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(8, solve_case<config1>("day02.example"));
-  AOC_EXPECT_RESULT(2600, solve_case<config1>("day02.input"));
+  let example = parse("day02.example");
+  AOC_EXPECT_RESULT(8, solve_case<config1>(example));
+  let input = parse("day02.input");
+  AOC_EXPECT_RESULT(2600, solve_case<config1>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(2286, solve_case<config2>("day02.example"));
-  AOC_EXPECT_RESULT(86036, solve_case<config2>("day02.input"));
+  AOC_EXPECT_RESULT(2286, solve_case<config2>(example));
+  AOC_EXPECT_RESULT(86036, solve_case<config2>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
