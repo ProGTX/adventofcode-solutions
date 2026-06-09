@@ -172,8 +172,7 @@ String next_password_str(str const& password) {
 }
 
 String solve_case(const String& filename) {
-  std::ifstream file{filename};
-  return next_password_str(aoc::read_line(file));
+  return next_password_str(aoc::read_single_line(filename));
 }
 
 int main() {

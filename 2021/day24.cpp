@@ -90,8 +90,7 @@ fn parse_program(std::span<const str> lines) -> Vec<Instr> {
 }
 
 fn parse(String const& filename) -> Vec<Instr> {
-  let strings =
-      aoc::views::read_lines(filename) | aoc::ranges::to<Vec<String>>();
+  let strings = aoc::read_lines(filename);
   return parse_program(
       strings |
       stdv::transform([](const String& s) -> str { return s; }) |

@@ -21,8 +21,7 @@ constexpr let FORBIDDEN = HALLWAY[2];
 fn hallway_index(usize room_index) -> usize { return room_index * 2 + 2; }
 
 fn parse(String const& filename) -> Input {
-  let lines = aoc::views::read_lines(filename, aoc::keep_spaces{}) |
-              aoc::ranges::to<Vec<String>>();
+  let lines = aoc::read_lines(filename, aoc::keep_spaces{});
   Input rooms;
   for (let room_index : Range{0uz, 4uz}) {
     let col = hallway_index(room_index) + 1;

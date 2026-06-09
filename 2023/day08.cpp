@@ -72,7 +72,7 @@ constexpr int_t num_steps(const std::vector<node_t>& directions,
 template <bool all_paths>
 int_t solve_case(const std::string& filename) {
   std::ifstream file{filename};
-  auto instructions = aoc::read_line(file) |
+  auto instructions = aoc::read_single_line(filename) |
                       stdv::transform(get_direction) |
                       aoc::ranges::to<std::vector<node_select_func_t>>();
 

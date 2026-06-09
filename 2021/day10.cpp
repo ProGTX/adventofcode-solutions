@@ -52,8 +52,7 @@ static_assert(294 == get_score<true>("<{([{{}}[<[[[<>{}]]]>[]]"));
 
 template <bool autocomplete>
 int_t solve_case(const std::string& filename) {
-  auto navigation_lines = aoc::views::read_lines(filename) |
-                          aoc::ranges::to<std::vector<std::string>>();
+  auto navigation_lines = aoc::read_lines(filename);
 
   int_t sum = 0;
   auto scores = navigation_lines |

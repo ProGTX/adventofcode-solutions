@@ -103,11 +103,11 @@ fn sum_non_red(str s) -> i32 {
 
 template <bool red>
 fn solve_case(String const& filename) -> i32 {
-  auto file = std::ifstream{filename};
+  let line = aoc::read_single_line(filename);
   if constexpr (!red) {
-    return sum(aoc::read_line(file));
+    return sum(line);
   } else {
-    return sum_non_red(aoc::read_line(file));
+    return sum_non_red(line);
   }
 }
 

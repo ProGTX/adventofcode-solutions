@@ -8,9 +8,7 @@
 #include <ranges>
 
 auto parse(String const& filename) -> Vec<String> {
-  return aoc::views::read_lines(filename) |
-         aoc::views::transform_cast<String>() |
-         aoc::ranges::to<Vec<String>>();
+  return aoc::read_lines(filename);
 }
 
 fn is_symbol(char c) -> bool { return !aoc::is_number(c) && (c != '.'); }

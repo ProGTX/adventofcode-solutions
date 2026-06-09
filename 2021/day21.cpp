@@ -12,7 +12,7 @@
 using Input = std::pair<u32, u32>;
 
 fn parse(String const& filename) -> Input {
-  auto lines = aoc::views::read_lines(filename);
+  auto lines = aoc::read_lines(filename);
   auto it = std::begin(lines);
   let p1 = aoc::to_number<u32>(
       aoc::trim(*it).substr(sizeof("Player 1 starting position:")));

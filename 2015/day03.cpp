@@ -32,13 +32,11 @@ int deliveries(std::string_view directions) {
 }
 
 int solve_case1(const std::string& filename) {
-  std::ifstream file{filename};
-  return deliveries<1>(aoc::read_line(file));
+  return deliveries<1>(aoc::read_single_line(filename));
 }
 
 int solve_case2(const std::string& filename) {
-  std::ifstream file{filename};
-  return deliveries<2>(aoc::read_line(file));
+  return deliveries<2>(aoc::read_single_line(filename));
 }
 
 int main() {

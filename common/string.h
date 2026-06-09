@@ -253,9 +253,23 @@ constexpr std::size_t pattern_size(const char[N]) {
 }
 
 template <class... Args>
-constexpr std::string read_line(std::ifstream& stream, Args... args) {
+constexpr std::string read_single_line(const std::string& filename,
+                                       Args... args) {
+  auto view = views::read_lines(filename, std::forward<Args>(args)...);
+  return *view.begin();
+}
+
+template <class... Args>
+constexpr std::string read_single_line(std::ifstream& stream, Args... args) {
   auto view = views::read_lines(stream, std::forward<Args>(args)...);
   return *view.begin();
+}
+
+template <class... Args>
+constexpr std::vector<std::string> read_lines(const std::string& filename,
+                                              Args... args) {
+  return views::read_lines(filename, std::forward<Args>(args)...) |
+         ranges::to<std::vector<std::string>>();
 }
 
 template <class value_type, std::ranges::range R>

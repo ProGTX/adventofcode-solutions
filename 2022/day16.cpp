@@ -25,7 +25,7 @@ struct Input {
 };
 
 auto parse(const String& filename) -> Input {
-  let lines = aoc::views::read_lines(filename) | aoc::ranges::to<Vec<String>>();
+  let lines = aoc::read_lines(filename);
 
   auto name_to_id = aoc::name_to_id{};
   for (str line : lines) {

@@ -24,8 +24,7 @@ void look_and_say(Vec<u32> const& input, Vec<u32>& output) {
 
 template <int iterations>
 int solve_case(const std::string& filename) {
-  std::ifstream file{filename};
-  auto input = aoc::read_line(file) |
+  auto input = aoc::read_single_line(filename) |
                aoc::views::to_number<u32>() |
                aoc::ranges::to<std::vector<u32>>();
   auto output = decltype(input){};

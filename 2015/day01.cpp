@@ -10,8 +10,7 @@ template <bool check_position>
 int solve_case(const std::string& filename) {
   int floor = 0;
   [[maybe_unused]] int position = 0;
-  std::ifstream file{filename};
-  for (char c : aoc::read_line(file)) {
+  for (char c : aoc::read_single_line(filename)) {
     floor += static_cast<int>(c == '(') - static_cast<int>(c == ')');
     if constexpr (check_position) {
       ++position;

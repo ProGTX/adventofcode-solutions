@@ -10,9 +10,7 @@
 #include <span>
 
 auto parse(String const& filename) -> Vec<String> {
-  return aoc::views::read_lines(filename) |
-         aoc::views::transform_cast<String>() |
-         aoc::ranges::to<Vec<String>>();
+  return aoc::read_lines(filename);
 }
 
 static constexpr auto numbers_view =

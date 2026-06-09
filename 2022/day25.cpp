@@ -9,7 +9,7 @@
 #include <ranges>
 
 fn parse(String const& filename) -> Vec<String> {
-  return aoc::views::read_lines(filename) | aoc::ranges::to<Vec<String>>();
+  return aoc::read_lines(filename);
 }
 
 fn snafu_char_to_int(char value) -> int {

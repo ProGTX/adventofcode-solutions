@@ -25,11 +25,14 @@ struct Input {
 };
 
 auto parse(String const& filename) -> Input {
-  Input result;
-  std::ifstream file{filename};
+  auto file = std::ifstream{filename};
 
-  let line = aoc::read_line(file);
-  result.seed_ints = aoc::split_to_vec<i64>(line.substr(sizeof("seeds:")), ' ');
+  let first_line = aoc::read_single_line(file);
+  auto result = Input{
+      .seed_ints =
+          aoc::split_to_vec<i64>(first_line.substr(sizeof("seeds:")), ' '),
+      .mappings = {},
+  };
 
   Vec<single_mapping_t> mapping;
   for (str line : aoc::views::read_lines(file)) {
