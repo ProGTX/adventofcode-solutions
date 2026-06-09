@@ -558,6 +558,12 @@ class priority_queue {
 /// don't have to include iostream
 void flush() { std::cout << std::flush; }
 
+void return_incomplete() {
+  std::println("  This test is incomplete, skipping");
+  flush();
+  std::exit(AOC_SKIP_RETURN_CODE);
+}
+
 } // AOC_EXPORT_NAMESPACE(aoc)
 
 template <class T>

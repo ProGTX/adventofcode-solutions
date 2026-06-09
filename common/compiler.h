@@ -31,6 +31,10 @@
 #endif
 #endif
 
+#ifndef AOC_SKIP_RETURN_CODE
+#define AOC_SKIP_RETURN_CODE 17
+#endif
+
 #if !defined(_MSC_VER)
 #define AOC_CONSTEVAL consteval
 #endif

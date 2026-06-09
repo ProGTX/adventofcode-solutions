@@ -54,6 +54,10 @@ if (AOC_MODULE_SUPPORT)
   )
 endif()
 
+# We use this to mark incomplete tests as skipped
+set(AOC_SKIP_RETURN_CODE 17)
+add_compile_definitions(AOC_SKIP_RETURN_CODE=${AOC_SKIP_RETURN_CODE})
+
 function(copy_single_input_file target filename)
   add_custom_command(
     TARGET ${target} PRE_BUILD
@@ -98,6 +102,9 @@ function(add_sample sample_name year)
   endif()
 
   add_test(NAME ${target} COMMAND ${target})
+  set_tests_properties(${target} PROPERTIES
+      SKIP_RETURN_CODE ${AOC_SKIP_RETURN_CODE}
+  )
 endfunction()
 
 add_subdirectory(external)

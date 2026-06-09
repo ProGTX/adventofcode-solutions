@@ -23,6 +23,7 @@ function(add_rust_test sample_name year)
     )
     set_tests_properties(${year}_${sample_name}_rust PROPERTIES
         DEPENDS rust_build
+        SKIP_RETURN_CODE ${AOC_SKIP_RETURN_CODE}
     )
 
     # rust_local_sources is needed by generate_cargo_toml

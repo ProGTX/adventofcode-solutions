@@ -1,3 +1,8 @@
 // @RUST_GENERATED@
 
 @RUST_UTILS_SECTION@
+
+pub fn return_incomplete() {
+    println!("  This test is incomplete, skipping");
+    std::process::exit(@AOC_SKIP_RETURN_CODE@);
+}
