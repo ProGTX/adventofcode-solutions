@@ -1,27 +1,33 @@
 // https://adventofcode.com/2023/day/7
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <array>
 #include <compare>
-#include <map>
 #include <print>
 #include <ranges>
-#include <span>
-#include <string>
-#include <string_view>
-#include <vector>
 
-using namespace std::string_view_literals;
+using Input = Vec<std::pair<String, i32>>;
 
-inline constexpr int joker_card_number = 1;
-inline constexpr int ace_card_number = 14;
+auto parse(String const& filename) -> Input {
+  using Pair = Input::value_type;
+  return aoc::views::read_lines(filename) |
+         stdv::transform([](str line) {
+           auto [hand_str, bid_str] = aoc::split_once(line, ' ');
+           return Pair{String{hand_str}, aoc::to_number<i32>(bid_str)};
+         }) |
+         aoc::collect_vec<Pair>();
+}
+
+constexpr let joker_card_number = 1;
+constexpr let ace_card_number = 14;
 
 template <bool joker>
-constexpr int card_to_number(char c) {
+fn card_to_number(char c) -> i32 {
   if (aoc::is_number(c)) {
-    int number = static_cast<int>(c - '0');
+    let number = static_cast<i32>(c - '0');
     AOC_ASSERT((number > joker_card_number) && (number < 10),
                "Invalid card number");
     return number;
@@ -63,19 +69,19 @@ enum class type_t {
 
 template <bool joker>
 struct hand_type {
-  using cards_t = std::array<int, 5>;
+  using cards_t = std::array<i32, 5>;
 
   cards_t cards;
 
-  constexpr hand_type(std::string_view cards_str) {
+  constexpr hand_type(str cards_str) {
     stdr::transform(cards_str, cards.begin(), &card_to_number<joker>);
   }
 
   constexpr hand_type(const cards_t& cards_) : cards{cards_} {}
 
-  constexpr type_t type() const {
-    std::array<int, ace_card_number> card_map{};
-    int num_jokers = 0;
+  fn type() const -> type_t {
+    std::array<i32, ace_card_number> card_map{};
+    i32 num_jokers = 0;
     for (auto c : cards) {
       if (c == joker_card_number) {
         if constexpr (joker) {
@@ -115,7 +121,7 @@ struct hand_type {
     }
   }
 
-  constexpr std::strong_ordering operator<=>(const hand_type& other) const {
+  fn operator<=>(const hand_type& other) const->std::strong_ordering {
     auto type_comp = (type() <=> other.type());
     if (type_comp != std::strong_ordering::equal) {
       return type_comp;
@@ -145,47 +151,47 @@ static_assert(hand_type<false>{"KTJJT"} < hand_type<false>{"KK677"});
 static_assert(hand_type<true>{"KTJJT"} > hand_type<true>{"KK677"});
 
 template <bool joker>
-using single_bid_type = std::pair<hand_type<joker>, int>;
+using bid_type = std::pair<hand_type<joker>, i32>;
 
 template <bool joker>
-using bids_type = std::vector<single_bid_type<joker>>;
-
-template <bool joker>
-constexpr int total_winnings(const bids_type<joker>& bids) {
-  bids_type<joker> sorted_bids = aoc::ranges::sorted(bids);
-  int sum = 0;
-  for (int i = 0; i < sorted_bids.size(); ++i) {
-    sum += (i + 1) * sorted_bids[i].second;
-  }
-  return sum;
+fn total_winnings(Vec<bid_type<joker>> const& bids) -> i32 {
+  let sorted_bids = aoc::ranges::sorted(bids);
+  return aoc::ranges::accumulate(
+      sorted_bids | stdv::enumerate | stdv::transform([](let& elem) {
+        let & [ i, bid ] = elem;
+        return static_cast<i32>(i + 1) * bid.second;
+      }),
+      0);
 }
 
 static_assert((765 * 1 + 12 * 2) ==
-              total_winnings<false>({single_bid_type<false>{"KTJJT", 765},
-                                     single_bid_type<false>{"QQQJA", 12}}));
+              total_winnings<false>({bid_type<false>{"KTJJT", 765},
+                                     bid_type<false>{"QQQJA", 12}}));
 static_assert((765 * 2 + 12 * 1) ==
-              total_winnings<true>({single_bid_type<true>{"KTJJT", 765},
-                                    single_bid_type<true>{"QQQJA", 12}}));
+              total_winnings<true>({bid_type<true>{"KTJJT", 765},
+                                    bid_type<true>{"QQQJA", 12}}));
 
 template <bool joker>
-int solve_case(const std::string& filename) {
-  bids_type<joker> bids;
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [hand_str, bid_str] = aoc::split_once(line, ' ');
-    bids.emplace_back(hand_str, aoc::to_number<int>(bid_str));
-  }
-
-  int sum = total_winnings<joker>(bids);
-
-  return sum;
+fn solve_case(Input const& raw) -> i32 {
+  return total_winnings<joker>( //
+      raw |
+      stdv::transform([](let& elem) {
+        let & [ hand_str, bid ] = elem;
+        return bid_type<joker>(hand_str, bid);
+      }) |
+      aoc::collect_vec<bid_type<joker>>());
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(6440, (solve_case<false>("day07.example")));
-  AOC_EXPECT_RESULT(249638405, (solve_case<false>("day07.input")));
+  let example = parse("day07.example");
+  AOC_EXPECT_RESULT(6440, (solve_case<false>(example)));
+  let input = parse("day07.input");
+  AOC_EXPECT_RESULT(249638405, (solve_case<false>(input)));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(5905, (solve_case<true>("day07.example")));
-  AOC_EXPECT_RESULT(249776650, (solve_case<true>("day07.input")));
+  AOC_EXPECT_RESULT(5905, (solve_case<true>(example)));
+  AOC_EXPECT_RESULT(249776650, (solve_case<true>(input)));
+
   AOC_RETURN_CHECK_RESULT();
 }
