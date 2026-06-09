@@ -1,27 +1,35 @@
 // https://adventofcode.com/2023/day/6
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
-#include <cstdint>
-#include <map>
+#include <functional>
 #include <print>
 #include <ranges>
 #include <span>
-#include <string>
-#include <string_view>
-#include <vector>
 
-using namespace std::string_view_literals;
+struct Input {
+  Vec<String> time_tokens;
+  Vec<String> dist_tokens;
+};
 
-using int_t = std::int64_t;
+auto parse(String const& filename) -> Input {
+  let lines = aoc::read_lines(filename);
+  return {
+      .time_tokens = aoc::split_to_vec<String, true>(
+          lines[0].substr(sizeof("Time:")), ' '),
+      .dist_tokens = aoc::split_to_vec<String, true>(
+          lines[1].substr(sizeof("Distance:")), ' '),
+  };
+}
 
 // d=v*tr
 // tr=t-tb
 // v=tb
 //
 // -> d=tb*t-tb^2
-constexpr int_t calculate_distance(int_t total_time, int_t button_time) {
+fn calculate_distance(i64 total_time, i64 button_time) -> i64 {
   return button_time * total_time - button_time * button_time;
 }
 
@@ -29,8 +37,8 @@ static_assert(6 == calculate_distance(7, 1));
 static_assert(10 == calculate_distance(7, 2));
 static_assert(12 == calculate_distance(7, 3));
 
-constexpr int_t num_ways_to_win(int_t total_time, int_t record_distance) {
-  return stdr::count_if(stdv::iota(1, total_time), [&](int_t button_time) {
+fn num_ways_to_win(i64 total_time, i64 record_distance) -> i64 {
+  return stdr::count_if(Range{i64{1}, total_time}, [&](i64 button_time) {
     return calculate_distance(total_time, button_time) > record_distance;
   });
 }
@@ -43,48 +51,44 @@ static_assert(9 == num_ways_to_win(30, 200));
 static_assert(71503 == num_ways_to_win(71530, 940200));
 #endif
 
-constexpr int_t num_ways_to_win(std::span<const int_t> total_times,
-                                std::span<const int_t> record_distances) {
+fn num_ways_to_win(std::span<const i64> total_times,
+                   std::span<const i64> record_distances) -> i64 {
   AOC_ASSERT(total_times.size() == record_distances.size(),
              "Number of times must match number of distances");
-  int_t error_margin = 1;
-  for (int i = 0; i < total_times.size(); ++i) {
-    error_margin *= num_ways_to_win(total_times[i], record_distances[i]);
-  }
-  return error_margin;
+  return stdr::fold_left(
+      Range{0uz, total_times.size()} | std::views::transform([&](usize i) {
+        return num_ways_to_win(total_times[i], record_distances[i]);
+      }),
+      i64{1}, std::multiplies{});
 }
 
-template <bool single_race>
-int_t solve_case(const std::string& filename) {
-  std::vector<int_t> total_times;
-  std::vector<int_t> record_distances;
-  for (int linenum = 1;
-       std::string_view line : aoc::views::read_lines(filename)) {
-    auto number_str =
-        line.substr((linenum == 1) ? sizeof("Time:") : sizeof("Distance:"));
-    using store_t = std::conditional_t<single_race, std::string_view, int_t>;
-    auto tmp_container = aoc::split_to_vec<store_t, true>(number_str, ' ');
-    auto& container = (linenum == 1) ? total_times : record_distances;
-    if constexpr (!single_race) {
-      container = std::move(tmp_container);
-    } else {
-      auto full_str =
-          stdv::join(tmp_container) | aoc::ranges::to<std::string>();
-      container.push_back(aoc::to_number<int_t>(full_str));
-    }
-    ++linenum;
-  }
+fn solve_case1(Input const& input) -> i64 {
+  let total_times = input.time_tokens |
+                    aoc::views::to_number<i64>() |
+                    aoc::collect_vec<i64>();
+  let record_distances = input.dist_tokens |
+                         aoc::views::to_number<i64>() |
+                         aoc::collect_vec<i64>();
+  return num_ways_to_win(total_times, record_distances);
+}
 
-  int_t error_margin = num_ways_to_win(total_times, record_distances);
-  return error_margin;
+fn solve_case2(Input const& input) -> i64 {
+  let time_str = stdv::join(input.time_tokens) | aoc::collect_string();
+  let dist_str = stdv::join(input.dist_tokens) | aoc::collect_string();
+  return num_ways_to_win(aoc::to_number<i64>(time_str),
+                         aoc::to_number<i64>(dist_str));
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(288, (solve_case<false>("day06.example")));
-  AOC_EXPECT_RESULT(1624896, (solve_case<false>("day06.input")));
+  let example = parse("day06.example");
+  AOC_EXPECT_RESULT(288, solve_case1(example));
+  let input = parse("day06.input");
+  AOC_EXPECT_RESULT(1624896, solve_case1(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(71503, (solve_case<true>("day06.example")));
-  AOC_EXPECT_RESULT(32583852, (solve_case<true>("day06.input")));
+  AOC_EXPECT_RESULT(71503, solve_case2(example));
+  AOC_EXPECT_RESULT(32583852, solve_case2(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
