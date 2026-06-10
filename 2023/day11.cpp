@@ -80,13 +80,14 @@ fn expand_space(Input const& input) -> space_t {
 
 fn sum_distances(space_t const& space) -> i64 {
   return aoc::ranges::accumulate(
-      stdv::cartesian_product(space, space) | stdv::filter([](let& elem) {
-        let[g1, g2] = elem;
-        return g1.first < g2.first;
-      }) | stdv::transform([](let& elem) {
-        let[g1, g2] = elem;
-        return distance_manhattan(g1.first, g2.first);
-      }),
+      stdv::cartesian_product(space, space) |
+          aoc::views::transform_filter([](let& elem) -> Option<i64> {
+            let[g1, g2] = elem;
+            if (g1.first < g2.first) {
+              return distance_manhattan(g1.first, g2.first);
+            }
+            return None;
+          }),
       i64{});
 }
 

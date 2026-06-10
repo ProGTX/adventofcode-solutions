@@ -121,7 +121,100 @@ void extend(std::vector<T>& vec, R&& r) {
   }
 }
 
+template <std::ranges::input_range View, class F>
+  requires std::ranges::view<View> &&
+           std::invocable<F&, std::ranges::range_reference_t<View>> &&
+           specialization_of<
+               std::invoke_result_t<F&, std::ranges::range_reference_t<View>>,
+               std::optional>
+class transform_filter_view
+    : public std::ranges::view_interface<transform_filter_view<View, F>> {
+  using mapped_t = typename std::invoke_result_t<
+      F&, std::ranges::range_reference_t<View>>::value_type;
+
+  View base{};
+  [[no_unique_address]] F user_function{};
+
+ public:
+  constexpr transform_filter_view()
+    requires std::default_initializable<View> && std::default_initializable<F>
+  = default;
+
+  constexpr transform_filter_view(View base, F user_function)
+      : base{std::move(base)}, user_function{std::move(user_function)} {}
+
+  class iterator {
+    transform_filter_view* parent = nullptr;
+    std::ranges::iterator_t<View> current{};
+    std::optional<mapped_t> value_opt{};
+
+    /// Advances the current value until function returns an engaged optional
+    /// (caching the result), or until it reaches the end.
+    constexpr void advance_to_match() {
+      const auto last = std::ranges::end(parent->base);
+      for (; current != last; ++current) {
+        value_opt = std::invoke(parent->user_function, *current);
+        if (value_opt.has_value()) {
+          return;
+        }
+      }
+      value_opt.reset();
+    }
+
+   public:
+    using value_type = mapped_t;
+    using difference_type = std::ranges::range_difference_t<View>;
+    using iterator_concept = std::input_iterator_tag;
+
+    iterator() = default;
+    constexpr iterator(transform_filter_view* parent,
+                       std::ranges::iterator_t<View> current)
+        : parent{parent}, current{std::move(current)} {
+      advance_to_match();
+    }
+
+    constexpr const mapped_t& operator*() const { return *value_opt; }
+
+    constexpr iterator& operator++() {
+      ++current;
+      advance_to_match();
+      return *this;
+    }
+    constexpr void operator++(int) { ++*this; }
+
+    constexpr bool operator==(std::default_sentinel_t) const {
+      return !value_opt.has_value();
+    }
+  };
+
+  constexpr iterator begin() {
+    return iterator{this, std::ranges::begin(base)};
+  }
+  constexpr std::default_sentinel_t end() { return {}; }
+};
+template <class R, class F>
+transform_filter_view(R&&, F) -> transform_filter_view<std::views::all_t<R>, F>;
+
 } // namespace ranges
+
+namespace detail {
+
+template <class F>
+struct transform_filter_closure
+    : std::ranges::range_adaptor_closure<transform_filter_closure<F>> {
+  [[no_unique_address]] F fun;
+
+  constexpr explicit transform_filter_closure(F fun) : fun{std::move(fun)} {}
+
+  template <std::ranges::viewable_range R>
+  constexpr auto operator()(R&& r) const {
+    return ::aoc::ranges::transform_filter_view{std::forward<R>(r), fun};
+  }
+};
+template <class F>
+transform_filter_closure(F) -> transform_filter_closure<F>;
+
+} // namespace detail
 
 namespace views {
 
@@ -140,6 +233,25 @@ template <class T>
 constexpr auto to_number(int base = 10) {
   return std::views::transform(::aoc::number_converter<T>{base});
 }
+
+/// Performs a filter and a transform in a single view.
+///
+/// Similar to Rust `filter_map`,
+/// filters out based on whether the returned optional is engaged or not.
+/// Resulting values are automatically unwrapped.
+/// The provided function is invoked at most once per element.
+///
+/// Name chosed based on this:
+/// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2760r0.html
+template <class F>
+constexpr auto transform_filter(F&& f) {
+  return ::aoc::detail::transform_filter_closure{std::forward<F>(f)};
+}
+static_assert(std::ranges::equal(
+    std::views::iota(0, 6) | transform_filter([](int i) -> std::optional<int> {
+      return (i % 2 == 0) ? std::optional{i * 10} : std::nullopt;
+    }),
+    std::array{0, 20, 40}));
 
 } // namespace views
 
