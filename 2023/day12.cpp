@@ -1,183 +1,189 @@
 // https://adventofcode.com/2023/day/12
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
-#include <array>
+#include <future>
 #include <print>
 #include <ranges>
 #include <span>
 #include <string>
-#include <string_view>
+#include <thread>
+#include <unordered_map>
 #include <vector>
 
-using namespace std::string_view_literals;
+struct Record {
+  String springs;
+  Vec<u8> groups;
+};
+
+using Input = Vec<Record>;
+
+fn parse(String const& filename) -> Input {
+  return aoc::views::read_lines(filename) |
+         stdv::transform([](str line) {
+           auto [springs, groups_str] = aoc::split_once<String>(line, ' ');
+           return Record{std::move(springs),
+                         aoc::split_to_vec<u8>(groups_str, ',')};
+         }) |
+         aoc::collect_vec<Record>();
+}
 
 constexpr inline char operational = '.';
 constexpr inline char damaged = '#';
 constexpr inline char unknown = '?';
 
-struct state_t {
-  std::string arr;
-  int arr_pos;
-  int group_id;
-  int current_group_count;
+struct SearchState {
+  String springs;
+  Vec<u8> groups;
+  u8 damaged_before;
 
-  constexpr auto as_array() const {
-    return std::array{arr_pos, group_id, current_group_count};
-  }
-
-  constexpr bool operator==(const state_t& other) const = default;
+  constexpr bool operator==(SearchState const&) const = default;
 };
 
-constexpr std::pair<state_t, char> advance_state(
-    state_t state, std::span<const int> spring_groups) {
-  AOC_ASSERT(state.current_group_count <= spring_groups[state.group_id],
-             "Invalid group count");
-  AOC_ASSERT(state.group_id < spring_groups.size(), "Invalid group ID");
-  auto previous =
-      (state.arr_pos > 0) ? state.arr[state.arr_pos - 1] : operational;
-  for (; state.arr_pos < state.arr.size(); ++state.arr_pos) {
-    switch (state.arr[state.arr_pos]) {
-      case unknown:
-        return {state, unknown};
-      case damaged:
-        if ((previous == damaged) && (state.current_group_count == 0)) {
-          return {state, damaged};
+template <>
+struct std::hash<SearchState> {
+  size_t operator()(SearchState const& state) const {
+    size_t seed = std::hash<String>{}(state.springs);
+    auto combine = [&seed](size_t value) {
+      seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    };
+    for (u8 group : state.groups) {
+      combine(std::hash<u8>{}(group));
+    }
+    combine(std::hash<u8>{}(state.damaged_before));
+    return seed;
+  }
+};
+
+using Cache = std::unordered_map<SearchState, u64>;
+
+fn num_arrangements(Cache& cache, SearchState state) -> u64 {
+  if (let it = cache.find(state); it != cache.end()) {
+    return it->second;
+  }
+
+  auto result = u64{0};
+  if (state.springs.empty()) {
+    // End of search, success if no groups left
+    result = static_cast<u64>(state.groups.empty());
+  } else {
+    switch (state.springs.front()) {
+      case damaged: {
+        let rest = str{state.springs}.substr(1);
+        let extra_damaged = static_cast<u8>(stdr::distance(
+            rest | stdv::take_while([](char c) { return c == damaged; })));
+        let total_damaged =
+            static_cast<u8>(state.damaged_before + 1 + extra_damaged);
+        if ((extra_damaged + 1) == state.springs.size()) {
+          // End of search, success if last group equals our count
+          return static_cast<u64>((state.groups.size() == 1) &&
+                                  (state.groups.back() == total_damaged));
         }
-        ++state.current_group_count;
-        if (state.current_group_count == spring_groups[state.group_id]) {
-          state.current_group_count = 0;
-          ++state.group_id;
-          if (state.group_id == spring_groups.size()) {
-            // We don't have any more groups to check,
-            // so we need to check if there are any more damaged springs.
-            // If there are, the arrangement is invalid.
-            // Otherwise, the arrangement is valid.
-            auto num_damaged_after =
-                stdr::count(std::begin(state.arr) + state.arr_pos + 1,
-                            std::end(state.arr), damaged);
-            return {state, (num_damaged_after == 0) ? operational : damaged};
+        result = num_arrangements(
+            cache, SearchState{.springs = String{rest.substr(extra_damaged)},
+                               .groups = state.groups,
+                               .damaged_before = total_damaged});
+        break;
+      }
+      case operational: {
+        auto new_groups = Vec<u8>{};
+        if (state.damaged_before > 0) {
+          if (state.groups.empty() ||
+              (state.groups.front() != state.damaged_before)) {
+            // Invalid group count
+            return 0;
           }
-        }
-        break;
-      case operational:
-        if (state.current_group_count > 0) {
-          return {state, damaged};
+          // Close the group
+          new_groups = Vec<u8>(state.groups.begin() + 1, state.groups.end());
         } else {
-          // Everything is still OK
-          break;
+          new_groups = state.groups;
         }
-      default:
-        AOC_UNREACHABLE("Unexpected state");
+        let rest = str{state.springs}.substr(1);
+        let skip = static_cast<usize>(stdr::distance(
+            rest | stdv::take_while([](char c) { return c == operational; })));
+        result = num_arrangements(
+            cache, SearchState{.springs = String{rest.substr(skip)},
+                               .groups = std::move(new_groups),
+                               .damaged_before = 0});
         break;
-    }
-    previous = state.arr[state.arr_pos];
-  }
-  return {state,
-          (state.group_id == spring_groups.size()) ? operational : damaged};
-}
-
-#if defined(AOC_COMPILER_GCC)
-static_assert(std::pair{state_t{"???.###", 0, 0, 0}, unknown} ==
-              advance_state(state_t{"???.###", 0, 0, 0}, std::array{1, 1, 3}));
-static_assert(std::pair{state_t{"#??.###", 1, 0, 1}, unknown} ==
-              advance_state(state_t{"#??.###", 1, 0, 1}, std::array{1, 1, 3}));
-static_assert(std::pair{state_t{"#.#.###", 6, 3, 0}, operational} ==
-              advance_state(state_t{"#.#.###", 0, 0, 0}, std::array{1, 1, 3}));
-static_assert(std::pair{state_t{"#...###", 5, 2, 0}, damaged} ==
-              advance_state(state_t{"#...###", 0, 0, 0}, std::array{1, 1, 3}));
-static_assert(std::pair{state_t{".###.##.....", 12, 2, 0}, damaged} ==
-              advance_state(state_t{".###.##.....", 0, 0, 0},
-                            std::array{3, 2, 1}));
-static_assert(std::pair{state_t{".###.#.#...#", 6, 1, 1}, damaged} ==
-              advance_state(state_t{".###.#.#...#", 0, 0, 0},
-                            std::array{3, 2, 1}));
-static_assert(std::pair{state_t{".###.##.#???", 8, 3, 0}, operational} ==
-              advance_state(state_t{".###.##.#???", 0, 0, 0},
-                            std::array{3, 2, 1}));
-#endif
-
-constexpr int num_arrangements(std::string_view springs,
-                               std::span<const int> spring_groups) {
-  std::vector<state_t> arrangement_stack;
-  arrangement_stack.emplace_back(std::string{springs}, 0, 0, 0);
-  int count = 0;
-  while (!arrangement_stack.empty()) {
-    auto [arr_state, status] =
-        advance_state(aoc::pop_stack(arrangement_stack), spring_groups);
-    if (status == operational) {
-      // Valid arrangement
-      ++count;
-      continue;
-    } else if (status == unknown) {
-      // Add two more options to the stack
-      arr_state.arr[arr_state.arr_pos] = operational;
-      state_t arr_state2 = arr_state;
-      arr_state2.arr[arr_state2.arr_pos] = damaged;
-      arrangement_stack.push_back(std::move(arr_state));
-      arrangement_stack.push_back(std::move(arr_state2));
-    } else {
-      AOC_ASSERT(status == damaged, "Unexpected status");
-      // Invalid arrangement, don't count it
+      }
+      case unknown: {
+        // Two options to explore
+        auto state1 = state;
+        state1.springs.front() = damaged;
+        auto state2 = state;
+        state2.springs.front() = operational;
+        result = num_arrangements(cache, std::move(state1)) +
+                 num_arrangements(cache, std::move(state2));
+        break;
+      }
+      default:
+        AOC_UNREACHABLE("Invalid value");
     }
   }
-  return count;
+
+  cache.emplace(std::move(state), result);
+  return result;
 }
 
-#if defined(AOC_COMPILER_GCC)
-static_assert(1 == num_arrangements("???.###", std::array{1, 1, 3}));
-static_assert(4 == num_arrangements(".??..??...?##.", std::array{1, 1, 3}));
-static_assert(10 == num_arrangements("?###????????", std::array{3, 2, 1}));
-#endif
-
-template <int factor>
-constexpr std::pair<std::string, std::vector<int>> unfold(
-    std::string_view springs, std::span<const int> spring_groups) {
-  std::string new_springs{springs};
-  std::vector<int> new_groups;
-  new_springs.reserve(springs.size() * factor + (factor - 1));
-  new_groups.reserve(spring_groups.size() * factor);
-  stdr::copy(spring_groups, std::back_inserter(new_groups));
-  for (int i = 1; i < factor; ++i) {
-    new_springs.append("?");
-    new_springs.append(springs);
-    stdr::copy(spring_groups, std::back_inserter(new_groups));
-  }
-  return {new_springs, new_groups};
+template <usize factor>
+fn count_arrangements(std::span<Record const> records) -> u64 {
+  auto cache = Cache{};
+  return aoc::ranges::accumulate(
+      records | stdv::transform([&](Record const& record) {
+        cache.clear();
+        return num_arrangements(
+            cache,
+            SearchState{.springs = aoc::ranges::join(
+                            stdv::repeat(record.springs, factor), unknown),
+                        .groups = stdv::repeat(record.groups, factor) |
+                                  stdv::join |
+                                  aoc::collect_vec<u8>(),
+                        .damaged_before = 0});
+      }),
+      u64{0});
 }
 
-static_assert(".#?.#?.#?.#?.#" == unfold<5>(".#", std::array{1}).first);
-static_assert(stdr::equal(std::array{1, 1, 1, 1, 1},
-                          unfold<5>(".#", std::array{1}).second));
-static_assert("???.###????.###????.###????.###????.###" ==
-              unfold<5>("???.###", std::array{1, 1, 3}).first);
-static_assert(stdr::equal(std::array{1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1,
-                                     3},
-                          unfold<5>("???.###", std::array{1, 1, 3}).second));
+template <usize factor>
+fn solve_case(Input const& records) -> u64 {
+  let num_threads = std::max<usize>(std::thread::hardware_concurrency(), 1uz);
+  let chunk_size =
+      std::max((records.size() + num_threads - 1) / num_threads, 1uz);
 
-template <int factor>
-int solve_case(const std::string& filename) {
-  int sum = 0;
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [springs, groups_str] = aoc::split_once<std::string>(line, ' ');
-    auto spring_groups = aoc::split_to_vec<int>(groups_str, ',');
-    std::tie(springs, spring_groups) = unfold<factor>(springs, spring_groups);
-    sum += num_arrangements(springs, spring_groups);
+  auto futures = Vec<std::future<u64>>{};
+  for (let chunk_index : Range{0uz, num_threads}) {
+    let offset = chunk_index * chunk_size;
+    if (offset >= records.size()) {
+      break;
+    }
+    let count = std::min(chunk_size, records.size() - offset);
+    futures.push_back(std::async(std::launch::async, [&records, offset, count] {
+      return count_arrangements<factor>(
+          std::span{records}.subspan(offset, count));
+    }));
   }
-
-  return sum;
+  return aoc::ranges::accumulate(
+      futures | stdv::transform([](auto& f) { return f.get(); }), u64{0});
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(21, (solve_case<1>("day12.example")));
-  AOC_EXPECT_RESULT(7379, (solve_case<1>("day12.input")));
+  let example = parse("day12.example");
+  AOC_EXPECT_RESULT(21, (solve_case<1>(example)));
+  let input = parse("day12.input");
+  AOC_EXPECT_RESULT(7379, (solve_case<1>(input)));
 
   std::println("Part 2");
-  AOC_EXPECT_RESULT(525152, (solve_case<5>("day12.example")));
-  aoc::return_incomplete();
-  // AOC_EXPECT_RESULT(525152, (solve_case<5>("day12.input")));
+  AOC_EXPECT_RESULT(206, (solve_case<2>(example)));
+  AOC_EXPECT_RESULT(2612, (solve_case<3>(example)));
+  AOC_EXPECT_RESULT(36308, (solve_case<4>(example)));
+  AOC_EXPECT_RESULT(525152, (solve_case<5>(example)));
+  AOC_EXPECT_RESULT(450228, (solve_case<2>(input)));
+  AOC_EXPECT_RESULT(83673283, (solve_case<3>(input)));
+  AOC_EXPECT_RESULT(23356098881, (solve_case<4>(input)));
+  AOC_EXPECT_RESULT(7732028747925, (solve_case<5>(input)));
 
   AOC_RETURN_CHECK_RESULT();
 }
