@@ -96,6 +96,11 @@ class static_vector {
     return this->rend();
   }
 
+  // Comparison
+  constexpr bool operator==(static_vector const& other) const {
+    return std::ranges::equal(*this, other);
+  }
+
   // Size/capacity:
   constexpr bool empty() const noexcept { return m_size == 0; }
   constexpr size_type size() const noexcept { return m_size; }
