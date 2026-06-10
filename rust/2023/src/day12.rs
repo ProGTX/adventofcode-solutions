@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
+use std::thread;
 
 struct Record {
     springs: String,
@@ -29,7 +30,7 @@ struct SearchState {
     damaged_before: u8,
 }
 
-type Cache = HashMap<SearchState, u64>;
+type Cache = FxHashMap<SearchState, u64>;
 
 fn num_arrangements(cache: &mut Cache, state: SearchState) -> u64 {
     if let Some(&cached_result) = cache.get(&state) {
@@ -96,11 +97,12 @@ fn num_arrangements(cache: &mut Cache, state: SearchState) -> u64 {
     return result;
 }
 
-fn solve_case<const FACTOR: usize>(records: &[Record]) -> u64 {
+fn count_arrangements<const FACTOR: usize>(records: &[Record]) -> u64 {
+    let mut cache = Cache::default();
     records
         .iter()
         .map(|record| {
-            let mut cache = Cache::new();
+            cache.clear();
             num_arrangements(
                 &mut cache,
                 SearchState {
@@ -110,7 +112,22 @@ fn solve_case<const FACTOR: usize>(records: &[Record]) -> u64 {
                 },
             )
         })
-        .sum()
+        .sum::<u64>()
+}
+
+fn solve_case<const FACTOR: usize>(records: &[Record]) -> u64 {
+    let num_threads = thread::available_parallelism().map_or(1, |n| n.get());
+    let chunk_size = records.len().div_ceil(num_threads).max(1);
+
+    thread::scope(|scope| {
+        records
+            .chunks(chunk_size)
+            .map(|chunk| scope.spawn(move || count_arrangements::<FACTOR>(chunk)))
+            .collect::<Vec<_>>()
+            .into_iter()
+            .map(|handle| handle.join().unwrap())
+            .sum()
+    })
 }
 
 fn main() {
