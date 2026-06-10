@@ -1,102 +1,113 @@
 // https://adventofcode.com/2023/day/11
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
-#include <cstdint>
 #include <print>
 #include <ranges>
 #include <string>
-#include <string_view>
-#include <vector>
 
-using namespace std::string_view_literals;
-
-using int_t = std::int64_t;
-using point_t = aoc::point_type<int_t>;
+using point_t = aoc::point_type<i64>;
 
 inline constexpr char galaxy = '#';
 inline constexpr char empty_space = '.';
 using space_t = aoc::sparse_grid<char, empty_space, point_t>;
 
+struct Input {
+  Vec<String> space_rows;
+  Vec<bool> row_populated;
+  Vec<bool> column_populated;
+};
+
+fn parse(String const& filename) -> Input {
+  auto space_rows = aoc::read_lines(filename);
+
+  auto row_populated = //
+      space_rows |
+      stdv::transform(
+          [](String const& row) { return stdr::contains(row, galaxy); }) |
+      aoc::collect_vec<bool>();
+
+  let num_columns = space_rows.empty() ? 0uz : space_rows.front().size();
+  auto column_populated =
+      Range{0uz, num_columns} |
+      stdv::transform([&](usize column) {
+        return stdr::any_of(space_rows, [column](String const& row) {
+          return row[column] == galaxy;
+        });
+      }) |
+      aoc::collect_vec<bool>();
+
+  return Input{std::move(space_rows), std::move(row_populated),
+               std::move(column_populated)};
+}
+
 template <int factor>
-space_t expand_space(const std::vector<std::string>& space_rows,
-                     const std::vector<bool>& row_populated,
-                     const std::vector<bool>& column_populated) {
+fn expand_space(Input const& input) -> space_t {
+  let& space_rows = input.space_rows;
+  let& row_populated = input.row_populated;
+  let& column_populated = input.column_populated;
+
   AOC_ASSERT(space_rows.size() > 1, "Cannot construct space from no rows");
-  const auto num_empty_columns = stdr::count(column_populated, false);
-  const auto orig_row_size = space_rows[0].size();
-  const auto num_columns = orig_row_size + num_empty_columns;
+  let num_empty_columns = stdr::count(column_populated, false);
+  let orig_row_size = space_rows[0].size();
+  let num_columns = orig_row_size + num_empty_columns;
   auto space = space_t(space_rows.size(), num_columns);
-  int_t row = 0;
-  for (int r = 0; r < space_rows.size(); ++r, ++row) {
+
+  auto row = i64{0};
+  for (let r : Range{0uz, space_rows.size()}) {
     if (!row_populated[r]) {
-      row += factor - 1;
+      row += factor;
       continue;
     }
-    const auto& current_row = space_rows[r];
-    int_t column = 0;
-    for (int c = 0; c < orig_row_size; ++c, ++column) {
+    let& current_row = space_rows[r];
+    auto column = i64{0};
+    for (let c : Range{0uz, orig_row_size}) {
       if (!column_populated[c]) {
-        column += factor - 1;
-        continue;
-      } else if (current_row[c] != galaxy) {
+        column += factor;
         continue;
       }
-      space.modify(galaxy, row, column);
+      if (current_row[c] == galaxy) {
+        space.modify(galaxy, row, column);
+      }
+      ++column;
     }
+    ++row;
   }
   return space;
 }
 
-int_t sum_distances(const space_t& space) {
-  int_t sum = 0;
-  for (auto it1 = std::begin(space); it1 != std::end(space); ++it1) {
-    auto it2 = it1;
-    for (++it2; it2 != std::end(space); ++it2) {
-      sum += distance_manhattan(it1->first, it2->first);
-    }
-  }
-  return sum;
+fn sum_distances(space_t const& space) -> i64 {
+  return aoc::ranges::accumulate(
+      stdv::cartesian_product(space, space) | stdv::filter([](let& elem) {
+        let[g1, g2] = elem;
+        return g1.first < g2.first;
+      }) | stdv::transform([](let& elem) {
+        let[g1, g2] = elem;
+        return distance_manhattan(g1.first, g2.first);
+      }),
+      i64{});
 }
 
 template <int factor>
-int_t solve_case(const std::string& filename) {
-  std::vector<std::string> space_rows;
-  std::string empty_row;
-  std::vector<bool> column_populated;
-  std::vector<bool> row_populated;
-
-  for (std::string& line : aoc::views::read_lines(filename)) {
-    const auto size = line.size();
-    if (empty_row.empty()) {
-      empty_row.reserve(size);
-      column_populated.reserve(size);
-      stdr::fill_n(std::back_inserter(empty_row), size, empty_space);
-      stdr::fill_n(std::back_inserter(column_populated), size, false);
-    }
-    row_populated.push_back(line != empty_row);
-    for (int i = 0; i < size; ++i) {
-      column_populated[i] = column_populated[i] || (line[i] != empty_space);
-    }
-    space_rows.push_back(std::move(line));
-  }
-
-  auto space =
-      expand_space<factor>(space_rows, row_populated, column_populated);
-
-  int_t sum = sum_distances(space);
-  return sum;
+fn solve_case(Input const& input) -> i64 {
+  let space = expand_space<factor>(input);
+  return sum_distances(space);
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(374, (solve_case<2>("day11.example")));
-  AOC_EXPECT_RESULT(10228230, (solve_case<2>("day11.input")));
+  let example = parse("day11.example");
+  AOC_EXPECT_RESULT(374, (solve_case<2>(example)));
+  let input = parse("day11.input");
+  AOC_EXPECT_RESULT(10228230, (solve_case<2>(input)));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(1030, (solve_case<10>("day11.example")));
-  AOC_EXPECT_RESULT(8410, (solve_case<100>("day11.example")));
-  AOC_EXPECT_RESULT(82000210, (solve_case<1000000>("day11.example")));
-  AOC_EXPECT_RESULT(447073334102, (solve_case<1000000>("day11.input")));
+  AOC_EXPECT_RESULT(1030, (solve_case<10>(example)));
+  AOC_EXPECT_RESULT(8410, (solve_case<100>(example)));
+  AOC_EXPECT_RESULT(82000210, (solve_case<1000000>(example)));
+  AOC_EXPECT_RESULT(447073334102, (solve_case<1000000>(input)));
+
   AOC_RETURN_CHECK_RESULT();
 }
