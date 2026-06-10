@@ -554,6 +554,15 @@ class priority_queue {
   constexpr std::size_t size() const { return m_heap.size(); }
 };
 
+struct hash_combine {
+  std::size_t seed;
+
+  // https://www.boost.org/doc/libs/1_86_0/libs/container_hash/doc/html/hash.html#notes_hash_combine
+  constexpr void operator()(std::size_t value) {
+    seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  }
+};
+
 /// Custom flush function so that users of the aoc module
 /// don't have to include iostream
 void flush() { std::cout << std::flush; }
