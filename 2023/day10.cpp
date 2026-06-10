@@ -1,16 +1,14 @@
 // https://adventofcode.com/2023/day/10
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <array>
 #include <print>
 #include <ranges>
+#include <span>
 #include <string>
-#include <string_view>
-#include <vector>
-
-using namespace std::string_view_literals;
 
 namespace tile_t {
 
@@ -34,13 +32,30 @@ inline constexpr auto east_allowed =
 
 } // namespace tile_t
 
-using field_t = aoc::grid<char, std::string, std::vector<char>>;
+using field_t = aoc::char_grid<>;
 
-constexpr std::vector<int> get_pipe_loop(const field_t& field,
-                                         const int start_index) {
-  std::vector<int> loop_indexes;
+struct Input {
+  field_t field;
+  int start_index;
+};
+
+fn parse(String const& filename) -> Input {
+  auto field = aoc::read_char_grid(filename);
+  let start_index = static_cast<i32>(
+      stdr::distance(field.begin(), stdr::find(field, tile_t::start)));
+  return Input{std::move(field), start_index};
+}
+
+fn get_pipe_loop(field_t const& field, i32 start_index) -> Vec<i32> {
+  auto loop_indexes = Vec<i32>{};
   loop_indexes.push_back(start_index);
-  aoc::static_vector<point, 2> start_neighbor_diffs;
+  auto start_neighbor_diffs = aoc::static_vector<point, 2>{};
+
+  auto pos_2d = field.position(start_index);
+  let south_diff = aoc::get_diff(aoc::south);
+  let north_diff = aoc::get_diff(aoc::north);
+  let west_diff = aoc::get_diff(aoc::west);
+  let east_diff = aoc::get_diff(aoc::east);
 
   // Separate logic for finding the neighbors of the start position
   auto add_starting_neighbor = [&](point current_pos, point diff,
@@ -62,11 +77,6 @@ constexpr std::vector<int> get_pipe_loop(const field_t& field,
     start_neighbor_diffs.push_back(diff);
   };
 
-  auto pos_2d = field.position(start_index);
-  const auto south_diff = aoc::get_diff(aoc::south);
-  const auto north_diff = aoc::get_diff(aoc::north);
-  const auto west_diff = aoc::get_diff(aoc::west);
-  const auto east_diff = aoc::get_diff(aoc::east);
   {
     using namespace tile_t;
 
@@ -81,12 +91,12 @@ constexpr std::vector<int> get_pipe_loop(const field_t& field,
                           auto pos = pos_2d + diff;
                           return field.linear_index(pos.y, pos.x);
                         }) |
-        aoc::collect_static_vec<int, 2>();
+        aoc::collect_static_vec<i32, 2>();
     loop_indexes.push_back(start_neighbor_indexes[0]);
   }
 
   auto get_neighbors_no_check =
-      [&](int current_index) -> aoc::static_vector<point, 2> {
+      [&](i32 current_index) -> aoc::static_vector<point, 2> {
     pos_2d = field.position(current_index);
     auto current_value = field.at_index(current_index);
     // No need to check edges, assume each pipe always has two neighbors
@@ -110,9 +120,9 @@ constexpr std::vector<int> get_pipe_loop(const field_t& field,
     }
   };
 
-  int current_index = loop_indexes.back();
+  auto current_index = loop_indexes.back();
   while (true) {
-    const auto neighbors = get_neighbors_no_check(current_index);
+    let neighbors = get_neighbors_no_check(current_index);
 
     auto neighbor_index = field.linear_index(neighbors[0].y, neighbors[0].x);
     if (!field.in_bounds(neighbors[0].y, neighbors[0].x) ||
@@ -128,18 +138,16 @@ constexpr std::vector<int> get_pipe_loop(const field_t& field,
   return loop_indexes;
 }
 
-constexpr int get_num_steps(const field_t& field, const int start_index) {
-  return get_pipe_loop(field, start_index).size() / 2;
+fn get_num_steps(field_t const& field, i32 start_index) -> i32 {
+  return static_cast<i32>(get_pipe_loop(field, start_index).size()) / 2;
 }
 
-constexpr auto test_field() {
-  return field_t{std::vector<char>{
-                     '.', '.', '.', '.', '.', //
-                     '.', 'S', '-', '7', '.', //
-                     '.', '|', '.', '|', '.', //
-                     '.', 'L', '-', 'J', '.', //
-                     '.', '.', '.', '.', '.'  //
-                 },
+fn test_field() {
+  return field_t{"....."
+                 ".S-7."
+                 ".|.|."
+                 ".L-J."
+                 ".....",
                  5, 5};
 };
 
@@ -147,56 +155,48 @@ static_assert(4 == get_num_steps(test_field(), 6));
 static_assert(stdr::equal(get_pipe_loop(test_field(), 6),
                           std::array{6, 11, 16, 17, 18, 13, 8, 7}));
 
+fn solve_case1(Input const& input) -> i32 {
+  return get_num_steps(input.field, input.start_index);
+}
+
 // https://www.reddit.com/r/adventofcode/comments/18fgddy/2023_day_10_part_2_using_a_rendering_algorithm_to/
 // https://en.wikipedia.org/wiki/Point_in_polygon
-constexpr int num_inside(const field_t& field, const int start_index) {
-  const auto pipe_loop = get_pipe_loop(field, start_index);
-  std::vector<point> corners;
-  for (auto index : pipe_loop) {
-    const auto value = field.at_index(index);
+fn num_inside(field_t const& field, i32 start_index) -> i32 {
+  let pipe_loop = get_pipe_loop(field, start_index);
+  auto corners = Vec<point>{};
+  for (let index : pipe_loop) {
+    let value = field.at_index(index);
     if ((value == tile_t::vertical_pipe) ||
         (value == tile_t::horizontal_pipe)) {
       continue;
     }
     corners.push_back(field.position(index));
   }
-  int area = aoc::calculate_area(std::span{corners});
-  return area - (pipe_loop.size() / 2) + 1;
+  let area = aoc::calculate_area(std::span{corners});
+  return area - static_cast<i32>(pipe_loop.size()) / 2 + 1;
 }
 
 static_assert(1 == num_inside(test_field(), 6));
 
-template <bool calc_area>
-int solve_case(const std::string& filename) {
-  field_t field;
-  int start_index = 0;
-
-  for (std::string& line : aoc::views::read_lines(filename)) {
-    if (auto start_pos = line.find(tile_t::start);
-        start_pos != std::string::npos) {
-      start_index = field.size() + start_pos;
-    }
-    field.add_row(std::move(line));
-  }
-
-  int sum = 0;
-  if constexpr (!calc_area) {
-    sum = get_num_steps(field, start_index);
-  } else {
-    sum = num_inside(field, start_index);
-  }
-  return sum;
+fn solve_case2(Input const& input) -> i32 {
+  return num_inside(input.field, input.start_index);
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(4, (solve_case<false>("day10.example")));
-  AOC_EXPECT_RESULT(8, (solve_case<false>("day10.example2")));
-  AOC_EXPECT_RESULT(6820, (solve_case<false>("day10.input")));
+  let example = parse("day10.example");
+  AOC_EXPECT_RESULT(4, solve_case1(example));
+  let example2 = parse("day10.example2");
+  AOC_EXPECT_RESULT(8, solve_case1(example2));
+  let input = parse("day10.input");
+  AOC_EXPECT_RESULT(6820, solve_case1(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(1, (solve_case<true>("day10.example")));
-  AOC_EXPECT_RESULT(1, (solve_case<true>("day10.example2")));
-  AOC_EXPECT_RESULT(4, (solve_case<true>("day10.example3")));
-  AOC_EXPECT_RESULT(337, (solve_case<true>("day10.input")));
+  AOC_EXPECT_RESULT(1, solve_case2(example));
+  AOC_EXPECT_RESULT(1, solve_case2(example2));
+  let example3 = parse("day10.example3");
+  AOC_EXPECT_RESULT(4, solve_case2(example3));
+  AOC_EXPECT_RESULT(337, solve_case2(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
