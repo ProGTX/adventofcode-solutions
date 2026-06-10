@@ -1,4 +1,4 @@
-use crate::math::AbsDiff;
+use crate::math::{AbsDiff, Numeric};
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -212,13 +212,6 @@ where
     }
 }
 
-pub fn distance_manhattan<T>(a: Point<T>, b: Point<T>) -> T
-where
-    T: AbsDiff + Add<Output = T> + Copy,
-{
-    a.x.abs_diff(b.x) + a.y.abs_diff(b.y)
-}
-
 impl<T> Hash for Point<T>
 where
     T: Hash,
@@ -227,4 +220,35 @@ where
         self.x.hash(state);
         self.y.hash(state);
     }
+}
+
+pub fn distance_manhattan<T>(a: Point<T>, b: Point<T>) -> T
+where
+    T: AbsDiff + Add<Output = T> + Copy,
+{
+    a.x.abs_diff(b.x) + a.y.abs_diff(b.y)
+}
+
+// https://en.wikipedia.org/wiki/Shoelace_formula
+pub fn calculate_area<T, A>(polygon: &[Point<T>]) -> A
+where
+    T: Copy + Into<A>,
+    A: Numeric,
+{
+    let n = polygon.len();
+    debug_assert!(n >= 3, "Formula only works on triangles or higher");
+
+    let mut area = A::from(0u32);
+    for i in 0..n {
+        let j = (i + 1) % n;
+        let (xi, yi): (A, A) = (polygon[i].x.into(), polygon[i].y.into());
+        let (xj, yj): (A, A) = (polygon[j].x.into(), polygon[j].y.into());
+        area += xi * yj - xj * yi;
+    }
+    let abs_area = if area < A::from(0u32) {
+        A::from(0u32) - area
+    } else {
+        area
+    };
+    abs_area / A::from(2u32)
 }
