@@ -1,39 +1,36 @@
 // https://adventofcode.com/2023/day/14
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
-#include <algorithm>
 #include <print>
-#include <ranges>
-#include <string>
-#include <string_view>
 #include <unordered_map>
-#include <vector>
-
-using namespace std::string_view_literals;
 
 inline constexpr char round_rock = 'O';
 inline constexpr char cube_rock = '#';
 inline constexpr char empty = '.';
 
 using platform_t = aoc::char_grid<>;
+using platform_it = platform_t::iterator;
 
-constexpr int north_load(const platform_t& platform) {
-  int total_load = 0;
-  for (int row = 0; row < platform.num_rows(); ++row) {
-    for (int col = 0; col < platform.row_length(); ++col) {
+fn parse(String const& filename) -> platform_t {
+  return aoc::read_char_grid(filename);
+}
+
+fn north_load(platform_t const& platform) -> i32 {
+  auto total_load = i32{0};
+  for (let row : Range{0uz, platform.num_rows()}) {
+    for (let col : Range{0uz, platform.row_length()}) {
       if (platform.at(row, col) == round_rock) {
-        total_load += platform.num_rows() - row;
+        total_load += static_cast<i32>(platform.num_rows() - row);
       }
     }
   }
   return total_load;
 }
 
-constexpr void single_rock_fall(const typename platform_t::iterator start_it,
-                                const typename platform_t::iterator begin_it,
-                                const typename platform_t::iterator end_it,
-                                const int fall_stride) {
+fn single_rock_fall(platform_it start_it, platform_it begin_it,
+                    platform_it end_it, isize fall_stride) {
   auto previous_it = start_it;
   // Rock falls
   for (auto current_it = start_it + fall_stride;
@@ -50,46 +47,45 @@ constexpr void single_rock_fall(const typename platform_t::iterator start_it,
   }
 }
 
-constexpr void rocks_fall_vertical(platform_t& platform,
-                                   const point fall_diff) {
+fn rocks_fall_vertical(platform_t& platform, point fall_diff) {
   AOC_ASSERT(fall_diff.x == 0, "Invalid fall_diff for vertical function");
-  const auto fall_stride =
-      static_cast<int>(platform.row_length()) * fall_diff.y;
+  let fall_stride = static_cast<isize>(platform.row_length()) * fall_diff.y;
   auto row_it = (fall_stride < 0) ? platform.begin_row(0)
                                   : platform.begin_row(platform.num_rows() - 1);
-  for (int row = 0; row < platform.num_rows(); ++row, row_it -= fall_stride) {
-    for (int col = 0; col < platform.row_length(); ++col) {
-      const auto start_it = row_it + col;
+  for (let _ : Range{0uz, platform.num_rows()}) {
+    for (let col : Range{0uz, platform.row_length()}) {
+      let start_it = row_it + static_cast<isize>(col);
       if (*start_it != round_rock) {
         continue;
       }
       single_rock_fall(start_it, platform.begin(), platform.end(), fall_stride);
     }
+    row_it -= fall_stride;
   }
 }
 
-constexpr void rocks_fall_horizontal(platform_t& platform,
-                                     const point fall_diff) {
+fn rocks_fall_horizontal(platform_t& platform, point fall_diff) {
   AOC_ASSERT(fall_diff.y == 0, "Invalid fall_diff for horizontal function");
-  const auto fall_stride = fall_diff.x;
-  auto current_col = (fall_stride < 0) ? 0 : (platform.row_length() - 1);
-  for (int col = 0; col < platform.row_length();
-       ++col, current_col -= fall_stride) {
-    for (int row = 0; row < platform.num_rows(); ++row) {
-      const auto row_begin_it = platform.begin_row(row);
-      const auto start_it = row_begin_it + current_col;
+  let fall_stride = static_cast<isize>(fall_diff.x);
+  auto current_col = (fall_stride < 0)
+                         ? isize{0}
+                         : static_cast<isize>(platform.row_length() - 1);
+  for (let _ : Range{0uz, platform.row_length()}) {
+    for (let row : Range{0uz, platform.num_rows()}) {
+      let row_begin_it = platform.begin_row(row);
+      let start_it = row_begin_it + current_col;
       if (*start_it != round_rock) {
         continue;
       }
       single_rock_fall(start_it, row_begin_it, platform.end_row(row),
                        fall_stride);
     }
+    current_col -= fall_stride;
   }
 }
 
-constexpr void rocks_fall_inplace(platform_t& platform,
-                                  const aoc::facing_t direction) {
-  const auto fall_diff = get_diff(direction);
+fn rocks_fall_inplace(platform_t& platform, aoc::facing_t direction) {
+  let fall_diff = aoc::get_diff(direction);
   if (fall_diff.x == 0) {
     rocks_fall_vertical(platform, fall_diff);
   } else {
@@ -97,57 +93,37 @@ constexpr void rocks_fall_inplace(platform_t& platform,
   }
 }
 
-constexpr platform_t rocks_fall(platform_t platform,
-                                const aoc::facing_t direction) {
+fn rocks_fall(platform_t platform, aoc::facing_t direction) -> platform_t {
   rocks_fall_inplace(platform, direction);
   return platform;
 }
 
-constexpr void spin_cycle(platform_t& platform) {
-  rocks_fall_vertical(platform, get_diff(aoc::north));
-  rocks_fall_horizontal(platform, get_diff(aoc::west));
-  rocks_fall_vertical(platform, get_diff(aoc::south));
-  rocks_fall_horizontal(platform, get_diff(aoc::east));
+fn spin_cycle(platform_t& platform) {
+  rocks_fall_vertical(platform, aoc::get_diff(aoc::north));
+  rocks_fall_horizontal(platform, aoc::get_diff(aoc::west));
+  rocks_fall_vertical(platform, aoc::get_diff(aoc::south));
+  rocks_fall_horizontal(platform, aoc::get_diff(aoc::east));
 }
 
-constexpr platform_t test_platform() {
-  return {std::string{"O....#...."
-                      "O.OO#....#"
-                      ".....##..."
-                      "OO.#O....O"
-                      ".O.....O#."
-                      "O.#..O.#.#"
-                      "..O..#O..O"
-                      ".......O.."
-                      "#....###.."
-                      "#OO..#...."},
-          10, 10};
+fn test_platform() -> platform_t {
+  return platform_t{String{"O....#...."
+                           "O.OO#....#"
+                           ".....##..."
+                           "OO.#O....O"
+                           ".O.....O#."
+                           "O.#..O.#.#"
+                           "..O..#O..O"
+                           ".......O.."
+                           "#....###.."
+                           "#OO..#...."},
+                    10, 10};
 }
-
-#if 0
-static_assert(stdr::equal(platform_t{std::string{"OOOO.#.O.."
-                                                        "OO..#....#"
-                                                        "OO..O##..O"
-                                                        "O..#.OO..."
-                                                        "........#."
-                                                        "..#....#.#"
-                                                        "..O..#.O.O"
-                                                        "..O......."
-                                                        "#....###.."
-                                                        "#....#...."},
-                                            10,10},
-                                 rocks_fall(test_platform(), aoc::north)));
-static_assert(136 == north_load(rocks_fall(test_platform(), aoc::north)));
-#endif
 
 template <bool run_cycles>
-int solve_case(const std::string& filename) {
-
-  platform_t platform = aoc::read_char_grid(filename);
-
-  auto sum = 0;
+fn solve_case(platform_t const& input) -> i32 {
+  auto platform = input;
   if constexpr (!run_cycles) {
-    sum = north_load(rocks_fall(std::move(platform), aoc::north));
+    return north_load(rocks_fall(std::move(platform), aoc::north));
   } else {
     // Imagine an iteration that looks something like this:
     // |........|.................|.................|.................|........|
@@ -161,35 +137,51 @@ int solve_case(const std::string& filename) {
     // and calculate the state of the cycle at point N:
     // x = (N-S) % A
 
-    std::unordered_map<std::string, int> cycle_map;
-    const auto num_iter = 1000000000;
+    auto cycle_map = std::unordered_map<String, i32>{};
+    constexpr auto num_iter = i32{1000000000};
 
-    for (int i = 0; i < num_iter; ++i) {
-      const auto str = std::string{platform.data()};
-      auto it = cycle_map.find(str);
+    for (let i : Range{i32{}, num_iter}) {
+      let platform_str = String{platform.data()};
+      let it = cycle_map.find(platform_str);
       if (it != cycle_map.end()) {
         // We found a cycle, run only for the minimum amount of iterations
-        const auto remainder = (num_iter - it->second) % (i - it->second);
-        for (int j = 0; j < remainder; ++j) {
+        let remainder = (num_iter - it->second) % (i - it->second);
+        for (let _ : Range{i32{}, remainder}) {
           spin_cycle(platform);
         }
         break;
       }
-      cycle_map.emplace(str, i);
+      cycle_map.emplace(platform_str, i);
       spin_cycle(platform);
     }
-    sum = north_load(platform);
+    return north_load(platform);
   }
-
-  return sum;
 }
 
 int main() {
+  std::println("Asserts");
+  AOC_EXPECT_RESULT("OOOO.#.O.."
+                    "OO..#....#"
+                    "OO..O##..O"
+                    "O..#.OO..."
+                    "........#."
+                    "..#....#.#"
+                    "..O..#.O.O"
+                    "..O......."
+                    "#....###.."
+                    "#....#....",
+                    rocks_fall(test_platform(), aoc::north).data());
+  AOC_EXPECT_RESULT(136, north_load(rocks_fall(test_platform(), aoc::north)));
+
   std::println("Part 1");
-  AOC_EXPECT_RESULT(136, (solve_case<false>("day14.example")));
-  AOC_EXPECT_RESULT(108857, (solve_case<false>("day14.input")));
+  let example = parse("day14.example");
+  AOC_EXPECT_RESULT(136, (solve_case<false>(example)));
+  let input = parse("day14.input");
+  AOC_EXPECT_RESULT(108857, (solve_case<false>(input)));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(64, (solve_case<true>("day14.example")));
-  AOC_EXPECT_RESULT(95273, (solve_case<true>("day14.input")));
+  AOC_EXPECT_RESULT(64, (solve_case<true>(example)));
+  AOC_EXPECT_RESULT(95273, (solve_case<true>(input)));
+
   AOC_RETURN_CHECK_RESULT();
 }
