@@ -6,6 +6,7 @@
 
 #ifndef AOC_MODULE_SUPPORT
 #include <array>
+#include <concepts>
 #include <iterator>
 #include <string_view>
 #include <type_traits>
