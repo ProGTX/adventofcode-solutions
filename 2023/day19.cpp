@@ -1,165 +1,237 @@
 // https://adventofcode.com/2023/day/19
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <array>
-#include <functional>
-#include <map>
-#include <optional>
 #include <print>
-#include <ranges>
-#include <string>
-#include <string_view>
-#include <vector>
+#include <variant>
 
-using namespace std::string_view_literals;
-using int_t = int;
-constexpr inline auto start = "in"sv;
+constexpr str start_name = "in";
 
 struct part_t {
-  int x;
-  int m;
-  int a;
-  int s;
+  std::array<i32, 4> xmas;
 
-  constexpr int sum() const { return x + m + a + s; }
+  fn sum() const -> i32 { return aoc::ranges::accumulate(xmas, i32{0}); }
 };
 
-using rule_t = std::function<std::optional<std::string>(const part_t& part)>;
-using workflow_t = std::vector<rule_t>;
-using workflow_map_t = std::map<std::string, workflow_t>;
+struct accepted_t {};
+struct rejected_t {};
+using destination_t = std::variant<accepted_t, rejected_t, usize>;
 
-bool check_part(const part_t& part, const workflow_map_t& workflows) {
-  auto current = std::string{start};
+constexpr let no_comparison = 4uz;
+
+struct rule_t {
+  destination_t destination;
+  usize member = no_comparison;
+  i32 number = 0;
+};
+
+using workflow_t = Vec<rule_t>;
+using workflows_t = Vec<workflow_t>;
+
+struct input_t {
+  Vec<part_t> parts;
+  workflows_t workflows;
+  usize start;
+};
+
+fn rule_matches(part_t const& part, rule_t const& rule) -> bool {
+  if (rule.member == no_comparison) {
+    return true;
+  }
+  let value = part.xmas[rule.member];
+  return (rule.number > 0) ? (value > rule.number) : (value < -rule.number);
+}
+
+fn check_part(part_t const& part, workflows_t const& workflows, usize start)
+    -> bool {
+  auto current = start;
   while (true) {
-    const auto& workflow = workflows.at(current);
-    for (const auto& rule : workflow) {
-      const auto result = rule(part);
-      if (!result) {
+    let& workflow = workflows[current];
+    for (let& rule : workflow) {
+      if (!rule_matches(part, rule)) {
         continue;
       }
-      if (*result == "A") {
+      if (std::holds_alternative<accepted_t>(rule.destination)) {
         return true;
       }
-      if (*result == "R") {
+      if (std::holds_alternative<rejected_t>(rule.destination)) {
         return false;
       }
-      current = *result;
+      current = std::get<usize>(rule.destination);
       break;
     }
   }
   return false;
 }
 
-int_t sort_parts(const std::vector<part_t>& parts,
-                 const workflow_map_t& workflows) {
-  return aoc::ranges::accumulate( //
-      parts | stdv::filter([&](const part_t& part) {
-        return check_part(part, workflows);
+fn solve_case1(input_t const& input) -> i32 {
+  return aoc::ranges::accumulate(
+      input.parts | stdv::filter([&](part_t const& part) {
+        return check_part(part, input.workflows, input.start);
       }) | stdv::transform(&part_t::sum),
-      int_t{0});
+      i32{0});
 }
 
-template <bool>
-int_t solve_case(const std::string& filename) {
+fn parse(String const& filename) -> input_t {
+  input_t input;
 
-  std::vector<part_t> parts;
-  workflow_map_t workflows;
+  auto name_to_id = aoc::name_to_id{};
+  input.start = name_to_id.intern(start_name);
 
-  const auto parse_rule = [&](std::string_view rule_str) -> rule_t {
+  let parse_destination = [&](str dest_str) -> destination_t {
+    if (dest_str == "A") {
+      return accepted_t{};
+    }
+    if (dest_str == "R") {
+      return rejected_t{};
+    }
+    return name_to_id.intern(dest_str);
+  };
+  let parse_rule = [&](str rule_str) -> rule_t {
     // a<2006:qkq
     // rfg
     if ((rule_str.size() == 1) ||
         ((rule_str[1] != '<') && (rule_str[1] != '>'))) {
-      return [return_str = std::string{rule_str}](
-                 const part_t&) -> std::optional<std::string> {
-        return return_str;
-      };
+      return rule_t{.destination = parse_destination(rule_str)};
     }
-    auto member_ptr = std::mem_fn([&]() {
+    let member = [&]() -> usize {
       switch (rule_str[0]) {
         case 'x':
-          return &part_t::x;
+          return 0;
         case 'm':
-          return &part_t::m;
+          return 1;
         case 'a':
-          return &part_t::a;
+          return 2;
         case 's':
-          return &part_t::s;
+          return 3;
         default:
           AOC_UNREACHABLE("Invalid part member");
           throw 0;
       }
-    }());
-    const bool less_than = (rule_str[1] == '<');
-    auto [number, rule_rest_str] =
-        aoc::to_number_with_rest<int>(rule_str.substr(2));
-    return [member_ptr, less_than, number,
-            return_str = std::string{rule_rest_str.substr(1)}](
-               const part_t& part) -> std::optional<std::string> {
-      if (less_than) {
-        if (member_ptr(part) < number) {
-          return return_str;
-        }
-      } else {
-        if (member_ptr(part) > number) {
-          return return_str;
-        }
-      }
-      return std::nullopt;
+    }();
+    let less_than = (rule_str[1] == '<');
+    let[number, rule_rest_str] =
+        aoc::to_number_with_rest<i32>(rule_str.substr(2));
+    return rule_t{
+        .destination = parse_destination(rule_rest_str.substr(1)),
+        .member = member,
+        .number = less_than ? -number : number,
     };
   };
-  const auto parse_workflows = [&](std::string_view line) {
+  let parse_workflow = [&](str line) {
     // px{a<2006:qkq,m>2090:A,rfg}
-    auto [name, rules_str_raw] = aoc::split_once(line, '{');
-    auto rules_str = aoc::split_to_vec(
+    let[name, rules_str_raw] = aoc::split_once(line, '{');
+    let rules_str = aoc::split_to_vec(
         rules_str_raw.substr(0, rules_str_raw.size() - 1), ',');
     workflow_t workflow;
-    for (auto rule_str : rules_str) {
+    for (let rule_str : rules_str) {
       workflow.push_back(parse_rule(rule_str));
     }
-    workflows[std::string{name}] = workflow;
+    let id = name_to_id.intern(name);
+    input.workflows.resize(name_to_id.new_size(input.workflows.size()));
+    input.workflows[id] = std::move(workflow);
   };
-  const auto parse_parts = [&](std::string_view line) {
+  let parse_part = [&](str line) {
     // {x=787,m=2655,a=1222,s=2876}
-    auto [x, m, a, s] =
+    let[x, m, a, s] =
         aoc::split_to_array<4>(line.substr(1, line.size() - 2), ',');
-    part_t part{
-        .x = aoc::to_number<int>(x.substr(2)),
-        .m = aoc::to_number<int>(m.substr(2)),
-        .a = aoc::to_number<int>(a.substr(2)),
-        .s = aoc::to_number<int>(s.substr(2)),
-    };
-    parts.push_back(part);
+    input.parts.push_back(part_t{
+        .xmas =
+            {
+                aoc::to_number<i32>(x.substr(2)),
+                aoc::to_number<i32>(m.substr(2)),
+                aoc::to_number<i32>(a.substr(2)),
+                aoc::to_number<i32>(s.substr(2)),
+            },
+    });
   };
 
   bool parsing_parts = false;
-  for (std::string_view line :
-       aoc::views::read_lines(filename, aoc::keep_empty{})) {
+  for (str line : aoc::views::read_lines(filename, aoc::keep_empty{})) {
     if (line.empty()) {
       parsing_parts = true;
       continue;
     }
     if (!parsing_parts) {
-      parse_workflows(line);
+      parse_workflow(line);
     } else {
-      parse_parts(line);
+      parse_part(line);
     }
   }
 
-  return sort_parts(parts, workflows);
+  return input;
+}
+
+struct range_t {
+  i32 start;
+  i32 end;
+
+  fn size() const -> i64 { return static_cast<i64>(end - start + 1); }
+};
+
+fn range_product(std::array<range_t, 4> const& ranges) -> i64 {
+  i64 product = 1;
+  for (let& range : ranges) {
+    product *= range.size();
+  }
+  return product;
+}
+
+fn count_accepted(workflows_t const& workflows, usize workflow_id,
+                  std::array<range_t, 4> ranges) -> i64 {
+  auto total = i64{};
+  for (let& rule : workflows[workflow_id]) {
+    auto matching = ranges;
+    bool has_match = true;
+    if (rule.member != no_comparison) {
+      auto& match_range = matching[rule.member];
+      auto& rest_range = ranges[rule.member];
+      if (rule.number > 0) {
+        match_range.start = std::max(match_range.start, rule.number + 1);
+        rest_range.end = std::min(rest_range.end, rule.number);
+      } else {
+        match_range.end = std::min(match_range.end, -rule.number - 1);
+        rest_range.start = std::max(rest_range.start, -rule.number);
+      }
+      has_match = match_range.start <= match_range.end;
+    }
+
+    if (has_match) {
+      if (std::holds_alternative<accepted_t>(rule.destination)) {
+        total += range_product(matching);
+      } else if (std::holds_alternative<usize>(rule.destination)) {
+        total += count_accepted(workflows, std::get<usize>(rule.destination),
+                                matching);
+      }
+    }
+
+    if ((rule.member == no_comparison) ||
+        (ranges[rule.member].start > ranges[rule.member].end)) {
+      break;
+    }
+  }
+  return total;
+}
+
+fn solve_case2(input_t const& input) -> i64 {
+  constexpr range_t full_range{1, 4000};
+  return count_accepted(input.workflows, input.start,
+                        {full_range, full_range, full_range, full_range});
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(19114, (solve_case<false>("day19.example")));
-  AOC_EXPECT_RESULT(509597, (solve_case<false>("day19.input")));
+  let example = parse("day19.example");
+  AOC_EXPECT_RESULT(19114, solve_case1(example));
+  let input = parse("day19.input");
+  AOC_EXPECT_RESULT(509597, solve_case1(input));
 
   std::println("Part 2");
-  aoc::return_incomplete();
-  // AOC_EXPECT_RESULT(952408144115, (solve_case<true>("day19.example")));
-  // AOC_EXPECT_RESULT(90111113594927, (solve_case<true>("day19.input")));
+  AOC_EXPECT_RESULT(167409079868000, solve_case2(example));
+  AOC_EXPECT_RESULT(143219569011526, solve_case2(input));
 
   AOC_RETURN_CHECK_RESULT();
 }
