@@ -1,117 +1,108 @@
 // https://adventofcode.com/2023/day/17
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
-#include <algorithm>
 #include <array>
 #include <compare>
 #include <print>
-#include <ranges>
-#include <set>
-#include <string>
-#include <string_view>
-#include <vector>
-
-using namespace std::string_view_literals;
+#include <span>
+#include <unordered_map>
 
 using city_block_t = aoc::grid<int>;
 
 struct node_t {
-  int heat_loss;
   point pos;
   point direction;
   int consecutive;
 
-  constexpr std::weak_ordering operator<=>(const node_t& other) const = default;
+  constexpr bool operator==(node_t const&) const = default;
+  constexpr auto operator<=>(node_t const&) const = default;
 };
 
-struct visited_node_comparator {
-  constexpr bool operator()(const node_t& lhs, const node_t& rhs) const {
-    return std::tie(lhs.pos, lhs.direction, lhs.consecutive) <
-           std::tie(rhs.pos, rhs.direction, rhs.consecutive);
+template <>
+struct std::hash<node_t> {
+  constexpr size_t operator()(node_t const& node) const {
+    auto combine = aoc::hash_combine{};
+    combine(std::hash<point>{}(node.pos));
+    combine(std::hash<point>{}(node.direction));
+    combine(std::hash<int>{}(node.consecutive));
+    return combine.seed;
   }
 };
 
-template <int min, int max>
-int least_heat_loss(const city_block_t& city_block, const node_t start) {
-  std::set<node_t, visited_node_comparator> visited;
-  std::set<node_t> unvisited;
-  {
-    // Push two options as the starting nodes
-    node_t node = start;
-    node.direction = aoc::get_diff(aoc::east);
-    unvisited.insert(node);
-    node.direction = aoc::get_diff(aoc::south);
-    unvisited.insert(node);
+fn parse(String const& filename) -> city_block_t {
+  auto city_block = city_block_t{};
+  for (str line : aoc::views::read_lines(filename)) {
+    city_block.add_row(line | aoc::views::to_number<int>());
   }
-
-  const auto add_neighbor = [&](node_t node, point direction, int consecutive) {
-    node.pos += direction;
-    if (!city_block.in_bounds(node.pos.y, node.pos.x)) {
-      return;
-    }
-    node.direction = direction;
-    node.consecutive = consecutive;
-    node.heat_loss += city_block.at(node.pos.y, node.pos.x);
-    if (visited.contains(node) || unvisited.contains(node)) {
-      return;
-    }
-    unvisited.insert(node);
-  };
-
-  const auto end_pos =
-      point(city_block.num_columns() - 1, city_block.num_rows() - 1);
-
-  city_block_t visited_block{city_block};
-
-  while (!unvisited.empty()) {
-    auto current_it = unvisited.begin();
-    const auto current = *current_it;
-    unvisited.erase(current_it);
-    AOC_ASSERT(current.consecutive >= 1, "Invalid consecutive number");
-    if ((current.consecutive >= min) && (current.pos == end_pos)) {
-      return current.heat_loss;
-    }
-    visited.insert(current);
-
-    auto direction = current.direction;
-    if (current.consecutive < max) {
-      // Straight line
-      add_neighbor(current, direction, current.consecutive + 1);
-    }
-    if (current.consecutive >= min) {
-      // mirror_left
-      std::swap(direction.x, direction.y);
-      add_neighbor(current, direction, 1);
-      // mirror_right
-      direction = -direction;
-      add_neighbor(current, direction, 1);
-    }
-  }
-  return 0;
+  return city_block;
 }
 
 template <int min, int max>
-int solve_case(const std::string& filename) {
+fn least_heat_loss(city_block_t const& city_block) -> int {
+  let end_pos = point(city_block.num_columns() - 1, city_block.num_rows() - 1);
 
-  city_block_t city_block;
+  auto start_nodes = std::array{
+      node_t{
+          .pos = {}, .direction = aoc::get_diff(aoc::east), .consecutive = 0},
+      node_t{
+          .pos = {}, .direction = aoc::get_diff(aoc::south), .consecutive = 0},
+  };
 
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    city_block.add_row(line | aoc::views::to_number<int>());
-  }
+  let get_neighbors = [&](node_t const& current) {
+    auto neighbors = aoc::static_vector<aoc::dijkstra_neighbor_t<node_t>, 3>{};
+    let add_neighbor = [&](point direction, int consecutive) {
+      let pos = current.pos + direction;
+      if (!city_block.in_bounds(pos.y, pos.x)) {
+        return;
+      }
+      neighbors.emplace_back(
+          node_t{
+              .pos = pos, .direction = direction, .consecutive = consecutive},
+          city_block.at(pos.y, pos.x));
+    };
 
-  return least_heat_loss<min, max>(
-      city_block,
-      node_t{.heat_loss = 0, .pos = {}, .direction = {}, .consecutive = 1});
+    if (current.consecutive < max) {
+      // Straight line
+      add_neighbor(current.direction, current.consecutive + 1);
+    }
+    if (current.consecutive >= min) {
+      auto direction = current.direction;
+      // mirror_left
+      std::swap(direction.x, direction.y);
+      add_neighbor(direction, 1);
+      add_neighbor(-direction, 1);
+    }
+    return neighbors;
+  };
+
+  let end_reached = [&](node_t const& node) {
+    return (node.pos == end_pos) && (node.consecutive >= min);
+  };
+
+  let distances =
+      aoc::shortest_distances_dijkstra<std::unordered_map<node_t, int>>(
+          std::span<node_t>{start_nodes}, get_neighbors, end_reached);
+
+  return stdr::min(
+      distances |
+      stdv::filter([&](let& entry) { return end_reached(entry.first); }) |
+      stdv::transform([](let& entry) { return entry.second; }));
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(102, (solve_case<1, 3>("day17.example")));
-  AOC_EXPECT_RESULT(967, (solve_case<1, 3>("day17.input")));
-  // std::println("Part 2");
-  AOC_EXPECT_RESULT(94, (solve_case<4, 10>("day17.example")));
-  AOC_EXPECT_RESULT(71, (solve_case<4, 10>("day17.example2")));
-  AOC_EXPECT_RESULT(-1105, (solve_case<4, 10>("day17.input")));
+  let example = parse("day17.example");
+  AOC_EXPECT_RESULT(102, (least_heat_loss<1, 3>(example)));
+  let input = parse("day17.input");
+  AOC_EXPECT_RESULT(967, (least_heat_loss<1, 3>(input)));
+
+  std::println("Part 2");
+  AOC_EXPECT_RESULT(94, (least_heat_loss<4, 10>(example)));
+  let example2 = parse("day17.example2");
+  AOC_EXPECT_RESULT(71, (least_heat_loss<4, 10>(example2)));
+  AOC_EXPECT_RESULT(1101, (least_heat_loss<4, 10>(input)));
+
   AOC_RETURN_CHECK_RESULT();
 }
