@@ -48,7 +48,12 @@ class timer {
 
 class scoped_timer {
  public:
-  scoped_timer() { timer_.start(); }
+  scoped_timer(std::string_view msg = "") {
+    if (!msg.empty()) {
+      std::println("Timer: {}", msg);
+    }
+    timer_.start();
+  }
 
   ~scoped_timer() {
     timer_.stop();
