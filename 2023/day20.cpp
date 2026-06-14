@@ -1,195 +1,224 @@
 // https://adventofcode.com/2023/day/20
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <array>
-#include <cstdint>
-#include <functional>
+#include <concepts>
 #include <map>
-#include <memory>
-#include <optional>
 #include <print>
-#include <ranges>
-#include <string>
-#include <string_view>
-#include <vector>
+#include <variant>
 
-using int_t = std::uint64_t;
 using signal_t = bool;
-using inputs_t = std::map<std::string, signal_t>;
-using outputs_t = aoc::static_vector<std::string, 7>;
-constexpr inline auto broadcaster_str = "broadcaster";
+using inputs_t = std::map<usize, signal_t>;
+using outputs_t = aoc::static_vector<usize, 7>;
+using output_names_t = aoc::static_vector<String, 7>;
+constexpr str broadcaster_str = "broadcaster";
+constexpr let button_id = static_cast<usize>(-1);
 
-struct module_t {
- protected:
-  std::string m_name; // For debugging
-  inputs_t m_inputs;
-  outputs_t m_outputs;
-  signal_t m_state = false;
-
- public:
-  module_t(std::string name, outputs_t outputs)
-      : m_name(std::move(name)), m_outputs{std::move(outputs)} {}
-
-  virtual void add_input(const std::string& name, signal_t input) {
-    m_inputs[name] = input;
-  }
-
-  const outputs_t& outputs() const { return m_outputs; }
-
-  virtual std::optional<signal_t> process() = 0;
-
-  virtual ~module_t() = default;
+struct flip_flop_t {
+  inputs_t inputs;
+  outputs_t outputs;
+  signal_t state = false;
 };
 
-struct flip_flop_t final : public module_t {
-  using module_t::module_t;
-
-  void add_input(const std::string& name, signal_t input) override {
-    m_inputs.clear();
-    m_inputs[name] = input;
-  }
-
-  virtual std::optional<signal_t> process() override {
-    AOC_ASSERT(m_inputs.size() == 1, "Flip flop requires exactly one input");
-    if (m_inputs.begin()->second) {
-      // Ignore high pulse
-      return std::nullopt;
-    }
-    m_state = !m_state;
-    return m_state;
-  }
+struct conjunction_t {
+  inputs_t inputs;
+  outputs_t outputs;
 };
 
-struct conjunction_t final : public module_t {
-  using module_t::module_t;
-
-  virtual std::optional<signal_t> process() override {
-    return !stdr::all_of(m_inputs,
-                         [](auto&& input_pair) { return input_pair.second; });
-  }
+struct broadcast_t {
+  inputs_t inputs;
+  outputs_t outputs;
 };
 
-struct broadcast_t final : public module_t {
-  using module_t::module_t;
-
-  virtual std::optional<signal_t> process() override {
-    AOC_ASSERT(m_inputs.size() == 1, "Broadcast requires exactly one input");
-    return m_inputs.begin()->second;
-  }
+struct output_t {
+  outputs_t outputs;
 };
 
-struct output_t final : public module_t {
-  output_t() : module_t{"output", {}} {}
+using module_t =
+    std::variant<output_t, flip_flop_t, conjunction_t, broadcast_t>;
 
-  virtual std::optional<signal_t> process() override { return std::nullopt; }
-};
+fn module_outputs(module_t const& module) -> outputs_t const& {
+  return std::visit([](auto&& m) -> outputs_t const& { return m.outputs; },
+                    module);
+}
+
+fn module_add_input(module_t& module, usize name, signal_t input) {
+  std::visit(
+      [&](auto&& m) {
+        using T = std::decay_t<decltype(m)>;
+        if constexpr (std::same_as<T, output_t>) {
+          // Output module ignores its inputs
+        } else if constexpr (std::same_as<T, flip_flop_t>) {
+          m.inputs.clear();
+          m.inputs[name] = input;
+        } else {
+          m.inputs[name] = input;
+        }
+      },
+      module);
+}
+
+fn module_process(module_t& module) -> Option<signal_t> {
+  return std::visit(
+      [](auto&& m) -> Option<signal_t> {
+        using T = std::decay_t<decltype(m)>;
+        if constexpr (std::same_as<T, flip_flop_t>) {
+          AOC_ASSERT(m.inputs.size() == 1,
+                     "Flip flop requires exactly one input");
+          if (m.inputs.begin()->second) {
+            // Ignore high pulse
+            return None;
+          }
+          m.state = !m.state;
+          return m.state;
+        } else if constexpr (std::same_as<T, conjunction_t>) {
+          return !stdr::all_of(
+              m.inputs, [](auto&& input_pair) { return input_pair.second; });
+        } else if constexpr (std::same_as<T, broadcast_t>) {
+          AOC_ASSERT(m.inputs.size() == 1,
+                     "Broadcast requires exactly one input");
+          return m.inputs.begin()->second;
+        } else {
+          return None;
+        }
+      },
+      module);
+}
 
 struct signal_transit_t {
-  std::string from;
+  usize from;
   signal_t signal;
-  std::string to;
+  usize to;
 };
 
-using module_map_t = aoc::flat_map<std::string, std::unique_ptr<module_t>>;
+using module_map_t = Vec<module_t>;
 
-std::array<int, 2> push_button(module_map_t& module_map) {
-  std::array<int, 2> num_pulses{0, 0};
-  std::vector<signal_transit_t> remaining_signals;
+struct push_result_t {
+  std::array<i32, 2> num_pulses{0, 0};
+  bool target_received_low = false;
+};
+
+fn push_button(module_map_t& module_map, usize broadcaster_id,
+               Option<usize> target_id = None) -> push_result_t {
+  push_result_t result;
+  auto remaining_signals = Vec<signal_transit_t>{};
 
   // Push button
-  remaining_signals.emplace_back("button", false, broadcaster_str);
-  ++num_pulses[static_cast<int>(false)];
+  remaining_signals.emplace_back(button_id, false, broadcaster_id);
+  ++result.num_pulses[static_cast<usize>(false)];
 
   // Process signals
-  for (size_t signals_start = 0; signals_start < remaining_signals.size();
+  for (auto signals_start = 0uz; signals_start < remaining_signals.size();
        ++signals_start) {
-    const auto current_signal = remaining_signals[signals_start];
-    module_map.at(current_signal.to)
-        ->add_input(current_signal.from, current_signal.signal);
-
+    let current_signal = remaining_signals[signals_start];
     auto& current = module_map.at(current_signal.to);
-    auto signal = current->process();
+    module_add_input(current, current_signal.from, current_signal.signal);
+
+    let signal = module_process(current);
     if (!signal.has_value()) {
       continue;
     }
-    const auto& outputs = current->outputs();
+    let& outputs = module_outputs(current);
     remaining_signals.reserve(remaining_signals.size() + outputs.size());
-    for (const std::string& out : outputs) {
+    for (let out : outputs) {
       remaining_signals.emplace_back(current_signal.to, *signal, out);
-      ++num_pulses[static_cast<int>(*signal)];
+      ++result.num_pulses[static_cast<usize>(*signal)];
+      if (target_id.has_value() && (out == *target_id) && !*signal) {
+        result.target_received_low = true;
+      }
     }
   }
-  return num_pulses;
+  return result;
 }
 
-template <bool>
-int_t solve_case(const std::string& filename) {
-
+struct input_t {
   module_map_t module_map;
+  usize broadcaster_id;
+  Option<usize> rx_id;
+};
+
+fn parse(String const& filename) -> input_t {
+  auto name_to_id = aoc::name_to_id{};
+  let broadcaster_id = name_to_id.intern(broadcaster_str);
+
+  auto module_map = module_map_t{};
 
   // Need to track the inputs
   // so that we can set the inputs correctly for the conjunctions
-  aoc::flat_map<std::string, std::vector<std::string>> input_map;
+  auto input_map = std::map<usize, Vec<usize>>{};
 
-  // Need to track outputs to find out which ones should be output_t
-  std::vector<std::string> output_list;
+  for (str line : aoc::views::read_lines(filename)) {
+    let[from, to] = aoc::split_once<String>(line, " -> ");
+    let name = ((from[0] == '%') || (from[0] == '&')) ? from.substr(1) : from;
+    let id = name_to_id.intern(name);
+    module_map.resize(name_to_id.new_size(module_map.size()));
 
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto [from, to] = aoc::split_once<std::string>(line, " -> ");
-    auto name = ((from[0] == '%') || (from[0] == '&')) ? from.substr(1) : from;
-    auto outputs = aoc::split<outputs_t>(to, ", ");
-    stdr::copy(outputs, std::back_inserter(output_list));
-    for (const auto& out : outputs) {
-      input_map[out].push_back(name);
+    outputs_t outputs;
+    for (let& out_name : aoc::split<output_names_t>(to, ", ")) {
+      let out_id = name_to_id.intern(out_name);
+      module_map.resize(name_to_id.new_size(module_map.size()));
+      outputs.push_back(out_id);
+      input_map[out_id].push_back(id);
     }
+
     if (from[0] == '%') {
-      module_map.emplace(
-          name, std::make_unique<flip_flop_t>(name, std::move(outputs)));
+      module_map[id] = flip_flop_t{.outputs = std::move(outputs)};
     } else if (from[0] == '&') {
-      module_map.emplace(
-          name, std::make_unique<conjunction_t>(name, std::move(outputs)));
+      module_map[id] = conjunction_t{.outputs = std::move(outputs)};
     } else if (from == broadcaster_str) {
-      module_map.emplace(
-          name, std::make_unique<broadcast_t>(name, std::move(outputs)));
+      module_map[id] = broadcast_t{.outputs = std::move(outputs)};
     }
   }
 
   // Only conjunctions with more than one input need to have inputs updated
-  for (const auto& [name, inputs] : input_map) {
+  for (let& [ id, inputs ] : input_map) {
     if (inputs.size() < 2) {
       continue;
     }
-    for (const auto& input : inputs) {
-      module_map.at(name)->add_input(input, false);
-    }
-  }
-  for (auto& out : output_list) {
-    if (!module_map.contains(out)) {
-      module_map.emplace(std::move(out), std::make_unique<output_t>());
+    for (let input_id : inputs) {
+      module_add_input(module_map[id], input_id, false);
     }
   }
 
-  std::array<int_t, 2> total_signals{0, 0};
-  for (int i = 0; i < 1000; ++i) {
-    auto [num_low, num_high] = push_button(module_map);
-    total_signals[0] += num_low;
-    total_signals[1] += num_high;
+  return input_t{std::move(module_map), broadcaster_id, name_to_id.get("rx")};
+}
+
+fn solve_case1(input_t input) -> u64 {
+  auto total_signals = std::array<u64, 2>{0, 0};
+  for (let _ : Range{0, 1000}) {
+    let result = push_button(input.module_map, input.broadcaster_id);
+    total_signals[0] += static_cast<u64>(result.num_pulses[0]);
+    total_signals[1] += static_cast<u64>(result.num_pulses[1]);
   }
   return total_signals[0] * total_signals[1];
 }
 
+fn solve_case2(input_t input) -> u64 {
+  let rx_id = input.rx_id.value();
+  for (let num_presses : stdv::iota(1)) {
+    let result = push_button(input.module_map, input.broadcaster_id, rx_id);
+    if (result.target_received_low) {
+      return static_cast<u64>(num_presses);
+    }
+  }
+  return 0;
+}
+
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(32000000, (solve_case<false>("day20.example")));
-  AOC_EXPECT_RESULT(11687500, (solve_case<false>("day20.example2")));
-  AOC_EXPECT_RESULT(814934624, (solve_case<false>("day20.input")));
+  let example = parse("day20.example");
+  AOC_EXPECT_RESULT(32000000, solve_case1(example));
+  let example2 = parse("day20.example2");
+  AOC_EXPECT_RESULT(11687500, solve_case1(example2));
+  let input = parse("day20.input");
+  AOC_EXPECT_RESULT(814934624, solve_case1(input));
 
   std::println("Part 2");
   aoc::return_incomplete();
-  // AOC_EXPECT_RESULT(952408144115, (solve_case<true>("day20.example")));
-  // AOC_EXPECT_RESULT(90111113594927, (solve_case<true>("day20.input")));
+  // AOC_EXPECT_RESULT(1337, solve_case2(input));
 
   AOC_RETURN_CHECK_RESULT();
 }
