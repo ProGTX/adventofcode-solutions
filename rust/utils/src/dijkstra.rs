@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::collections::hash_map::Entry;
 use std::hash::Hash;
 
@@ -236,6 +237,84 @@ where
     GetNeighborsF: Fn(&T) -> NeighborIter,
 {
     shortest_distances_astar(start, is_end, get_neighbors, |_| 0)
+}
+
+/// Computes the length of the longest path from `start`
+/// to every node reachable from it (the critical path).
+///
+/// The portion of the graph reachable from `start` must be a DAG.
+/// If it contains a cycle, this function does not terminate.
+pub fn longest_distances<T, GetEndF, GetNeighborsF, NeighborIter>(
+    start: &T,
+    is_end: GetEndF,
+    get_neighbors: GetNeighborsF,
+) -> HashMap<T, u32>
+where
+    T: Clone + Ord + Hash,
+    GetEndF: Fn(&T) -> bool,
+    NeighborIter: IntoIterator<Item = DijkstraState<T>>,
+    GetNeighborsF: Fn(&T) -> NeighborIter,
+{
+    // Discover every reachable node via DFS,
+    // recording each one when it finishes (post-order).
+    // Reversing post-order gives a topological order:
+    // for every edge u -> v, u comes before v.
+    // Nodes beyond `is_end` are not expanded,
+    // mirroring Dijkstra's early exit.
+    let mut visited: HashSet<T> = HashSet::new();
+    let mut post_order: Vec<T> = Vec::new();
+    let mut stack: Vec<(T, bool)> = vec![(start.clone(), false)];
+    visited.insert(start.clone());
+
+    while let Some((node, finished)) = stack.pop() {
+        if finished {
+            post_order.push(node);
+            continue;
+        }
+        if is_end(&node) {
+            post_order.push(node);
+            continue;
+        }
+        stack.push((node.clone(), true));
+        for neighbor in get_neighbors(&node) {
+            if visited.insert(neighbor.data.clone()) {
+                stack.push((neighbor.data, false));
+            }
+        }
+    }
+
+    // Relax edges in topological order,
+    // so that by the time a node is processed,
+    // its own distance from `start` is already final.
+    // All predecessors of `is_end` are guaranteed
+    // to precede it in this order,
+    // so its distance is settled when we reach it and we can stop.
+    let mut distances: HashMap<T, u32> = HashMap::new();
+    distances.insert(start.clone(), 0);
+
+    for node in post_order.into_iter().rev() {
+        let Some(&distance) = distances.get(&node) else {
+            continue;
+        };
+        for neighbor in get_neighbors(&node) {
+            let next_distance = distance + neighbor.distance;
+            match distances.entry(neighbor.data) {
+                Entry::Vacant(e) => {
+                    e.insert(next_distance);
+                }
+                Entry::Occupied(mut e) => {
+                    if next_distance > *e.get() {
+                        *e.get_mut() = next_distance;
+                    }
+                }
+            }
+        }
+        if is_end(&node) {
+            break;
+        }
+    }
+
+    return distances;
 }
 
 pub trait DijkstraNeighborView: Iterator {
