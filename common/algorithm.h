@@ -467,6 +467,84 @@ std::vector<Node> get_path(const predecessor_map<Node>& predecessors,
   return path;
 }
 
+/// Computes the longest distance from `start_node`
+/// to every reachable node (the critical path).
+/// The graph must be a DAG, cycles cause non-termination.
+///
+/// Derives a topological order via DFS post-order,
+/// then relaxes edges in that order maximizing distances,
+/// analogous to shortest_distances_dijkstra.
+template <class ReturnT = void, class Node, class NeighborsFn,
+          class EndReachedFn = constant_value<bool>>
+  requires std::totally_ordered<Node> && requires(Node node) {
+    { std::declval<EndReachedFn>()(node) } -> std::convertible_to<bool>;
+  }
+constexpr auto longest_distances(Node start_node, NeighborsFn&& get_neighbors,
+                                 EndReachedFn&& end_reached = {}) {
+  using distances_t =
+      std::conditional_t<std::is_void_v<ReturnT>, flat_map<Node, int>, ReturnT>;
+
+  // Discover every reachable node via DFS,
+  // recording each one when it finishes (post-order).
+  // Reversing post-order gives a topological order:
+  // for every edge u -> v, u comes before v.
+  auto visited = flat_set<Node>{};
+  auto post_order = std::vector<Node>{};
+  auto stack = std::vector<std::pair<Node, bool>>{};
+  stack.emplace_back(start_node, false);
+  visited.insert(start_node);
+
+  while (!stack.empty()) {
+    auto [node, finished] = stack.back();
+    stack.pop_back();
+
+    if (finished) {
+      post_order.push_back(node);
+      continue;
+    }
+
+    if (end_reached(node)) {
+      post_order.push_back(node);
+      continue;
+    }
+
+    stack.emplace_back(node, true);
+    for (const auto& neighbor : get_neighbors(node)) {
+      if (visited.insert(neighbor.node).second) {
+        stack.emplace_back(neighbor.node, false);
+      }
+    }
+  }
+
+  // Relax edges in topological order.
+  // By the time a node is processed,
+  // its own longest distance from `start_node` is already final.
+  auto distances = distances_t{};
+  distances.emplace(start_node, 0);
+
+  for (const auto& node : post_order | std::views::reverse) {
+    auto it = distances.find(node);
+    if (it == distances.end()) {
+      continue;
+    }
+    const auto dist = it->second;
+
+    for (const auto& neighbor : get_neighbors(node)) {
+      const auto next_dist = dist + neighbor.distance;
+      auto [ins_it, inserted] = distances.emplace(neighbor.node, next_dist);
+      if (!inserted && next_dist > ins_it->second) {
+        ins_it->second = next_dist;
+      }
+    }
+
+    if (end_reached(node)) {
+      break;
+    }
+  }
+
+  return distances;
+}
+
 template <std::integral counter_type>
 struct combinations_args {
   counter_type single_min;
