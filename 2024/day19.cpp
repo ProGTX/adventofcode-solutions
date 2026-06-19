@@ -24,6 +24,12 @@ constexpr int_t num_possible_designs<false>(
   bool end_found = false;
   aoc::shortest_distances_dijkstra(
       std::string{""},
+      [&](std::string_view current) {
+        if (current.size() == design.size()) {
+          end_found = true;
+        }
+        return end_found;
+      },
       [&](const std::string& current) {
         auto neighbors = std::vector<aoc::dijkstra_neighbor_t<std::string>>{};
         for (const std::string& pattern : patterns) {
@@ -34,12 +40,6 @@ constexpr int_t num_possible_designs<false>(
           }
         }
         return neighbors;
-      },
-      [&](std::string_view current) {
-        if (current.size() == design.size()) {
-          end_found = true;
-        }
-        return end_found;
       });
   return end_found;
 }

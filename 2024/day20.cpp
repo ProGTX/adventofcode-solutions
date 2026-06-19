@@ -43,6 +43,21 @@ constexpr auto shortest_path(const racetrack_t& track, const point start_pos,
   aoc::shortest_distances_dijkstra(
       node_t{start_pos, 0, false},
       [&](const node_t& node) {
+        if constexpr (!wall_allowed) {
+          if (node.pos == end_pos) {
+            end_nodes = node;
+            return true;
+          }
+        } else {
+          if (node.cheated &&
+              (node.length > 1) &&
+              (track.at(node.pos.y, node.pos.x) != wall)) {
+            end_nodes.emplace(node);
+          }
+        }
+        return false;
+      },
+      [&](const node_t& node) {
         auto neighbors =
             aoc::static_vector<aoc::dijkstra_neighbor_t<node_t>, 4>{};
         if ((node.length >= max_length) || (node.pos == end_pos)) {
@@ -66,21 +81,6 @@ constexpr auto shortest_path(const racetrack_t& track, const point start_pos,
           }
         }
         return neighbors;
-      },
-      [&](const node_t& node) {
-        if constexpr (!wall_allowed) {
-          if (node.pos == end_pos) {
-            end_nodes = node;
-            return true;
-          }
-        } else {
-          if (node.cheated &&
-              (node.length > 1) &&
-              (track.at(node.pos.y, node.pos.x) != wall)) {
-            end_nodes.emplace(node);
-          }
-        }
-        return false;
       },
       predecessors_ptr);
   if constexpr (!wall_allowed) {

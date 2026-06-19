@@ -26,9 +26,8 @@ auto parse(String const& filename) -> Input {
 
 fn shortest_path(aoc::char_grid<> const& heightmap, point start, point end)
     -> Option<u32> {
-  let distances = aoc::shortest_distances_dijkstra(
-      start,
-      [&](point current) {
+  let distances =
+      aoc::shortest_distances_dijkstra(start, end, [&](point current) {
         return heightmap.basic_neighbor_positions(current) |
                stdv::filter([&, current_height = heightmap.at(
                                     current.y, current.x)](point pos) {
@@ -36,8 +35,7 @@ fn shortest_path(aoc::char_grid<> const& heightmap, point start, point end)
                  return neighbor <= (current_height + 1);
                }) |
                aoc::dijkstra_uniform_neighbors_view();
-      },
-      end);
+      });
   let it = distances.find(end);
   if (it == std::end(distances)) {
     return {};

@@ -17,16 +17,14 @@ fn solve_case1(Input const& grid) -> int {
   let start = point{0, 0};
   let end = point{static_cast<int>(grid.num_columns()) - 1,
                   static_cast<int>(grid.num_rows()) - 1};
-  let distances = aoc::shortest_distances_dijkstra(
-      start,
-      [&](point current) {
+  let distances =
+      aoc::shortest_distances_dijkstra(start, end, [&](point current) {
         return grid.basic_neighbor_positions(current) |
                stdv::transform([&](point neighbor) {
                  return aoc::dijkstra_neighbor_t{
                      neighbor, grid.at(neighbor.y, neighbor.x) - '0'};
                });
-      },
-      end);
+      });
   return distances.find(end)->second;
 }
 
@@ -60,16 +58,14 @@ fn solve_case2(Input const& grid) -> int {
   let cols = static_cast<int>(grid.num_columns()) * 5;
   let start = point{0, 0};
   let end = point{cols - 1, rows - 1};
-  let distances = aoc::shortest_distances_dijkstra(
-      start,
-      [&](point current) {
+  let distances =
+      aoc::shortest_distances_dijkstra(start, end, [&](point current) {
         return virtual_neighbors(current, rows, cols) |
                stdv::transform([&](point neighbor) {
                  return aoc::dijkstra_neighbor_t{neighbor,
                                                  virtual_cost(grid, neighbor)};
                });
-      },
-      end);
+      });
   return distances.find(end)->second;
 }
 

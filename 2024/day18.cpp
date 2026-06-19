@@ -32,15 +32,13 @@ constexpr std::optional<int> shortest_path(const memspace_t& memspace) {
       point(memspace.num_rows() - 1, memspace.num_columns() - 1);
 
   const auto distances = aoc::shortest_distances_dijkstra(
-      start_pos,
-      [&](const point current) {
+      start_pos, end_pos, [&](const point current) {
         return memspace.basic_neighbor_positions(current) |
                stdv::filter([&](point neighbor) {
                  return memspace.at(neighbor.y, neighbor.x) != corrupted;
                }) |
                aoc::dijkstra_uniform_neighbors_view();
-      },
-      end_pos);
+      });
 
   auto it = distances.find(end_pos);
   if (it == std::end(distances)) {

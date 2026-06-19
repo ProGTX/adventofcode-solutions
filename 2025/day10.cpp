@@ -58,8 +58,7 @@ fn solve_case1(Input const& input) -> u32 {
                                    aoc::ranges::to<Lights>()};
         let target = DijkstraLights{lights};
         let distances = aoc::shortest_distances_dijkstra(
-            start,
-            [&](DijkstraLights const& current) {
+            start, target, [&](DijkstraLights const& current) {
               return //
                   buttons |
                   stdv::transform([&](Button const& button) {
@@ -70,8 +69,7 @@ fn solve_case1(Input const& input) -> u32 {
                     return DijkstraLights{next_lights};
                   }) |
                   aoc::dijkstra_uniform_neighbors_view();
-            },
-            target);
+            });
         return static_cast<u32>(distances.at(target));
       }),
       u32{});
@@ -120,8 +118,7 @@ fn solve_case2(Input const& input) -> u64 {
                                     aoc::ranges::to<Joltage>()};
         let target = DijkstraJoltage{joltage};
         let distances = aoc::shortest_distances_dijkstra(
-            start,
-            [&](DijkstraJoltage const& current) {
+            start, target, [&](DijkstraJoltage const& current) {
               return //
                   buttons |
                   stdv::transform([&](Button const& button) {
@@ -139,8 +136,7 @@ fn solve_case2(Input const& input) -> u64 {
                         });
                   }) |
                   aoc::dijkstra_uniform_neighbors_view();
-            },
-            target);
+            });
         return static_cast<u64>(distances.at(target));
       }),
       u64{});

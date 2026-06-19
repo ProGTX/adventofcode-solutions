@@ -98,6 +98,7 @@ fn find_distance(Input const& input, const point start_pos, const point end_pos,
   };
   let distances = aoc::shortest_distances_astar(
       search_state_t{start_pos, start_time},
+      [&](search_state_t const& current) { return current.pos == end_pos; },
       [&](search_state_t const& current) {
         let next_time = (current.time + 1) % period;
         let& new_blizzards = blizzard_cache[static_cast<usize>(next_time)];
@@ -126,8 +127,7 @@ fn find_distance(Input const& input, const point start_pos, const point end_pos,
       },
       [&](search_state_t const& current) {
         return static_cast<int>(distance_manhattan(current.pos, end_pos));
-      },
-      [&](search_state_t const& current) { return current.pos == end_pos; });
+      });
   let it = stdr::find_if(
       distances, [&](let& entry) { return entry.first.pos == end_pos; });
   return {it->first.time, it->second};

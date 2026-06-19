@@ -17,7 +17,7 @@ fn solve_case1(island_t const& island_map) -> u32 {
                   static_cast<i32>(island_map.num_rows()) - 1};
 
   let distances = aoc::longest_distances(
-      start,
+      start, [&](const point& pos) { return pos == end; },
       [&](const point& pos) {
         auto neighbors =
             aoc::static_vector<aoc::dijkstra_neighbor_t<point>, 4>{};
@@ -58,8 +58,7 @@ fn solve_case1(island_t const& island_map) -> u32 {
           neighbors.emplace_back(neighbor, 1);
         }
         return neighbors;
-      },
-      [&](const point& pos) { return pos == end; });
+      });
 
   return distances.at(end);
 }

@@ -123,7 +123,7 @@ fn solve(Rooms const& rooms, usize room_size) -> u32 {
   let end = Configuration{HALLWAY, std::move(end_rooms)};
 
   let distances = aoc::shortest_distances_astar(
-      start,
+      start, end,
       [&](Configuration const& current) {
         auto neighbors = Vec<aoc::dijkstra_neighbor_t<Configuration>>{};
 
@@ -240,8 +240,9 @@ fn solve(Rooms const& rooms, usize room_size) -> u32 {
 
         return neighbors;
       },
-      [&](Configuration const& config) { return heuristic(config, room_size); },
-      end);
+      [&](Configuration const& config) {
+        return heuristic(config, room_size);
+      });
 
   return distances.find(end)->second;
 }

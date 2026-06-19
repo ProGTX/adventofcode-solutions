@@ -22,6 +22,12 @@ constexpr auto get_distances(const maze_t& maze, point start_pos,
   auto distances = aoc::shortest_distances_dijkstra(
       arrow_t{start_pos, aoc::east},
       [&](const arrow_t current) {
+        if (!end_pos.has_value()) {
+          return false;
+        }
+        return current.position == *end_pos;
+      },
+      [&](const arrow_t current) {
         auto neighbors =
             aoc::static_vector<aoc::dijkstra_neighbor_t<arrow_t>, 3>{};
 
@@ -45,12 +51,6 @@ constexpr auto get_distances(const maze_t& maze, point start_pos,
         neighbors.emplace_back(arrow_t{current.position, new_direction}, 1000);
 
         return neighbors;
-      },
-      [&](const arrow_t current) {
-        if (!end_pos.has_value()) {
-          return false;
-        }
-        return current.position == *end_pos;
       },
       predecessors);
 
