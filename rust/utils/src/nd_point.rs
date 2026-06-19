@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NDPoint<T, const N: usize> {
@@ -31,6 +31,13 @@ impl<T, const N: usize> NDPoint<T, N> {
     }
     pub fn w(&self) -> &T {
         &self.data[3]
+    }
+
+    pub fn scale(self, factor: T) -> Self
+    where
+        T: Mul<Output = T> + Copy,
+    {
+        NDPoint::from_fn(|i| self.data[i] * factor)
     }
 
     pub fn x_mut(&mut self) -> &mut T {
@@ -67,6 +74,7 @@ macro_rules! impl_pointwise_op {
 impl_pointwise_op!(Add, add, AddAssign, add_assign, +, +=);
 impl_pointwise_op!(Sub, sub, SubAssign, sub_assign, -, -=);
 impl_pointwise_op!(Mul, mul, MulAssign, mul_assign, *, *=);
+impl_pointwise_op!(Div, div, DivAssign, div_assign, /, /=);
 
 impl<T: Neg<Output = T> + Copy, const N: usize> Neg for NDPoint<T, N> {
     type Output = Self;

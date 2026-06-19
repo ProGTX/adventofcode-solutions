@@ -89,6 +89,16 @@ impl<T> Point<T> {
         val.cmp(&T::default())
     }
 
+    pub fn scale(self, factor: T) -> Self
+    where
+        T: Mul<Output = T> + Copy,
+    {
+        Self {
+            x: self.x * factor,
+            y: self.y * factor,
+        }
+    }
+
     pub fn safe_divide(self, rhs: Self, default: T) -> Self
     where
         T: PartialEq + Default + Div<Output = T> + Copy,
