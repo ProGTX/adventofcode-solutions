@@ -413,7 +413,15 @@ constexpr auto to_number_with_rest(std::string_view str, int base = 10) {
   auto first = str.data();
   auto last = first + str.size();
   value_type value;
-  auto result = std::from_chars(first, last, value, base);
+  auto result = std::from_chars_result{};
+  if constexpr (std::integral<value_type>) {
+    result = std::from_chars(first, last, value, base);
+  } else if constexpr (std::floating_point<value_type>) {
+    // TODO: Support other formats
+    result = std::from_chars(first, last, value, std::chars_format::general);
+  } else {
+    static_assert(false, "Parsing not supported for this type");
+  }
   if (result.ec != std::errc{}) [[unlikely]] {
     throw std::runtime_error("to_number failed to parse " + std::string(str));
   }
