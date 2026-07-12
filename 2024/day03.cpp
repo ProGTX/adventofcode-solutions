@@ -1,110 +1,110 @@
 // https://adventofcode.com/2024/day/3
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <print>
-#include <string>
-#include <string_view>
-#include <type_traits>
 
-static constexpr int max_digits = 3;
+auto parse(String const& filename) -> String {
+  return aoc::read_file(filename);
+}
 
-constexpr int parse_multiplications(std::string_view line) {
-  constexpr std::string_view prefix = "mul(";
-  // Plus 1 to simplify bounds checking
-  aoc::static_vector<char, max_digits + 1> number_buffer;
-  int left = 0;
-  int right = 0;
-  int current_prefix_i = 0;
-  int sum = 0;
-  for (char elem : line) {
-    if (current_prefix_i < prefix.size()) {
-      // Getting through the prefix
-      if (elem == prefix[current_prefix_i]) {
-        ++current_prefix_i;
-      } else {
-        current_prefix_i = 0;
+constexpr let max_operand_digits = usize{3};
+
+// A cursor over the input,
+// in the spirit of the Kaleidoscope tutorial's token stream:
+// `try*` methods attempt to consume a semantic element at the current position
+// and rewind on failure so the caller can try something else instead
+// (or just skip a character).
+struct Cursor {
+  str bytes;
+  usize pos = 0;
+
+  fn peek() const -> Option<char> {
+    return (pos < bytes.size()) ? Option<char>{bytes[pos]} : None;
+  }
+
+  fn advance() -> Option<char> {
+    let byte = peek();
+    if (byte) {
+      ++pos;
+    }
+    return byte;
+  }
+
+  fn try_consume_literal(str literal) -> bool {
+    let start = pos;
+    for (char expected : literal) {
+      if (advance() != expected) {
+        pos = start;
+        return false;
       }
-    } else if (left == 0) {
-      // Parsing first number
-      if (aoc::is_number(elem)) {
-        number_buffer.push_back(elem);
-        if (number_buffer.size() <= max_digits) {
-          continue;
-        }
-      } else if (elem == ',') {
-        if (number_buffer.size() > 0) {
-          // Parse the number
-          left = aoc::to_number<int>(
-              std::string_view(number_buffer.data(), number_buffer.size()));
-          number_buffer.clear();
-          continue;
-        }
-      }
-      // If nothing succeeded, return to beginning
-      current_prefix_i = 0;
-      number_buffer.clear();
-    } else if (right == 0) {
-      // Parsing second number
-      if (aoc::is_number(elem)) {
-        number_buffer.push_back(elem);
-        if (number_buffer.size() <= max_digits) {
-          continue;
-        }
-      } else if (elem == ')') {
-        if (number_buffer.size() > 0) {
-          // Parse the number
-          right = aoc::to_number<int>(
-              std::string_view(number_buffer.data(), number_buffer.size()));
+    }
+    return true;
+  }
 
-          // Great success
-          sum += left * right;
-
-          // Don't continue, return to beginning
-        }
+  fn try_parse_number() -> Option<u32> {
+    let start = pos;
+    while ((pos - start) < max_operand_digits) {
+      let next = peek();
+      if (!next || !aoc::is_number(*next)) {
+        break;
       }
-      // If nothing succeeded, return to beginning
-      current_prefix_i = 0;
-      number_buffer.clear();
-      left = 0;
-      right = 0;
+      (void)advance();
+    }
+    if (pos == start) {
+      return None;
+    }
+    return aoc::to_number<u32>(bytes.substr(start, pos - start));
+  }
+
+  fn try_parse_mul() -> Option<u32> {
+    let start = pos;
+    if (!try_consume_literal("mul(")) {
+      pos = start;
+      return None;
+    }
+    let left = try_parse_number();
+    if (!left || !try_consume_literal(",")) {
+      pos = start;
+      return None;
+    }
+    let right = try_parse_number();
+    if (!right || !try_consume_literal(")")) {
+      pos = start;
+      return None;
+    }
+    // Great success
+    return *left * *right;
+  }
+};
+
+fn parse_multiplications(str line) -> u32 {
+  auto cursor = Cursor{line};
+  auto sum = u32{};
+  while (cursor.peek()) {
+    if (let product = cursor.try_parse_mul()) {
+      sum += *product;
     } else {
-      AOC_UNREACHABLE("Invalid condition");
+      (void)cursor.advance();
     }
   }
   return sum;
 }
 
-constexpr int parse_multiplications_with_enablers(std::string_view line) {
-  constexpr auto npos = std::string_view::npos;
-  using pos_t = std::remove_const_t<decltype(npos)>;
-  constexpr std::string_view do_str = "do()";
-  constexpr std::string_view dont_str = "don't()";
-  pos_t current_index = 0;
+fn parse_multiplications_with_enablers(str line) -> u32 {
+  auto cursor = Cursor{line};
+  u32 sum = 0;
   bool mul_enabled = true;
-  int sum = 0;
-  while (true) {
-    if (mul_enabled) {
-      auto index = line.find(dont_str, current_index);
-      if (index == npos) {
-        auto partial = parse_multiplications(line.substr(current_index));
-        sum += partial;
-        break;
-      } else {
-        auto partial = parse_multiplications(
-            line.substr(current_index, index - current_index));
-        sum += partial;
-        mul_enabled = false;
-        current_index = index + dont_str.size();
-      }
+  while (cursor.peek()) {
+    if (cursor.try_consume_literal("do()")) {
+      mul_enabled = true;
+    } else if (cursor.try_consume_literal("don't()")) {
+      mul_enabled = false;
+    } else if (let product = cursor.try_parse_mul()) {
+      sum += *product * static_cast<u32>(mul_enabled);
     } else {
-      auto index = line.find(do_str, current_index);
-      if (index == npos) {
-        break;
-      } else {
-        mul_enabled = true;
-        current_index = index + do_str.size();
-      }
+      (void)cursor.advance();
     }
   }
   return sum;
@@ -118,27 +118,19 @@ static_assert(8 == parse_multiplications_with_enablers(
 static_assert(1019406 == parse_multiplications(
                              "[#from())when()/}+%mul(982,733)mul(700,428)}}"));
 
-template <bool enablers>
-int solve_case(const std::string& filename) {
-  int sum = 0;
-
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    if constexpr (enablers) {
-      sum += parse_multiplications_with_enablers(line);
-    } else {
-      sum += parse_multiplications(line);
-    }
-  }
-
-  return sum;
-}
-
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(161, solve_case<false>("day03.example"));
-  AOC_EXPECT_RESULT(174960292, solve_case<false>("day03.input"));
+  let example = parse("day03.example");
+  AOC_EXPECT_RESULT(161, parse_multiplications(example));
+  let example2 = parse("day03.example2");
+  AOC_EXPECT_RESULT(161, parse_multiplications(example2));
+  let input = parse("day03.input");
+  AOC_EXPECT_RESULT(174960292, parse_multiplications(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(48, solve_case<true>("day03.example2"));
-  AOC_EXPECT_RESULT(-61636489, solve_case<true>("day03.input"));
+  AOC_EXPECT_RESULT(161, parse_multiplications_with_enablers(example));
+  AOC_EXPECT_RESULT(48, parse_multiplications_with_enablers(example2));
+  AOC_EXPECT_RESULT(56275602, parse_multiplications_with_enablers(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
