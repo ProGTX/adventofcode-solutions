@@ -280,6 +280,32 @@ static_assert(std::ranges::equal(
     }),
     std::array{0, 20, 40}));
 
+/// C++26 std::views::indices
+/// https://en.cppreference.com/cpp/ranges/iota_view
+inline constexpr auto indices = []<std::integral I>(I n) {
+  return std::views::iota(I{}, n);
+};
+static_assert(std::ranges::equal( //
+    std::array{0, 1, 2, 3},       //
+    indices(4)));
+
+struct indices_of_fn : std::ranges::range_adaptor_closure<indices_of_fn> {
+  template <std::ranges::sized_range R>
+  constexpr auto operator()(R&& r) const {
+    return std::views::iota(std::ranges::range_size_t<R>{0},
+                            std::ranges::size(r));
+  }
+};
+/// Returns views::indices(ranges::size(r))
+inline constexpr indices_of_fn indices_of;
+
+static_assert(std::ranges::equal( //
+    std::array{0uz, 1uz, 2uz},    //
+    indices_of(std::array{5, 6, 7})));
+static_assert(std::ranges::equal( //
+    std::array{0uz, 1uz, 2uz},    //
+    std::array{5, 6, 7} | indices_of));
+
 } // namespace views
 
 } // AOC_EXPORT_NAMESPACE(aoc)
