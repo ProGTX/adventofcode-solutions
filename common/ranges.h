@@ -164,7 +164,8 @@ class transform_filter_view
    public:
     using value_type = mapped_t;
     using difference_type = std::ranges::range_difference_t<View>;
-    using iterator_concept = std::input_iterator_tag;
+    using iterator_concept = std::ranges::iterator_t<std::ranges::filter_view<
+        View, ::aoc::constant_value<bool>>>::iterator_concept;
 
     iterator() = default;
     constexpr iterator(transform_filter_view* parent,
@@ -180,8 +181,34 @@ class transform_filter_view
       advance_to_match();
       return *this;
     }
-    constexpr void operator++(int) { ++*this; }
+    constexpr iterator operator++(int) {
+      auto tmp = *this;
+      ++*this;
+      return tmp;
+    }
 
+    // Precondition: a matching element exists before `current`,
+    // i.e. this iterator is not `begin()`.
+    constexpr iterator& operator--()
+      requires std::ranges::bidirectional_range<View>
+    {
+      do {
+        --current;
+        value_opt = std::invoke(parent->user_function, *current);
+      } while (!value_opt.has_value());
+      return *this;
+    }
+    constexpr iterator operator--(int)
+      requires std::ranges::bidirectional_range<View>
+    {
+      auto tmp = *this;
+      --*this;
+      return tmp;
+    }
+
+    constexpr bool operator==(iterator const& other) const {
+      return current == other.current;
+    }
     constexpr bool operator==(std::default_sentinel_t) const {
       return !value_opt.has_value();
     }
