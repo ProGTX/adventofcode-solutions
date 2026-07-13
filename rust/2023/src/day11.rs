@@ -65,8 +65,8 @@ fn expand_space(input: &Input, factor: i64) -> Vec<Pos> {
 fn sum_distances(galaxies: &[Pos]) -> i64 {
     galaxies
         .iter()
-        .tuple_combinations()
-        .map(|(&a, &b)| distance_manhattan(a, b))
+        .array_combinations()
+        .map(|[&a, &b]| distance_manhattan(a, b))
         .sum()
 }
 

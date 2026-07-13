@@ -10,4 +10,4 @@ unused_parens = "allow"
 needless_return = "allow"
 
 [dependencies]
-arrayvec = "0.7.6"
+arrayvec = "0.7.8"
