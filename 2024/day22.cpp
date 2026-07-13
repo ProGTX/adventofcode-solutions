@@ -10,6 +10,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 #include <vector>
 
 using int_t = std::int64_t;
@@ -74,7 +75,7 @@ constexpr auto get_value_total() {
 // See https://www.reddit.com/r/adventofcode/comments/1hk15et/comment/m3asuqa/
 // for inspiration
 constexpr int most_bananas(std::span<const int> secrets) {
-  aoc::flat_set<int> buyer_has_pattern;
+  auto buyer_has_pattern = std::unordered_set<int>{};
   auto value_total = get_value_total();
 
   for (int s = 0; s < secrets.size(); ++s) {
@@ -121,10 +122,12 @@ int main() {
   AOC_EXPECT_RESULT(37327623, solve_case<false>("day22.example"));
   AOC_EXPECT_RESULT(20215960478, solve_case<false>("day22.input"));
   std::println("Part 2");
+
   // The following two calls can't be static_assert because of compiler limits
   AOC_EXPECT_RESULT(9, most_bananas(std::array{123}));
   AOC_EXPECT_RESULT(23, most_bananas(std::array{1, 2, 3, 2024}));
   AOC_EXPECT_RESULT(24, solve_case<true>("day22.example"));
   AOC_EXPECT_RESULT(2221, solve_case<true>("day22.input"));
+
   AOC_RETURN_CHECK_RESULT();
 }
