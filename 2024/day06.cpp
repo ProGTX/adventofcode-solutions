@@ -7,8 +7,8 @@
 #include <array>
 #include <print>
 #include <ranges>
-#include <set>
 #include <type_traits>
+#include <unordered_map>
 
 constexpr let empty_space = '.';
 constexpr let obstacle = '#';
@@ -32,6 +32,20 @@ auto parse(String const& filename) -> Input {
   return {std::move(lab_map), *config.start_pos};
 }
 
+// The guard only ever faces one of the 4 cardinal directions,
+// so its direction can be packed into a 2-bit index.
+constexpr i32 direction_bit(point d) {
+  if (d == point{0, -1}) {
+    return 0;
+  } else if (d == point{1, 0}) {
+    return 1;
+  } else if (d == point{0, 1}) {
+    return 2;
+  } else {
+    return 3; // {-1, 0}
+  }
+}
+
 template <bool interfere, bool copy_map = false>
 fn follow_guard(std::conditional_t<
                     copy_map, lab_map_t,
@@ -42,19 +56,21 @@ fn follow_guard(std::conditional_t<
   let start_direction = aoc::get_diff(aoc::north);
   auto pos = start_pos;
   auto direction = start_direction;
+  // Maps each visited position to a bitmask of the directions
+  // it has been visited from (see direction_bit)
   auto visited =
-      std::conditional_t<interfere, aoc::flat_set<std::pair<point, point>>,
-                         usize>{};
+      std::conditional_t<interfere, std::unordered_map<point, u8>, usize>{};
   loop {
     if constexpr (!interfere) {
       lab_map.at(pos.y, pos.x) = visited_space;
     } else {
-      let new_node = std::pair{pos, direction};
-      let[it, inserted] = visited.insert(new_node);
-      if (!inserted) {
+      auto& mask = visited[pos];
+      let bit = static_cast<u8>(1 << direction_bit(direction));
+      if (mask & bit) {
         // Detected a loop
         return true;
       }
+      mask |= bit;
     }
     // Try to turn right, but might need to do it multiple times, at most 3
     // Stop rotating as soon as a non-obstacle cell is found, which may be
@@ -156,14 +172,6 @@ int main() {
 
   std::println("Part 2");
   AOC_EXPECT_RESULT(6, solve_case<true>(example));
-  // NOTE: Time required with different containers (on Ryzen 5950X):
-  //    std::vector                       = 96    s
-  //    std::set                          =  6    s
-  //    aoc::flat_set<std::vector>        =  1.95 s
-  //    aoc::flat_set<aoc::static_vector> =  1.78 s
-  // NOTE: Running this on the same machine, but a different drive,
-  //    the flat_set numbers are not so good: 24s for the vector version,
-  //    and 100s for the static_vector.
   AOC_EXPECT_RESULT(1928, solve_case<true>(input));
 
   AOC_RETURN_CHECK_RESULT();
