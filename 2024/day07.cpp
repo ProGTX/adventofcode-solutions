@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <print>
@@ -31,27 +32,21 @@ constexpr int_t evaluate_equation(const int_t test_value,
   const unsigned max_operators = operands.size() - 1;
   const unsigned max_evaluations = 1 << ((concat ? 2 : 1) * max_operators);
   for (unsigned id = 0; id < max_evaluations; ++id) {
-    operands_t operation_ids;
-    operation_ids.resize(max_operators);
-    std::conditional_t<concat, bool, const bool> skip_evaluation = false;
-    for (int bit_pos : bit_pos_view(max_operators)) {
-      operation_ids[bit_pos] = get_operation_id<concat>(id, bit_pos);
-      if constexpr (concat) {
-        if (operation_ids[bit_pos] == 3) {
-          // We only have 3 possible operations, but we use 2 bits to represent
-          // them, so we need to skip every time we get the 4th operation
-          skip_evaluation = true;
-          break;
-        }
+    if constexpr (concat) {
+      const auto has_invalid_operation =
+          stdr::any_of(bit_pos_view(max_operators), [&](int bit_pos) {
+            return get_operation_id<concat>(id, bit_pos) == 3;
+          });
+      if (has_invalid_operation) {
+        // We only have 3 possible operations, but we use 2 bits to represent
+        // them, so we need to skip every time we get the 4th operation
+        continue;
       }
-    }
-    if (skip_evaluation) {
-      continue;
     }
     int_t sum = operands[0];
     for (int bit_pos : bit_pos_view(max_operators)) {
       auto current_num = operands[max_operators - bit_pos];
-      auto operation_id = operation_ids[bit_pos];
+      auto operation_id = get_operation_id<concat>(id, bit_pos);
       if (operation_id == 0) {
         sum += current_num;
       } else if (operation_id == 1) {
