@@ -37,6 +37,7 @@ impl Default for Module {
 struct Input {
     module_map: Vec<Module>,
     broadcaster_id: usize,
+    #[allow(dead_code)]
     rx_id: Option<usize>,
 }
 
@@ -211,6 +212,7 @@ fn solve_case1(input: &Input) -> u64 {
     total_signals[0] * total_signals[1]
 }
 
+#[allow(dead_code)]
 fn solve_case2(input: &Input) -> u64 {
     let mut module_map = input.module_map.clone();
     let rx_id = input.rx_id.expect("rx module not found");

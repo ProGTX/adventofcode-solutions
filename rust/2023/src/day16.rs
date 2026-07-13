@@ -1,4 +1,4 @@
-use aoc::direction::{Arrow, Direction};
+use aoc::direction::Direction;
 use aoc::grid::Grid;
 use aoc::point::Point;
 
