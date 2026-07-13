@@ -47,22 +47,43 @@ constexpr std::optional<int> shortest_path(const memspace_t& memspace) {
   return it->second;
 }
 
-template <int num_fallen>
-constexpr point first_problematic_byte(memspace_t memspace,
-                                       std::span<const point> falling_bytes) {
-  // We know from part 1 that num_fallen bytes don't cause a problem yet
-  memspace = bytes_fall<num_fallen>(memspace, falling_bytes);
+constexpr memspace_t bytes_fall_dyn(memspace_t memspace,
+                                    std::span<const point> falling_bytes,
+                                    int count) {
+  for (const auto byte_pos : falling_bytes.subspan(0, count)) {
+    memspace.modify(corrupted, byte_pos.y, byte_pos.x);
+  }
+  return memspace;
+}
 
-  for (int byte_index = num_fallen; byte_index < falling_bytes.size();
-       ++byte_index) {
-    memspace = bytes_fall<1>(memspace, falling_bytes.subspan(byte_index));
-    auto result = shortest_path(memspace);
-    if (!result) {
-      return falling_bytes[byte_index];
+template <int num_fallen>
+constexpr point first_problematic_byte(const memspace_t& memspace,
+                                       std::span<const point> falling_bytes) {
+  // Adding corrupted cells can only ever block a path, never reopen one,
+  // so whether a path exists is monotonic in the number of fallen bytes
+  // That lets us binary search for the first blocking byte
+  // instead of testing every byte one at a time
+  const auto has_path_after = [&](int count) {
+    return shortest_path(bytes_fall_dyn(memspace, falling_bytes, count))
+        .has_value();
+  };
+
+  // We know from part 1 that num_fallen bytes don't cause a problem yet
+  int low = num_fallen;
+  int high = static_cast<int>(falling_bytes.size());
+  if (has_path_after(high)) {
+    return {};
+  }
+  while (low + 1 < high) {
+    int mid = low + (high - low) / 2;
+    if (has_path_after(mid)) {
+      low = mid;
+    } else {
+      high = mid;
     }
   }
 
-  return {};
+  return falling_bytes[high - 1];
 }
 
 template <point grid_size, int num_fallen, bool check_closed>

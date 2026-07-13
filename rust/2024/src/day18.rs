@@ -45,28 +45,41 @@ fn solve_case1<const NUM_ROWS: usize, const NUM_COLUMNS: usize, const NUM_FALLEN
 }
 
 fn first_problematic_byte(
-    memspace: Grid<char>,
+    memspace: &Grid<char>,
     falling_bytes: &[Upos],
     num_fallen: usize,
 ) -> Option<Upos> {
-    // We know from part 1 that num_fallen bytes don't cause a problem yet
-    let mut memspace = bytes_fall(memspace, &falling_bytes[..num_fallen]);
+    // Adding corrupted cells can only ever block a path, never reopen one,
+    // so whether a path exists is monotonic in the number of fallen bytes
+    // That lets us binary search for the first blocking byte
+    // instead of testing every byte one at a time
+    let has_path_after = |count: usize| {
+        shortest_path(&bytes_fall(memspace.clone(), &falling_bytes[..count])).is_some()
+    };
 
-    for byte_index in num_fallen..falling_bytes.len() {
-        memspace = bytes_fall(memspace, &falling_bytes[byte_index..byte_index + 1]);
-        if shortest_path(&memspace).is_none() {
-            return Some(falling_bytes[byte_index]);
+    // We know from part 1 that num_fallen bytes don't cause a problem yet
+    let mut low = num_fallen;
+    let mut high = falling_bytes.len();
+    if has_path_after(high) {
+        return None;
+    }
+    while low + 1 < high {
+        let mid = low + (high - low) / 2;
+        if has_path_after(mid) {
+            low = mid;
+        } else {
+            high = mid;
         }
     }
 
-    None
+    Some(falling_bytes[high - 1])
 }
 
 fn solve_case2<const NUM_ROWS: usize, const NUM_COLUMNS: usize, const NUM_FALLEN: usize>(
     falling_bytes: &[Upos],
 ) -> Upos {
     let memspace = Grid::new(EMPTY, NUM_ROWS, NUM_COLUMNS);
-    first_problematic_byte(memspace, falling_bytes, NUM_FALLEN).unwrap()
+    first_problematic_byte(&memspace, falling_bytes, NUM_FALLEN).unwrap()
 }
 
 fn main() {
