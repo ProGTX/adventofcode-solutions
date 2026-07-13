@@ -10,12 +10,13 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 using int_t = std::uint64_t;
 using stones_t = std::vector<int_t>;
 using blink_key_t = aoc::point_type<int_t>;
-using blink_cache_t = aoc::flat_map<blink_key_t, int_t>;
+using blink_cache_t = std::unordered_map<blink_key_t, int_t>;
 
 constexpr int_t blink(int_t stone, int_t blink_counter,
                       blink_cache_t& blink_cache) {
