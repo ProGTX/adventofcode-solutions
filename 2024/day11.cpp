@@ -43,7 +43,10 @@ fn solve_case(stones_t const& stones) -> u64 {
         let start = blink_state_t{stone, static_cast<u64>(times)};
         let num_stones = aoc::dfs(
             start, [](blink_state_t const& state) { return state.y == 0; },
-            blink_neighbors);
+            [](blink_state_t const& state) {
+              return blink_neighbors(state) |
+                     aoc::dijkstra_uniform_neighbors_view();
+            });
         return num_stones.at(start);
       }),
       u64{0});

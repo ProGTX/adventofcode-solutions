@@ -915,21 +915,25 @@ constexpr auto binary_select_from_combination(ElementsR&& elements,
 
 /// Generic depth-first search with memoization.
 ///
-/// get_neighbors expands a state into a range of successor states.
-/// A state's value is 1 if end_reached(state),
-/// otherwise the sum of its neighbors' values
-/// (0 if there are none, i.e. a dead end).
+/// get_neighbors expands a state into a range of successor states, each
+/// paired with a weight (dijkstra_neighbor_t::distance) -- a plain
+/// dijkstra_uniform_neighbors_view() gives every edge weight 1, matching
+/// the original sum-of-neighbors behavior; a state-dependent leaf value can
+/// be encoded as a single weighted edge to an already-end_reached state.
+/// A state's value is 1 if end_reached(state), otherwise its neighbors'
+/// (weight * value) terms folded together with `combine`, left to right
+/// (Value{} if there are no neighbors, i.e. a dead end).
 /// Returns the cache of all computed state values,
 /// including the one for start_state.
 template <class ReturnT = void, class Value = std::uint64_t, class State,
-          class EndReachedFn, class NeighborsFn>
+          class EndReachedFn, class NeighborsFn, class CombineFn = std::plus<>>
   requires requires(EndReachedFn end_reached, NeighborsFn get_neighbors,
                     const State& state) {
     { end_reached(state) } -> std::convertible_to<bool>;
     { get_neighbors(state) } -> std::ranges::input_range;
   }
 constexpr auto dfs(State start_state, EndReachedFn&& end_reached,
-                   NeighborsFn&& get_neighbors) {
+                   NeighborsFn&& get_neighbors, CombineFn&& combine = {}) {
   using cache_t = std::conditional_t<std::is_void_v<ReturnT>,
                                      std::unordered_map<State, Value>, ReturnT>;
   auto cache = cache_t{};
@@ -941,11 +945,14 @@ constexpr auto dfs(State start_state, EndReachedFn&& end_reached,
     auto result =          //
         end_reached(state) //
             ? Value{1}
-            : ::aoc::ranges::accumulate( //
+            : std::ranges::fold_left( //
                   get_neighbors(state) |
-                      std::views::as_rvalue |
-                      std::views::transform(self_search),
-                  Value{});
+                      std::views::transform(
+                          [&](dijkstra_neighbor_t<State> neighbor) -> Value {
+                            return static_cast<Value>(neighbor.distance) *
+                                   self_search(std::move(neighbor.node));
+                          }),
+                  Value{}, combine);
     cache.emplace(std::move(state), std::move(result));
     return result;
   };

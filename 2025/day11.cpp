@@ -30,7 +30,9 @@ auto parse(String const& filename) -> Input {
 fn search(Vec<Outputs> const& device_map, usize start, usize end) -> u64 {
   let num_paths = aoc::dfs(
       start, [end](usize node) { return node == end; },
-      [&device_map](usize node) { return device_map[node]; });
+      [&device_map](usize node) {
+        return device_map[node] | aoc::dijkstra_uniform_neighbors_view();
+      });
   return num_paths.at(start);
 }
 

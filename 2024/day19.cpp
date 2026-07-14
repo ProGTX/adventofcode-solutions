@@ -69,7 +69,8 @@ fn num_possible_designs<true>(str design, std::span<const String> patterns)
                stdv::filter(
                    [&](String const& p) { return remaining.starts_with(p); }) |
                stdv::transform(
-                   [&](String const& p) { return remaining.substr(p.size()); });
+                   [&](String const& p) { return remaining.substr(p.size()); }) |
+               aoc::dijkstra_uniform_neighbors_view();
       });
   return num_designs.at(design_str);
 }

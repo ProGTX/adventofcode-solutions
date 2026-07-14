@@ -139,7 +139,10 @@ fn count_arrangements(std::span<Record const> records) -> u64 {
             [](SearchState const& state) {
               return state.springs.empty() && state.groups.empty();
             },
-            arrangement_neighbors);
+            [](SearchState const& state) {
+              return arrangement_neighbors(state) |
+                     aoc::dijkstra_uniform_neighbors_view();
+            });
         return arrangements.at(start);
       }),
       u64{0});
