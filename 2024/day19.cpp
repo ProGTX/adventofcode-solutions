@@ -1,38 +1,49 @@
 // https://adventofcode.com/2024/day/19
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
-#include <algorithm>
-#include <array>
-#include <cstdint>
 #include <print>
 #include <ranges>
 #include <span>
-#include <string>
-#include <string_view>
-#include <vector>
 
-using int_t = std::int64_t;
+struct Input {
+  Vec<String> patterns;
+  Vec<String> designs;
+};
+
+auto parse(String const& filename) -> Input {
+  auto patterns = Vec<String>{};
+  auto designs = Vec<String>{};
+  for (int row = 0; String line : aoc::views::read_lines(filename)) {
+    if (row < 1) {
+      patterns = aoc::split_to_vec<String>(line, ',', aoc::trimmer<String>());
+    } else {
+      designs.push_back(std::move(line));
+    }
+    ++row;
+  }
+  return {std::move(patterns), std::move(designs)};
+}
 
 template <bool all_options>
-constexpr int_t num_possible_designs(std::string_view design,
-                                     std::span<const std::string> patterns);
+fn num_possible_designs(str design, std::span<const String> patterns) -> i64;
 
 template <>
-constexpr int_t num_possible_designs<false>(
-    std::string_view design, std::span<const std::string> patterns) {
+fn num_possible_designs<false>(str design, std::span<const String> patterns)
+    -> i64 {
   bool end_found = false;
   aoc::shortest_distances_dijkstra(
-      std::string{""},
-      [&](std::string_view current) {
+      String{""},
+      [&](str current) {
         if (current.size() == design.size()) {
           end_found = true;
         }
         return end_found;
       },
-      [&](const std::string& current) {
-        auto neighbors = std::vector<aoc::dijkstra_neighbor_t<std::string>>{};
-        for (const std::string& pattern : patterns) {
+      [&](String const& current) {
+        auto neighbors = Vec<aoc::dijkstra_neighbor_t<String>>{};
+        for (String const& pattern : patterns) {
           auto neighbor = current + pattern;
           if (design.starts_with(neighbor)) {
             neighbors.emplace_back(std::move(neighbor),
@@ -44,18 +55,17 @@ constexpr int_t num_possible_designs<false>(
   return end_found;
 }
 
-constexpr int_t count_designs(aoc::flat_map<std::string, int_t>& cache,
-                              const std::string& design,
-                              std::span<const std::string> patterns) {
+fn count_designs(aoc::flat_map<String, i64>& cache, String const& design,
+                 std::span<const String> patterns) -> i64 {
   if (design.empty()) {
     return 1;
   }
-  auto it = cache.find(design);
+  let it = cache.find(design);
   if (it != std::end(cache)) {
     return it->second;
   }
-  int_t sum = 0;
-  for (std::string_view p : patterns) {
+  i64 sum = 0;
+  for (str p : patterns) {
     if (design.starts_with(p)) {
       sum += count_designs(cache, design.substr(p.size()), patterns);
     }
@@ -65,48 +75,31 @@ constexpr int_t count_designs(aoc::flat_map<std::string, int_t>& cache,
 }
 
 template <>
-constexpr int_t num_possible_designs<true>(
-    std::string_view design, std::span<const std::string> patterns) {
-  aoc::flat_map<std::string, int_t> cache;
-  return count_designs(cache, std::string{design}, patterns);
+fn num_possible_designs<true>(str design, std::span<const String> patterns)
+    -> i64 {
+  auto cache = aoc::flat_map<String, i64>{};
+  return count_designs(cache, String{design}, patterns);
 }
 
 template <bool all_options>
-constexpr int_t check_all_designs(std::span<const std::string> designs,
-                                  std::span<const std::string> patterns) {
+fn solve_case(Input const& input) -> i64 {
   return aoc::ranges::accumulate(
-      designs | stdv::transform([&](std::string_view design) {
-        return num_possible_designs<all_options>(design, patterns);
+      input.designs | stdv::transform([&](str design) {
+        return num_possible_designs<all_options>(design, input.patterns);
       }),
-      int_t{0});
-}
-
-template <bool all_options>
-int_t solve_case(const std::string& filename) {
-  std::vector<std::string> designs;
-  std::vector<std::string> patterns;
-  for (int row = 0; std::string line : aoc::views::read_lines(filename)) {
-    if (row < 1) {
-      patterns = aoc::split_to_vec<std::string>(line, ',',
-                                                aoc::trimmer<std::string>());
-    } else {
-      designs.push_back(std::move(line));
-    }
-    ++row;
-  }
-
-  int_t sum = 0;
-  sum = check_all_designs<all_options>(designs, patterns);
-
-  return sum;
+      i64{0});
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(6, solve_case<false>("day19.example"));
-  AOC_EXPECT_RESULT(317, solve_case<false>("day19.input"));
+  let example = parse("day19.example");
+  AOC_EXPECT_RESULT(6, solve_case<false>(example));
+  let input = parse("day19.input");
+  AOC_EXPECT_RESULT(317, solve_case<false>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(16, solve_case<true>("day19.example"));
-  AOC_EXPECT_RESULT(883443544805484, solve_case<true>("day19.input"));
+  AOC_EXPECT_RESULT(16, solve_case<true>(example));
+  AOC_EXPECT_RESULT(883443544805484, solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
