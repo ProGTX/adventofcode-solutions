@@ -7,6 +7,7 @@
 #ifndef AOC_MODULE_SUPPORT
 #include <array>
 #include <concepts>
+#include <functional>
 #include <iterator>
 #include <string_view>
 #include <type_traits>
@@ -75,6 +76,13 @@ concept contains_type = (std::same_as<T, U> || ...);
 
 template <typename T, typename... U>
 concept contains_uncvref = (std::same_as<std::remove_cvref_t<T>, U> || ...);
+
+template <class T>
+concept hashable = requires(const std::remove_cvref_t<T>& value) {
+  {
+    std::hash<std::remove_cvref_t<T>>{}(value)
+  } -> std::convertible_to<std::size_t>;
+};
 
 static_assert(contains_type<std::string_view, std::string_view>);
 static_assert(contains_type<std::string_view, int, std::string_view>);

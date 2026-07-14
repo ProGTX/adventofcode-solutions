@@ -571,14 +571,14 @@ struct hash_combine {
   }
 
   template <std::ranges::input_range R>
+    requires(!hashable<R>)
   constexpr void operator()(R&& range) {
     for (auto&& value : range) {
       this->operator()(value);
     }
   }
 
-  template <class T>
-    requires(!std::ranges::input_range<T>)
+  template <hashable T>
   constexpr void operator()(const T& value) {
     return this->operator()(std::hash<T>{}(value));
   }
