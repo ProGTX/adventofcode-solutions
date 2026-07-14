@@ -960,6 +960,33 @@ constexpr auto dfs(State start_state, EndReachedFn&& end_reached,
   return cache;
 }
 
+/// dfs for the common case: every edge has weight 1
+/// and the combine operator is addition.
+/// A state's value is 1 if end_reached(state),
+/// otherwise the sum of its neighbors' values (Value{} for a dead end).
+template <class ReturnT = void, class Value = std::uint64_t, class State,
+          class EndReachedFn, class NeighborsFn>
+  requires requires(EndReachedFn end_reached, NeighborsFn get_neighbors,
+                    const State& state) {
+    { end_reached(state) } -> std::convertible_to<bool>;
+    { get_neighbors(state) } -> std::ranges::input_range;
+  }
+constexpr auto dfs_uniform(State start_state, EndReachedFn&& end_reached,
+                           NeighborsFn&& get_neighbors) {
+  return dfs<ReturnT, Value>(                  //
+      std::move(start_state),                  //
+      std::forward<EndReachedFn>(end_reached), //
+      [&](const State& state) {
+        // as_rvalue lets States be moved rather than
+        // copied out of get_neighbors' result, whether
+        // it's an owned container or a lazy view This is
+        // important since State may be expensive to copy
+        return get_neighbors(state) |
+               std::views::as_rvalue |
+               dijkstra_uniform_neighbors_view();
+      });
+}
+
 } // AOC_EXPORT_NAMESPACE(aoc)
 
 static_assert(std::movable<aoc::ranges::combinations_view<std::vector<int>>>);

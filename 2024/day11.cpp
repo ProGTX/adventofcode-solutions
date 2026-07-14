@@ -41,12 +41,9 @@ fn solve_case(stones_t const& stones) -> u64 {
   return aoc::ranges::accumulate(
       stones | stdv::transform([](u64 stone) {
         let start = blink_state_t{stone, static_cast<u64>(times)};
-        let num_stones = aoc::dfs(
+        let num_stones = aoc::dfs_uniform(
             start, [](blink_state_t const& state) { return state.y == 0; },
-            [](blink_state_t const& state) {
-              return blink_neighbors(state) |
-                     aoc::dijkstra_uniform_neighbors_view();
-            });
+            blink_neighbors);
         return num_stones.at(start);
       }),
       u64{0});

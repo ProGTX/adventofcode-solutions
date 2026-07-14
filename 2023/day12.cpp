@@ -134,15 +134,12 @@ fn count_arrangements(std::span<Record const> records) -> u64 {
                                   stdv::join |
                                   aoc::collect_vec<u8>(),
                         .damaged_before = 0};
-        let arrangements = aoc::dfs(
+        let arrangements = aoc::dfs_uniform(
             start,
             [](SearchState const& state) {
               return state.springs.empty() && state.groups.empty();
             },
-            [](SearchState const& state) {
-              return arrangement_neighbors(state) |
-                     aoc::dijkstra_uniform_neighbors_view();
-            });
+            arrangement_neighbors);
         return arrangements.at(start);
       }),
       u64{0});

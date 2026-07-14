@@ -62,15 +62,14 @@ fn num_possible_designs<true>(str design, std::span<const String> patterns)
   // otherwise the sum of arrangement counts of what's left
   // after stripping off each pattern that matches its start
   let design_str = String{design};
-  let num_designs = aoc::dfs<void, i64>(
+  let num_designs = aoc::dfs_uniform<void, i64>(
       design_str, [](String const& remaining) { return remaining.empty(); },
       [&](String const& remaining) {
         return patterns |
                stdv::filter(
                    [&](String const& p) { return remaining.starts_with(p); }) |
                stdv::transform(
-                   [&](String const& p) { return remaining.substr(p.size()); }) |
-               aoc::dijkstra_uniform_neighbors_view();
+                   [&](String const& p) { return remaining.substr(p.size()); });
       });
   return num_designs.at(design_str);
 }
