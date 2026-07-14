@@ -1,47 +1,44 @@
 // https://adventofcode.com/2024/day/11
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
-#include <algorithm>
-#include <array>
-#include <cstdint>
 #include <print>
 #include <ranges>
-#include <span>
-#include <string>
-#include <string_view>
 #include <unordered_map>
-#include <vector>
 
-using int_t = std::uint64_t;
-using stones_t = std::vector<int_t>;
-using blink_key_t = aoc::point_type<int_t>;
-using blink_cache_t = std::unordered_map<blink_key_t, int_t>;
+using stones_t = Vec<u64>;
+using blink_key_t = aoc::point_type<u64>;
+using blink_cache_t = std::unordered_map<blink_key_t, u64>;
 
-constexpr int_t blink(int_t stone, int_t blink_counter,
-                      blink_cache_t& blink_cache) {
+auto parse(String const& filename) -> stones_t {
+  let lines = aoc::views::read_lines(filename) | aoc::collect_vec<String>();
+  return aoc::split<stones_t>(lines.back(), ' ');
+}
+
+fn blink(u64 stone, u64 blink_counter, blink_cache_t& blink_cache) -> u64 {
   if (blink_counter == 0) {
     return 1;
   }
-  const auto cache_key = blink_key_t{stone, blink_counter};
-  if (auto it = blink_cache.find(cache_key); it != blink_cache.end()) {
+  let cache_key = blink_key_t{stone, blink_counter};
+  if (let it = blink_cache.find(cache_key); it != blink_cache.end()) {
     return it->second;
   } else {
     if (stone == 0) {
-      auto num_stones = blink(1, blink_counter - 1, blink_cache);
+      let num_stones = blink(1, blink_counter - 1, blink_cache);
       blink_cache.try_emplace(cache_key, num_stones);
       return num_stones;
-    } else if (int digits = aoc::num_digits(stone); (digits % 2) == 0) {
+    } else if (let digits = aoc::num_digits(stone); (digits % 2) == 0) {
       // The stone is replaced by two stones
-      const auto divider = aoc::pown(10, digits / 2);
+      let divider = aoc::pown(10, digits / 2);
       // The left half of the digits are engraved on the new left stone
       // The right half of the digits are engraved on the new right stone
-      auto num_stones = blink(stone / divider, blink_counter - 1, blink_cache) +
-                        blink(stone % divider, blink_counter - 1, blink_cache);
+      let num_stones = blink(stone / divider, blink_counter - 1, blink_cache) +
+                       blink(stone % divider, blink_counter - 1, blink_cache);
       blink_cache.try_emplace(cache_key, num_stones);
       return num_stones;
     } else {
-      auto num_stones = blink(stone * 2024, blink_counter - 1, blink_cache);
+      let num_stones = blink(stone * 2024, blink_counter - 1, blink_cache);
       blink_cache.try_emplace(cache_key, num_stones);
       return num_stones;
     }
@@ -49,36 +46,25 @@ constexpr int_t blink(int_t stone, int_t blink_counter,
 }
 
 template <int times>
-constexpr int_t change_stones(const stones_t& stones) {
+fn solve_case(stones_t const& stones) -> u64 {
   // We need to use dynamic programming to speed up the calculation
-  blink_cache_t blink_cache;
-  int_t num_stones = 0;
-  for (const int_t stone : stones) {
-    num_stones += blink(stone, times, blink_cache);
-  }
-  return num_stones;
-}
-
-template <int blink_times>
-int_t solve_case(const std::string& filename) {
-  stones_t stones;
-
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    stones = aoc::split<stones_t>(line, ' ');
-  }
-
-  int_t sum = 0;
-  sum = change_stones<blink_times>(stones);
-
-  return sum;
+  auto blink_cache = blink_cache_t{};
+  return aoc::ranges::accumulate(stones | stdv::transform([&](u64 stone) {
+                                   return blink(stone, times, blink_cache);
+                                 }),
+                                 u64{0});
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(55312, solve_case<25>("day11.example"));
-  AOC_EXPECT_RESULT(191690, solve_case<25>("day11.input"));
+  let example = parse("day11.example");
+  AOC_EXPECT_RESULT(55312, solve_case<25>(example));
+  let input = parse("day11.input");
+  AOC_EXPECT_RESULT(191690, solve_case<25>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(65601038650482, solve_case<75>("day11.example"));
-  AOC_EXPECT_RESULT(228651922369703, solve_case<75>("day11.input"));
+  AOC_EXPECT_RESULT(65601038650482, solve_case<75>(example));
+  AOC_EXPECT_RESULT(228651922369703, solve_case<75>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
