@@ -11,3 +11,4 @@ needless_return = "allow"
 
 [dependencies]
 arrayvec = "0.7.8"
+rustc-hash = "2.1.3"

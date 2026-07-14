@@ -1,8 +1,7 @@
 use aoc::dijkstra::DijkstraState;
-use rustc_hash::FxHashMap;
+use itertools::Itertools;
 use std::cell::Cell;
 
-type Cache = FxHashMap<String, i64>;
 type Input = (Vec<String>, Vec<String>);
 
 fn parse(filename: &str) -> Input {
@@ -45,25 +44,20 @@ fn num_possible_designs_reachable(design: &str, patterns: &[String]) -> i64 {
     end_found.get() as i64
 }
 
-fn count_designs(cache: &mut Cache, design: &str, patterns: &[String]) -> i64 {
-    if design.is_empty() {
-        return 1;
-    }
-    if let Some(&cached) = cache.get(design) {
-        return cached;
-    }
-    let sum = patterns
-        .iter()
-        .filter(|pattern| design.starts_with(pattern.as_str()))
-        .map(|pattern| count_designs(cache, &design[pattern.len()..], patterns))
-        .sum();
-    cache.insert(design.to_string(), sum);
-    sum
-}
-
 fn num_possible_designs_all(design: &str, patterns: &[String]) -> i64 {
-    let mut cache = Cache::default();
-    count_designs(&mut cache, design, patterns)
+    let start = design.to_string();
+    let counts = aoc::algorithm::dfs_uniform(
+        start.clone(),
+        |remaining: &String| remaining.is_empty(),
+        |remaining: &String| {
+            patterns
+                .iter()
+                .filter(|pattern| remaining.starts_with(pattern.as_str()))
+                .map(|pattern| remaining[pattern.len()..].to_string())
+                .collect_vec()
+        },
+    );
+    counts[&start]
 }
 
 fn solve_case<const ALL_OPTIONS: bool>((designs, patterns): &Input) -> i64 {

@@ -11,6 +11,7 @@ function(add_rust_source filename folder)
     set(rust_local_sources "${local_sources}" PARENT_SCOPE)
 endfunction()
 
+add_rust_source(algorithm utils)
 add_rust_source(closed_range utils)
 add_rust_source(dijkstra utils)
 add_rust_source(direction utils)

@@ -20,32 +20,13 @@ fn parse(filename: &str) -> Input {
     return (result, name_to_id);
 }
 
-fn count_paths(
-    device_map: &Vec<Outputs>,
-    current: usize,
-    end: usize,
-    cache: &mut Vec<Option<u64>>,
-) -> u64 {
-    if current == end {
-        // Reached the destination: one complete path found
-        return 1;
-    }
-    if let Some(result) = cache[current] {
-        return result;
-    }
-
-    // Total paths from here = sum of paths from each outgoing neighbor
-    let result = device_map[current]
-        .iter()
-        .map(|&out| count_paths(device_map, out, end, cache))
-        .sum();
-    cache[current] = Some(result);
-    result
-}
-
-fn search(device_map: &Vec<Outputs>, start: usize, end: usize) -> u64 {
-    let mut cache = vec![None; device_map.len()];
-    return count_paths(device_map, start, end, &mut cache);
+fn search(device_map: &[Outputs], start: usize, end: usize) -> u64 {
+    let paths = aoc::algorithm::dfs_uniform(
+        start,
+        |&node| node == end,
+        |&node| device_map[node].iter().copied(),
+    );
+    paths[&start]
 }
 
 fn solve_case1((device_map, name_to_id): &Input) -> u64 {
