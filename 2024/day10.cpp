@@ -76,8 +76,7 @@ fn get_score(top_map_t const& top_map, point trailhead) -> usize {
 }
 static_assert(1 == get_score(test_map(), {1, 1}));
 
-template <bool>
-fn solve_case(Input const& input) -> usize {
+fn solve_case1(Input const& input) -> usize {
   return aoc::ranges::accumulate(
       input.trailheads | stdv::transform([&](point trailhead) {
         return get_score(input.top_map, trailhead);
@@ -85,19 +84,72 @@ fn solve_case(Input const& input) -> usize {
       usize{});
 }
 
+struct SearchState {
+  point pos;
+  Vec<point> trail;
+
+  constexpr bool operator==(SearchState const&) const = default;
+};
+template <>
+struct std::hash<SearchState> {
+  size_t operator()(SearchState const& state) const {
+    auto combine = aoc::hash_combine{};
+    combine(std::hash<point>{}(state.pos));
+    for (point const& p : state.trail) {
+      combine(std::hash<point>{}(p));
+    }
+    return combine.seed;
+  }
+};
+
+fn get_rating(top_map_t const& top_map, point trailhead) -> usize {
+  let start = SearchState{
+      .pos = trailhead,
+      .trail = {},
+  };
+  let num_trails = aoc::dfs_uniform(
+      start,
+      [&](SearchState const& state) {
+        return top_map.at(state.pos.y, state.pos.x) == trail_end;
+      },
+      [&](SearchState const& state) {
+        let current_height = top_map.at(state.pos.y, state.pos.x);
+        return aoc::basic_neighbor_diffs |
+               stdv::transform([&](point diff) { return state.pos + diff; }) |
+               stdv::filter([&top_map, current_height](point neighbor) {
+                 return top_map.at(neighbor.y, neighbor.x) ==
+                        current_height + 1;
+               }) |
+               stdv::transform([&](point neighbor) {
+                 auto new_state = state;
+                 new_state.pos = neighbor;
+                 new_state.trail.push_back(state.pos);
+                 return new_state;
+               });
+      });
+  return num_trails.at(start);
+}
+
+fn solve_case2(Input const& input) -> usize {
+  return aoc::ranges::accumulate(
+      input.trailheads | stdv::transform([&](point trailhead) {
+        return get_rating(input.top_map, trailhead);
+      }),
+      usize{});
+}
+
 int main() {
   std::println("Part 1");
   let example = parse("day10.example");
-  AOC_EXPECT_RESULT(1, solve_case<false>(example));
+  AOC_EXPECT_RESULT(1, solve_case1(example));
   let example2 = parse("day10.example2");
-  AOC_EXPECT_RESULT(36, solve_case<false>(example2));
+  AOC_EXPECT_RESULT(36, solve_case1(example2));
   let input = parse("day10.input");
-  AOC_EXPECT_RESULT(652, solve_case<false>(input));
+  AOC_EXPECT_RESULT(652, solve_case1(input));
 
   std::println("Part 2");
-  aoc::return_incomplete();
-  // AOC_EXPECT_RESULT(281, solve_case<true>(example));
-  // AOC_EXPECT_RESULT(53515, solve_case<true>(input));
+  AOC_EXPECT_RESULT(81, solve_case2(example2));
+  AOC_EXPECT_RESULT(1432, solve_case2(input));
 
   AOC_RETURN_CHECK_RESULT();
 }
