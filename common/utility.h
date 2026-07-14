@@ -569,6 +569,19 @@ struct hash_combine {
   constexpr void operator()(std::size_t value) {
     seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   }
+
+  template <std::ranges::input_range R>
+  constexpr void operator()(R&& range) {
+    for (auto&& value : range) {
+      this->operator()(value);
+    }
+  }
+
+  template <class T>
+    requires(!std::ranges::input_range<T>)
+  constexpr void operator()(const T& value) {
+    return this->operator()(std::hash<T>{}(value));
+  }
 };
 
 /// Custom flush function so that users of the aoc module

@@ -24,9 +24,9 @@ template <>
 struct std::hash<node_t> {
   constexpr size_t operator()(node_t const& node) const {
     auto combine = aoc::hash_combine{};
-    combine(std::hash<point>{}(node.pos));
-    combine(std::hash<point>{}(node.direction));
-    combine(std::hash<int>{}(node.consecutive));
+    combine(node.pos);
+    combine(node.direction);
+    combine(node.consecutive);
     return combine.seed;
   }
 };

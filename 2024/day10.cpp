@@ -94,10 +94,8 @@ template <>
 struct std::hash<SearchState> {
   size_t operator()(SearchState const& state) const {
     auto combine = aoc::hash_combine{};
-    combine(std::hash<point>{}(state.pos));
-    for (point const& p : state.trail) {
-      combine(std::hash<point>{}(p));
-    }
+    combine(state.pos);
+    combine(state.trail);
     return combine.seed;
   }
 };

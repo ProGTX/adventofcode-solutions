@@ -46,11 +46,9 @@ template <>
 struct std::hash<SearchState> {
   size_t operator()(SearchState const& state) const {
     auto combine = aoc::hash_combine{};
-    combine(std::hash<String>{}(state.springs));
-    for (u8 group : state.groups) {
-      combine(std::hash<u8>{}(group));
-    }
-    combine(std::hash<u8>{}(state.damaged_before));
+    combine(state.springs);
+    combine(state.groups);
+    combine(state.damaged_before);
     return combine.seed;
   }
 };

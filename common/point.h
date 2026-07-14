@@ -51,7 +51,7 @@ struct point_type {
   }
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
-  constexpr point_type& operator op_eq(const point_type & other) {             \
+  constexpr point_type& operator op_eq(const point_type& other) {              \
     x op_eq other.x;                                                           \
     y op_eq other.y;                                                           \
     return *this;                                                              \
@@ -72,7 +72,7 @@ struct point_type {
   // by setting the element to zero
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
-  constexpr point_type& operator op_eq(const point_type & other) {             \
+  constexpr point_type& operator op_eq(const point_type& other) {              \
     if (other.x == 0) {                                                        \
       x = 0;                                                                   \
     } else {                                                                   \
@@ -264,7 +264,7 @@ class nd_point_type {
   }
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
-  constexpr nd_point_type& operator op_eq(const nd_point_type & other) {       \
+  constexpr nd_point_type& operator op_eq(const nd_point_type& other) {        \
     transform([&](value_type val, int i) { return val op other[i]; });         \
     return *this;                                                              \
   }                                                                            \
@@ -284,7 +284,7 @@ class nd_point_type {
   // by setting the element to zero
 
 #define AOC_POINTWISE_OP(op, op_eq)                                            \
-  constexpr nd_point_type& operator op_eq(const nd_point_type & other) {       \
+  constexpr nd_point_type& operator op_eq(const nd_point_type& other) {        \
     transform([&](value_type val, int i) {                                     \
       return (other[i] == 0) ? 0 : (val op other[i]);                          \
     });                                                                        \
@@ -547,8 +547,8 @@ struct hash<aoc::point_type<T>> {
              (static_cast<size_t>(static_cast<U>(value.y)) << (sizeof(T) * 8));
     } else {
       auto combine = aoc::hash_combine{};
-      combine(std::hash<T>{}(value.x));
-      combine(std::hash<T>{}(value.y));
+      combine(value.x);
+      combine(value.y);
       return combine.seed;
     }
   }
