@@ -913,30 +913,30 @@ constexpr auto binary_select_from_combination(ElementsR&& elements,
   return output;
 }
 
-/// Generic depth-first search with memoization.
+/// Generic depth-first search with memoization, using a caller-owned cache.
 ///
 /// get_neighbors expands a state into a range of successor states, each
 /// paired with a weight (dijkstra_neighbor_t::distance) -- a plain
 /// dijkstra_uniform_neighbors_view() gives every edge weight 1, matching
-/// the original sum-of-neighbors behavior; a state-dependent leaf value can
-/// be encoded as a single weighted edge to an already-end_reached state.
+/// a plain sum-of-neighbors search; a state-dependent leaf value can be
+/// encoded as a single weighted edge to an already-end_reached state.
 /// A state's value is 1 if end_reached(state), otherwise its neighbors'
 /// (weight * value) terms folded together with `combine`, left to right
 /// (Value{} if there are no neighbors, i.e. a dead end).
-/// Returns the cache of all computed state values,
-/// including the one for start_state.
-template <class ReturnT = void, class Value = std::uint64_t, class State,
-          class EndReachedFn, class NeighborsFn, class CombineFn = std::plus<>>
+/// Returns the value computed for start_state; every state visited along
+/// the way is also cached, so passing the same cache into further calls
+/// (e.g. once per item in a batch) reuses that work instead of redoing it.
+/// Call cache.clear() yourself between logically-independent searches.
+template <class State, class EndReachedFn, class NeighborsFn, class CacheT,
+          class CombineFn = std::plus<>>
   requires requires(EndReachedFn end_reached, NeighborsFn get_neighbors,
                     const State& state) {
     { end_reached(state) } -> std::convertible_to<bool>;
     { get_neighbors(state) } -> std::ranges::input_range;
   }
-constexpr auto dfs(State start_state, EndReachedFn&& end_reached,
+constexpr auto dfs(CacheT& cache, State start_state, EndReachedFn&& end_reached,
                    NeighborsFn&& get_neighbors, CombineFn&& combine = {}) {
-  using cache_t = std::conditional_t<std::is_void_v<ReturnT>,
-                                     std::unordered_map<State, Value>, ReturnT>;
-  auto cache = cache_t{};
+  using Value = typename CacheT::mapped_type;
   const auto search = [&](this const auto& self_search,
                           State&& state) -> Value {
     if (const auto it = cache.find(state); it != cache.end()) {
@@ -956,7 +956,26 @@ constexpr auto dfs(State start_state, EndReachedFn&& end_reached,
     cache.emplace(std::move(state), std::move(result));
     return result;
   };
-  search(std::move(start_state));
+  return search(std::move(start_state));
+}
+
+/// dfs that allocates its own cache (rather than reusing a caller-owned
+/// one) and returns it in full, keyed by every state visited,
+/// including start_state.
+template <class ReturnT = void, class Value = std::uint64_t, class State,
+          class EndReachedFn, class NeighborsFn, class CombineFn = std::plus<>>
+  requires requires(EndReachedFn end_reached, NeighborsFn get_neighbors,
+                    const State& state) {
+    { end_reached(state) } -> std::convertible_to<bool>;
+    { get_neighbors(state) } -> std::ranges::input_range;
+  }
+constexpr auto dfs(State start_state, EndReachedFn&& end_reached,
+                   NeighborsFn&& get_neighbors, CombineFn&& combine = {}) {
+  auto cache = std::conditional_t<std::is_void_v<ReturnT>,
+                                  std::unordered_map<State, Value>, ReturnT>{};
+  dfs(cache, std::move(start_state), std::forward<EndReachedFn>(end_reached),
+      std::forward<NeighborsFn>(get_neighbors),
+      std::forward<CombineFn>(combine));
   return cache;
 }
 
@@ -964,6 +983,29 @@ constexpr auto dfs(State start_state, EndReachedFn&& end_reached,
 /// and the combine operator is addition.
 /// A state's value is 1 if end_reached(state),
 /// otherwise the sum of its neighbors' values (Value{} for a dead end).
+template <class State, class EndReachedFn, class NeighborsFn, class CacheT>
+  requires requires(EndReachedFn end_reached, NeighborsFn get_neighbors,
+                    const State& state) {
+    { end_reached(state) } -> std::convertible_to<bool>;
+    { get_neighbors(state) } -> std::ranges::input_range;
+  }
+constexpr auto dfs_uniform(CacheT& cache, State start_state,
+                           EndReachedFn&& end_reached,
+                           NeighborsFn&& get_neighbors) {
+  return dfs(cache, std::move(start_state),
+             std::forward<EndReachedFn>(end_reached), [&](const State& state) {
+               // as_rvalue lets States be moved rather than
+               // copied out of get_neighbors' result, whether
+               // it's an owned container or a lazy view This is
+               // important since State may be expensive to copy
+               return get_neighbors(state) |
+                      std::views::as_rvalue |
+                      dijkstra_uniform_neighbors_view();
+             });
+}
+
+/// dfs_uniform that allocates its own cache -- see the two-argument dfs
+/// for how this relates to the cache-taking overload above.
 template <class ReturnT = void, class Value = std::uint64_t, class State,
           class EndReachedFn, class NeighborsFn>
   requires requires(EndReachedFn end_reached, NeighborsFn get_neighbors,
@@ -973,18 +1015,12 @@ template <class ReturnT = void, class Value = std::uint64_t, class State,
   }
 constexpr auto dfs_uniform(State start_state, EndReachedFn&& end_reached,
                            NeighborsFn&& get_neighbors) {
-  return dfs<ReturnT, Value>(                  //
-      std::move(start_state),                  //
-      std::forward<EndReachedFn>(end_reached), //
-      [&](const State& state) {
-        // as_rvalue lets States be moved rather than
-        // copied out of get_neighbors' result, whether
-        // it's an owned container or a lazy view This is
-        // important since State may be expensive to copy
-        return get_neighbors(state) |
-               std::views::as_rvalue |
-               dijkstra_uniform_neighbors_view();
-      });
+  auto cache = std::conditional_t<std::is_void_v<ReturnT>,
+                                  std::unordered_map<State, Value>, ReturnT>{};
+  dfs_uniform(cache, std::move(start_state),
+              std::forward<EndReachedFn>(end_reached),
+              std::forward<NeighborsFn>(get_neighbors));
+  return cache;
 }
 
 } // AOC_EXPORT_NAMESPACE(aoc)

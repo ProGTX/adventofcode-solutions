@@ -1,6 +1,6 @@
-use std::{collections::HashMap, thread};
-
 use arrayvec::ArrayVec;
+use rustc_hash::FxHashMap;
+use std::thread;
 
 #[derive(Clone)]
 struct Record {
@@ -90,6 +90,7 @@ fn arrangement_neighbors(state: &SearchState) -> ArrayVec<SearchState, 2> {
 }
 
 fn count_arrangements<const FACTOR: usize>(records: &[Record]) -> u64 {
+    let mut cache = FxHashMap::<_, u64>::default();
     records
         .iter()
         .map(|record| {
@@ -98,12 +99,13 @@ fn count_arrangements<const FACTOR: usize>(records: &[Record]) -> u64 {
                 groups: record.groups.repeat(FACTOR),
                 damaged_before: 0,
             };
-            let arrangements: HashMap<_, u64, _> = aoc::algorithm::dfs_uniform(
-                start.clone(),
+            cache.clear();
+            aoc::algorithm::dfs_uniform_with_cache(
+                &mut cache,
+                start,
                 |state: &SearchState| state.springs.is_empty() && state.groups.is_empty(),
                 arrangement_neighbors,
-            );
-            arrangements[&start]
+            )
         })
         .sum()
 }

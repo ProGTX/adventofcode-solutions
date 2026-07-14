@@ -56,6 +56,7 @@ struct std::hash<SearchState> {
 };
 
 using Neighbors = aoc::static_vector<SearchState, 2>;
+using Cache = std::unordered_map<SearchState, u64>;
 
 fn arrangement_neighbors(SearchState const& state) -> Neighbors {
   auto neighbors = Neighbors{};
@@ -125,8 +126,9 @@ fn arrangement_neighbors(SearchState const& state) -> Neighbors {
 
 template <usize factor>
 fn count_arrangements(std::span<Record const> records) -> u64 {
+  auto cache = Cache{};
   return aoc::ranges::accumulate(
-      records | stdv::transform([](Record const& record) {
+      records | stdv::transform([&](Record const& record) {
         let start =
             SearchState{.springs = aoc::ranges::join(
                             stdv::repeat(record.springs, factor), unknown),
@@ -134,13 +136,13 @@ fn count_arrangements(std::span<Record const> records) -> u64 {
                                   stdv::join |
                                   aoc::collect_vec<u8>(),
                         .damaged_before = 0};
-        let arrangements = aoc::dfs_uniform(
-            start,
+        cache.clear();
+        return aoc::dfs_uniform(
+            cache, start,
             [](SearchState const& state) {
               return state.springs.empty() && state.groups.empty();
             },
             arrangement_neighbors);
-        return arrangements.at(start);
       }),
       u64{0});
 }
