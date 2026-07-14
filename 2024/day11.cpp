@@ -5,54 +5,48 @@
 
 #include <print>
 #include <ranges>
-#include <unordered_map>
 
 using stones_t = Vec<u64>;
-using blink_key_t = aoc::point_type<u64>;
-using blink_cache_t = std::unordered_map<blink_key_t, u64>;
+using blink_state_t = aoc::point_type<u64>; // x: stone, y: blink_counter
 
 auto parse(String const& filename) -> stones_t {
   let lines = aoc::views::read_lines(filename) | aoc::collect_vec<String>();
   return aoc::split<stones_t>(lines.back(), ' ');
 }
 
-fn blink(u64 stone, u64 blink_counter, blink_cache_t& blink_cache) -> u64 {
-  if (blink_counter == 0) {
-    return 1;
-  }
-  let cache_key = blink_key_t{stone, blink_counter};
-  if (let it = blink_cache.find(cache_key); it != blink_cache.end()) {
-    return it->second;
-  } else {
+fn blink_neighbors(blink_state_t const& state)
+    -> aoc::static_vector<blink_state_t, 2> {
+  let[stone, blink_counter] = state;
+  auto neighbors = aoc::static_vector<blink_state_t, 2>{};
+  {
     if (stone == 0) {
-      let num_stones = blink(1, blink_counter - 1, blink_cache);
-      blink_cache.try_emplace(cache_key, num_stones);
-      return num_stones;
+      neighbors.emplace_back(u64{1}, blink_counter - 1);
     } else if (let digits = aoc::num_digits(stone); (digits % 2) == 0) {
       // The stone is replaced by two stones
       let divider = aoc::pown(10, digits / 2);
       // The left half of the digits are engraved on the new left stone
       // The right half of the digits are engraved on the new right stone
-      let num_stones = blink(stone / divider, blink_counter - 1, blink_cache) +
-                       blink(stone % divider, blink_counter - 1, blink_cache);
-      blink_cache.try_emplace(cache_key, num_stones);
-      return num_stones;
+      neighbors.emplace_back(stone / divider, blink_counter - 1);
+      neighbors.emplace_back(stone % divider, blink_counter - 1);
     } else {
-      let num_stones = blink(stone * 2024, blink_counter - 1, blink_cache);
-      blink_cache.try_emplace(cache_key, num_stones);
-      return num_stones;
+      neighbors.emplace_back(stone * 2024, blink_counter - 1);
     }
   }
+  return neighbors;
 }
 
 template <int times>
 fn solve_case(stones_t const& stones) -> u64 {
   // We need to use dynamic programming to speed up the calculation
-  auto blink_cache = blink_cache_t{};
-  return aoc::ranges::accumulate(stones | stdv::transform([&](u64 stone) {
-                                   return blink(stone, times, blink_cache);
-                                 }),
-                                 u64{0});
+  return aoc::ranges::accumulate(
+      stones | stdv::transform([](u64 stone) {
+        let start = blink_state_t{stone, static_cast<u64>(times)};
+        let num_stones = aoc::dfs(
+            start, [](blink_state_t const& state) { return state.y == 0; },
+            blink_neighbors);
+        return num_stones.at(start);
+      }),
+      u64{0});
 }
 
 int main() {

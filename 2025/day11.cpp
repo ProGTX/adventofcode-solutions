@@ -27,31 +27,11 @@ auto parse(String const& filename) -> Input {
   return {std::move(result), std::move(name_to_id)};
 }
 
-using cache_t = Vec<Option<u64>>;
-
-fn count_paths(Vec<Outputs> const& device_map, usize current, usize end,
-               cache_t& cache) -> u64 {
-  if (current == end) {
-    // Reached the destination: one complete path found
-    return 1;
-  }
-  if (cache[current].has_value()) {
-    return *cache[current];
-  }
-
-  // Total paths from here = sum of paths from each outgoing neighbor
-  let result = aoc::ranges::accumulate( //
-      device_map[current] | stdv::transform([&](let& out) {
-        return count_paths(device_map, out, end, cache);
-      }),
-      u64{});
-  cache[current] = result;
-  return result;
-}
-
 fn search(Vec<Outputs> const& device_map, usize start, usize end) -> u64 {
-  auto cache = cache_t(device_map.size(), None);
-  return count_paths(device_map, start, end, cache);
+  let num_paths = aoc::dfs(
+      start, [end](usize node) { return node == end; },
+      [&device_map](usize node) { return device_map[node]; });
+  return num_paths.at(start);
 }
 
 fn solve_case1(Input const& input) -> u64 {

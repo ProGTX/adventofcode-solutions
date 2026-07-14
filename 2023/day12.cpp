@@ -55,18 +55,15 @@ struct std::hash<SearchState> {
   }
 };
 
-using Cache = std::unordered_map<SearchState, u64>;
+using Neighbors = aoc::static_vector<SearchState, 2>;
 
-fn num_arrangements(Cache& cache, SearchState state) -> u64 {
-  if (let it = cache.find(state); it != cache.end()) {
-    return it->second;
-  }
-
-  auto result = u64{0};
+fn arrangement_neighbors(SearchState const& state) -> Neighbors {
+  auto neighbors = Neighbors{};
   if (state.springs.empty()) {
-    // End of search, success if no groups left
-    result = static_cast<u64>(state.groups.empty());
-  } else {
+    // End of search
+    return neighbors;
+  }
+  {
     switch (state.springs.front()) {
       case damaged: {
         let rest = str{state.springs}.substr(1);
@@ -76,13 +73,16 @@ fn num_arrangements(Cache& cache, SearchState state) -> u64 {
             static_cast<u8>(state.damaged_before + 1 + extra_damaged);
         if ((extra_damaged + 1) == state.springs.size()) {
           // End of search, success if last group equals our count
-          return static_cast<u64>((state.groups.size() == 1) &&
-                                  (state.groups.back() == total_damaged));
+          if ((state.groups.size() == 1) &&
+              (state.groups.back() == total_damaged)) {
+            neighbors.emplace_back();
+          }
+        } else {
+          neighbors.emplace_back(
+              SearchState{.springs = String{rest.substr(extra_damaged)},
+                          .groups = state.groups,
+                          .damaged_before = total_damaged});
         }
-        result = num_arrangements(
-            cache, SearchState{.springs = String{rest.substr(extra_damaged)},
-                               .groups = state.groups,
-                               .damaged_before = total_damaged});
         break;
       }
       case operational: {
@@ -91,7 +91,7 @@ fn num_arrangements(Cache& cache, SearchState state) -> u64 {
           if (state.groups.empty() ||
               (state.groups.front() != state.damaged_before)) {
             // Invalid group count
-            return 0;
+            break;
           }
           // Close the group
           new_groups = Vec<u8>(state.groups.begin() + 1, state.groups.end());
@@ -101,10 +101,9 @@ fn num_arrangements(Cache& cache, SearchState state) -> u64 {
         let rest = str{state.springs}.substr(1);
         let skip = static_cast<usize>(stdr::distance(
             rest | stdv::take_while([](char c) { return c == operational; })));
-        result = num_arrangements(
-            cache, SearchState{.springs = String{rest.substr(skip)},
-                               .groups = std::move(new_groups),
-                               .damaged_before = 0});
+        neighbors.emplace_back(SearchState{.springs = String{rest.substr(skip)},
+                                           .groups = std::move(new_groups),
+                                           .damaged_before = 0});
         break;
       }
       case unknown: {
@@ -113,33 +112,35 @@ fn num_arrangements(Cache& cache, SearchState state) -> u64 {
         state1.springs.front() = damaged;
         auto state2 = state;
         state2.springs.front() = operational;
-        result = num_arrangements(cache, std::move(state1)) +
-                 num_arrangements(cache, std::move(state2));
+        neighbors.emplace_back(std::move(state1));
+        neighbors.emplace_back(std::move(state2));
         break;
       }
       default:
         AOC_UNREACHABLE("Invalid value");
     }
   }
-
-  cache.emplace(std::move(state), result);
-  return result;
+  return neighbors;
 }
 
 template <usize factor>
 fn count_arrangements(std::span<Record const> records) -> u64 {
-  auto cache = Cache{};
   return aoc::ranges::accumulate(
-      records | stdv::transform([&](Record const& record) {
-        cache.clear();
-        return num_arrangements(
-            cache,
+      records | stdv::transform([](Record const& record) {
+        let start =
             SearchState{.springs = aoc::ranges::join(
                             stdv::repeat(record.springs, factor), unknown),
                         .groups = stdv::repeat(record.groups, factor) |
                                   stdv::join |
                                   aoc::collect_vec<u8>(),
-                        .damaged_before = 0});
+                        .damaged_before = 0};
+        let arrangements = aoc::dfs(
+            start,
+            [](SearchState const& state) {
+              return state.springs.empty() && state.groups.empty();
+            },
+            arrangement_neighbors);
+        return arrangements.at(start);
       }),
       u64{0});
 }

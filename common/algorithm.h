@@ -22,6 +22,7 @@
 #include <span>
 #include <stdexcept>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 #endif
@@ -910,6 +911,46 @@ constexpr auto binary_select_from_combination(ElementsR&& elements,
     }
   }
   return output;
+}
+
+/// Generic depth-first search with memoization.
+///
+/// get_neighbors expands a state into a range of successor states.
+/// A state's value is 1 if end_reached(state),
+/// otherwise the sum of its neighbors' values
+/// (0 if there are none, i.e. a dead end).
+/// Returns the cache of all computed state values,
+/// including the one for start_state.
+template <class ReturnT = void, class Value = std::uint64_t, class State,
+          class EndReachedFn, class NeighborsFn>
+  requires requires(EndReachedFn end_reached, NeighborsFn get_neighbors,
+                    const State& state) {
+    { end_reached(state) } -> std::convertible_to<bool>;
+    { get_neighbors(state) } -> std::ranges::input_range;
+  }
+constexpr auto dfs(State start_state, EndReachedFn&& end_reached,
+                   NeighborsFn&& get_neighbors) {
+  using cache_t = std::conditional_t<std::is_void_v<ReturnT>,
+                                     std::unordered_map<State, Value>, ReturnT>;
+  auto cache = cache_t{};
+  const auto search = [&](this const auto& self_search,
+                          State&& state) -> Value {
+    if (const auto it = cache.find(state); it != cache.end()) {
+      return it->second;
+    }
+    auto result =          //
+        end_reached(state) //
+            ? Value{1}
+            : ::aoc::ranges::accumulate( //
+                  get_neighbors(state) |
+                      std::views::as_rvalue |
+                      std::views::transform(self_search),
+                  Value{});
+    cache.emplace(std::move(state), std::move(result));
+    return result;
+  };
+  search(std::move(start_state));
+  return cache;
 }
 
 } // AOC_EXPORT_NAMESPACE(aoc)

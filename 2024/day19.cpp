@@ -55,30 +55,23 @@ fn num_possible_designs<false>(str design, std::span<const String> patterns)
   return end_found;
 }
 
-fn count_designs(aoc::flat_map<String, i64>& cache, String const& design,
-                 std::span<const String> patterns) -> i64 {
-  if (design.empty()) {
-    return 1;
-  }
-  let it = cache.find(design);
-  if (it != std::end(cache)) {
-    return it->second;
-  }
-  i64 sum = 0;
-  for (str p : patterns) {
-    if (design.starts_with(p)) {
-      sum += count_designs(cache, design.substr(p.size()), patterns);
-    }
-  }
-  cache[design] = sum;
-  return sum;
-}
-
 template <>
 fn num_possible_designs<true>(str design, std::span<const String> patterns)
     -> i64 {
-  auto cache = aoc::flat_map<String, i64>{};
-  return count_designs(cache, String{design}, patterns);
+  // A design's number of arrangements is 1 if it's fully matched,
+  // otherwise the sum of arrangement counts of what's left
+  // after stripping off each pattern that matches its start
+  let design_str = String{design};
+  let num_designs = aoc::dfs<void, i64>(
+      design_str, [](String const& remaining) { return remaining.empty(); },
+      [&](String const& remaining) {
+        return patterns |
+               stdv::filter(
+                   [&](String const& p) { return remaining.starts_with(p); }) |
+               stdv::transform(
+                   [&](String const& p) { return remaining.substr(p.size()); });
+      });
+  return num_designs.at(design_str);
 }
 
 template <bool all_options>
