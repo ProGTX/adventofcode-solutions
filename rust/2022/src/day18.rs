@@ -1,4 +1,5 @@
-use std::collections::{HashSet, VecDeque};
+use aoc::algorithm::flood_fill;
+use std::collections::HashSet;
 
 type Droplet = [i32; 3];
 type Input = HashSet<Droplet>;
@@ -59,30 +60,19 @@ fn solve_case2(droplets: &Input) -> u32 {
     };
 
     // BFS from corner of bounding box outward
-    // Each time a neighbor is a droplet face, count it as exterior surface
-    let mut visited = HashSet::new();
-    let mut queue = VecDeque::new();
-    let mut exterior_area = 0;
-
-    visited.insert(min_pt);
-    queue.push_back(min_pt);
-
-    while let Some(current) = queue.pop_front() {
-        for delta in DELTAS {
+    let exterior = flood_fill(&min_pt, |&current| {
+        DELTAS.into_iter().filter_map(move |delta| {
             let neighbor = add_area(current, delta);
-            if !in_bounds(&neighbor) {
-                continue;
-            }
-            if droplets.contains(&neighbor) {
-                exterior_area += 1;
-            } else if visited.insert(neighbor) {
-                // insert returns true if newly inserted (not already visited)
-                queue.push_back(neighbor);
-            }
-        }
-    }
+            (in_bounds(&neighbor) && !droplets.contains(&neighbor)).then_some(neighbor)
+        })
+    });
 
-    return exterior_area;
+    // Each time a neighbor is a droplet face, count it as exterior surface
+    exterior
+        .into_iter()
+        .flat_map(|current| DELTAS.map(|delta| add_area(current, delta)))
+        .filter(|neighbor| droplets.contains(neighbor))
+        .count() as u32
 }
 
 fn main() {

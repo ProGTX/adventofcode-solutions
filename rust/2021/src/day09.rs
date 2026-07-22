@@ -1,5 +1,5 @@
+use aoc::algorithm::flood_fill;
 use itertools::Itertools;
-use std::collections::HashSet;
 
 type Heightmap = aoc::grid::Grid<u32>;
 type LowPoints = Vec<(usize, u32)>;
@@ -34,28 +34,19 @@ fn solve_case2(heightmap: &Heightmap) -> u32 {
     get_low_points(heightmap)
         .iter()
         .map(|(origin, _)| {
-            let mut visited = HashSet::new();
-            let mut unvisited = Vec::new();
-            unvisited.push(*origin);
-            while (!unvisited.is_empty()) {
-                let index = unvisited.pop().unwrap();
-                if (!visited.insert(index)) {
-                    continue;
-                }
+            flood_fill(origin, |&index| {
                 let pos = heightmap.position(index);
                 let current = heightmap.get(pos.y, pos.x);
-                for neighbor in heightmap.basic_neighbor_positions(pos) {
-                    let neighbor_index = heightmap.linear_index(neighbor.y, neighbor.x);
-                    let neighbor = heightmap.get(neighbor.y, neighbor.x);
-                    if ((*neighbor != 9)
-                        && (neighbor > current)
-                        && (!visited.contains(&neighbor_index)))
-                    {
-                        unvisited.push(neighbor_index);
-                    }
-                }
-            }
-            visited.len() as u32
+                heightmap
+                    .basic_neighbor_positions(pos)
+                    .into_iter()
+                    .filter_map(move |neighbor| {
+                        let neighbor_index = heightmap.linear_index(neighbor.y, neighbor.x);
+                        let neighbor = heightmap.get(neighbor.y, neighbor.x);
+                        (*neighbor != 9 && neighbor > current).then_some(neighbor_index)
+                    })
+            })
+            .len() as u32
         })
         .sorted_unstable()
         .rev()

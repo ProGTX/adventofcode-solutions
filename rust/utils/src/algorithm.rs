@@ -1,5 +1,6 @@
 use crate::dijkstra::{DijkstraNeighborView, DijkstraState};
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
+use std::collections::VecDeque;
 use std::hash::Hash;
 use std::ops::{Add, Mul};
 
@@ -133,4 +134,35 @@ where
     let mut cache = FxHashMap::default();
     dfs_uniform_with_cache(&mut cache, start_state, end_reached, get_neighbors);
     cache
+}
+
+/// Breadth-first flood fill over unweighted, undirected connectivity.
+///
+/// `get_neighbors` expands a state into its neighboring states.
+/// There's no `end_reached`/early exit, unlike `dijkstra::shortest_distances`:
+/// a flood fill's whole point is to reach everything connected to `start`,
+/// so `get_neighbors` is expected to encode the stopping condition itself
+/// (e.g. by not yielding neighbors that fail some predicate).
+/// Returns every state reachable from `start`, including `start` itself.
+pub fn flood_fill<T, GetNeighborsF, NeighborIter>(
+    start: &T,
+    get_neighbors: GetNeighborsF,
+) -> FxHashSet<T>
+where
+    T: Clone + Eq + Hash,
+    NeighborIter: IntoIterator<Item = T>,
+    GetNeighborsF: Fn(&T) -> NeighborIter,
+{
+    let mut visited = FxHashSet::default();
+    let mut queue = VecDeque::new();
+    visited.insert(start.clone());
+    queue.push_back(start.clone());
+    while let Some(node) = queue.pop_front() {
+        for neighbor in get_neighbors(&node) {
+            if visited.insert(neighbor.clone()) {
+                queue.push_back(neighbor);
+            }
+        }
+    }
+    visited
 }
