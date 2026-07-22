@@ -62,6 +62,26 @@ macro_rules! impl_abs_diff {
 impl_abs_diff!(u8, u16, u32, u64, u128, usize);
 impl_abs_diff!(i8, i16, i32, i64, i128, isize);
 
+pub trait IntoPair<T> {
+    fn into_pair(self) -> (T, T);
+}
+impl<T> IntoPair<T> for (T, T) {
+    fn into_pair(self) -> (T, T) {
+        self
+    }
+}
+impl<T> IntoPair<T> for [T; 2] {
+    fn into_pair(self) -> (T, T) {
+        let [a, b] = self;
+        (a, b)
+    }
+}
+
+pub fn sorted_pair<T: PartialOrd, P: IntoPair<T>>(pair: P) -> (T, T) {
+    let (a, b) = pair.into_pair();
+    if a <= b { (a, b) } else { (b, a) }
+}
+
 pub fn gcd<T: Numeric>(a: T, b: T) -> T {
     let zero = T::from(0u32);
     if b == zero { a } else { gcd(b, a % b) }
