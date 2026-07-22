@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 pub struct NameToId {
     current_id: usize,
-    name_ids: HashMap<String, usize>,
+    name_ids: FxHashMap<String, usize>,
 }
 impl NameToId {
     pub fn new() -> Self {
@@ -12,7 +12,7 @@ impl NameToId {
     pub fn from(start: usize) -> Self {
         Self {
             current_id: start,
-            name_ids: HashMap::new(),
+            name_ids: FxHashMap::default(),
         }
     }
 

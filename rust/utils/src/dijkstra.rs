@@ -1,8 +1,7 @@
+use rustc_hash::{FxHashMap, FxHashSet};
 use std::cmp::Ordering;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
-use std::collections::HashMap;
-use std::collections::HashSet;
 use std::collections::hash_map::Entry;
 use std::hash::Hash;
 
@@ -31,7 +30,7 @@ pub fn shortest_distances_astar<T, GetEndF, GetNeighborsF, NeighborIter, Heurist
     is_end: GetEndF,
     get_neighbors: GetNeighborsF,
     heuristic: HeuristicF,
-) -> HashMap<T, u32>
+) -> FxHashMap<T, u32>
 where
     T: Clone + Ord + Hash,
     GetEndF: Fn(&T) -> bool,
@@ -39,7 +38,7 @@ where
     GetNeighborsF: Fn(&T) -> NeighborIter,
     HeuristicF: Fn(&T) -> u32,
 {
-    let mut distances: HashMap<T, u32> = HashMap::new();
+    let mut distances: FxHashMap<T, u32> = FxHashMap::default();
     // Heap entries: (Reverse(f), g, data) — sorted by f = g + h, min-first.
     let mut unvisited: BinaryHeap<(Reverse<u32>, u32, T)> = BinaryHeap::new();
     distances.insert(start.clone(), 0_u32);
@@ -101,8 +100,8 @@ where
         return Some(0);
     }
 
-    let mut forward_distances: HashMap<T, u32> = HashMap::new();
-    let mut backward_distances: HashMap<T, u32> = HashMap::new();
+    let mut forward_distances: FxHashMap<T, u32> = FxHashMap::default();
+    let mut backward_distances: FxHashMap<T, u32> = FxHashMap::default();
     let mut forward_unvisited: BinaryHeap<(Reverse<u32>, u32, T)> = BinaryHeap::new();
     let mut backward_unvisited: BinaryHeap<(Reverse<u32>, u32, T)> = BinaryHeap::new();
     let mut best_distance: Option<u32> = None;
@@ -229,7 +228,7 @@ pub fn shortest_distances<T, GetEndF, GetNeighborsF, NeighborIter>(
     start: &T,
     is_end: GetEndF,
     get_neighbors: GetNeighborsF,
-) -> HashMap<T, u32>
+) -> FxHashMap<T, u32>
 where
     T: Clone + Ord + Hash,
     GetEndF: Fn(&T) -> bool,
@@ -248,7 +247,7 @@ pub fn longest_distances<T, GetEndF, GetNeighborsF, NeighborIter>(
     start: &T,
     is_end: GetEndF,
     get_neighbors: GetNeighborsF,
-) -> HashMap<T, u32>
+) -> FxHashMap<T, u32>
 where
     T: Clone + Ord + Hash,
     GetEndF: Fn(&T) -> bool,
@@ -261,7 +260,7 @@ where
     // for every edge u -> v, u comes before v.
     // Nodes beyond `is_end` are not expanded,
     // mirroring Dijkstra's early exit.
-    let mut visited: HashSet<T> = HashSet::new();
+    let mut visited: FxHashSet<T> = FxHashSet::default();
     let mut post_order: Vec<T> = Vec::new();
     let mut stack: Vec<(T, bool)> = vec![(start.clone(), false)];
     visited.insert(start.clone());
@@ -289,7 +288,7 @@ where
     // All predecessors of `is_end` are guaranteed
     // to precede it in this order,
     // so its distance is settled when we reach it and we can stop.
-    let mut distances: HashMap<T, u32> = HashMap::new();
+    let mut distances: FxHashMap<T, u32> = FxHashMap::default();
     distances.insert(start.clone(), 0);
 
     for node in post_order.into_iter().rev() {
