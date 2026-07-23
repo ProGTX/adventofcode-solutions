@@ -1,15 +1,15 @@
 use aoc::{
     algorithm::flood_fill,
+    closed_range::ClosedRange,
     direction::Direction,
     grid::{BASIC_NEIGHBOR_DIFFS, ConfigInput, Grid, Ipos, Upos},
-    math::sorted_pair,
 };
 use itertools::Itertools;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 type Garden = Grid<char>;
 type Region = FxHashSet<usize>;
-type Side = (Upos, Upos);
+type Side = ClosedRange<Upos>;
 const PADDING: char = '#';
 
 fn get_regions(garden: &Garden) -> Vec<Region> {
@@ -66,7 +66,7 @@ fn perimeter(garden: &Garden, region: &Region) -> Vec<Side> {
         ]
         .array_windows::<2>()
         {
-            *occurence.entry(sorted_pair(*side)).or_default() += 1;
+            *occurence.entry(ClosedRange::new(side[0], side[1])).or_default() += 1;
         }
     }
     return occurence
@@ -84,7 +84,8 @@ fn solve_case1((garden, regions): &(Garden, Vec<Region>)) -> usize {
 
 /// Which side of a fence segment the region sits on,
 /// i.e. which of the segment's two flanking cells is part of `region`.
-fn fence_direction(garden: &Garden, region: &Region, &(from, to): &Side) -> Direction {
+fn fence_direction(garden: &Garden, region: &Region, side: &Side) -> Direction {
+    let (from, to) = (*side).into();
     if from.y == to.y {
         let below = garden.linear_index(from.y, from.x);
         if region.contains(&below) {
@@ -110,7 +111,7 @@ fn count_sides(garden: &Garden, region: &Region, fence: &[Side]) -> usize {
     // Bucket each segment by its direction and the line it lies on,
     // recording its position along that line.
     for &side in fence {
-        let (from, _) = side;
+        let from = side.begin;
         let direction = fence_direction(garden, region, &side);
         let (line, position) = match direction {
             Direction::North | Direction::South => (from.y, from.x),

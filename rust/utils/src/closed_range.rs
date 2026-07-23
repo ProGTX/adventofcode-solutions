@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ClosedRange<T> {
     pub begin: T,
     pub end: T,
@@ -32,5 +32,11 @@ impl<T: std::ops::Sub<Output = T> + Copy> ClosedRange<T> {
 
     pub fn size(self) -> T {
         self.direction()
+    }
+}
+
+impl<T> From<ClosedRange<T>> for (T, T) {
+    fn from(range: ClosedRange<T>) -> Self {
+        (range.begin, range.end)
     }
 }

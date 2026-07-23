@@ -77,11 +77,6 @@ impl<T> IntoPair<T> for [T; 2] {
     }
 }
 
-pub fn sorted_pair<T: PartialOrd, P: IntoPair<T>>(pair: P) -> (T, T) {
-    let (a, b) = pair.into_pair();
-    if a <= b { (a, b) } else { (b, a) }
-}
-
 pub fn gcd<T: Numeric>(a: T, b: T) -> T {
     let zero = T::from(0u32);
     if b == zero { a } else { gcd(b, a % b) }
