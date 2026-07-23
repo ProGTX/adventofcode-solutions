@@ -1,36 +1,69 @@
 // https://adventofcode.com/2024/day/15
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <algorithm>
 #include <array>
 #include <print>
 #include <ranges>
 #include <span>
-#include <string>
-#include <string_view>
-#include <vector>
 
-constexpr const char wall = '#';
-constexpr const char empty = '.';
-constexpr const char box = 'O';
-constexpr const char robot = '@';
+constexpr let wall = '#';
+constexpr let empty = '.';
+constexpr let box = 'O';
+constexpr let robot = '@';
 
-constexpr const char up = '^';
-constexpr const char down = 'v';
-constexpr const char left = '<';
-constexpr const char right = '>';
+constexpr let up = '^';
+constexpr let down = 'v';
+constexpr let left = '<';
+constexpr let right = '>';
 
 using map_t = aoc::char_grid<>;
-using directions_storage = std::vector<aoc::facing_t>;
+using directions_storage = Vec<aoc::facing_t>;
 
-constexpr map_t move_robot(map_t map, point robot_pos,
-                           std::span<const aoc::facing_t> directions) {
+struct Input {
+  map_t map;
+  point robot_pos;
+  directions_storage directions;
+};
+
+fn parse_directions(str directions) -> directions_storage {
+  return directions |
+         stdv::transform(&aoc::to_facing) |
+         aoc::ranges::to<directions_storage>();
+}
+
+auto parse(String const& filename) -> Input {
+  auto map = map_t{};
+  auto robot_pos = point{};
+  auto directions = directions_storage{};
+
+  for (String line : aoc::views::read_lines(filename)) {
+    if (line.empty()) {
+      continue;
+    }
+    if (stdr::contains(std::array{up, down, left, right}, line[0])) {
+      stdr::copy(parse_directions(line), std::back_inserter(directions));
+    } else {
+      let robot_x = line.find(robot);
+      if (robot_x != String::npos) {
+        robot_pos = point(robot_x, map.num_rows());
+      }
+      map.add_row(std::move(line));
+    }
+  }
+
+  return {std::move(map), robot_pos, std::move(directions)};
+}
+
+fn move_robot(map_t map, point robot_pos,
+              std::span<const aoc::facing_t> directions) -> map_t {
   AOC_ASSERT(robot == map.at(robot_pos.y, robot_pos.x),
              "Robot not located where expected");
-  for (auto direction : directions) {
+  for (let direction : directions) {
     auto& robot_ref = map.at(robot_pos.y, robot_pos.x);
-    const auto new_pos = robot_pos + aoc::get_diff(direction);
+    let new_pos = robot_pos + aoc::get_diff(direction);
     auto& new_pos_ref = map.at(new_pos.y, new_pos.x);
     switch (new_pos_ref) {
       case wall:
@@ -76,22 +109,15 @@ constexpr map_t move_robot(map_t map, point robot_pos,
   return map;
 }
 
-constexpr directions_storage parse_directions(std::string_view directions) {
-  return directions |
-         stdv::transform(&aoc::to_facing) |
-         aoc::ranges::to<directions_storage>();
-}
-
-constexpr int sum_coordinates(map_t map) {
-  int sum = 0;
-  for (int row = 0; row < map.num_rows(); ++row) {
-    for (int col = 0; col < map.num_columns(); ++col) {
-      if (map.at(row, col) == box) {
-        sum += 100 * row + col;
-      }
-    }
-  }
-  return sum;
+fn sum_coordinates(map_t const& map) -> int {
+  return aoc::ranges::accumulate(
+      aoc::views::indices_of(map) | stdv::filter([&](usize i) {
+        return map.at_index(i) == box;
+      }) | stdv::transform([&](usize i) {
+        let pos = map.position(i);
+        return 100 * pos.y + pos.x;
+      }),
+      0);
 }
 
 static_assert(104 == sum_coordinates(map_t{"#######"
@@ -99,43 +125,25 @@ static_assert(104 == sum_coordinates(map_t{"#######"
                                            "#......",
                                            3, 7}));
 
-template <bool words>
-int solve_case(const std::string& filename) {
-  map_t map;
-  point robot_pos;
-  directions_storage directions;
-
-  for (std::string line : aoc::views::read_lines(filename)) {
-    if (line.empty()) {
-      continue;
-    }
-    if (stdr::contains(std::array{up, down, left, right}, line[0])) {
-      stdr::copy(parse_directions(line), std::back_inserter(directions));
-    } else {
-      auto robot_x = line.find(robot);
-      if (robot_x != std::string::npos) {
-        robot_pos = point(robot_x, map.num_rows());
-      }
-      map.add_row(std::move(line));
-    }
-  }
-
-  int sum = 0;
-  sum = sum_coordinates(move_robot(map, robot_pos, directions));
-
-  return sum;
+template <bool>
+fn solve_case(Input const& input) -> int {
+  return sum_coordinates(
+      move_robot(input.map, input.robot_pos, input.directions));
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(10092, solve_case<false>("day15.example"));
-  AOC_EXPECT_RESULT(2028, solve_case<false>("day15.example2"));
-  AOC_EXPECT_RESULT(1514353, solve_case<false>("day15.input"));
+  let example = parse("day15.example");
+  AOC_EXPECT_RESULT(10092, solve_case<false>(example));
+  let example2 = parse("day15.example2");
+  AOC_EXPECT_RESULT(2028, solve_case<false>(example2));
+  let input = parse("day15.input");
+  AOC_EXPECT_RESULT(1514353, solve_case<false>(input));
 
   std::println("Part 2");
   aoc::return_incomplete();
-  // AOC_EXPECT_RESULT(281, solve_case<true>("day15.example"));
-  // AOC_EXPECT_RESULT(53515, solve_case<true>("day15.input"));
+  // AOC_EXPECT_RESULT(281, solve_case<true>(example));
+  // AOC_EXPECT_RESULT(53515, solve_case<true>(input));
 
   AOC_RETURN_CHECK_RESULT();
 }
