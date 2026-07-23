@@ -41,22 +41,12 @@ constexpr int sum_risk_levels(const heightmap_t& heightmap) {
 }
 
 constexpr int find_basin(const heightmap_t& heightmap, const point low_point) {
-  aoc::flat_set<point> basin;
-  aoc::flat_set<point> unvisited;
-  unvisited.emplace(low_point);
-  while (!unvisited.empty()) {
-    auto current_it = unvisited.end() - 1;
-    const auto current = *current_it;
-    unvisited.erase(current_it);
-    basin.emplace(current);
-    for (const auto neighbor : heightmap.basic_neighbor_positions(current)) {
-      if (basin.contains(neighbor) ||
-          (heightmap.at(neighbor.y, neighbor.x) == wall)) {
-        continue;
-      }
-      unvisited.emplace(neighbor);
-    }
-  }
+  const auto basin = aoc::flood_fill(low_point, [&](const point current) {
+    return heightmap.basic_neighbor_positions(current) |
+           stdv::filter([&](const point neighbor) {
+             return heightmap.at(neighbor.y, neighbor.x) != wall;
+           });
+  });
   return basin.size();
 }
 

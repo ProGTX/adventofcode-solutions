@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <array>
 #include <print>
-#include <queue>
 
 using Droplet = aoc::nd_point_type<i32, 3>;
 using Input = aoc::flat_set<Droplet>;
@@ -50,17 +49,6 @@ fn solve_case2(Input const& droplets) -> u32 {
   min_pt += Droplet{-1, -1, -1};
   max_pt += Droplet{1, 1, 1};
 
-  // BFS from the corner of the bounding box outward
-  // Each time a neighbor is a droplet face, count it as exterior surface
-  auto visited = Input{};
-  auto queue = std::queue<Droplet>{};
-  let enqueue = [&](Droplet const& pos) {
-    if (visited.find(pos) == visited.end()) {
-      visited.insert(pos);
-      queue.push(pos);
-    }
-  };
-
   let in_bounds = [&](Droplet const& pos) {
     for (int i = 0; i < 3; ++i) {
       if ((pos[i] < min_pt[i]) || (pos[i] > max_pt[i])) {
@@ -70,24 +58,28 @@ fn solve_case2(Input const& droplets) -> u32 {
     return true;
   };
 
-  auto exterior_area = u32{};
-  enqueue(min_pt);
-  while (!queue.empty()) {
-    let current = queue.front();
-    queue.pop();
-    for (let& delta : deltas) {
-      let neighbor = current + delta;
-      if (!in_bounds(neighbor)) {
-        continue;
-      }
-      if (droplets.find(neighbor) != droplets.end()) {
-        ++exterior_area;
-      } else {
-        enqueue(neighbor);
-      }
-    }
-  }
-  return exterior_area;
+  // BFS from the corner of the bounding box outward
+  let exterior = aoc::flood_fill<Input>(min_pt, [&](Droplet const& current) {
+    return deltas |
+           aoc::views::transform_filter([&](Droplet delta) -> Option<Droplet> {
+             let neighbor = current + delta;
+             if (!in_bounds(neighbor) ||
+                 (droplets.find(neighbor) != droplets.end())) {
+               return None;
+             }
+             return neighbor;
+           });
+  });
+
+  // Each exterior air cell's droplet-neighbors are exterior surface faces
+  return aoc::ranges::accumulate(
+      exterior | stdv::transform([&](Droplet const& current) {
+        return static_cast<u32>(
+            stdr::count_if(deltas, [&](Droplet const& delta) {
+              return droplets.find(current + delta) != droplets.end();
+            }));
+      }),
+      u32{});
 }
 
 int main() {

@@ -16,6 +16,7 @@
 #include <array>
 #include <compare>
 #include <concepts>
+#include <deque>
 #include <optional>
 #include <print>
 #include <ranges>
@@ -23,6 +24,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 #endif
@@ -471,6 +473,33 @@ std::vector<Node> get_path(const predecessor_map<Node>& predecessors,
     it = predecessors.find(it->second);
   }
   return path;
+}
+
+/// Explores every state reachable from `start` via BFS.
+/// get_neighbors expands a state into its adjacent states
+/// (exclude invalid ones directly in that range,
+/// e.g. by filtering out neighbors that fail some predicate).
+/// Returns every state reachable from `start`, including `start` itself.
+template <class ReturnT = void, class State, class NeighborsFn>
+  requires requires(NeighborsFn get_neighbors, const State& state) {
+    { get_neighbors(state) } -> std::ranges::input_range;
+  }
+constexpr auto flood_fill(State start, NeighborsFn&& get_neighbors) {
+  auto visited = std::conditional_t<std::is_void_v<ReturnT>,
+                                    std::unordered_set<State>, ReturnT>{};
+  auto queue = std::deque<State>{};
+  visited.insert(start);
+  queue.push_back(std::move(start));
+  while (!queue.empty()) {
+    auto node = std::move(queue.front());
+    queue.pop_front();
+    for (auto&& neighbor : get_neighbors(node)) {
+      if (auto [it, inserted] = visited.insert(neighbor); inserted) {
+        queue.push_back(std::move(neighbor));
+      }
+    }
+  }
+  return visited;
 }
 
 /// Computes the longest distance from `start_node`

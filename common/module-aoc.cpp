@@ -16,6 +16,7 @@ module;
 #include <concepts>
 #include <cstdint>
 #include <cstdlib>
+#include <deque>
 #include <exception>
 #include <fstream>
 #include <functional>
