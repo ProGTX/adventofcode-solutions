@@ -604,4 +604,14 @@ struct std::formatter<aoc::closed_range<T>> {
   }
 };
 
+template <class T>
+struct std::hash<aoc::closed_range<T>> {
+  constexpr size_t operator()(const aoc::closed_range<T>& value) const {
+    auto combine = aoc::hash_combine{};
+    combine(value.begin);
+    combine(value.end);
+    return combine.seed;
+  }
+};
+
 #endif // AOC_UTILITY_H
