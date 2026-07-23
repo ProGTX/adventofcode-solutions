@@ -197,7 +197,7 @@ class grid {
       std::ranges::copy_n(std::begin(row), 0, iterator{});
     }
   constexpr iterator add_row(Row&& row) {
-    m_row_length = row.size();
+    m_row_length = std::ranges::size(row);
     // Use m_num_rows instead of num_rows()
     // because we allow setting rows in a fixed size container
     auto old_size = (this->row_length() * m_num_rows);
