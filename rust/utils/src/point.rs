@@ -1,6 +1,8 @@
 use crate::math::{AbsDiff, Numeric};
 use std::hash::{Hash, Hasher};
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
+};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Point<T> {
@@ -219,6 +221,29 @@ where
     fn div_assign(&mut self, rhs: Self) {
         self.x /= rhs.x;
         self.y /= rhs.y;
+    }
+}
+
+impl<T> Rem for Point<T>
+where
+    T: Rem<Output = T>,
+{
+    type Output = Self;
+
+    fn rem(self, rhs: Self) -> Self {
+        Self {
+            x: self.x % rhs.x,
+            y: self.y % rhs.y,
+        }
+    }
+}
+impl<T> RemAssign for Point<T>
+where
+    T: RemAssign,
+{
+    fn rem_assign(&mut self, rhs: Self) {
+        self.x %= rhs.x;
+        self.y %= rhs.y;
     }
 }
 
