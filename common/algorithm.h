@@ -463,6 +463,22 @@ constexpr auto shortest_distances_astar(
       std::forward<HeuristicFn>(heuristic), predecessors_out);
 }
 
+template <class ReturnT = void, class Node, class NeighborsFn,
+          class HeuristicFn, class EndReachedFn = constant_value<bool>,
+          class PredecessorMap = predecessor_map<Node>>
+  requires(!std::is_const_v<Node>)
+constexpr auto shortest_distances_astar(
+    std::span<Node> start_nodes, EndReachedFn&& end_reached,
+    NeighborsFn&& get_reachable_neighbors, HeuristicFn&& heuristic,
+    PredecessorMap* predecessors_out = nullptr) {
+  using node_t = std::remove_cvref_t<Node>;
+  return shortest_distances_dijkstra<ReturnT>(
+      std::span<const node_t>{start_nodes},
+      std::forward<EndReachedFn>(end_reached),
+      std::forward<NeighborsFn>(get_reachable_neighbors),
+      std::forward<HeuristicFn>(heuristic), predecessors_out);
+}
+
 template <class Node, class ForwardNeighborsFn, class BackwardNeighborsFn,
           class ForwardHeuristicFn, class BackwardHeuristicFn>
 constexpr auto shortest_distance_bidirectional_astar(
