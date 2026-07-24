@@ -8,8 +8,6 @@
 #include <print>
 #include <span>
 #include <string>
-#include <unordered_set>
-#include <variant>
 #include <vector>
 
 enum class Reg : usize {
@@ -20,7 +18,14 @@ enum class Reg : usize {
 };
 constexpr let z_id = static_cast<usize>(Reg::Z);
 
-using Operand = std::variant<Reg, i64>;
+// A plain tagged value instead of std::variant<Reg, i64>: execute() below
+// runs this on the order of hundreds of millions of instructions, and a
+// variant visit is a lot more machinery than a single branch for a 2-way
+// choice.
+struct Operand {
+  bool is_reg;
+  i64 value; // register index (see Reg) if is_reg, else the immediate value
+};
 
 enum class Op {
   Inp,
@@ -52,9 +57,9 @@ fn parse_reg(str s) -> Reg {
 
 fn parse_operand(str s) -> Operand {
   if (s == "w" || s == "x" || s == "y" || s == "z") {
-    return parse_reg(s);
+    return Operand{true, static_cast<i64>(parse_reg(s))};
   }
-  return aoc::to_number<i64>(s);
+  return Operand{false, aoc::to_number<i64>(s)};
 }
 
 fn parse_program(std::span<const str> lines) -> Vec<Instr> {
@@ -83,7 +88,7 @@ fn parse_program(std::span<const str> lines) -> Vec<Instr> {
       return Op::Eql;
     }();
     let dst = parse_reg(parts[1]);
-    let src = (op == Op::Inp) ? Operand{i64{0}} : parse_operand(parts[2]);
+    let src = (op == Op::Inp) ? Operand{false, i64{0}} : parse_operand(parts[2]);
     instrs.push_back(Instr{op, dst, src});
   }
   return instrs;
@@ -104,10 +109,8 @@ fn execute(Registers regs, std::span<const Instr> instructions,
   auto input_it = input.begin();
   for (let& instr : instructions) {
     let d = static_cast<usize>(instr.dst);
-    let src = aoc::match(
-        instr.src, //
-        [&](Reg r) { return regs[static_cast<usize>(r)]; },
-        [&](i64 n) { return n; });
+    let src = instr.src.is_reg ? regs[static_cast<usize>(instr.src.value)]
+                                : instr.src.value;
     regs[d] = [&] {
       switch (instr.op) {
         case Op::Inp:
@@ -135,7 +138,19 @@ fn digits_to_number(std::span<const i64> digits) -> u64 {
 }
 
 constexpr let NUM_BLOCKS = 14uz;
-using ZOutputCache = std::array<std::unordered_set<i64>, NUM_BLOCKS>;
+
+// This limit is somewhat arbitrary, it happens to work for my input
+// Could be slightly lower, but this is a nice number
+constexpr let Z_LIMIT = i64{314159};
+
+// z values are tracked in a flat, per-block bitset instead of an
+// unordered_set<i64>: the (input, z) search below calls contains()/insert()
+// tens of millions of times, all for values that are always small and
+// densely packed in [0, Z_LIMIT), which is exactly what flat indexing (no
+// hashing) is good at.
+using ZOutputCache = std::array<Vec<u8>, NUM_BLOCKS>;
+
+fn in_z_limit(i64 z) -> bool { return z >= 0 && z < Z_LIMIT; }
 
 template <bool SMALLEST>
 fn solve_case(std::span<const Instr> instructions,
@@ -157,15 +172,14 @@ fn solve_case(std::span<const Instr> instructions,
 
   if (!valid_z_output_cache.has_value()) {
     auto vzo = ZOutputCache{};
-
-    // This limit is somewhat arbitrary, it happens to work for my input
-    // Could be slightly lower, but this is a nice number
-    constexpr let Z_LIMIT = i64{314159};
+    for (auto& outputs : vzo) {
+      outputs.assign(static_cast<usize>(Z_LIMIT), u8{0});
+    }
 
     // Find valid z outputs for each block
-    vzo[NUM_BLOCKS - 1].insert(0);
+    vzo[NUM_BLOCKS - 1][0] = 1;
     for (let block_id : Range{0uz, NUM_BLOCKS} | stdv::reverse) {
-      auto valid_z_input = std::unordered_set<i64>{};
+      auto valid_z_input = Vec<u8>(static_cast<usize>(Z_LIMIT), u8{0});
       for (let elem : stdv::cartesian_product(Range{i64{1}, i64{10}},
                                               Range{i64{0}, Z_LIMIT})) {
         let[input, z] = elem;
@@ -173,8 +187,10 @@ fn solve_case(std::span<const Instr> instructions,
         regs[z_id] = z;
         let result =
             execute(regs, blocks[block_id], std::span<const i64>{&input, 1});
-        if (vzo[block_id].contains(result[z_id])) {
-          valid_z_input.insert(z);
+        let output_z = result[z_id];
+        if (in_z_limit(output_z) &&
+            vzo[block_id][static_cast<usize>(output_z)]) {
+          valid_z_input[static_cast<usize>(z)] = 1;
         }
       }
       if (block_id > 0) {
@@ -196,7 +212,9 @@ fn solve_case(std::span<const Instr> instructions,
       auto regs = Registers{};
       regs[z_id] = z;
       let after = execute(regs, block, std::span<const i64>{&input, 1});
-      if (valid_z_output[block_id].contains(after[z_id])) {
+      let output_z = after[z_id];
+      if (in_z_limit(output_z) &&
+          valid_z_output[block_id][static_cast<usize>(output_z)]) {
         max_input[block_id] = input;
         z = after[z_id];
         break;

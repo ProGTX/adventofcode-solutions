@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use rustc_hash::FxHashSet;
 use std::array;
 
 #[derive(Clone, Copy, Debug)]
@@ -105,7 +104,21 @@ fn to_number(digits: &[i64]) -> u64 {
 }
 
 const NUM_BLOCKS: usize = 14;
-type ZOutputCache = [FxHashSet<i64>; NUM_BLOCKS];
+
+// This limit is somewhat arbitrary, it happens to work for my input
+// Could be slightly lower, but this is a nice number
+const Z_LIMIT: i64 = 314159;
+
+fn in_z_limit(z: i64) -> bool {
+    (0..Z_LIMIT).contains(&z)
+}
+
+// z values are tracked in a flat, per-block byte array instead of an
+// FxHashSet<i64>: the (input, z) search below checks/inserts tens of
+// millions of times, all for values that are always small and densely
+// packed in [0, Z_LIMIT), which is exactly what flat indexing (no hashing)
+// is good at.
+type ZOutputCache = [Vec<u8>; NUM_BLOCKS];
 
 fn solve_case<const SMALLEST: bool>(
     instructions: &[Instr],
@@ -130,28 +143,21 @@ fn solve_case<const SMALLEST: bool>(
     let valid_z_output = if let Some(vzo) = valid_z_output_cache.as_ref() {
         vzo.clone()
     } else {
-        let mut valid_z_output = array::from_fn(|_| FxHashSet::default());
-
-        // This limit is somewhat arbitrary, it happens to work for my input
-        // Could be slightly lower, but this is a nice number
-        const Z_LIMIT: i64 = 314159;
+        let mut valid_z_output: ZOutputCache = array::from_fn(|_| vec![0u8; Z_LIMIT as usize]);
 
         // Find valid z outputs for each block
-        valid_z_output[NUM_BLOCKS - 1].insert(0);
+        valid_z_output[NUM_BLOCKS - 1][0] = 1;
         for (block_id, block) in blocks.iter().enumerate().rev() {
-            let valid_z_input: FxHashSet<i64> = (1..=9)
-                .cartesian_product(0..Z_LIMIT)
-                .filter_map(|(input, z)| {
-                    let mut regs = Registers::default();
-                    regs[Reg::Z as usize] = z;
-                    let regs = execute(regs, &block, &[input]);
-                    return if valid_z_output[block_id].contains(&regs[Reg::Z as usize]) {
-                        Some(z)
-                    } else {
-                        None
-                    };
-                })
-                .collect();
+            let mut valid_z_input = vec![0u8; Z_LIMIT as usize];
+            for (input, z) in (1..=9).cartesian_product(0..Z_LIMIT) {
+                let mut regs = Registers::default();
+                regs[Reg::Z as usize] = z;
+                let regs = execute(regs, &block, &[input]);
+                let output_z = regs[Reg::Z as usize];
+                if in_z_limit(output_z) && valid_z_output[block_id][output_z as usize] != 0 {
+                    valid_z_input[z as usize] = 1;
+                }
+            }
             if (block_id > 0) {
                 valid_z_output[block_id - 1] = valid_z_input;
             }
@@ -171,8 +177,10 @@ fn solve_case<const SMALLEST: bool>(
                 let mut regs = Registers::default();
                 regs[Reg::Z as usize] = z;
                 let regs = execute(regs, &block, &[*input]);
-                return if valid_z_output[block_id].contains(&regs[Reg::Z as usize]) {
-                    z = regs[Reg::Z as usize];
+                let output_z = regs[Reg::Z as usize];
+                return if in_z_limit(output_z) && valid_z_output[block_id][output_z as usize] != 0
+                {
+                    z = output_z;
                     true
                 } else {
                     false
