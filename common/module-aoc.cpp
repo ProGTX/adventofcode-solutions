@@ -48,6 +48,7 @@ export module aoc;
 
 #include "algorithm.h"
 #include "assert.h"
+#include "combinations.h"
 #include "compiler.h"
 #include "concepts.h"
 #include "flat.h"
