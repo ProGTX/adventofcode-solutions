@@ -20,6 +20,7 @@ import aoc;
 // Include same headers as the module
 #include "algorithm.h"
 #include "assert.h"
+#include "combinations.h"
 #include "compiler.h"
 #include "concepts.h"
 #include "flat.h"
