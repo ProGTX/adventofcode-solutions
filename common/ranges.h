@@ -93,15 +93,24 @@ constexpr auto rotate_right(R&& r) {
 
 template <std::ranges::forward_range... Rs>
 constexpr auto dot_product(Rs&&... rs) {
-  auto zipped = std::views::zip(rs...);
   using value_type = std::iter_value_t<std::ranges::iterator_t<
       std::remove_reference_t<std::tuple_element_t<0, std::tuple<Rs...>>>>>;
-  return std::ranges::fold_left(
-      zipped, value_type{}, [](auto acc, auto&& tuple) {
-        auto product =
-            std::apply([](auto&&... elems) { return (elems * ...); }, tuple);
-        return acc + product;
-      });
+  // Walks all ranges in lockstep with plain iterators instead of
+  // std::views::zip + fold_left over tuples -
+  // same "stop at the shortest range" semantics,
+  // without the zip_view/tuple-of-references machinery,
+  // which makes this version much faster,
+  // mostly in Debug
+  auto its = std::tuple{std::ranges::begin(rs)...};
+  auto ends = std::tuple{std::ranges::end(rs)...};
+  auto result = value_type{};
+  [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+    while (((std::get<Is>(its) != std::get<Is>(ends)) && ...)) {
+      result += (*std::get<Is>(its) * ...);
+      ((++std::get<Is>(its)), ...);
+    }
+  }(std::index_sequence_for<Rs...>{});
+  return result;
 }
 static_assert(270 == dot_product(std::array{1, 2, 3}, //
                                  std::array{4, 5, 6}, //
