@@ -57,8 +57,8 @@ fn get_score(top_map_t const& top_map, point trailhead) -> usize {
   // so the graph is a DAG and every path to a given cell has the same length -
   // reachability and "shortest distance" coincide,
   // so we can use Dijkstra to explore the whole trail from the trailhead
-  let distances =
-      aoc::shortest_distances_dijkstra(trailhead, [&](point current) {
+  let distances = aoc::shortest_distances_dijkstra<aoc::flat_map<point, int>>(
+      trailhead, [&](point current) {
         let current_height = top_map.at(current.y, current.x);
         return aoc::basic_neighbor_diffs |
                stdv::transform(

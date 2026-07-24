@@ -16,9 +16,11 @@
 #include <compare>
 #include <concepts>
 #include <deque>
+#include <map>
 #include <optional>
 #include <print>
 #include <ranges>
+#include <set>
 #include <span>
 #include <stdexcept>
 #include <type_traits>
@@ -74,13 +76,30 @@ constexpr auto dijkstra_uniform_neighbors(
   return neighbors | dijkstra_uniform_neighbors_view() | ranges::to<Return>();
 }
 
-template <class Node>
-using predecessor_map =
-    flat_map<std::remove_cvref_t<Node>, std::remove_cvref_t<Node>>;
+/// Default associative map for the search algorithms
+template <class Key, class T>
+using default_map =
+    std::conditional_t<hashable<Key>,
+                       std::unordered_map<std::remove_cvref_t<Key>, T>,
+                       std::map<std::remove_cvref_t<Key>, T>>;
 
+/// Default associative set for the search algorithms
+template <class Key>
+using default_set =
+    std::conditional_t<hashable<Key>,
+                       std::unordered_set<std::remove_cvref_t<Key>>,
+                       std::set<std::remove_cvref_t<Key>>>;
+
+// Node needs the explicit remove_cvref_t here
+// because default_map only strips its key, not its mapped type
+// and Node is deduced from a forwarding reference below,
+// so it can arrive as an lvalue reference.
 template <class Node>
-using predecessor_map_all =
-    flat_map<std::remove_cvref_t<Node>, flat_set<std::remove_cvref_t<Node>>>;
+using predecessor_map = default_map<Node, std::remove_cvref_t<Node>>;
+
+// Here we don't need remove_cvref_t, default_set strips its own key
+template <class Node>
+using predecessor_map_all = default_map<Node, default_set<Node>>;
 
 // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Algorithm
 // https://en.wikipedia.org/wiki/A*_search_algorithm
@@ -104,8 +123,8 @@ constexpr auto shortest_distances_dijkstra(
     std::span<const Node> start_nodes, EndReachedFn&& end_reached,
     NeighborsFn&& get_reachable_neighbors, HeuristicFn&& heuristic = {},
     PredecessorMap* predecessors_out = nullptr) {
-  using distances_t =
-      std::conditional_t<std::is_void_v<ReturnT>, flat_map<Node, int>, ReturnT>;
+  using distances_t = std::conditional_t<std::is_void_v<ReturnT>,
+                                         default_map<Node, int>, ReturnT>;
 
   const bool use_predecessors = (predecessors_out != nullptr);
   constexpr const bool all_predecessors =
@@ -219,8 +238,8 @@ constexpr std::optional<int> shortest_distance_bidirectional_astar(
   using entry_t = std::tuple<int, int, Node>;
   auto forward_unvisited = priority_queue<entry_t, std::greater<entry_t>>{};
   auto backward_unvisited = priority_queue<entry_t, std::greater<entry_t>>{};
-  auto forward_distances = flat_map<Node, int>{};
-  auto backward_distances = flat_map<Node, int>{};
+  auto forward_distances = default_map<Node, int>{};
+  auto backward_distances = default_map<Node, int>{};
 
   forward_distances.emplace(start_node, 0);
   backward_distances.emplace(end_node, 0);
@@ -315,7 +334,7 @@ class all_nodes_encountered {
 
  private:
   std::vector<Node> m_searched_nodes;
-  flat_set<Node> m_visited;
+  default_set<Node> m_visited;
 };
 template <has_value_type Container>
 all_nodes_encountered(Container&&)
@@ -417,27 +436,27 @@ constexpr auto shortest_distance_bidirectional_dijkstra(
 
 // A* convenience overloads (caller-supplied heuristic)
 
-template <class Node, class NeighborsFn, class HeuristicFn,
-          class PredecessorMap = predecessor_map<Node>>
+template <class ReturnT = void, class Node, class NeighborsFn,
+          class HeuristicFn, class PredecessorMap = predecessor_map<Node>>
 constexpr auto shortest_distances_astar(
     Node&& start_node, Node&& end_node, NeighborsFn&& get_reachable_neighbors,
     HeuristicFn&& heuristic, PredecessorMap* predecessors_out = nullptr) {
   using node_t = std::remove_cvref_t<Node>;
-  return shortest_distances_dijkstra(
+  return shortest_distances_dijkstra<ReturnT>(
       std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
       equal_to_value{std::forward<Node>(end_node)},
       std::forward<NeighborsFn>(get_reachable_neighbors),
       std::forward<HeuristicFn>(heuristic), predecessors_out);
 }
-template <class Node, class NeighborsFn, class HeuristicFn,
-          class EndReachedFn = constant_value<bool>,
+template <class ReturnT = void, class Node, class NeighborsFn,
+          class HeuristicFn, class EndReachedFn = constant_value<bool>,
           class PredecessorMap = predecessor_map<Node>>
 constexpr auto shortest_distances_astar(
     Node&& start_node, EndReachedFn&& end_reached,
     NeighborsFn&& get_reachable_neighbors, HeuristicFn&& heuristic,
     PredecessorMap* predecessors_out = nullptr) {
   using node_t = std::remove_cvref_t<Node>;
-  return shortest_distances_dijkstra(
+  return shortest_distances_dijkstra<ReturnT>(
       std::span<const node_t>{std::array{std::forward<Node>(start_node)}},
       std::forward<EndReachedFn>(end_reached),
       std::forward<NeighborsFn>(get_reachable_neighbors),
@@ -523,14 +542,14 @@ template <class ReturnT = void, class Node, class EndReachedFn,
   }
 constexpr auto longest_distances(Node start_node, EndReachedFn&& end_reached,
                                  NeighborsFn&& get_neighbors) {
-  using distances_t =
-      std::conditional_t<std::is_void_v<ReturnT>, flat_map<Node, int>, ReturnT>;
+  using distances_t = std::conditional_t<std::is_void_v<ReturnT>,
+                                         default_map<Node, int>, ReturnT>;
 
   // Discover every reachable node via DFS,
   // recording each one when it finishes (post-order).
   // Reversing post-order gives a topological order:
   // for every edge u -> v, u comes before v.
-  auto visited = flat_set<Node>{};
+  auto visited = default_set<Node>{};
   auto post_order = std::vector<Node>{};
   auto stack = std::vector<std::pair<Node, bool>>{};
   stack.emplace_back(start_node, false);
