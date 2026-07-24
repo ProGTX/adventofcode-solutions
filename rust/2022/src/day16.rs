@@ -122,42 +122,40 @@ fn find_most_pressure(
     state: SearchState,
     total_flow: u32,
 ) -> u32 {
-    flow_rates
-        .iter()
-        .enumerate()
-        .filter(|(neighbor_id, flow)| {
-            // Find valves to open
-            let neighbor_id = *neighbor_id + 1; // Skipped AA
-            // +1 because it takes 1 minute to open the valve
-            let time_to_open = distances[state.current_id as usize][neighbor_id] + 1;
+    return {
+        let mut most_pressure = total_flow * state.time_left as u32;
+        // filter + map is pretty slow in Debug, use a loop instead
+        for (neighbor_id, &flow) in flow_rates.iter().enumerate() {
+            let neighbor_id = neighbor_id + 1; // Skipped AA
             // Despite graph compression, zero flow is used in part 2
             // to exclude a valve from a subset
-            return (neighbor_id != (state.current_id as usize))
-                && (**flow > 0)
-                && !state.is_open(neighbor_id)
-                && (time_to_open <= state.time_left);
-        })
-        .map(|(neighbor_id, flow)| {
-            let neighbor_id = neighbor_id + 1; // Skipped AA 
-            // Move to neighbor valve and open it
+            if neighbor_id == state.current_id as usize || flow == 0 || state.is_open(neighbor_id) {
+                continue;
+            }
+            // +1 because it takes 1 minute to open the valve
             let time_to_open = distances[state.current_id as usize][neighbor_id] + 1;
+            if time_to_open > state.time_left {
+                continue;
+            }
+            // Move to neighbor valve and open it
             let mut new_state = SearchState {
                 opened_mask: state.opened_mask,
                 current_id: neighbor_id as u8,
                 time_left: state.time_left - time_to_open,
             };
             new_state.open(neighbor_id);
-            return (total_flow * time_to_open as u32)
+            let neighbor_pressure = (total_flow * time_to_open as u32)
                 + find_most_pressure(
                     //
                     flow_rates,
                     distances,
                     new_state,
-                    total_flow + (*flow as u32),
+                    total_flow + flow as u32,
                 );
-        })
-        .max()
-        .unwrap_or(total_flow * state.time_left as u32)
+            most_pressure = most_pressure.max(neighbor_pressure);
+        }
+        most_pressure
+    };
 }
 
 fn solve_case1((valves, aa_id): &Input) -> u32 {
