@@ -42,12 +42,13 @@ struct Bounds {
     max: i32,
 }
 
-fn find_positions(
+fn count_positions(
     sensors: &[Sensor],
     beacons: &[Point],
     bounds: Bounds,
     inspect_row: i32,
-) -> Vec<Point> {
+    //
+) -> i64 {
     let sensors_on_row: Vec<_> = sensors.iter().filter(|s| s.pos.y == inspect_row).collect();
     let beacons_on_row: Vec<_> = beacons.iter().filter(|b| b.y == inspect_row).collect();
     (bounds.min..=bounds.max)
@@ -61,7 +62,7 @@ fn find_positions(
             !sensors_on_row.iter().any(|s| s.pos.x == current.x)
                 && !beacons_on_row.iter().any(|b| b.x == current.x)
         })
-        .collect()
+        .count() as i64
 }
 
 fn solve_case1<const INSPECT_ROW: i32>(input: &Input) -> i64 {
@@ -77,7 +78,7 @@ fn solve_case1<const INSPECT_ROW: i32>(input: &Input) -> i64 {
         min: min_x - largest_distance,
         max: max_x + largest_distance,
     };
-    find_positions(&input.sensors, &input.beacons, bounds, INSPECT_ROW).len() as i64
+    count_positions(&input.sensors, &input.beacons, bounds, INSPECT_ROW)
 }
 
 fn find_distress_beacon(sensors: &[Sensor], bounds: Bounds) -> Point {

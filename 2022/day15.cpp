@@ -62,9 +62,22 @@ fn parse(String const& filename) -> Input {
   return result;
 }
 
-template <bool find_distress>
-fn find_positions(Vec<Sensor> const& sensors, Vec<Beacon> const& beacons,
-                  Bounds const& bounds, int inspect_row) -> Vec<point> {
+// Plain loop drop in for stdr::any_of
+// Same early exit semantics, but without the iterator/view abstraction overhead
+// that makes stdr::any_of costly in Debug builds
+// Note that the predicate needs to be forced inline to match loop performance
+template <class R, class F>
+fn any_of(R const& range, F&& pred) -> bool {
+  for (let& elem : range) {
+    if (pred(elem)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+fn count_positions(Vec<Sensor> const& sensors, Vec<Beacon> const& beacons,
+                   Bounds const& bounds, int inspect_row) -> i64 {
   let sensors_on_row = sensors |
                        stdv::filter([&](Sensor const& sensor) {
                          return sensor.pos.y == inspect_row;
@@ -75,23 +88,32 @@ fn find_positions(Vec<Sensor> const& sensors, Vec<Beacon> const& beacons,
                          return beacon.y == inspect_row;
                        }) |
                        aoc::collect_vec<Beacon>();
-  return //
+  return stdr::distance(
       Range{bounds.min, bounds.max + 1} |
-      stdv::transform([&](int column) { return point{column, inspect_row}; }) |
-      stdv::filter([&](point current) {
-        let within_range = stdr::any_of(sensors, [&](Sensor const& sensor) {
-          return distance_manhattan(sensor.pos, current) <= sensor.range;
-        });
-        return within_range != find_distress;
-      }) |
-      stdv::filter([&](point current) {
-        return !stdr::any_of(sensors_on_row, [&](Sensor const& sensor) {
-          return sensor.pos.x == current.x;
-        }) && !stdr::any_of(beacons_on_row, [&](Beacon const& beacon) {
-          return beacon.x == current.x;
-        });
-      }) |
-      aoc::collect_vec<point>();
+      aoc::views::transform_filter([&](int column) -> Option<point> {
+        let current = point{column, inspect_row};
+
+        let within_range =
+            any_of(sensors, [&](Sensor const& sensor) AOC_FORCE_INLINE {
+              return distance_manhattan(sensor.pos, current) <= sensor.range;
+            });
+        if (!within_range) {
+          return None;
+        }
+
+        let is_known = //
+            any_of(sensors_on_row,
+                   [&](Sensor const& sensor) AOC_FORCE_INLINE {
+                     return sensor.pos.x == current.x;
+                   }) ||
+            any_of(beacons_on_row, [&](Beacon const& beacon) AOC_FORCE_INLINE {
+              return beacon.x == current.x;
+            });
+        if (is_known) {
+          return None;
+        }
+        return current;
+      }));
 }
 
 template <int inspect_row>
@@ -101,11 +123,10 @@ fn solve_case1(Input const& input) -> i64 {
                     return lhs.range < rhs.range;
                   }).range;
   let largest_distance = 2 * max_range + 1;
-  return find_positions<false>(sensors, beacons,
-                               {min_max.min_value.x - largest_distance,
-                                min_max.max_value.x + largest_distance},
-                               inspect_row)
-      .size();
+  return count_positions(sensors, beacons,
+                         {min_max.min_value.x - largest_distance,
+                          min_max.max_value.x + largest_distance},
+                         inspect_row);
 }
 
 fn find_distress_beacon(Vec<Sensor> const& sensors, Bounds const& bounds)
