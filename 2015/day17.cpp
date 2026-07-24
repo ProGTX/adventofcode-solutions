@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <print>
 #include <ranges>
-#include <span>
 
 template <u32 LITERS, bool COUNT_WAYS>
 fn solve_case(String const& filename) -> u32 {
@@ -18,13 +17,15 @@ fn solve_case(String const& filename) -> u32 {
   }();
   let size = containers.size();
   auto count = std::array<u32, (COUNT_WAYS ? size : 0) + 1>{};
-  for (let& combination : containers | aoc::views::binary_combinations<u32>) {
-    let exact_match =
-        aoc::ranges::dot_product(containers, combination) == LITERS;
+  for (let& group : containers | aoc::views::binary_combinations()) {
+    let sum = aoc::ranges::accumulate(group | aoc::views::deref, 0u);
+    if (sum != LITERS) {
+      continue;
+    }
+    let num_used = static_cast<u32>(group.size());
     if constexpr (!COUNT_WAYS) {
-      count[0] += static_cast<u32>(exact_match);
-    } else if (exact_match) {
-      let num_used = aoc::ranges::accumulate(combination, 0u);
+      count[0] += 1;
+    } else {
       count[num_used] += 1;
     }
   }

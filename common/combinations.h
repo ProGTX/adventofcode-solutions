@@ -225,6 +225,117 @@ template <std::ranges::sized_range ElementsR,
 combinations_view(ElementsR&&, combinations_args<counter_type>)
     -> combinations_view<std::views::all_t<ElementsR>, counter_type>;
 
+/**
+ * Enumerates every subset of a range as a bitmask, dereferencing yields
+ * a static_vector of pointers to the selected elements directly
+ * (unlike combinations_view, which yields per-element counts).
+ * Limited to at most (bits in mask_type - 1) elements,
+ * since a full bitmask needs one more bit to represent "one past the end".
+ *
+ * NOTE: combinations_args{.single_min = 0, .single_max = 1,
+ *                         .all_min = 0, .all_max = num_elements}
+ *       provides essentially the same functionality, but it's much slower.
+ *
+ * NOTE: We have to return pointers instead of references (or wrappers)
+ *       because `static_vector` requires types to be default constructible,
+ *       which can't be easily changed in C++23.
+ *       This needs to be revisited with C++26 and inplace_vector.
+ */
+template <std::ranges::forward_range R,
+          std::unsigned_integral mask_type = std::uint32_t>
+  requires std::ranges::sized_range<R>
+class binary_combinations_view : public std::ranges::view_interface<
+                                     binary_combinations_view<R, mask_type>> {
+  using element_type = std::ranges::range_value_t<R>;
+  static_assert(std::is_lvalue_reference_v<std::ranges::range_reference_t<R>>,
+                "binary_combinations_view needs a range of addressable "
+                "elements -- dereferencing an iterator must yield a real "
+                "reference, not a generated/temporary value");
+
+  static constexpr std::size_t max_bits =
+      std::numeric_limits<mask_type>::digits;
+  static constexpr std::size_t static_elems = aoc::static_size<R>();
+
+  // A subset can never reach max_bits elements:
+  // `mask_type{1} << max_bits` would be UB
+  // (needed for "one past the last mask")
+  static constexpr std::size_t capacity =
+      (static_elems == std::string::npos) ? max_bits : static_elems;
+  static_assert(static_elems == std::string::npos || static_elems < max_bits,
+                "binary_combinations_view supports at most "
+                "(bits in mask_type - 1) elements");
+
+ public:
+  using selection_type = aoc::static_vector<const element_type*, capacity>;
+
+ private:
+  R* range;
+
+  // Custom iterator allows us to support forward_range
+  class iterator {
+    R* range = nullptr;
+    mask_type mask = 0;
+    selection_type current;
+
+    constexpr void materialize() {
+      current.clear();
+      mask_type i = 0;
+      for (auto&& elem : *range) {
+        if (mask & (mask_type{1} << i)) {
+          current.emplace_back(std::addressof(elem));
+        }
+        ++i;
+      }
+    }
+
+   public:
+    using value_type = selection_type;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::input_iterator_tag;
+
+    iterator() = default;
+    constexpr iterator(R* range, mask_type mask) : range{range}, mask{mask} {
+      materialize();
+    }
+
+    constexpr const selection_type& operator*() const { return current; }
+
+    constexpr iterator& operator++() {
+      ++mask;
+      materialize();
+      return *this;
+    }
+    constexpr iterator operator++(int) {
+      auto tmp = *this;
+      ++*this;
+      return tmp;
+    }
+
+    constexpr friend bool operator==(const iterator& lhs, const iterator& rhs) {
+      return lhs.mask == rhs.mask;
+    }
+  };
+
+ public:
+  constexpr explicit binary_combinations_view(R& r) : range{&r} {
+    // Compile-time-sized ranges are already covered by the static_assert above
+    // Only the dynamic case needs a runtime check
+    if constexpr (static_elems == std::string::npos) {
+      AOC_ASSERT(std::ranges::size(r) < max_bits,
+                 "binary_combinations_view supports at most "
+                 "(bits in mask_type - 1) elements");
+    }
+  }
+
+  constexpr iterator begin() const { return iterator{range, mask_type{0}}; }
+  constexpr iterator end() const {
+    return iterator{range, static_cast<mask_type>(
+                               mask_type{1} << std::ranges::size(*range))};
+  }
+};
+template <class R, std::unsigned_integral mask_type = std::uint32_t>
+binary_combinations_view(R&) -> binary_combinations_view<R, mask_type>;
+
 } // namespace ranges
 
 namespace detail {
@@ -276,22 +387,13 @@ struct math_combinations_fn {
   }
 };
 
-template <std::integral counter_type>
+template <std::unsigned_integral mask_type>
 struct binary_combinations_fn
-    : std::ranges::range_adaptor_closure<binary_combinations_fn<counter_type>> {
-  constexpr auto operator()(counter_type num_elements) const {
-    return counted_combinations_closure{.args = combinations_args<counter_type>{
-                                            .single_min = 0,
-                                            .single_max = 1,
-                                            .all_min = 0,
-                                            .all_max = num_elements,
-                                        }};
-  }
-
-  template <std::ranges::range ElementsR>
+    : std::ranges::range_adaptor_closure<binary_combinations_fn<mask_type>> {
+  template <std::ranges::viewable_range ElementsR>
   constexpr auto operator()(ElementsR&& elements) const {
-    return this->operator()(static_cast<counter_type>(
-        std::ranges::size(elements)))(std::forward<ElementsR>(elements));
+    return ranges::binary_combinations_view<std::remove_reference_t<ElementsR>,
+                                            mask_type>{elements};
   }
 };
 
@@ -305,9 +407,18 @@ constexpr inline auto counted_combinations =
 /// Corresponds to math combinations of (n k), where n is size(elements).
 constexpr inline auto combinations = aoc::detail::math_combinations_fn{};
 
-template <std::integral counter_type = unsigned>
-constexpr inline auto binary_combinations =
-    aoc::detail::binary_combinations_fn<counter_type>{};
+/// Enumerates every subset of a range,
+/// yielding pointers to the selected elements directly
+template <std::unsigned_integral mask_type = std::uint32_t>
+constexpr auto binary_combinations() {
+  return aoc::detail::binary_combinations_fn<mask_type>{};
+}
+template <std::unsigned_integral mask_type = std::uint32_t,
+          std::ranges::viewable_range ElementsR>
+constexpr auto binary_combinations(ElementsR&& elements) {
+  return aoc::detail::binary_combinations_fn<mask_type>{}(
+      std::forward<ElementsR>(elements));
+}
 
 } // namespace views
 
