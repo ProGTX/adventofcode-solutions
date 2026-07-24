@@ -21,6 +21,7 @@ but only when all compilers support it (basically only GCC 15 is missing).
 #include <ranges>
 #include <tuple>
 #include <utility>
+#include <vector>
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {
