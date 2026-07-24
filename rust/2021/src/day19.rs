@@ -1,6 +1,6 @@
 use aoc::nd_point::{NDPoint, distance_manhattan};
 use arrayvec::ArrayVec;
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 
 const MAX_SCANNERS: usize = 32;
 const MAX_BEACONS: usize = 32;
@@ -78,9 +78,9 @@ fn rotations(scanner: &Scanner) -> impl Iterator<Item = Scanner> + '_ {
 // Return the rotated+translated beacons in world coordinates
 // and the scanner's world-space position,
 // or None if no match found.
-fn try_align(all_beacons: &HashSet<Point3D>, scanner: &Scanner) -> Option<(Scanner, Point3D)> {
+fn try_align(all_beacons: &FxHashSet<Point3D>, scanner: &Scanner) -> Option<(Scanner, Point3D)> {
     for rotated in rotations(scanner) {
-        let mut offset_counts: HashMap<Point3D, usize> = HashMap::new();
+        let mut offset_counts = FxHashMap::default();
         for &a in all_beacons {
             for &b in &rotated {
                 *offset_counts.entry(a - b).or_insert(0) += 1;
@@ -101,8 +101,8 @@ fn try_align(all_beacons: &HashSet<Point3D>, scanner: &Scanner) -> Option<(Scann
 // Scanners that can't yet match (no direct overlap with scanner 0)
 // will eventually match once an intermediate scanner has been merged.
 // All unaligned scanners are tried in parallel each round via scoped threads.
-fn align_all(scanners: &[Scanner]) -> (HashSet<Point3D>, ArrayVec<Point3D, MAX_SCANNERS>) {
-    let mut all_beacons: HashSet<Point3D> = scanners[0].iter().copied().collect();
+fn align_all(scanners: &[Scanner]) -> (FxHashSet<Point3D>, ArrayVec<Point3D, MAX_SCANNERS>) {
+    let mut all_beacons = scanners[0].iter().copied().collect();
     let mut scanner_positions: ArrayVec<Point3D, MAX_SCANNERS> =
         [Point3D { data: [0, 0, 0] }].into_iter().collect();
     let mut unaligned: ArrayVec<u8, MAX_SCANNERS> = (1..scanners.len()).map(|i| i as u8).collect();

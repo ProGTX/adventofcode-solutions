@@ -4,17 +4,20 @@
 #include "../common/rust.h"
 
 #include <future>
-#include <map>
 #include <print>
-#include <set>
 #include <span>
 #include <string>
 #include <thread>
+#include <unordered_map>
+#include <unordered_set>
 
 static constexpr usize max_scanners = 32;
 static constexpr usize max_beacons = 32;
 
-using Point3D = aoc::nd_point_type<i32, 3>;
+// i16 is plenty for this puzzle's coordinate range
+// (this input's raw per-scanner coordinates are within [-988, 983]),
+// and it lets Point3D hash fit into a packed size_t
+using Point3D = aoc::nd_point_type<i16, 3>;
 using Scanner = aoc::static_vector<Point3D, max_beacons>;
 
 fn parse(String const& filename) -> aoc::static_vector<Scanner, max_scanners> {
@@ -85,10 +88,12 @@ fn rotations(Scanner const& scanner) -> aoc::static_vector<Scanner, 24> {
 // so the scanners overlap.
 // Return the rotated+translated beacons in world coordinates
 // and the scanner's world-space position, or None if no match found.
-fn try_align(std::set<Point3D> const& all_beacons, Scanner const& scanner)
-    -> Option<std::pair<Scanner, Point3D>> {
+fn try_align(std::unordered_set<Point3D> const& all_beacons,
+             Scanner const& scanner) -> Option<std::pair<Scanner, Point3D>> {
+  // Both containers are keyed by Point3D purely for existence/tally checks,
+  // never for sorted iteration, so hashing is faster over regular map
   for (let& rotated : rotations(scanner)) {
-    auto offset_counts = std::map<Point3D, usize>{};
+    auto offset_counts = std::unordered_map<Point3D, usize>{};
     for (let& a : all_beacons) {
       for (let& b : rotated) {
         offset_counts[a - b]++;
@@ -117,8 +122,10 @@ fn try_align(std::set<Point3D> const& all_beacons, Scanner const& scanner)
 // once an intermediate scanner has been merged.
 // Unaligned scanners are tried in parallel, chunked by hardware concurrency.
 fn align_all(std::span<Scanner const> scanners)
-    -> std::pair<std::set<Point3D>, aoc::static_vector<Point3D, max_scanners>> {
-  auto all_beacons = std::set<Point3D>{scanners[0].begin(), scanners[0].end()};
+    -> std::pair<std::unordered_set<Point3D>,
+                 aoc::static_vector<Point3D, max_scanners>> {
+  auto all_beacons =
+      std::unordered_set<Point3D>{scanners[0].begin(), scanners[0].end()};
   auto scanner_positions = aoc::static_vector<Point3D, max_scanners>{{0, 0, 0}};
   auto unaligned = aoc::static_vector<u8, max_scanners>{};
   for (usize i = 1; i < scanners.size(); ++i) {
@@ -173,8 +180,8 @@ fn solve_case2(std::span<Scanner const> scanners) -> i32 {
   auto max_dist = i32{0};
   for (usize i = 0; i < positions.size(); ++i) {
     for (usize j = i + 1; j < positions.size(); ++j) {
-      max_dist =
-          std::max(max_dist, distance_manhattan(positions[i], positions[j]));
+      max_dist = std::max(max_dist, static_cast<i32>(distance_manhattan(
+                                        positions[i], positions[j])));
     }
   }
   return max_dist;
