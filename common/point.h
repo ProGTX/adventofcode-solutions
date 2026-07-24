@@ -553,6 +553,29 @@ struct hash<aoc::point_type<T>> {
     }
   }
 };
+
+template <class T, int dims>
+struct hash<aoc::nd_point_type<T, dims>> {
+  constexpr size_t operator()(const aoc::nd_point_type<T, dims>& value) const {
+    if constexpr (sizeof(T) * dims <= sizeof(size_t)) {
+      // Pack all components into size_t with no collisions
+      using U = std::make_unsigned_t<T>;
+      size_t result = 0;
+      for (int i = 0; i < dims; ++i) {
+        result |= static_cast<size_t>(static_cast<U>(value[i]))
+                  << (static_cast<size_t>(i) * sizeof(T) * 8);
+      }
+      return result;
+    } else {
+      auto combine = aoc::hash_combine{};
+      for (int i = 0; i < dims; ++i) {
+        combine(value[i]);
+      }
+      return combine.seed;
+    }
+  }
+};
+
 } // namespace std
 
 #endif // AOC_POINT_H
