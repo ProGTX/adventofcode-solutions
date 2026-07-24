@@ -265,6 +265,18 @@ constexpr auto transform_cast() {
   return std::views::transform(::aoc::transform_cast<return_t>{});
 }
 
+/// Dereferences each element
+inline constexpr auto deref =
+    std::views::transform([](auto&& ptr) -> decltype(auto) { return *ptr; });
+static_assert([] {
+  auto arr = std::array{1, 2, 3};
+  auto ptrs = std::array{&arr[0], &arr[1], &arr[2]};
+  for (auto& x : ptrs | deref) {
+    x += 10;
+  }
+  return std::ranges::equal(arr, std::array{11, 12, 13});
+}());
+
 template <class T>
 constexpr auto to_number(int base = 10) {
   return std::views::transform(::aoc::number_converter<T>{base});
