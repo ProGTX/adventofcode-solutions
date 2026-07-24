@@ -44,4 +44,12 @@
     statement;                                                                 \
   }
 
+#ifndef AOC_COMPILER_MSVC
+/// Forces the function to be inlined.
+/// Non-standard attribute can also be used on lambdas.
+#define AOC_FORCE_INLINE __attribute__((always_inline))
+#else
+#define AOC_FORCE_INLINE
+#endif
+
 #endif // AOC_COMPILER_H
