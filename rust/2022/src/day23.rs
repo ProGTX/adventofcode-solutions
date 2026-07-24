@@ -1,6 +1,6 @@
 use aoc::direction::{ALL_SKY_DIRECTIONS, Direction};
 use aoc::point::Point;
-use std::collections::{BTreeMap, HashMap};
+use rustc_hash::FxHashMap;
 
 type Pos = Point<i32>;
 
@@ -25,10 +25,10 @@ fn parse(filename: &str) -> Vec<Pos> {
 
 fn simulate(elves: &mut Vec<Pos>, num_rounds: i32) -> i32 {
     // current position -> proposed position
-    let mut sim: BTreeMap<Pos, Pos> = elves.iter().map(|&e| (e, e)).collect();
+    let mut sim: FxHashMap<Pos, Pos> = elves.iter().map(|&e| (e, e)).collect();
     let mut proposals = PROPOSAL_DIRS;
 
-    let is_empty = |sim: &BTreeMap<Pos, Pos>, pos: Pos, dirs: &[Direction]| -> bool {
+    let is_empty = |sim: &FxHashMap<Pos, Pos>, pos: Pos, dirs: &[Direction]| -> bool {
         dirs.iter().all(|d| !sim.contains_key(&(pos + d.diff())))
     };
 
@@ -56,7 +56,7 @@ fn simulate(elves: &mut Vec<Pos>, num_rounds: i32) -> i32 {
         }
 
         // Count how many elves propose each destination
-        let mut counts: HashMap<Pos, i32> = HashMap::new();
+        let mut counts: FxHashMap<Pos, i32> = FxHashMap::default();
         for &(current, proposed) in &new_proposals {
             if current != proposed {
                 *counts.entry(proposed).or_insert(0) += 1;

@@ -6,9 +6,9 @@
 #include <algorithm>
 #include <array>
 #include <limits>
-#include <map>
 #include <print>
 #include <ranges>
+#include <unordered_map>
 
 using elf_t = point;
 using elves_t = Vec<elf_t>;
@@ -29,7 +29,8 @@ fn parse(String const& filename) -> elves_t {
 }
 
 fn simulate(elves_t& elves, int num_rounds) -> int {
-  using elf_simulation_t = std::map<point, point>; // current -> proposed
+  // current -> proposed
+  using elf_simulation_t = std::unordered_map<point, point>;
 
   auto elf_simulation = elf_simulation_t{};
   for (let elf : elves) {
@@ -65,7 +66,7 @@ fn simulate(elves_t& elves, int num_rounds) -> int {
   };
 
   let execute = [&] {
-    auto counts = aoc::flat_map<point, int>{};
+    auto counts = std::unordered_map<point, int>{};
     for (let& [ current, proposed ] : elf_simulation) {
       if (current != proposed) {
         ++counts[proposed];
