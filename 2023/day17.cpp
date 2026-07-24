@@ -81,9 +81,8 @@ fn least_heat_loss(city_block_t const& city_block) -> int {
     return (node.pos == end_pos) && (node.consecutive >= min);
   };
 
-  let distances =
-      aoc::shortest_distances_dijkstra<std::unordered_map<node_t, int>>(
-          std::span<node_t>{start_nodes}, end_reached, get_neighbors);
+  let distances = aoc::shortest_distances_dijkstra(
+      std::span<node_t>{start_nodes}, end_reached, get_neighbors);
 
   return stdr::min(
       distances |
