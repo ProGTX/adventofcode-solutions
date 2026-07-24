@@ -35,6 +35,9 @@ struct Configuration {
   Rooms rooms;
   fn operator<=>(const Configuration&) const = default;
 };
+template <>
+struct std::hash<Configuration> : aoc::packed_hash {};
+static_assert(aoc::hashable<Configuration>);
 
 fn get_cost(char c) -> u32 {
   constexpr std::array<u32, 4> costs = {1, 10, 100, 1000};

@@ -14,6 +14,7 @@ module;
 #include <cmath>
 #include <compare>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <deque>

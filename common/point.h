@@ -567,11 +567,7 @@ struct hash<aoc::nd_point_type<T, dims>> {
       }
       return result;
     } else {
-      auto combine = aoc::hash_combine{};
-      for (int i = 0; i < dims; ++i) {
-        combine(value[i]);
-      }
-      return combine.seed;
+      return aoc::packed_hash{}(value);
     }
   }
 };

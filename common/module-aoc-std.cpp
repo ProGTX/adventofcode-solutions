@@ -9,6 +9,7 @@ module;
 #include <cmath>
 #include <compare>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <deque>
@@ -21,6 +22,7 @@ module;
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <print>
 #include <ranges>
 #include <set>
 #include <span>
@@ -33,6 +35,7 @@ module;
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 #include <vector>
 
 export module aoc.std;

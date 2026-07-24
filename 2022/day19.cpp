@@ -110,11 +110,10 @@ struct SearchNode {
 template <>
 struct std::hash<SearchNode> {
   fn operator()(SearchNode const& search_node) const noexcept -> usize {
-    auto h = std::hash<u32>{}(search_node.packed);
-    for (u8 r : search_node.resources) {
-      h = h * 131 + r;
-    }
-    return h;
+    auto combine = aoc::hash_combine{};
+    combine(search_node.packed);
+    combine(search_node.resources);
+    return combine.seed;
   }
 };
 
