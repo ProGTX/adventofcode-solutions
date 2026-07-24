@@ -663,14 +663,16 @@ class combinations_view : public std::ranges::view_interface<
     const combinations_view* parent{nullptr};
     value_type combination;
 
-    constexpr bool is_done() const { return combination.empty(); }
+    // Sum of combination[0..=pos],
+    // where pos is advance()'s current search position.
+    // Maintained incrementally (a handful of +/- per step)
+    // instead of recomputed from scratch via accumulate on every single
+    // increment attempt, which is what made this view expensive to use in a
+    // hot search loop: this is the same combination either way,
+    // just found without redoing the same partial sums over and over.
+    counter_type prefix_sum{};
 
-    constexpr bool is_valid() const {
-      AOC_ASSERT(!this->is_done(),
-                 "Can only call this function with an active iterator");
-      const auto sum = ranges::accumulate(combination, counter_type{0});
-      return (sum >= parent->args.all_min) && (sum <= parent->args.all_max);
-    }
+    constexpr bool is_done() const { return combination.empty(); }
 
     constexpr void advance() {
       if (is_done()) {
@@ -685,29 +687,31 @@ class combinations_view : public std::ranges::view_interface<
       while (true) {
         if (combination[pos] < parent->args.single_max) {
           ++combination[pos];
+          ++prefix_sum;
 
           // Check if this path can lead to valid combinations
-          const auto current_sum = ranges::accumulate(
-              combination | std::views::take(pos + 1), counter_type{0});
-
           const auto remaining = static_cast<counter_type>(size - pos - 1);
           const auto max_possible =
-              current_sum + remaining * parent->args.single_max;
+              prefix_sum + remaining * parent->args.single_max;
           const auto min_possible =
-              current_sum + remaining * parent->args.single_min;
+              prefix_sum + remaining * parent->args.single_min;
 
           if ((max_possible >= parent->args.all_min) &&
               (min_possible <= parent->args.all_max)) {
             // Reset positions after current one to minimum
             std::ranges::fill(combination | std::views::drop(pos + 1),
                               parent->args.single_min);
+            const auto total_sum =
+                prefix_sum + remaining * parent->args.single_min;
 
-            // Check if this combination is valid
-            if (this->is_valid()) {
+            if ((total_sum >= parent->args.all_min) &&
+                (total_sum <= parent->args.all_max)) {
+              prefix_sum = total_sum;
               return; // Found valid combination
             }
 
             // Otherwise continue searching
+            prefix_sum = total_sum;
             pos = size - 1;
             continue;
           }
@@ -716,6 +720,7 @@ class combinations_view : public std::ranges::view_interface<
           break;
         } else {
           // Backtrack
+          prefix_sum -= combination[pos];
           pos--;
         }
       }
@@ -724,8 +729,11 @@ class combinations_view : public std::ranges::view_interface<
     }
 
     constexpr void find_first_valid() {
+      // One-time full sum to seed the incremental total tracked from here on
+      prefix_sum = ranges::accumulate(combination, counter_type{0});
       // Check if initial combination is valid
-      if (this->is_valid()) {
+      if ((prefix_sum >= parent->args.all_min) &&
+          (prefix_sum <= parent->args.all_max)) {
         return;
       }
       // Find first valid combination
