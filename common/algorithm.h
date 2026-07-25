@@ -534,7 +534,16 @@ constexpr auto flood_fill(State start, NeighborsFn&& get_neighbors) {
     auto node = std::move(queue.front());
     queue.pop_front();
     for (auto&& neighbor : get_neighbors(node)) {
-      if (auto [it, inserted] = visited.insert(neighbor); inserted) {
+      // Standard sets report a fresh insertion through the pair's second,
+      // bitmap_set returns the flag directly
+      const bool inserted = [&] {
+        if constexpr (std::same_as<decltype(visited.insert(neighbor)), bool>) {
+          return visited.insert(neighbor);
+        } else {
+          return visited.insert(neighbor).second;
+        }
+      }();
+      if (inserted) {
         queue.push_back(std::move(neighbor));
       }
     }

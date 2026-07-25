@@ -6,8 +6,10 @@
 
 #ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
+#include <bit>
 #include <concepts>
 #include <cstdint>
+#include <iterator>
 #include <ranges>
 #include <type_traits>
 #include <vector>
@@ -46,6 +48,64 @@ class bitmap_set {
   using value_type = T;
   static constexpr const size_t limit = Limit;
 
+  /// Walks the set bits in increasing order,
+  /// consuming the current word one lowest-set-bit at a time.
+  class const_iterator {
+   public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using reference = T;
+    using pointer = void;
+
+    constexpr const_iterator() = default;
+    constexpr const_iterator(const word_type* words, size_t word_index)
+        : m_words(words), m_word_index(word_index) {
+      seek_next_word();
+    }
+
+    constexpr T operator*() const {
+      return static_cast<T>(m_word_index * word_bits +
+                            static_cast<size_t>(std::countr_zero(m_remaining)));
+    }
+
+    constexpr const_iterator& operator++() {
+      // Clearing the lowest set bit leaves the rest of the word to walk
+      m_remaining &= (m_remaining - 1);
+      if (m_remaining == 0) {
+        ++m_word_index;
+        seek_next_word();
+      }
+      return *this;
+    }
+    constexpr const_iterator operator++(int) {
+      auto copy = *this;
+      ++(*this);
+      return copy;
+    }
+
+    constexpr bool operator==(const const_iterator& other) const {
+      return (m_word_index == other.m_word_index) &&
+             (m_remaining == other.m_remaining);
+    }
+
+   private:
+    /// Advances to the first word holding a member,
+    /// landing on the end state when there is none left
+    constexpr void seek_next_word() {
+      while ((m_word_index < num_words) && (m_words[m_word_index] == 0)) {
+        ++m_word_index;
+      }
+      m_remaining =
+          (m_word_index < num_words) ? m_words[m_word_index] : word_type{0};
+    }
+
+    const word_type* m_words = nullptr;
+    size_t m_word_index = num_words;
+    word_type m_remaining = 0;
+  };
+  using iterator = const_iterator;
+
   /// An empty set covering the whole [0, Limit) range.
   constexpr bitmap_set() : m_bits(num_words, word_type{0}) {}
 
@@ -75,6 +135,27 @@ class bitmap_set {
     const bool was_member = (word & mask) != 0;
     word |= mask;
     return !was_member;
+  }
+
+  constexpr const_iterator begin() const {
+    return const_iterator{m_bits.data(), 0};
+  }
+  constexpr const_iterator end() const {
+    return const_iterator{m_bits.data(), num_words};
+  }
+
+  /// The number of members, counted on demand rather than tracked,
+  /// because insert() is the hot path and this rarely gets called.
+  constexpr size_t size() const {
+    auto count = size_t{0};
+    for (const auto word : m_bits) {
+      count += static_cast<size_t>(std::popcount(word));
+    }
+    return count;
+  }
+  constexpr bool empty() const {
+    return std::ranges::all_of(m_bits,
+                               [](word_type word) { return word == 0; });
   }
 
   /// Removes all values, keeping the allocation.

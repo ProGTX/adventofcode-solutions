@@ -11,7 +11,12 @@
 #include <unordered_set>
 
 using garden_t = aoc::char_grid<>;
-using region_t = std::unordered_set<usize>;
+// Every region is a set of linear indices into the same garden,
+// so a bitmap indexes straight by cell.
+// get_regions() probes every region for every cell,
+// which is by far the hottest lookup here.
+constexpr let max_garden_size = 200uz * 200uz;
+using region_t = aoc::bitmap_set<usize, max_garden_size>;
 // Pad the area with edges to remove the need for bounds checking
 constexpr let padding = '#';
 
@@ -19,7 +24,7 @@ using side_t = aoc::closed_range<point>;
 
 fn get_regions(garden_t const& garden) -> Vec<region_t> {
   let get_region = [&](usize start) {
-    return aoc::flood_fill(start, [&](usize current) {
+    return aoc::flood_fill<region_t>(start, [&](usize current) {
       let current_pos = garden.position(current);
       let current_value = garden.at(current_pos.y, current_pos.x);
       // current_pos/current_value must be captured by value:
