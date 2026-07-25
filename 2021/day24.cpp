@@ -5,10 +5,11 @@
 
 #include <algorithm>
 #include <array>
+#include <future>
 #include <print>
 #include <span>
 #include <string>
-#include <unordered_set>
+#include <thread>
 #include <variant>
 #include <vector>
 
@@ -128,6 +129,55 @@ fn execute(Registers regs, std::span<const Instr> instructions,
   return regs;
 }
 
+// Runs one block for BATCH different z values at once.
+// Decoding an instruction is by far the dominant cost of the interpreter,
+// and this shares it across the lanes.
+// The lanes are independent of each other, so they also vectorize.
+constexpr let BATCH = 16uz;
+using RegisterBatch = std::array<std::array<i64, BATCH>, 4>;
+
+void execute_batch(RegisterBatch& regs, std::span<const Instr> instructions,
+                   i64 input) {
+  for (let& instr : instructions) {
+    auto src = std::array<i64, BATCH>{};
+    aoc::match(
+        instr.src, //
+        [&](Reg r) { src = regs[static_cast<usize>(r)]; },
+        [&](i64 n) { src.fill(n); });
+    auto& dst = regs[static_cast<usize>(instr.dst)];
+    switch (instr.op) {
+      case Op::Inp:
+        dst.fill(input);
+        break;
+      case Op::Add:
+        for (let i : Range{0uz, BATCH}) {
+          dst[i] += src[i];
+        }
+        break;
+      case Op::Mul:
+        for (let i : Range{0uz, BATCH}) {
+          dst[i] *= src[i];
+        }
+        break;
+      case Op::Div:
+        for (let i : Range{0uz, BATCH}) {
+          dst[i] /= src[i];
+        }
+        break;
+      case Op::Mod:
+        for (let i : Range{0uz, BATCH}) {
+          dst[i] %= src[i];
+        }
+        break;
+      case Op::Eql:
+        for (let i : Range{0uz, BATCH}) {
+          dst[i] = static_cast<i64>(dst[i] == src[i]);
+        }
+        break;
+    }
+  }
+}
+
 fn digits_to_number(std::span<const i64> digits) -> u64 {
   return stdr::fold_left(digits, u64{0}, [](u64 acc, i64 digit) {
     return acc * 10 + static_cast<u64>(digit);
@@ -135,7 +185,107 @@ fn digits_to_number(std::span<const i64> digits) -> u64 {
 }
 
 constexpr let NUM_BLOCKS = 14uz;
-using ZOutputCache = std::array<std::unordered_set<i64>, NUM_BLOCKS>;
+
+// This limit is somewhat arbitrary, it happens to work for my input
+// Could be slightly lower, but this is a nice number
+constexpr let Z_LIMIT = i64{314159};
+
+/**
+ * A set of z values stored as a bitmap:
+ * one bit per value in [0, Z_LIMIT), packed 64 to a word.
+ * The value is its own index, so a lookup is a shift,
+ * a mask and one load, with no hashing and no probing.
+ *
+ * The lookup cost is what matters here, not the memory.
+ * Every one of the ~40M block runs probes a set,
+ * but only ~15k values ever get inserted,
+ * and most of those lookups find nothing.
+ * Merging is a plain OR over the words,
+ * so the per-thread results are cheap to combine.
+ *
+ * A bitmap is worth it when the range of possible values
+ * is small enough to keep in cache,
+ * and when lookups far outnumber insertions.
+ * It costs Z_LIMIT/8 bytes no matter how few values it holds,
+ * and these sets are sparse: the busiest block keeps 10k out of 314k.
+ */
+class ZSet {
+ public:
+  /// An empty set covering the whole [0, Z_LIMIT) range.
+  ZSet() : m_bits(static_cast<usize>(Z_LIMIT) / 64 + 1, 0) {}
+
+  /// Membership test for an arbitrary z.
+  /// Block outputs routinely overshoot the range,
+  /// and those are not members.
+  fn contains(i64 z) const -> bool {
+    if ((z < 0) || (z >= Z_LIMIT)) {
+      return false;
+    }
+    let i = static_cast<usize>(z);
+    return ((m_bits[i / 64] >> (i % 64)) & 1) != 0;
+  }
+  /// Adds z, which the caller must already have checked is in range.
+  void insert(i64 z) {
+    let i = static_cast<usize>(z);
+    m_bits[i / 64] |= u64{1} << (i % 64);
+  }
+  /// Folds another set into this one, to combine the per-thread results.
+  void union_with(ZSet const& other) {
+    for (let i : aoc::views::indices_of(m_bits)) {
+      m_bits[i] |= other.m_bits[i];
+    }
+  }
+
+ private:
+  Vec<u64> m_bits;
+};
+using ZOutputCache = std::array<ZSet, NUM_BLOCKS>;
+
+// Every z value for one block is independent of every other,
+// so the range is split across threads.
+// Only the blocks themselves have to stay ordered
+// since each one consumes the set produced by the block after it.
+fn valid_z_inputs(std::span<const Instr> block, ZSet const& valid_output)
+    -> ZSet {
+  constexpr let max_parallelism = 16uz;
+  let num_threads = std::min<usize>(
+      max_parallelism, std::max(1u, std::thread::hardware_concurrency()));
+  // A chunk covers whole batches, so the threads write disjoint z values
+  let per_thread =
+      (static_cast<usize>(Z_LIMIT) + num_threads - 1) / num_threads;
+  let chunk = static_cast<i64>((per_thread + BATCH - 1) / BATCH * BATCH);
+
+  auto futures = Vec<std::future<ZSet>>{};
+  for (i64 z_start = 0; z_start < Z_LIMIT; z_start += chunk) {
+    futures.push_back(std::async(std::launch::async, [=, &valid_output] {
+      let z_end = std::min(z_start + chunk, Z_LIMIT);
+      auto valid_z_input = ZSet{};
+      for (let input : Range{i64{1}, i64{10}}) {
+        for (i64 z_base = z_start; z_base < z_end;
+             z_base += static_cast<i64>(BATCH)) {
+          auto regs = RegisterBatch{};
+          for (let i : Range{0uz, BATCH}) {
+            regs[z_id][i] = z_base + static_cast<i64>(i);
+          }
+          execute_batch(regs, block, input);
+          for (let i : Range{0uz, BATCH}) {
+            let z = z_base + static_cast<i64>(i);
+            if ((z < Z_LIMIT) && valid_output.contains(regs[z_id][i])) {
+              valid_z_input.insert(z);
+            }
+          }
+        }
+      }
+      return valid_z_input;
+    }));
+  }
+
+  auto valid_z_input = ZSet{};
+  for (auto& future : futures) {
+    valid_z_input.union_with(future.get());
+  }
+  return valid_z_input;
+}
 
 template <bool SMALLEST>
 fn solve_case(std::span<const Instr> instructions,
@@ -158,25 +308,10 @@ fn solve_case(std::span<const Instr> instructions,
   if (!valid_z_output_cache.has_value()) {
     auto vzo = ZOutputCache{};
 
-    // This limit is somewhat arbitrary, it happens to work for my input
-    // Could be slightly lower, but this is a nice number
-    constexpr let Z_LIMIT = i64{314159};
-
     // Find valid z outputs for each block
     vzo[NUM_BLOCKS - 1].insert(0);
     for (let block_id : Range{0uz, NUM_BLOCKS} | stdv::reverse) {
-      auto valid_z_input = std::unordered_set<i64>{};
-      for (let elem : stdv::cartesian_product(Range{i64{1}, i64{10}},
-                                              Range{i64{0}, Z_LIMIT})) {
-        let[input, z] = elem;
-        auto regs = Registers{};
-        regs[z_id] = z;
-        let result =
-            execute(regs, blocks[block_id], std::span<const i64>{&input, 1});
-        if (vzo[block_id].contains(result[z_id])) {
-          valid_z_input.insert(z);
-        }
-      }
+      auto valid_z_input = valid_z_inputs(blocks[block_id], vzo[block_id]);
       if (block_id > 0) {
         vzo[block_id - 1] = std::move(valid_z_input);
       }
