@@ -1,4 +1,5 @@
 use aoc::point::distance_manhattan;
+use itertools::Itertools;
 
 type Point = aoc::point::Point<i32>;
 
@@ -42,6 +43,12 @@ struct Bounds {
     max: i32,
 }
 
+/// How far a sensor still reaches sideways along the inspected row
+struct Reach {
+    x: i32,
+    reach: i32,
+}
+
 fn count_positions(
     sensors: &[Sensor],
     beacons: &[Point],
@@ -51,18 +58,31 @@ fn count_positions(
 ) -> i64 {
     let sensors_on_row: Vec<_> = sensors.iter().filter(|s| s.pos.y == inspect_row).collect();
     let beacons_on_row: Vec<_> = beacons.iter().filter(|b| b.y == inspect_row).collect();
-    (bounds.min..=bounds.max)
-        .map(|column| Point::new(column, inspect_row))
-        .filter(|&current| {
-            sensors
-                .iter()
-                .any(|s| distance_manhattan(s.pos, current) <= s.range)
+
+    // Everything about a sensor that only depends on the row is the same for
+    // every column, so compute it once instead of once per column.
+    // A sensor whose reach comes out negative cannot cover this row at all.
+    let reaches = sensors
+        .iter()
+        .filter_map(|s| {
+            let reach = s.range - (s.pos.y - inspect_row).abs();
+            (reach >= 0).then_some(Reach { x: s.pos.x, reach })
         })
-        .filter(|current| {
-            !sensors_on_row.iter().any(|s| s.pos.x == current.x)
-                && !beacons_on_row.iter().any(|b| b.x == current.x)
-        })
-        .count() as i64
+        .collect_vec();
+
+    let mut count = 0_i64;
+    for column in bounds.min..=bounds.max {
+        if !reaches.iter().any(|r| (r.x - column).abs() <= r.reach) {
+            continue;
+        }
+        if sensors_on_row.iter().any(|s| s.pos.x == column)
+            || beacons_on_row.iter().any(|b| b.x == column)
+        {
+            continue;
+        }
+        count += 1;
+    }
+    count
 }
 
 fn solve_case1<const INSPECT_ROW: i32>(input: &Input) -> i64 {

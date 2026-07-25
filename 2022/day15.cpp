@@ -76,6 +76,12 @@ fn any_of(R const& range, F&& pred) -> bool {
   return false;
 }
 
+// How far a sensor still reaches sideways along the inspected row
+struct Reach {
+  int x;
+  int reach;
+};
+
 fn count_positions(Vec<Sensor> const& sensors, Vec<Beacon> const& beacons,
                    Bounds const& bounds, int inspect_row) -> i64 {
   let sensors_on_row = sensors |
@@ -88,32 +94,40 @@ fn count_positions(Vec<Sensor> const& sensors, Vec<Beacon> const& beacons,
                          return beacon.y == inspect_row;
                        }) |
                        aoc::collect_vec<Beacon>();
-  return stdr::distance(
-      Range{bounds.min, bounds.max + 1} |
-      aoc::views::transform_filter([&](int column) -> Option<point> {
-        let current = point{column, inspect_row};
 
-        let within_range =
-            any_of(sensors, [&](Sensor const& sensor) AOC_FORCE_INLINE {
-              return distance_manhattan(sensor.pos, current) <= sensor.range;
-            });
-        if (!within_range) {
-          return None;
-        }
+  // Everything about a sensor that only depends on the row is the same for
+  // every column, so compute it once instead of once per column.
+  // A sensor whose reach comes out negative cannot cover this row at all.
+  auto reaches = Vec<Reach>{};
+  for (let& sensor : sensors) {
+    let reach = sensor.range - std::abs(sensor.pos.y - inspect_row);
+    if (reach >= 0) {
+      reaches.emplace_back(sensor.pos.x, reach);
+    }
+  }
 
-        let is_known = //
-            any_of(sensors_on_row,
-                   [&](Sensor const& sensor) AOC_FORCE_INLINE {
-                     return sensor.pos.x == current.x;
-                   }) ||
-            any_of(beacons_on_row, [&](Beacon const& beacon) AOC_FORCE_INLINE {
-              return beacon.x == current.x;
-            });
-        if (is_known) {
-          return None;
-        }
-        return current;
-      }));
+  auto count = i64{0};
+  for (let column : Range{bounds.min, bounds.max + 1}) {
+    let within_range = any_of(reaches, [&](Reach const& r) AOC_FORCE_INLINE {
+      return std::abs(r.x - column) <= r.reach;
+    });
+    if (!within_range) {
+      continue;
+    }
+
+    let is_known = //
+        any_of(sensors_on_row,
+               [&](Sensor const& sensor)
+                   AOC_FORCE_INLINE { return sensor.pos.x == column; }) ||
+        any_of(beacons_on_row, [&](Beacon const& beacon) AOC_FORCE_INLINE {
+          return beacon.x == column;
+        });
+    if (is_known) {
+      continue;
+    }
+    ++count;
+  }
+  return count;
 }
 
 template <int inspect_row>
