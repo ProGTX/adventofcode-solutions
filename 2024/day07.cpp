@@ -18,45 +18,32 @@ using int_t = std::uint64_t;
 using operands_t = aoc::static_vector<int, 12>;
 
 template <bool concat>
-constexpr int get_operation_id(unsigned evaluation_id, int bit_pos) {
-  return (evaluation_id >> ((concat ? 2 : 1) * bit_pos)) & (concat ? 3 : 1);
-}
-
-constexpr auto bit_pos_view(unsigned max_operators) {
-  return stdv::iota(0, static_cast<int>(max_operators)) | stdv::reverse;
-}
-
-template <bool concat>
 constexpr int_t evaluate_equation(const int_t test_value,
                                   std::span<const int> operands) {
   const unsigned max_operators = operands.size() - 1;
-  const unsigned max_evaluations = 1 << ((concat ? 2 : 1) * max_operators);
+  // 2 possible operators (+, *), or 3 with concatenation (+, *, ||)
+  // Enumerate operator assignments directly in that base,
+  // rather than in binary/base-4 with a step to skip invalid combinations,
+  // so every id enumerated below is valid,
+  // none are ever generated only to be discarded
+  constexpr unsigned base = concat ? 3 : 2;
+  unsigned max_evaluations = 1;
+  for (unsigned i = 0; i < max_operators; ++i) {
+    max_evaluations *= base;
+  }
   for (unsigned id = 0; id < max_evaluations; ++id) {
-    if constexpr (concat) {
-      const auto has_invalid_operation =
-          stdr::any_of(bit_pos_view(max_operators), [&](int bit_pos) {
-            return get_operation_id<concat>(id, bit_pos) == 3;
-          });
-      if (has_invalid_operation) {
-        // We only have 3 possible operations, but we use 2 bits to represent
-        // them, so we need to skip every time we get the 4th operation
-        continue;
-      }
-    }
     int_t sum = operands[0];
-    for (int bit_pos : bit_pos_view(max_operators)) {
-      auto current_num = operands[max_operators - bit_pos];
-      auto operation_id = get_operation_id<concat>(id, bit_pos);
+    unsigned code = id;
+    for (unsigned i = 1; i <= max_operators; ++i) {
+      auto current_num = operands[i];
+      auto operation_id = code % base;
+      code /= base;
       if (operation_id == 0) {
         sum += current_num;
       } else if (operation_id == 1) {
         sum *= current_num;
       } else if constexpr (concat) {
-        if (operation_id == 2) {
-          sum = aoc::concat_numbers(sum, static_cast<unsigned>(current_num));
-        } else {
-          AOC_UNREACHABLE("Invalid operation ID");
-        }
+        sum = aoc::concat_numbers(sum, static_cast<unsigned>(current_num));
       }
     }
     if (sum == test_value) {

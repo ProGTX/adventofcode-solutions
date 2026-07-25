@@ -38,35 +38,28 @@ fn concat_numbers(a: u64, b: u64) -> u64 {
     a * next_power_of_10(b + 1) + b
 }
 
-fn get_operation_id<const CONCAT: bool>(evaluation_id: u32, bit_pos: u32) -> u32 {
-    (evaluation_id >> ((if CONCAT { 2 } else { 1 }) * bit_pos)) & (if CONCAT { 3 } else { 1 })
-}
-
-fn bit_pos_view(max_operators: u32) -> impl Iterator<Item = u32> + Clone {
-    (0..max_operators).rev()
-}
-
+// 2 possible operators (+, *),
+// or 3 with concatenation (+, *, ||)
+// Enumerate operator assignments directly in that base,
+// rather than in binary/base-4 with a step to skip invalid combinations,
+// so every id enumerated below is valid,
+// none are ever generated only to be discarded
 fn evaluate_equation<const CONCAT: bool>(test_value: u64, operands: &[u32]) -> u64 {
     let max_operators = (operands.len() - 1) as u32;
-    let max_evaluations: u32 = 1 << ((if CONCAT { 2 } else { 1 }) * max_operators);
+    let base: u32 = if CONCAT { 3 } else { 2 };
+    let max_evaluations = base.pow(max_operators);
     for id in 0..max_evaluations {
-        if CONCAT
-            && bit_pos_view(max_operators)
-                .any(|bit_pos| get_operation_id::<CONCAT>(id, bit_pos) == 3)
-        {
-            // We only have 3 possible operations, but we use 2 bits to represent
-            // them, so we need to skip every time we get the 4th operation
-            continue;
-        }
         let mut sum: u64 = operands[0] as u64;
-        for bit_pos in bit_pos_view(max_operators) {
-            let current_num = operands[(max_operators - bit_pos) as usize] as u64;
-            let operation_id = get_operation_id::<CONCAT>(id, bit_pos);
+        let mut code = id;
+        for &operand in &operands[1..] {
+            let current_num = operand as u64;
+            let operation_id = code % base;
+            code /= base;
             if operation_id == 0 {
                 sum += current_num;
             } else if operation_id == 1 {
                 sum *= current_num;
-            } else if CONCAT && operation_id == 2 {
+            } else if CONCAT {
                 sum = concat_numbers(sum, current_num);
             }
         }
