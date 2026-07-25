@@ -22,7 +22,7 @@ fn hallway_index(usize room_index) -> usize { return room_index * 2 + 2; }
 
 fn parse(String const& filename) -> Input {
   let lines = aoc::read_lines(filename, aoc::keep_spaces{});
-  Input rooms;
+  auto rooms = Input{};
   for (let room_index : Range{0uz, 4uz}) {
     let col = hallway_index(room_index) + 1;
     rooms[room_index] = {lines[3][col], lines[2][col], EMPTY, EMPTY};
@@ -115,13 +115,10 @@ fn solve(Rooms const& rooms, usize room_size) -> u32 {
   let start = Configuration{HALLWAY, rooms};
 
   auto end_rooms = Rooms{};
-  for (auto& room : end_rooms) {
-    room.fill(EMPTY);
-  }
-  for (usize room_index = 0; room_index < 4; ++room_index) {
-    for (usize slot = 0; slot < room_size; ++slot) {
-      end_rooms[room_index][slot] = static_cast<char>('A' + room_index);
-    }
+  for (let room_index : Range{0uz, 4uz}) {
+    auto end_room = std::span{end_rooms[room_index]};
+    stdr::fill(end_room.first(room_size), static_cast<char>('A' + room_index));
+    stdr::fill(end_room.last(4 - room_size), EMPTY);
   }
   let end = Configuration{HALLWAY, std::move(end_rooms)};
 
@@ -129,6 +126,7 @@ fn solve(Rooms const& rooms, usize room_size) -> u32 {
       start, end,
       [&](Configuration const& current) {
         auto neighbors = Vec<aoc::dijkstra_neighbor_t<Configuration>>{};
+        let hallway_range = aoc::views::indices_of(current.hallway);
 
         // Try moving from room to the hallway
         for (usize room_index = 0; room_index < 4; ++room_index) {
@@ -163,8 +161,7 @@ fn solve(Rooms const& rooms, usize room_size) -> u32 {
           auto new_room = room;
           new_room[top_slot] = EMPTY;
 
-          for (usize hall_index = 0; hall_index < current.hallway.size();
-               ++hall_index) {
+          for (let hall_index : hallway_range) {
             if (current.hallway[hall_index] != EMPTY) {
               continue;
             }
@@ -188,8 +185,7 @@ fn solve(Rooms const& rooms, usize room_size) -> u32 {
         }
 
         // Try moving from the hallway to a room
-        for (usize hall_index = 0; hall_index < current.hallway.size();
-             ++hall_index) {
+        for (let hall_index : hallway_range) {
           let hall = current.hallway[hall_index];
           if ((hall == EMPTY) || (hall == FORBIDDEN)) {
             continue;
@@ -255,10 +251,10 @@ fn solve_case1(Rooms const& rooms) -> u32 { return solve(rooms, 2); }
 fn solve_case2(Rooms const& rooms) -> u32 {
   //   #D#C#B#A#  -> slot 2
   //   #D#B#A#C#  -> slot 1
-  constexpr std::array<char, 4> inserted_upper = {'D', 'C', 'B', 'A'};
-  constexpr std::array<char, 4> inserted_lower = {'D', 'B', 'A', 'C'};
-  Rooms rooms4;
-  for (usize i = 0; i < 4; ++i) {
+  constexpr let inserted_upper = std::array{'D', 'C', 'B', 'A'};
+  constexpr let inserted_lower = std::array{'D', 'B', 'A', 'C'};
+  auto rooms4 = Rooms{};
+  for (let i : Range{0uz, 4uz}) {
     rooms4[i] = {rooms[i][0], inserted_lower[i], inserted_upper[i],
                  rooms[i][1]};
   }

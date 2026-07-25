@@ -1,7 +1,10 @@
 use aoc::dijkstra::DijkstraState;
 
-type Rooms = [[char; 4]; 4];
-type Hallway = [char; 11];
+// Stored as bytes rather than chars
+// The whole state is then 27 bytes instead of 108,
+// which makes hashing and copying far cheaper
+type Rooms = [[u8; 4]; 4];
+type Hallway = [u8; 11];
 
 const fn hallway_index(room_index: usize) -> usize {
     room_index * 2 + 2
@@ -9,8 +12,8 @@ const fn hallway_index(room_index: usize) -> usize {
 
 fn parse(filename: &str) -> Rooms {
     let lines = aoc::file::read_lines(filename);
-    let top: Vec<char> = lines[2].chars().collect();
-    let bottom: Vec<char> = lines[3].chars().collect();
+    let top = lines[2].as_bytes();
+    let bottom = lines[3].as_bytes();
     std::array::from_fn(|room_index| {
         // +1 for the leading # in the file line
         let col = hallway_index(room_index) + 1;
@@ -18,20 +21,19 @@ fn parse(filename: &str) -> Rooms {
     })
 }
 
-const HALLWAY: Hallway = //
-    ['.', '.', 'X', '.', 'X', '.', 'X', '.', 'X', '.', '.'];
-const EMPTY: char = HALLWAY[0];
-const FORBIDDEN: char = HALLWAY[2];
+const HALLWAY: Hallway = *b"..X.X.X.X..";
+const EMPTY: u8 = HALLWAY[0];
+const FORBIDDEN: u8 = HALLWAY[2];
 
-const fn numeric(c: char) -> u8 {
-    c as u8 - b'A' as u8
+const fn numeric(c: u8) -> u8 {
+    c - b'A'
 }
 
-const fn get_cost(c: char) -> u32 {
+const fn get_cost(c: u8) -> u32 {
     10_u32.pow(numeric(c) as u32)
 }
 
-const fn correct_room(c: char, room_index: usize) -> bool {
+const fn correct_room(c: u8, room_index: usize) -> bool {
     (numeric(c) as usize) == room_index
 }
 
@@ -42,7 +44,7 @@ fn hallway_path(hallway: &Hallway, hall_index: usize, room_index: usize) -> Opti
         hall_above_room.max(hall_index),
     );
     if (hallway[from..=to].iter().enumerate().any(|(i, c)| {
-        return ((from + i) != hall_index) && ['A', 'B', 'C', 'D'].contains(c);
+        return ((from + i) != hall_index) && (b'A'..=b'D').contains(c);
     })) {
         // There is another amphipod in the way
         return None;
@@ -50,26 +52,58 @@ fn hallway_path(hallway: &Hallway, hall_index: usize, room_index: usize) -> Opti
     return Some((from, to));
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct Configuration {
     hallway: Hallway,
     rooms: Rooms,
 }
-
-impl std::fmt::Display for Configuration {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let hallway: String = self
-            .hallway
-            .iter()
-            .map(|&c| if c == FORBIDDEN { '.' } else { c })
-            .collect();
-        let [r0, r1, r2, r3] = self.rooms;
-        writeln!(f, "#############")?;
-        writeln!(f, "#{hallway}#")?;
-        writeln!(f, "###{0}#{1}#{2}#{3}###", r0[1], r1[1], r2[1], r3[1])?;
-        writeln!(f, "  #{0}#{1}#{2}#{3}#", r0[0], r1[0], r2[0], r3[0])?;
-        writeln!(f, "  #########")
+impl std::hash::Hash for Configuration {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        // The derived impl feeds the rooms to the hasher one row at a time
+        state.write(&self.hallway);
+        state.write(self.rooms.as_flattened());
     }
+}
+
+/// Admissible lower bound on the cost of finishing from `config`:
+/// every amphipod that is not already settled has to pay at least
+/// its own way out of the room, along the hallway and back down.
+fn heuristic(config: &Configuration, room_size: usize) -> u32 {
+    let mut cost = 0_u32;
+
+    for (h, &c) in config.hallway.iter().enumerate() {
+        if !(b'A'..=b'D').contains(&c) {
+            continue;
+        }
+        let target_room = numeric(c) as usize;
+        let steps = h.abs_diff(hallway_index(target_room)) as u32 + 1;
+        cost += steps * get_cost(c);
+    }
+
+    for (r, room) in config.rooms.iter().enumerate() {
+        for s in 0..room_size {
+            let c = room[s];
+            if c == EMPTY {
+                continue;
+            }
+            let target_room = numeric(c) as usize;
+
+            if (target_room == r) {
+                // Settled if all slots below are also in the correct room
+                if (0..s).all(|b| room[b] != EMPTY && correct_room(room[b], r)) {
+                    continue;
+                }
+                // Must exit and re-enter (wrong amphipod is stuck below)
+                cost += ((room_size - s) as u32 + 1) * get_cost(c);
+            } else {
+                let steps_out = (room_size - s) as u32;
+                let h_steps = hallway_index(r).abs_diff(hallway_index(target_room)) as u32;
+                cost += (steps_out + h_steps + 1) * get_cost(c);
+            }
+        }
+    }
+
+    return cost;
 }
 
 fn solve(rooms: &Rooms, room_size: usize) -> u32 {
@@ -80,14 +114,14 @@ fn solve(rooms: &Rooms, room_size: usize) -> u32 {
     let mut end_rooms = [[EMPTY; 4]; 4];
     for room_index in 0..4 {
         for slot in 0..room_size {
-            end_rooms[room_index][slot] = (b'A' + room_index as u8) as char;
+            end_rooms[room_index][slot] = b'A' + room_index as u8;
         }
     }
     let end = Configuration {
         hallway: HALLWAY,
         rooms: end_rooms,
     };
-    let distances = aoc::dijkstra::shortest_distances(
+    let distances = aoc::dijkstra::shortest_distances_astar(
         &start,
         |current| *current == end,
         |current| {
@@ -181,6 +215,7 @@ fn solve(rooms: &Rooms, room_size: usize) -> u32 {
 
             return neighbors;
         },
+        |current| heuristic(current, room_size),
     );
 
     return distances[&end];
@@ -193,8 +228,8 @@ fn solve_case1(rooms: &Rooms) -> u32 {
 fn solve_case2(rooms: &Rooms) -> u32 {
     // #D#C#B#A# -> slot 2
     // #D#B#A#C# -> slot 1
-    let inserted_upper = ['D', 'C', 'B', 'A'];
-    let inserted_lower = ['D', 'B', 'A', 'C'];
+    let inserted_upper = *b"DCBA";
+    let inserted_lower = *b"DBAC";
     let rooms4 = std::array::from_fn(|i| {
         [
             rooms[i][0],
