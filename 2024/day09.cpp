@@ -67,15 +67,9 @@ constexpr filesystem_t compact(filesystem_t filesystem) {
 }
 
 constexpr filesystem_t compact_nonfragment(filesystem_t filesystem) {
-  // 9 because that's the highest number possible
-  std::array<int, 9> max_empty_range;
-  stdr::fill(max_empty_range, empty_space);
-  const auto max_empty_range_begin = max_empty_range.begin();
-  using iterator = filesystem_t::iterator;
   const auto begin = filesystem.begin();
   const auto end = filesystem.end();
   const auto rend = filesystem.rend();
-  iterator it = end;
   for (auto rit = filesystem.rbegin(); rit != rend; ++rit) {
     // Skip over empty spaces from the back
     while (*rit == empty_space) {
@@ -107,16 +101,35 @@ constexpr filesystem_t compact_nonfragment(filesystem_t filesystem) {
     auto current_range = stdr::subrange(current_range_begin, current_range_end);
     const auto current_size = current_range.size();
 
-    // Find an empty range that can fit the current range
-    it = std::search(begin, current_range_begin, max_empty_range_begin,
-                     max_empty_range_begin + current_size);
-    if ((it == end) || (it >= current_range_begin)) {
+    // Find the leftmost empty range that can fit the current range
+    // with a single forward scan tracking the current run length
+    // instead of rechecking every overlapping window from scratch
+    // (`std::search` before)
+    auto run_start = begin;
+    auto run_len = 0uz;
+    auto found = end;
+    for (auto scan_it = begin; scan_it != current_range_begin; ++scan_it) {
+      if (*scan_it == empty_space) {
+        if (run_len == 0) {
+          run_start = scan_it;
+        }
+        ++run_len;
+        if (run_len == current_size) {
+          found = run_start;
+          break;
+        }
+      } else {
+        run_len = 0;
+      }
+    }
+    if (found == end) {
       // Can't fit the current range in any free space to the left
       continue;
     }
 
     // Swap the current range with the empty space
-    stdr::swap_ranges(stdr::subrange(it, it + current_size), current_range);
+    stdr::swap_ranges(stdr::subrange(found, found + current_size),
+                      current_range);
   }
   return filesystem;
 }

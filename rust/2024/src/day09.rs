@@ -71,11 +71,28 @@ fn compact_nonfragment(mut filesystem: Vec<i32>) -> Vec<i32> {
         // Progress past the current range for the next iteration
         right = current_range_begin;
 
-        // Find an empty range that can fit the current range
-        if let Some(pos) = filesystem[..current_range_begin]
-            .windows(current_size)
-            .position(|window| window.iter().all(|&value| value == EMPTY_SPACE))
-        {
+        // Find the leftmost empty range that can fit the current range
+        // with a single forward scan tracking the current run length
+        // instead of rechecking every overlapping window from scratch
+        // (`.windows(n).all(...)` before)
+        let mut run_start = 0usize;
+        let mut run_len = 0usize;
+        let mut found = None;
+        for i in 0..current_range_begin {
+            if filesystem[i] == EMPTY_SPACE {
+                if run_len == 0 {
+                    run_start = i;
+                }
+                run_len += 1;
+                if run_len == current_size {
+                    found = Some(run_start);
+                    break;
+                }
+            } else {
+                run_len = 0;
+            }
+        }
+        if let Some(pos) = found {
             // Swap the current range with the empty space
             for offset in 0..current_size {
                 filesystem.swap(pos + offset, current_range_begin + offset);
