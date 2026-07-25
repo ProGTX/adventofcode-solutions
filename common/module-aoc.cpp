@@ -49,6 +49,7 @@ export module aoc;
 
 #include "algorithm.h"
 #include "assert.h"
+#include "bitmap_set.h"
 #include "combinations.h"
 #include "compiler.h"
 #include "concepts.h"

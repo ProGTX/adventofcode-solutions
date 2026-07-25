@@ -10,7 +10,6 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <unordered_set>
 #include <vector>
 
 using int_t = std::int64_t;
@@ -66,16 +65,23 @@ constexpr int get_pattern(const std::array<int, 4>& diffs) {
          (diffs[3] + max_diff_abs);
 }
 
+constexpr const int num_patterns = get_pattern({9, 9, 9, 9}) + 1;
+
 constexpr auto get_value_total() {
-  constexpr const int max_pattern = get_pattern({9, 9, 9, 9});
-  std::vector<int> value_total(max_pattern + 1, 0);
+  std::vector<int> value_total(num_patterns, 0);
   return value_total;
 }
+
+// The patterns are already a dense encoding of the four diffs,
+// so a bitmap indexes straight by pattern.
+// Every one of the ~4M lookups is a shift and a mask,
+// and most of them find nothing.
+using pattern_set = aoc::bitmap_set<int, num_patterns>;
 
 // See https://www.reddit.com/r/adventofcode/comments/1hk15et/comment/m3asuqa/
 // for inspiration
 constexpr int most_bananas(std::span<const int> secrets) {
-  auto buyer_has_pattern = std::unordered_set<int>{};
+  auto buyer_has_pattern = pattern_set{};
   auto value_total = get_value_total();
 
   for (int s = 0; s < secrets.size(); ++s) {
@@ -89,9 +95,7 @@ constexpr int most_bananas(std::span<const int> secrets) {
       diffs[pattern_size - 1] = current - previous;
       if (i >= (pattern_size - 1)) {
         const auto pattern = get_pattern(diffs);
-        auto it = buyer_has_pattern.find(pattern);
-        if (it == std::end(buyer_has_pattern)) {
-          buyer_has_pattern.emplace(pattern);
+        if (buyer_has_pattern.insert(pattern)) {
           value_total[pattern] += current;
         }
       }

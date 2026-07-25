@@ -123,6 +123,8 @@ fn execute(Registers regs, std::span<const Instr> instructions,
           return regs[d] % src;
         case Op::Eql:
           return static_cast<i64>(regs[d] == src);
+        default:
+          AOC_UNREACHABLE("Invalid instruction");
       }
     }();
   }
@@ -191,54 +193,20 @@ constexpr let NUM_BLOCKS = 14uz;
 constexpr let Z_LIMIT = i64{314159};
 
 /**
- * A set of z values stored as a bitmap:
- * one bit per value in [0, Z_LIMIT), packed 64 to a word.
- * The value is its own index, so a lookup is a shift,
- * a mask and one load, with no hashing and no probing.
- *
  * The lookup cost is what matters here, not the memory.
  * Every one of the ~40M block runs probes a set,
  * but only ~15k values ever get inserted,
- * and most of those lookups find nothing.
+ * and most of those lookups find nothing,
+ * so a bitmap beats hashing by a wide margin.
+ * Block outputs routinely overshoot the range,
+ * which contains() reports as absent.
  * Merging is a plain OR over the words,
  * so the per-thread results are cheap to combine.
  *
- * A bitmap is worth it when the range of possible values
- * is small enough to keep in cache,
- * and when lookups far outnumber insertions.
- * It costs Z_LIMIT/8 bytes no matter how few values it holds,
+ * The set costs Z_LIMIT/8 bytes no matter how few values it holds,
  * and these sets are sparse: the busiest block keeps 10k out of 314k.
  */
-class ZSet {
- public:
-  /// An empty set covering the whole [0, Z_LIMIT) range.
-  ZSet() : m_bits(static_cast<usize>(Z_LIMIT) / 64 + 1, 0) {}
-
-  /// Membership test for an arbitrary z.
-  /// Block outputs routinely overshoot the range,
-  /// and those are not members.
-  fn contains(i64 z) const -> bool {
-    if ((z < 0) || (z >= Z_LIMIT)) {
-      return false;
-    }
-    let i = static_cast<usize>(z);
-    return ((m_bits[i / 64] >> (i % 64)) & 1) != 0;
-  }
-  /// Adds z, which the caller must already have checked is in range.
-  void insert(i64 z) {
-    let i = static_cast<usize>(z);
-    m_bits[i / 64] |= u64{1} << (i % 64);
-  }
-  /// Folds another set into this one, to combine the per-thread results.
-  void union_with(ZSet const& other) {
-    for (let i : aoc::views::indices_of(m_bits)) {
-      m_bits[i] |= other.m_bits[i];
-    }
-  }
-
- private:
-  Vec<u64> m_bits;
-};
+using ZSet = aoc::bitmap_set<i64, static_cast<usize>(Z_LIMIT)>;
 using ZOutputCache = std::array<ZSet, NUM_BLOCKS>;
 
 // Every z value for one block is independent of every other,
