@@ -94,28 +94,13 @@ struct SearchNode {
     return {robots(0), robots(1), robots(2), robots(3)};
   }
 
-  fn collect_resources() const -> Resources {
-    auto new_resources = resources;
-    for (usize robot_id = 0; robot_id < NUM_ROBOTS; ++robot_id) {
-      let sum = static_cast<u16>(new_resources[robot_id] + robots(robot_id));
-      new_resources[robot_id] = static_cast<u8>(
-          std::min(sum, static_cast<u16>(std::numeric_limits<u8>::max())));
-    }
-    return new_resources;
-  }
-
   constexpr bool operator==(SearchNode const&) const = default;
 };
 
+// The node is 8 bytes of packed fields with no padding,
+// so it can be hashed as one word instead of field by field
 template <>
-struct std::hash<SearchNode> {
-  fn operator()(SearchNode const& search_node) const noexcept -> usize {
-    auto combine = aoc::hash_combine{};
-    combine(search_node.packed);
-    combine(search_node.resources);
-    return combine.seed;
-  }
-};
+struct std::hash<SearchNode> : aoc::packed_hash {};
 
 fn clamp_resources(Resources const& max_resources, Resources const& resources,
                    Time time_left) -> Resources {
@@ -128,19 +113,34 @@ fn clamp_resources(Resources const& max_resources, Resources const& resources,
   return result;
 }
 
+/// One minute of every robot gathering its own resource, saturating at the cap
+fn collect_resources(Resources resources, Resources const& robots)
+    -> Resources {
+  for (usize robot_id = 0; robot_id < NUM_ROBOTS; ++robot_id) {
+    let sum = static_cast<u16>(resources[robot_id] + robots[robot_id]);
+    resources[robot_id] = static_cast<u8>(
+        std::min(sum, static_cast<u16>(std::numeric_limits<u8>::max())));
+  }
+  return resources;
+}
+
 fn try_build_robot(Blueprint const& blueprint, Resources const& max_resources,
                    SearchNode const& search_node, usize robot_id)
     -> Option<std::pair<Time, Resources>> {
+  // Neither the robot counts nor the starting time change
+  // while time is advanced below,
+  // so unpack them once rather than on every minute
+  let robots = search_node.robots_array();
+  let total_time = search_node.time_left();
+
   for (usize cost_id = 0; cost_id < NUM_ROBOTS; ++cost_id) {
-    if (search_node.robots(cost_id) > max_resources[cost_id]) {
+    if (robots[cost_id] > max_resources[cost_id]) {
       return None;
     }
   }
 
   auto new_node = search_node;
-  for (Time minute = 0; minute < search_node.time_left(); ++minute) {
-    let time_left = new_node.time_left();
-
+  for (Time minute = 0; minute < total_time; ++minute) {
     auto new_resources = new_node.resources;
     bool could_build = true;
     for (usize cost_id = 0; cost_id < NUM_ROBOTS; ++cost_id) {
@@ -156,12 +156,11 @@ fn try_build_robot(Blueprint const& blueprint, Resources const& max_resources,
       new_node.resources = new_resources;
     }
 
-    new_node.resources = new_node.collect_resources();
+    new_node.resources = collect_resources(new_node.resources, robots);
 
     if (could_build) {
       return std::pair{static_cast<Time>(minute + 1), new_node.resources};
     }
-    new_node.set_time_left(static_cast<Time>(time_left - 1));
   }
 
   return None;

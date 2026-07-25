@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use arrayvec::ArrayVec;
 
@@ -92,19 +92,9 @@ impl SearchNode {
             self.robots(3),
         ]
     }
-
-    /// Collects resources using current robots,
-    /// returns total new resources after collection
-    fn collect_resources(&self) -> Resources {
-        let mut new_resources = self.resources;
-        for robot_id in 0..NUM_ROBOTS {
-            new_resources[robot_id] = new_resources[robot_id].saturating_add(self.robots(robot_id));
-        }
-        new_resources
-    }
 }
 
-type Cache = HashMap<SearchNode, u16>;
+type Cache = FxHashMap<SearchNode, u16>;
 
 fn clamp_resources(max_resources: &Resources, resources: &Resources, time_left: Time) -> Resources {
     let mut new_resources = resources.clone();
@@ -116,6 +106,14 @@ fn clamp_resources(max_resources: &Resources, resources: &Resources, time_left: 
     new_resources
 }
 
+/// One minute of every robot gathering its own resource, saturating at the cap
+fn collect_resources(mut resources: Resources, robots: &Resources) -> Resources {
+    for robot_id in 0..NUM_ROBOTS {
+        resources[robot_id] = resources[robot_id].saturating_add(robots[robot_id]);
+    }
+    resources
+}
+
 /// Figure out how much time it takes to build a robot
 /// and what the resources would be at the end
 fn try_build_robot(
@@ -124,9 +122,15 @@ fn try_build_robot(
     search_node: &SearchNode,
     robot_id: usize,
 ) -> Option<(Time, Resources)> {
+    // Neither the robot counts nor the starting time change
+    // while time is advanced below,
+    // unpack them once rather than on every minute
+    let robots = search_node.robots_array();
+    let total_time = search_node.time_left();
+
     // First check if we have too many robots already
     for cost_id in 0..blueprint[robot_id].len() {
-        if (search_node.robots(cost_id) > max_resources[cost_id]) {
+        if (robots[cost_id] > max_resources[cost_id]) {
             // Too many robots of this type
             return None;
         }
@@ -134,13 +138,7 @@ fn try_build_robot(
 
     // Advance time until we can build the robot
     let mut new_node = search_node.clone();
-    for minute in 0..search_node.time_left() {
-        let time_left = new_node.time_left();
-        if (time_left == 0) {
-            // Cannot build robot in time
-            return None;
-        }
-
+    for minute in 0..total_time {
         // Check if we can build the robot now
         let mut new_resources = new_node.resources;
         let mut could_build = true;
@@ -158,13 +156,12 @@ fn try_build_robot(
         }
 
         // Spend a minute collecting resources
-        let new_resources = new_node.collect_resources();
+        let new_resources = collect_resources(new_node.resources.clone(), &robots);
         new_node.resources = new_resources;
 
         if (could_build) {
             return Some((minute + 1, new_resources));
         }
-        new_node.set_time_left(time_left - 1);
     }
 
     // Couldn't build robot in time
@@ -252,7 +249,7 @@ fn max_resources(blueprint: &Blueprint) -> Resources {
 }
 
 fn max_open_geodes(blueprint: &Blueprint, time_left: Time) -> u16 {
-    let mut cache = Cache::new();
+    let mut cache = Cache::default();
     let mut current_best = 0;
     max_open_geodes_cached(
         &mut cache,
