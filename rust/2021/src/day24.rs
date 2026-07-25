@@ -1,3 +1,4 @@
+use aoc::bitmap_set::BitmapSet;
 use std::array;
 use std::thread;
 
@@ -154,55 +155,19 @@ const NUM_BLOCKS: usize = 14;
 // Could be slightly lower, but this is a nice number
 const Z_LIMIT: i64 = 314159;
 
-/// A set of z values stored as a bitmap:
-/// one bit per value in [0, Z_LIMIT), packed 64 to a word.
-/// The value is its own index, so a lookup is a shift,
-/// a mask and one load, with no hashing and no probing.
-///
 /// The lookup cost is what matters here, not the memory.
 /// Every one of the ~40M block runs probes a set,
 /// but only ~15k values ever get inserted,
-/// and most of those lookups find nothing.
+/// and most of those lookups find nothing,
+/// so a bitmap beats hashing by a wide margin.
+/// Block outputs routinely overshoot the range,
+/// which `contains` reports as absent.
 /// Merging is a plain OR over the words,
 /// so the per-thread results are cheap to combine.
 ///
-/// A bitmap is worth it when the range of possible values
-/// is small enough to keep in cache,
-/// and when lookups far outnumber insertions.
-/// It costs Z_LIMIT/8 bytes no matter how few values it holds,
+/// The set costs Z_LIMIT/8 bytes no matter how few values it holds,
 /// and these sets are sparse: the busiest block keeps 10k out of 314k.
-struct ZSet {
-    bits: Vec<u64>,
-}
-impl ZSet {
-    /// An empty set covering the whole [0, Z_LIMIT) range.
-    fn new() -> Self {
-        ZSet {
-            bits: vec![0; Z_LIMIT as usize / 64 + 1],
-        }
-    }
-    /// Membership test for an arbitrary z.
-    /// Block outputs routinely overshoot the range,
-    /// and those are not members.
-    fn contains(&self, z: i64) -> bool {
-        if (z < 0) || (z >= Z_LIMIT) {
-            return false;
-        }
-        let i = z as usize;
-        (self.bits[i / 64] >> (i % 64)) & 1 != 0
-    }
-    /// Adds z, which the caller must already have checked is in range.
-    fn insert(&mut self, z: i64) {
-        let i = z as usize;
-        self.bits[i / 64] |= 1u64 << (i % 64);
-    }
-    /// Folds another set into this one, to combine the per-thread results.
-    fn union_with(&mut self, other: &ZSet) {
-        for (bits, other_bits) in self.bits.iter_mut().zip(&other.bits) {
-            *bits |= other_bits;
-        }
-    }
-}
+type ZSet = BitmapSet<i64, { Z_LIMIT as usize }>;
 type ZOutputCache = [ZSet; NUM_BLOCKS];
 
 // Every z value for one block is independent of every other,

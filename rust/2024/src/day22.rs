@@ -1,4 +1,4 @@
-use rustc_hash::FxHashSet;
+use aoc::bitmap_set::BitmapSet;
 
 const NUM_REPEAT: i32 = 2000;
 const PATTERN_SIZE: usize = 4;
@@ -36,17 +36,24 @@ fn sum_secrets(secrets: &[i32]) -> i64 {
     secrets.iter().map(|&s| next_secret_repeat(s) as i64).sum()
 }
 
-fn get_pattern(diffs: &[i32; PATTERN_SIZE]) -> i32 {
+const fn get_pattern(diffs: &[i32; PATTERN_SIZE]) -> i32 {
     (diffs[0] + MAX_DIFF_ABS) * (DIFF_OPTS * DIFF_OPTS * DIFF_OPTS)
         + (diffs[1] + MAX_DIFF_ABS) * (DIFF_OPTS * DIFF_OPTS)
         + (diffs[2] + MAX_DIFF_ABS) * DIFF_OPTS
         + (diffs[3] + MAX_DIFF_ABS)
 }
 
+const NUM_PATTERNS: usize = (get_pattern(&[9, 9, 9, 9]) + 1) as usize;
+
 fn get_value_total() -> Vec<i32> {
-    let max_pattern = get_pattern(&[9, 9, 9, 9]);
-    vec![0; (max_pattern + 1) as usize]
+    vec![0; NUM_PATTERNS]
 }
+
+/// The patterns are already a dense encoding of the four diffs,
+/// so a bitmap indexes straight by pattern.
+/// Every one of the ~4M lookups is a shift and a mask,
+/// and most of them find nothing.
+type PatternSet = BitmapSet<i32, NUM_PATTERNS>;
 
 fn rotate_left(diffs: &mut [i32; PATTERN_SIZE]) {
     let first = diffs[0];
@@ -59,7 +66,7 @@ fn rotate_left(diffs: &mut [i32; PATTERN_SIZE]) {
 // See https://www.reddit.com/r/adventofcode/comments/1hk15et/comment/m3asuqa/
 // for inspiration
 fn most_bananas(secrets: &[i32]) -> i32 {
-    let mut buyer_has_pattern = FxHashSet::default();
+    let mut buyer_has_pattern = PatternSet::new();
     let mut value_total = get_value_total();
 
     for &starting_secret in secrets {

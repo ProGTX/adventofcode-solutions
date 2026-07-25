@@ -12,6 +12,7 @@ function(add_rust_source filename folder)
 endfunction()
 
 add_rust_source(algorithm utils)
+add_rust_source(bitmap_set utils)
 add_rust_source(closed_range utils)
 add_rust_source(dijkstra utils)
 add_rust_source(direction utils)
