@@ -174,6 +174,12 @@ constexpr auto shortest_distances_dijkstra(
     // and update their distances through the current node
     for (const auto& neighbor : get_reachable_neighbors(current)) {
       const int tentative_g = g_enqueued + neighbor.distance;
+      // The insert path below looks the neighbor up twice,
+      // which a single try_emplace would fold into one lookup.
+      // That was measured across every caller and came out a wash:
+      // the second lookup only happens the first time a node is seen,
+      // and try_emplace costs more than find when revisiting a known one,
+      // which is the common case here.
       auto existing_it = distances.find(neighbor.node);
       if (existing_it != std::end(distances)) {
         // Neighbor already visited, update the distance
