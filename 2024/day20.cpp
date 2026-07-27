@@ -1,39 +1,49 @@
 // https://adventofcode.com/2024/day/20
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #include <array>
 #include <print>
 #include <ranges>
 #include <span>
-#include <string>
-#include <string_view>
-#include <vector>
 
 using racetrack_t = aoc::char_grid<>;
-constexpr const char start = 'S';
-constexpr const char end = 'E';
-constexpr const char wall = '#';
+constexpr let start = 'S';
+constexpr let end = 'E';
+constexpr let wall = '#';
+
+struct Input {
+  racetrack_t track;
+  point start_pos;
+  point end_pos;
+};
+
+auto parse(String const& filename) -> Input {
+  auto [track, config] = aoc::read_char_grid(
+      filename, {.padding = {}, .start_char = start, .end_char = end});
+  return {std::move(track), *config.start_pos, *config.end_pos};
+}
 
 struct node_t {
   point pos{};
-  int length{0};
+  i32 length{0};
   bool cheated{false};
 
-  constexpr bool operator==(const node_t& other) const {
+  constexpr bool operator==(node_t const& other) const {
     return (pos == other.pos);
   }
-  constexpr auto operator<=>(const node_t& other) const {
+  constexpr auto operator<=>(node_t const& other) const {
     return (pos <=> other.pos);
   }
 };
 using predecessors_t = aoc::predecessor_map<node_t>;
-using path_t = std::vector<node_t>;
+using path_t = Vec<node_t>;
 
 template <int max_length, bool wall_allowed>
-constexpr auto shortest_path(const racetrack_t& track, const point start_pos,
-                             const point end_pos) {
-  predecessors_t predecessors;
+fn shortest_path(racetrack_t const& track, point const start_pos,
+                 point const end_pos) {
+  auto predecessors = predecessors_t{};
   auto predecessors_ptr = &predecessors;
   if constexpr (wall_allowed) {
     predecessors_ptr = nullptr;
@@ -42,7 +52,7 @@ constexpr auto shortest_path(const racetrack_t& track, const point start_pos,
       std::conditional_t<wall_allowed, aoc::flat_set<node_t>, node_t>{};
   aoc::shortest_distances_dijkstra(
       node_t{start_pos, 0, false},
-      [&](const node_t& node) {
+      [&](node_t const& node) {
         if constexpr (!wall_allowed) {
           if (node.pos == end_pos) {
             end_nodes = node;
@@ -57,14 +67,14 @@ constexpr auto shortest_path(const racetrack_t& track, const point start_pos,
         }
         return false;
       },
-      [&](const node_t& node) {
+      [&](node_t const& node) {
         auto neighbors =
             aoc::static_vector<aoc::dijkstra_neighbor_t<node_t>, 4>{};
         if ((node.length >= max_length) || (node.pos == end_pos)) {
           return neighbors;
         }
-        for (auto neighbor_pos : track.basic_neighbor_positions(node.pos)) {
-          const auto neighbor = track.at(neighbor_pos.y, neighbor_pos.x);
+        for (let neighbor_pos : track.basic_neighbor_positions(node.pos)) {
+          let neighbor = track.at(neighbor_pos.y, neighbor_pos.x);
           if ((wall_allowed && (neighbor == wall)) || (neighbor != wall)) {
             bool cheated = node.cheated;
             if constexpr (wall_allowed) {
@@ -92,76 +102,71 @@ constexpr auto shortest_path(const racetrack_t& track, const point start_pos,
 
 using segment_t = aoc::closed_range<point>;
 
-using cache_t = aoc::flat_map<segment_t, int>;
-constexpr const int max_normal_length = (1 << 20);
+using cache_t = aoc::flat_map<segment_t, i32>;
+constexpr let max_normal_length = (1 << 20);
 
-constexpr int normal_shortest_length(cache_t& cache, const racetrack_t& track,
-                                     const point start_pos,
-                                     const point end_pos) {
-  auto segment = segment_t{start_pos, end_pos};
-  auto it = cache.find(segment);
+fn normal_shortest_length(cache_t& cache, racetrack_t const& track,
+                          point const start_pos, point const end_pos) -> i32 {
+  let segment = segment_t{start_pos, end_pos};
+  let it = cache.find(segment);
   if (it != std::end(cache)) {
     return it->second;
   }
-  const auto length =
-      shortest_path<max_normal_length, false>(track, start_pos, end_pos).size();
+  let length = static_cast<i32>(
+      shortest_path<max_normal_length, false>(track, start_pos, end_pos)
+          .size());
   cache[segment] = length;
   return length;
 }
 
 template <int max_cheat_length>
-constexpr int count_cheats(const racetrack_t& track, const point start_pos,
-                           const point end_pos) {
-  const path_t path =
-      shortest_path<max_normal_length, false>(track, start_pos, end_pos);
-  const int standard_length = path.size();
-  aoc::flat_set<segment_t> cheats;
-  cache_t cache;
-  const auto time_limit = (track.row_length() < 20) ? 50 : 100;
-  for (int path_length = 0; const node_t& node : path | stdv::reverse) {
+fn count_cheats(racetrack_t const& track, point const start_pos,
+                point const end_pos) -> i32 {
+  let path = shortest_path<max_normal_length, false>(track, start_pos, end_pos);
+  let standard_length = static_cast<i32>(path.size());
+  auto cheats = aoc::flat_set<segment_t>{};
+  auto cache = cache_t{};
+  let time_limit = (track.row_length() < 20) ? 50 : 100;
+  for (i32 path_length = 0; node_t const& node : path | stdv::reverse) {
     cache[segment_t{node.pos, end_pos}] = standard_length - path_length;
     ++path_length;
   }
-  for (int path_length = 0; const node_t& node : path | stdv::reverse) {
+  for (i32 path_length = 0; node_t const& node : path | stdv::reverse) {
     // end_pos doesn't matter here
-    const auto cheat_points =
+    let cheat_points =
         shortest_path<max_cheat_length, true>(track, node.pos, {});
-    for (const node_t& cheat_end_node : cheat_points) {
-      const auto cheat_length =
+    for (node_t const& cheat_end_node : cheat_points) {
+      let cheat_length =
           path_length +
           distance_manhattan(node.pos, cheat_end_node.pos) +
           normal_shortest_length(cache, track, cheat_end_node.pos, end_pos);
-      const auto time_diff = standard_length - cheat_length;
+      let time_diff = standard_length - cheat_length;
       if (time_diff >= time_limit) {
         cheats.emplace(node.pos, cheat_end_node.pos);
       }
     }
     ++path_length;
   }
-  return cheats.size();
+  return static_cast<i32>(cheats.size());
 }
 
 template <int max_cheat_length>
-int solve_case(const std::string& filename) {
-  auto [track, config] = aoc::read_char_grid(
-      filename, {.padding = {}, .start_char = start, .end_char = end});
-
-  int sum = 0;
-  sum =
-      count_cheats<max_cheat_length>(track, *config.start_pos, *config.end_pos);
-
-  return sum;
+fn solve_case(Input const& input) -> i32 {
+  return count_cheats<max_cheat_length>(input.track, input.start_pos,
+                                        input.end_pos);
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(1, solve_case<2>("day20.example"));
-  AOC_EXPECT_RESULT(1459, solve_case<2>("day20.input"));
+  let example = parse("day20.example");
+  AOC_EXPECT_RESULT(1, solve_case<2>(example));
+  let input = parse("day20.input");
+  AOC_EXPECT_RESULT(1459, solve_case<2>(input));
 
   std::println("Part 2");
   aoc::return_incomplete();
-  // AOC_EXPECT_RESULT(285, solve_case<20>("day20.example"));
-  // AOC_EXPECT_RESULT(53515, solve_case<20>("day20.input"));
+  // AOC_EXPECT_RESULT(14, solve_case<20>(example));
+  // AOC_EXPECT_RESULT(1337, solve_case<20>(input));
 
   AOC_RETURN_CHECK_RESULT();
 }
