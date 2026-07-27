@@ -124,9 +124,11 @@ fn find_most_pressure(
 ) -> u32 {
     return {
         let mut most_pressure = total_flow * state.time_left as u32;
-        // filter + map is pretty slow in Debug, use a loop instead
-        for (neighbor_id, &flow) in flow_rates.iter().enumerate() {
-            let neighbor_id = neighbor_id + 1; // Skipped AA
+        // filter + map is pretty slow in Debug, use a loop instead.
+        // Even enumerate() shows up on a loop this hot, so index directly.
+        for index in 0..flow_rates.len() {
+            let flow = flow_rates[index];
+            let neighbor_id = index + 1; // Skipped AA
             // Despite graph compression, zero flow is used in part 2
             // to exclude a valve from a subset
             if neighbor_id == state.current_id as usize || flow == 0 || state.is_open(neighbor_id) {

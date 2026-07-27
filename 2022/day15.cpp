@@ -62,20 +62,6 @@ fn parse(String const& filename) -> Input {
   return result;
 }
 
-// Plain loop drop in for stdr::any_of
-// Same early exit semantics, but without the iterator/view abstraction overhead
-// that makes stdr::any_of costly in Debug builds
-// Note that the predicate needs to be forced inline to match loop performance
-template <class R, class F>
-fn any_of(R const& range, F&& pred) -> bool {
-  for (let& elem : range) {
-    if (pred(elem)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 // How far a sensor still reaches sideways along the inspected row
 struct Reach {
   int x;
@@ -108,20 +94,23 @@ fn count_positions(Vec<Sensor> const& sensors, Vec<Beacon> const& beacons,
 
   auto count = i64{0};
   for (let column : Range{bounds.min, bounds.max + 1}) {
-    let within_range = any_of(reaches, [&](Reach const& r) AOC_FORCE_INLINE {
-      return std::abs(r.x - column) <= r.reach;
-    });
+    let within_range =
+        aoc::ranges::any_of(reaches, [&](Reach const& r) AOC_FORCE_INLINE {
+          return std::abs(r.x - column) <= r.reach;
+        });
     if (!within_range) {
       continue;
     }
 
     let is_known = //
-        any_of(sensors_on_row,
-               [&](Sensor const& sensor)
-                   AOC_FORCE_INLINE { return sensor.pos.x == column; }) ||
-        any_of(beacons_on_row, [&](Beacon const& beacon) AOC_FORCE_INLINE {
-          return beacon.x == column;
-        });
+        aoc::ranges::any_of(sensors_on_row,
+                            [&](Sensor const& sensor) AOC_FORCE_INLINE {
+                              return sensor.pos.x == column;
+                            }) ||
+        aoc::ranges::any_of(beacons_on_row,
+                            [&](Beacon const& beacon) AOC_FORCE_INLINE {
+                              return beacon.x == column;
+                            });
     if (is_known) {
       continue;
     }

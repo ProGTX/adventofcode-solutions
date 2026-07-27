@@ -33,7 +33,10 @@ fn solve_case(grid_t current_lights) -> u32 {
   for (let _ : stdv::iota(0u, STEPS)) {
     // TODO Trying to use std::transform instead of this for loop doesn't work,
     // likely an issue with grid iterators somewhere.
-    for (let[index, light] : current_lights | stdv::enumerate) {
+    // Plain index loop rather than enumerate, and a plain neighbor count
+    // rather than stdr::count: this body runs for every cell of every step
+    for (auto index = 0uz; index < current_lights.size(); ++index) {
+      let light = current_lights.at_index(index);
       let pos = current_lights.position(index);
       if constexpr (STUCK_CORNERS) {
         if (stdr::contains(corners, pos)) {
@@ -41,8 +44,8 @@ fn solve_case(grid_t current_lights) -> u32 {
         }
       }
       let next = [&] {
-        let num_on_neighbors =
-            stdr::count(current_lights.all_neighbor_values(pos), light_on);
+        let num_on_neighbors = aoc::ranges::count(
+            current_lights.all_neighbor_values(pos), light_on);
         if (light == light_on) {
           return ((num_on_neighbors == 2) || (num_on_neighbors == 3))
                      ? light_on

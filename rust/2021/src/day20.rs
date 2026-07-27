@@ -36,15 +36,17 @@ fn apply(algorithm: &Algorithm, input_image: &Image) -> Image {
     );
     for y in 1..(input_image.num_rows - 1) as isize {
         for x in 1..(input_image.num_columns - 1) as isize {
-            let mut bits: [u8; 9] = [0; 9];
+            // The index is shifted together directly rather than collected
+            // into an array and run through binary_to_number.
+            // Visiting order is top-left first, which ends up as the high bit,
+            // matching what the reversed fold did.
+            let mut alg_index = 0usize;
             for dy in -1..=1 as isize {
                 for dx in -1..=1 as isize {
-                    let bit_index = (dy + 1) * 3 + dx + 1;
                     let pixel = input_image.get((y + dy) as usize, (x + dx) as usize);
-                    bits[bit_index as usize] = *pixel as u8;
+                    alg_index = (alg_index << 1) | (*pixel as usize);
                 }
             }
-            let alg_index = aoc::math::binary_to_number::<usize>(&bits);
             output_image.modify(
                 algorithm[alg_index],
                 y as usize + PADDING,

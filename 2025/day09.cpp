@@ -46,7 +46,9 @@ fn point_inside_polygon(Polygon const& polygon, Point const& point) -> bool {
   let vertex_count = polygon.size();
   auto inside = false;
   auto prev_idx = vertex_count - 1;
-  for (auto curr_idx : Range{0uz, vertex_count}) {
+  // Plain index loops rather than Range: these two are the innermost loops of
+  // part 2, run once per polygon vertex per candidate rectangle
+  for (auto curr_idx = 0uz; curr_idx < vertex_count; ++curr_idx) {
     let& curr_vertex = polygon[curr_idx];
     let& prev_vertex = polygon[prev_idx];
     if (point_on_segment(point, Segment{curr_vertex, prev_vertex})) {
@@ -101,7 +103,7 @@ fn edges_intersect(Polygon const& polygon, Rectangle const& rectangle) -> bool {
   };
   let edge_count = polygon.size();
   auto prev_idx = edge_count - 1;
-  for (auto curr_idx : Range{0uz, edge_count}) {
+  for (auto curr_idx = 0uz; curr_idx < edge_count; ++curr_idx) {
     let poly_segment = Segment{polygon[curr_idx], polygon[prev_idx]};
     for (let& rect_segment : rect_edges) {
       if (segments_cross(poly_segment, rect_segment)) {
@@ -113,19 +115,29 @@ fn edges_intersect(Polygon const& polygon, Rectangle const& rectangle) -> bool {
   return false;
 }
 
+// A pair of corners with its area worked out up front
+struct SizedPair {
+  u64 area;
+  Point p1;
+  Point p2;
+};
+
 fn solve_case2(Polygon const& polygon) -> u64 {
-  auto pairs = stdv::cartesian_product(polygon, polygon) |
-               stdv::filter([](auto&& pair) {
-                 let & [ p1, p2 ] = pair;
-                 return p1 < p2;
-               }) |
-               aoc::collect_vec<std::pair<Point, Point>>();
-  stdr::sort(pairs, [](auto&& a, auto&& b) {
-    let & [ a1, a2 ] = a;
-    let & [ b1, b2 ] = b;
-    return area(a1, a2) > area(b1, b2);
+  // The area is stored alongside each pair rather than recomputed inside the
+  // comparator, which called it twice for every one of the ~2M comparisons.
+  // Plain loops rather than cartesian_product, for the usual Debug reasons.
+  auto pairs = Vec<SizedPair>{};
+  for (let& p1 : polygon) {
+    for (let& p2 : polygon) {
+      if (p1 < p2) {
+        pairs.emplace_back(area(p1, p2), p1, p2);
+      }
+    }
+  }
+  stdr::sort(pairs, [](SizedPair const& a, SizedPair const& b) {
+    return a.area > b.area;
   });
-  for (let& [ p1, p2 ] : pairs) {
+  for (let& [ pair_area, p1, p2 ] : pairs) {
     let xmin = std::min(p1.x, p2.x);
     let xmax = std::max(p1.x, p2.x);
     let ymin = std::min(p1.y, p2.y);
@@ -138,7 +150,7 @@ fn solve_case2(Polygon const& polygon) -> u64 {
     };
     if (corners_inside(polygon, corners) &&
         !edges_intersect(polygon, corners)) {
-      return area(p1, p2);
+      return pair_area;
     }
   }
   return 0;

@@ -17,18 +17,23 @@ fn solve_case<const STEPS: u32, const STUCK_CORNERS: bool>(original_lights: &Gri
     }
     let mut next_lights = current_lights.clone();
     for _ in 0..STEPS {
-        for (index, light) in current_lights.data.iter().enumerate() {
+        // Plain index loop rather than enumerate, and a plain neighbor count
+        // rather than filter + count: this body runs for every cell of every
+        // step, and the iterator machinery dominates it in a Debug build
+        for index in 0..current_lights.data.len() {
+            let light = &current_lights.data[index];
             let pos = current_lights.position(index);
             if (STUCK_CORNERS) {
                 if (corners.contains(&pos.into())) {
                     continue;
                 }
             }
-            let num_on_neighbors = current_lights
-                .all_neighbor_values(pos)
-                .into_iter()
-                .filter(|light| *light == LIGHT_ON)
-                .count();
+            let mut num_on_neighbors = 0usize;
+            for neighbor in current_lights.all_neighbor_values(pos) {
+                if neighbor == LIGHT_ON {
+                    num_on_neighbors += 1;
+                }
+            }
             let next = if (*light == LIGHT_ON) {
                 if ((num_on_neighbors == 2) || (num_on_neighbors == 3)) {
                     LIGHT_ON

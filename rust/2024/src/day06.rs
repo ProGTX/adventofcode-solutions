@@ -57,18 +57,17 @@ fn step(
     deltas: &[isize; NUM_DIRECTIONS],
     direction: &mut usize,
 ) -> Option<isize> {
-    let candidates = [
-        *direction,
-        (*direction + 1) % NUM_DIRECTIONS,
-        (*direction + 2) % NUM_DIRECTIONS,
-    ];
-    let chosen = candidates
-        .iter()
-        .find(|&&d| lab_map.data[(index + deltas[d]) as usize] != OBSTACLE)
-        .copied()
-        .unwrap_or(*candidates.last().unwrap());
-    *direction = chosen;
-    let new_index = index + deltas[chosen];
+    // Two turns at most: if the third candidate is blocked too it is still
+    // the one taken, which is what the unwrap_or fallback did.
+    // A plain loop rather than find over a built-up array, because this
+    // runs on every step of every one of the ~17k simulated walks
+    for _ in 0..2 {
+        if lab_map.data[(index + deltas[*direction]) as usize] != OBSTACLE {
+            break;
+        }
+        *direction = (*direction + 1) % NUM_DIRECTIONS;
+    }
+    let new_index = index + deltas[*direction];
     if lab_map.data[new_index as usize] == EDGE {
         None
     } else {

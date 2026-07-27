@@ -65,11 +65,15 @@ fn num_possible_designs<true>(str design, std::span<const String> patterns)
   let num_designs = aoc::dfs_uniform<void, i64>(
       design_str, [](String const& remaining) { return remaining.empty(); },
       [&](String const& remaining) {
-        return patterns |
-               stdv::filter(
-                   [&](String const& p) { return remaining.starts_with(p); }) |
-               stdv::transform(
-                   [&](String const& p) { return remaining.substr(p.size()); });
+        // Built with a plain loop, like the part 1 neighbors above:
+        // this runs over every pattern for every memoized state
+        auto next = Vec<String>{};
+        for (String const& pattern : patterns) {
+          if (remaining.starts_with(pattern)) {
+            next.push_back(remaining.substr(pattern.size()));
+          }
+        }
+        return next;
       });
   return num_designs.at(design_str);
 }

@@ -13,6 +13,7 @@
 #include <exception>
 #include <fstream>
 #include <functional>
+#include <memory>
 #include <ranges>
 #include <sstream>
 #include <string>
@@ -139,6 +140,38 @@ constexpr auto read_lines_from_file(std::ifstream& file, Args...) {
   return std::views::istream<full_line<trimmer_t, keep_empty_lines>>(file);
 }
 
+/// A line range that owns the file it reads from.
+///
+/// The stream has to outlive the istream_view built over it, so it lives on
+/// the heap and keeps its address when this view is moved or returned.
+/// Owning it here rather than in a shared global means two line ranges can be
+/// open at once, and that separate threads can each read their own file.
+template <class Line>
+class file_lines_view
+    : public std::ranges::view_interface<file_lines_view<Line>> {
+ public:
+  explicit file_lines_view(const std::string& filename)
+      : m_file{std::make_unique<std::ifstream>(filename)},
+        m_view{std::views::istream<Line>(*m_file)} {}
+
+  constexpr auto begin() { return m_view.begin(); }
+  constexpr auto end() { return m_view.end(); }
+
+ private:
+  std::unique_ptr<std::ifstream> m_file;
+  std::ranges::basic_istream_view<Line, char> m_view;
+};
+
+template <class... Args>
+constexpr auto read_lines_owned(const std::string& filename, Args...) {
+  constexpr bool should_keep_spaces = contains_uncvref<keep_spaces, Args...>;
+  using trimmer_t = trimmer_base<std::string, should_keep_spaces>;
+
+  constexpr bool keep_empty_lines = contains_uncvref<keep_empty, Args...>;
+
+  return file_lines_view<full_line<trimmer_t, keep_empty_lines>>{filename};
+}
+
 } // namespace detail
 
 // https://stackoverflow.com/a/2602258
@@ -151,23 +184,21 @@ std::string read_file(const std::string& filename) {
 
 namespace views {
 
+/// Stateless: the filename overload hands back a range that owns its stream,
+/// rather than every caller sharing one file handle held here
 struct __read_lines {
  public:
   template <class... Args>
-  constexpr auto operator()(const std::string& filename, Args... args) {
-    m_file = std::ifstream{filename};
-    return detail::read_lines_from_file(m_file, std::forward<Args>(args)...);
+  constexpr auto operator()(const std::string& filename, Args... args) const {
+    return detail::read_lines_owned(filename, std::forward<Args>(args)...);
   }
   template <class... Args>
   constexpr auto operator()(std::ifstream& file, Args... args) const {
     return detail::read_lines_from_file(file, std::forward<Args>(args)...);
   }
-
- private:
-  std::ifstream m_file;
 };
 
-inline __read_lines read_lines{};
+inline constexpr __read_lines read_lines{};
 
 template <class T, class... Args>
 constexpr auto read_numbers(const std::string& filename, Args... args) {

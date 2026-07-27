@@ -11,6 +11,8 @@
 #include <iterator>
 #include <numeric>
 #include <ranges>
+#include <type_traits>
+#include <utility>
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {
@@ -230,6 +232,96 @@ class transform_filter_view
 };
 template <class R, class F>
 transform_filter_view(R&&, F) -> transform_filter_view<std::views::all_t<R>, F>;
+
+/// Eager drop-ins for the std::ranges predicate algorithms.
+///
+/// Same semantics and the same early exits, but written as a plain loop
+/// rather than going through iterators and view adaptors, which is what
+/// dominates their cost in a Debug build where nothing is inlined.
+/// Force-inlined so the loop lands in the caller rather than adding a call
+/// of its own; the caller's predicate still wants AOC_FORCE_INLINE too.
+template <std::ranges::input_range R, class Pred>
+AOC_FORCE_INLINE constexpr bool any_of(R&& range, Pred pred) {
+  for (auto&& elem : range) {
+    if (pred(elem)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+template <std::ranges::input_range R, class Pred>
+AOC_FORCE_INLINE constexpr bool all_of(R&& range, Pred pred) {
+  for (auto&& elem : range) {
+    if (!pred(elem)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template <std::ranges::input_range R, class Pred>
+AOC_FORCE_INLINE constexpr bool none_of(R&& range, Pred pred) {
+  return !ranges::any_of(range, pred);
+}
+
+template <std::ranges::input_range R, class Pred>
+AOC_FORCE_INLINE constexpr std::size_t count_if(R&& range, Pred pred) {
+  auto total = std::size_t{0};
+  for (auto&& elem : range) {
+    if (pred(elem)) {
+      ++total;
+    }
+  }
+  return total;
+}
+
+template <std::ranges::input_range R, class T>
+AOC_FORCE_INLINE constexpr std::size_t count(R&& range, const T& value) {
+  auto total = std::size_t{0};
+  for (auto&& elem : range) {
+    if (elem == value) {
+      ++total;
+    }
+  }
+  return total;
+}
+
+template <std::ranges::input_range R, class T>
+AOC_FORCE_INLINE constexpr bool contains(R&& range, const T& value) {
+  for (auto&& elem : range) {
+    if (elem == value) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/// A counted loop with compile-time bounds: the analogue of Range{Begin, End},
+/// but unrolled by the expansion below so there is no loop, no counter and no
+/// iterator left at runtime. That matters in a Debug build, where the loop
+/// scaffolding of an ordinary range-for is not optimized away.
+///
+/// The callable is handed each value as an integral_constant, so it stays a
+/// constant expression inside the body and can be used for array indices or
+/// template arguments. Begin may be negative, and Begin == End does nothing.
+///
+/// @code
+/// aoc::ranges::static_for<-1, 2>([&](auto dy) { use(dy); }); // -1, 0, 1
+/// @endcode
+template <auto Begin, auto End, class F>
+AOC_FORCE_INLINE constexpr void static_for(F&& f) {
+  using value_type = std::common_type_t<decltype(Begin), decltype(End)>;
+  static_assert(static_cast<value_type>(Begin) <= static_cast<value_type>(End),
+                "static_for needs Begin <= End");
+  [&]<std::size_t... offsets>(std::index_sequence<offsets...>) {
+    (f(std::integral_constant<value_type,
+                              static_cast<value_type>(Begin) +
+                                  static_cast<value_type>(offsets)>{}),
+     ...);
+  }(std::make_index_sequence<static_cast<std::size_t>(
+        static_cast<value_type>(End) - static_cast<value_type>(Begin))>{});
+}
 
 } // namespace ranges
 

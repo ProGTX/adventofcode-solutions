@@ -77,15 +77,16 @@ fn follow_guard(
     // Try to turn right, but might need to do it multiple times, at most 3
     // Stop rotating as soon as a non-obstacle cell is found, which may be
     // the edge -- in which case the walk ends below
-    let candidate_directions =
-        std::array{direction, (direction + 1) % aoc::NUM_FACING,
-                   (direction + 2) % aoc::NUM_FACING};
-    let chosen_it = stdr::find_if(candidate_directions, [&](isize d) {
-      return cells[index + deltas[d]] != obstacle;
-    });
-    direction = (chosen_it != candidate_directions.end())
-                    ? *chosen_it
-                    : candidate_directions.back();
+    // Two turns at most: if the third candidate is blocked too it is still
+    // the one taken, which is what falling off the end of the search did.
+    // A plain loop rather than find_if over a built-up array, because this
+    // runs on every step of every one of the ~17k simulated walks
+    for (auto turn = 0; turn < 2; ++turn) {
+      if (cells[index + deltas[direction]] != obstacle) {
+        break;
+      }
+      direction = (direction + 1) % aoc::NUM_FACING;
+    }
     let new_index = index + deltas[direction];
     if (cells[new_index] == edge) {
       break;

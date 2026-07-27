@@ -27,26 +27,23 @@ struct DistanceEntry {
 
 template <usize NUM_CONNECTIONS>
 fn solve_case(Boxes const& boxes) -> usize {
-  auto distances =
-      stdv::cartesian_product(boxes | stdv::enumerate,
-                              boxes | stdv::enumerate) |
-      stdv::filter([](auto&& ab) {
-        let & [ a, b ] = ab;
-        return std::get<0>(a) < std::get<0>(b);
-      }) |
-      stdv::transform([](auto&& ab) {
-        let & [ a, b ] = ab;
-        let & [ index_p, p ] = a;
-        let & [ index_q, q ] = b;
-        return DistanceEntry{
-            .distance = (static_cast<u64>(aoc::pown(p[0] - q[0], 2)) +
-                         static_cast<u64>(aoc::pown(p[1] - q[1], 2)) +
-                         static_cast<u64>(aoc::pown(p[2] - q[2], 2))),
-            .from = static_cast<usize>(index_p),
-            .to = static_cast<usize>(index_q),
-        };
-      }) |
-      aoc::collect_vec<DistanceEntry>();
+  // Plain loops rather than a filtered cartesian_product of two enumerates.
+  // The filter only kept index_p < index_q, which is what the inner loop
+  // bound gives directly, and this builds the same entries in the same order.
+  auto distances = Vec<DistanceEntry>{};
+  for (auto index_p = 0uz; index_p < boxes.size(); ++index_p) {
+    let& p = boxes[index_p];
+    for (auto index_q = index_p + 1; index_q < boxes.size(); ++index_q) {
+      let& q = boxes[index_q];
+      distances.push_back(DistanceEntry{
+          .distance = (static_cast<u64>(aoc::pown(p[0] - q[0], 2)) +
+                       static_cast<u64>(aoc::pown(p[1] - q[1], 2)) +
+                       static_cast<u64>(aoc::pown(p[2] - q[2], 2))),
+          .from = index_p,
+          .to = index_q,
+      });
+    }
+  }
   stdr::sort(distances, {}, &DistanceEntry::distance);
   // In the beginning each box is its own circuit
   auto circuit_map = Range{0uz, boxes.size()} | aoc::collect_vec<usize>();

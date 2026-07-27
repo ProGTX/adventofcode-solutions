@@ -39,11 +39,15 @@ template <bool KCAL_500>
 fn score_cookie(std::span<const Ingredient> ingredients,
                 std::span<const u32> teaspoon_stack) -> u32 {
   auto result = Ingredient{};
-  for (let[index, teaspoon_u32] : teaspoon_stack | stdv::enumerate) {
+  // Plain index loops rather than enumerate and zip:
+  // this runs for every one of the ~176k teaspoon combinations,
+  // and building the views costs more than the arithmetic in Debug
+  for (auto index = 0uz; index < teaspoon_stack.size(); ++index) {
+    let teaspoon_u32 = teaspoon_stack[index];
     let teaspoon = static_cast<i32>(teaspoon_u32);
-    for (auto&& [res_prop, cookie_prop] :
-         stdv::zip(result.properties, ingredients[index].properties)) {
-      res_prop += cookie_prop * teaspoon;
+    let& properties = ingredients[index].properties;
+    for (auto prop = 0uz; prop < properties.size(); ++prop) {
+      result.properties[prop] += properties[prop] * teaspoon;
     }
     if constexpr (KCAL_500) {
       result.calories += ingredients[index].calories * teaspoon_u32;
@@ -54,11 +58,11 @@ fn score_cookie(std::span<const Ingredient> ingredients,
       return 0;
     }
   }
-  return stdr::fold_left( //
-      result.properties | stdv::transform([](i32& prop) {
-        return static_cast<u32>(std::max(prop, 0));
-      }),
-      1, std::multiplies{});
+  auto score = 1u;
+  for (let prop : result.properties) {
+    score *= static_cast<u32>(std::max(prop, 0));
+  }
+  return score;
 }
 
 template <bool KCAL_500>

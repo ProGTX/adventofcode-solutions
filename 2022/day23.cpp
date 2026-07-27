@@ -46,9 +46,10 @@ fn simulate(elves_t& elves, int num_rounds) -> int {
       });
 
   let is_empty = [&](point pos, let& directions) {
-    return stdr::all_of(
-        directions | stdv::transform(aoc::get_diff<int>),
-        [&](point diff) { return !elf_simulation.contains(pos + diff); });
+    return aoc::ranges::none_of(
+        directions, [&](auto direction) AOC_FORCE_INLINE {
+          return elf_simulation.contains(pos + aoc::get_diff<int>(direction));
+        });
   };
 
   let propose = [&](auto& entry) {

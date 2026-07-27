@@ -3,12 +3,14 @@ fn look_and_say(input: &Vec<u32>, output: &mut Vec<u32>) {
     let mut index = 0;
     while index < input.len() {
         let current = input[index];
+        // Counted with a plain loop rather than skip + take_while:
+        // every digit of the sequence passes through here,
+        // and the iterator machinery costs far more than the comparison
+        // in a Debug build
         let mut count = 0usize;
-        input
-            .iter()
-            .skip(index)
-            .take_while(|&&x| x == current)
-            .for_each(|_| count += 1);
+        while ((index + count) < input.len()) && (input[index + count] == current) {
+            count += 1;
+        }
         output.push(count as u32);
         output.push(current);
         index += count;

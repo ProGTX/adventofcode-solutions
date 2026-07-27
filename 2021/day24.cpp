@@ -152,29 +152,25 @@ void execute_batch(RegisterBatch& regs, std::span<const Instr> instructions,
         dst.fill(input);
         break;
       case Op::Add:
-        for (let i : Range{0uz, BATCH}) {
-          dst[i] += src[i];
-        }
+        aoc::ranges::static_for<0uz, BATCH>(
+            [&](auto i) AOC_FORCE_INLINE { dst[i] += src[i]; });
         break;
       case Op::Mul:
-        for (let i : Range{0uz, BATCH}) {
-          dst[i] *= src[i];
-        }
+        aoc::ranges::static_for<0uz, BATCH>(
+            [&](auto i) AOC_FORCE_INLINE { dst[i] *= src[i]; });
         break;
       case Op::Div:
-        for (let i : Range{0uz, BATCH}) {
-          dst[i] /= src[i];
-        }
+        aoc::ranges::static_for<0uz, BATCH>(
+            [&](auto i) AOC_FORCE_INLINE { dst[i] /= src[i]; });
         break;
       case Op::Mod:
-        for (let i : Range{0uz, BATCH}) {
-          dst[i] %= src[i];
-        }
+        aoc::ranges::static_for<0uz, BATCH>(
+            [&](auto i) AOC_FORCE_INLINE { dst[i] %= src[i]; });
         break;
       case Op::Eql:
-        for (let i : Range{0uz, BATCH}) {
+        aoc::ranges::static_for<0uz, BATCH>([&](auto i) AOC_FORCE_INLINE {
           dst[i] = static_cast<i64>(dst[i] == src[i]);
-        }
+        });
         break;
     }
   }
@@ -232,16 +228,16 @@ fn valid_z_inputs(std::span<const Instr> block, ZSet const& valid_output)
         for (i64 z_base = z_start; z_base < z_end;
              z_base += static_cast<i64>(BATCH)) {
           auto regs = RegisterBatch{};
-          for (let i : Range{0uz, BATCH}) {
+          aoc::ranges::static_for<0uz, BATCH>([&](auto i) AOC_FORCE_INLINE {
             regs[z_id][i] = z_base + static_cast<i64>(i);
-          }
+          });
           execute_batch(regs, block, input);
-          for (let i : Range{0uz, BATCH}) {
+          aoc::ranges::static_for<0uz, BATCH>([&](auto i) AOC_FORCE_INLINE {
             let z = z_base + static_cast<i64>(i);
             if ((z < Z_LIMIT) && valid_output.contains(regs[z_id][i])) {
               valid_z_input.insert(z);
             }
-          }
+          });
         }
       }
       return valid_z_input;

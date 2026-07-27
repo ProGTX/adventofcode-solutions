@@ -133,8 +133,9 @@ fn find_most_pressure(std::span<const u8> flow_rates,
                       SearchState state, //
                       u32 total_flow) -> u32 {
   auto most_pressure = total_flow * state.time_left;
-  // stdv::enumerate is pretty slow in Debug, use indices_of
-  for (let neighbor_id : aoc::views::indices_of(flow_rates)) {
+  // Both stdv::enumerate and indices_of iterate through a view,
+  // and even that shows up in Debug on a loop this hot
+  for (usize neighbor_id = 0; neighbor_id < flow_rates.size(); ++neighbor_id) {
     let flow = flow_rates[neighbor_id];
     // Skip AA at index 0
     let real_id = neighbor_id + 1;

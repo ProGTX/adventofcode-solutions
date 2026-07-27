@@ -43,14 +43,41 @@ class static_vector {
   // 5.2, copy/move construction:
   constexpr static_vector() noexcept = default;
 
+  // Copying and moving only touch the elements that are actually there.
+  // The defaulted versions would run over the whole std::array instead,
+  // so a static_vector<T, 39> holding three elements would copy 39.
   constexpr static_vector(const static_vector& other) noexcept(
-      std::is_nothrow_copy_constructible_v<value_type>) = default;
+      std::is_nothrow_copy_constructible_v<value_type>)
+      : m_size{other.m_size} {
+    std::ranges::copy_n(std::begin(other.m_data),
+                        static_cast<difference_type>(m_size),
+                        std::begin(m_data));
+  }
   constexpr static_vector(static_vector&& other) noexcept(
-      std::is_nothrow_move_constructible_v<value_type>) = default;
+      std::is_nothrow_move_constructible_v<value_type>)
+      : m_size{other.m_size} {
+    std::ranges::move(
+        std::begin(other.m_data),
+        std::begin(other.m_data) + static_cast<difference_type>(m_size),
+        std::begin(m_data));
+  }
   constexpr static_vector& operator=(const static_vector& other) noexcept(
-      std::is_nothrow_copy_assignable_v<value_type>) = default;
+      std::is_nothrow_copy_assignable_v<value_type>) {
+    m_size = other.m_size;
+    std::ranges::copy_n(std::begin(other.m_data),
+                        static_cast<difference_type>(m_size),
+                        std::begin(m_data));
+    return *this;
+  }
   constexpr static_vector& operator=(static_vector&& other) noexcept(
-      std::is_nothrow_move_assignable_v<value_type>) = default;
+      std::is_nothrow_move_assignable_v<value_type>) {
+    m_size = other.m_size;
+    std::ranges::move(
+        std::begin(other.m_data),
+        std::begin(other.m_data) + static_cast<difference_type>(m_size),
+        std::begin(m_data));
+    return *this;
+  }
 
   constexpr explicit static_vector(size_type n) : m_size{n} {
     this->assert_size(n);
@@ -147,10 +174,17 @@ class static_vector {
   constexpr const T* data() const noexcept { return m_data.data(); }
 
   // Add elements
+  // Constructs into the slot rather than building a temporary and pushing it,
+  // which cost an extra move plus a second bounds assert.
+  // Parentheses rather than braces so that narrowing conversions are allowed,
+  // matching what std::vector::emplace_back does.
   template <class... Args>
   constexpr reference emplace_back(Args&&... args) {
-    this->push_back(value_type{std::forward<Args>(args)...});
-    return this->back();
+    AOC_ASSERT(m_size < N, "Exceeded capacity on emplace_back");
+    auto& slot = m_data[m_size];
+    slot = value_type(std::forward<Args>(args)...);
+    ++m_size;
+    return slot;
   }
   constexpr void push_back(const value_type& x) {
     AOC_ASSERT(m_size < N, "Exceeded capacity on push_back");

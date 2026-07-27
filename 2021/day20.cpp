@@ -48,16 +48,18 @@ fn apply(Algorithm const& algorithm, Image const& input_image) -> Image {
   let num_cols = static_cast<isize>(input_image.num_columns());
   for (isize y = 1; y < num_rows - 1; ++y) {
     for (isize x = 1; x < num_cols - 1; ++x) {
-      auto bits = std::array<u8, 9>{};
+      // The index is shifted together directly rather than collected into an
+      // array and run through a reversed binary_to_number.
+      // Visiting order is top-left first, which ends up as the high bit,
+      // matching what the reversed range did.
+      auto alg_index = 0uz;
       for (isize dy = -1; dy <= 1; ++dy) {
         for (isize dx = -1; dx <= 1; ++dx) {
-          let bit_index = (dy + 1) * 3 + dx + 1;
           let pixel = input_image.at(static_cast<usize>(y + dy),
                                      static_cast<usize>(x + dx));
-          bits[bit_index] = pixel;
+          alg_index = (alg_index << 1) | static_cast<usize>(pixel == 1);
         }
       }
-      let alg_index = aoc::binary_to_number<u8{1}, usize>(bits | stdv::reverse);
       output_image.modify(algorithm[alg_index], static_cast<usize>(y) + PADDING,
                           static_cast<usize>(x) + PADDING);
     }

@@ -12,10 +12,14 @@ void look_and_say(Vec<u32> const& input, Vec<u32>& output) {
   auto index = 0u;
   while (index < input.size()) {
     let current = input[index];
-    let count = static_cast<u32>(
-        stdr::distance(input |
-                       stdv::drop(index) |
-                       stdv::take_while(aoc::equal_to_value{current})));
+    // Counted with a plain loop rather than drop + take_while:
+    // every digit of the sequence passes through here,
+    // and the view machinery costs far more than the comparison in Debug
+    auto count = 0u;
+    while (((index + count) < input.size()) &&
+           (input[index + count] == current)) {
+      ++count;
+    }
     output.push_back(count);
     output.push_back(current);
     index += count;

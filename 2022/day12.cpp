@@ -28,13 +28,17 @@ fn shortest_path(aoc::char_grid<> const& heightmap, point start, point end)
     -> Option<u32> {
   let distances =
       aoc::shortest_distances_dijkstra(start, end, [&](point current) {
-        return heightmap.basic_neighbor_positions(current) |
-               stdv::filter([&, current_height = heightmap.at(
-                                    current.y, current.x)](point pos) {
-                 let neighbor = heightmap.at(pos.y, pos.x);
-                 return neighbor <= (current_height + 1);
-               }) |
-               aoc::dijkstra_uniform_neighbors_view();
+        // Filled by a plain loop rather than returned as a filter view:
+        // the search walks this for every node it pops
+        auto neighbors =
+            aoc::static_vector<aoc::dijkstra_neighbor_t<point>, 4>{};
+        let current_height = heightmap.at(current.y, current.x);
+        for (let pos : heightmap.basic_neighbor_positions(current)) {
+          if (heightmap.at(pos.y, pos.x) <= (current_height + 1)) {
+            neighbors.emplace_back(pos, 1);
+          }
+        }
+        return neighbors;
       });
   let it = distances.find(end);
   if (it == std::end(distances)) {
