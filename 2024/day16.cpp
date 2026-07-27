@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#include <limits>
 #include <optional>
 #include <print>
 #include <ranges>
@@ -134,9 +135,25 @@ constexpr int tiles_on_best_paths(const maze_t& maze, point start_pos,
   predecessors_t predecessors;
   auto distances = get_distances(maze, start_pos, std::nullopt, &predecessors);
 
+  // Only arrows that actually reach the end with the best score
+  // are on a best path
+  // Arriving facing another way can cost a whole extra turn
+  // and tracing that back would pull in tiles
+  // that are only ever on a suboptimal route
+  auto best = std::numeric_limits<int>::max();
+  for (const auto end_arrow : get_end_arrows(end_pos)) {
+    const auto it = distances.find(end_arrow);
+    if (it != std::end(distances)) {
+      best = std::min(best, it->second);
+    }
+  }
+
   aoc::flat_set<point> tiles;
   for (const auto end_arrow : get_end_arrows(end_pos)) {
-    add_tiles(maze, distances, predecessors, tiles, end_arrow);
+    const auto it = distances.find(end_arrow);
+    if ((it != std::end(distances)) && (it->second == best)) {
+      add_tiles(maze, distances, predecessors, tiles, end_arrow);
+    }
   }
   return tiles.size();
 }
@@ -167,9 +184,8 @@ int main() {
   AOC_EXPECT_RESULT(94436, solve_case<false>("day16.input"));
 
   std::println("Part 2");
-  aoc::return_incomplete();
   AOC_EXPECT_RESULT(45, solve_case<true>("day16.example"));
-  // AOC_EXPECT_RESULT(64, solve_case<true>("day16.example2"));
+  AOC_EXPECT_RESULT(64, solve_case<true>("day16.example2"));
   AOC_EXPECT_RESULT(481, solve_case<true>("day16.input"));
 
   AOC_RETURN_CHECK_RESULT();
