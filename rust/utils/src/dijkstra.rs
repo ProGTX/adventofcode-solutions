@@ -25,12 +25,19 @@ impl<T: Ord> PartialOrd for DijkstraState<T> {
     }
 }
 
-fn shortest_distances_astar_impl<T, GetEndF, GetNeighborsF, NeighborIter, HeuristicF>(
+fn shortest_distances_astar_impl<
+    const RECORD_PREDECESSORS: bool,
+    T,
+    GetEndF,
+    GetNeighborsF,
+    NeighborIter,
+    HeuristicF,
+>(
     start: &T,
     is_end: GetEndF,
     get_neighbors: GetNeighborsF,
     heuristic: HeuristicF,
-    mut predecessors: Option<&mut FxHashMap<T, T>>,
+    predecessors: &mut FxHashMap<T, T>,
 ) -> FxHashMap<T, u32>
 where
     T: Clone + Ord + Hash,
@@ -56,8 +63,8 @@ where
             match distances.entry(neighbor.data.clone()) {
                 Entry::Vacant(e) => {
                     e.insert(next_g);
-                    if let Some(preds) = predecessors.as_deref_mut() {
-                        preds.insert(neighbor.data.clone(), data.clone());
+                    if (RECORD_PREDECESSORS) {
+                        predecessors.insert(neighbor.data.clone(), data.clone());
                     }
                     let next_f = next_g + heuristic(&neighbor.data);
                     unvisited.push((Reverse(next_f), next_g, neighbor.data));
@@ -65,8 +72,8 @@ where
                 Entry::Occupied(mut e) => {
                     if (next_g < *e.get()) {
                         *e.get_mut() = next_g;
-                        if let Some(preds) = predecessors.as_deref_mut() {
-                            preds.insert(neighbor.data.clone(), data.clone());
+                        if (RECORD_PREDECESSORS) {
+                            predecessors.insert(neighbor.data.clone(), data.clone());
                         }
                         let next_f = next_g + heuristic(&neighbor.data);
                         unvisited.push((Reverse(next_f), next_g, neighbor.data));
@@ -91,7 +98,15 @@ where
     GetNeighborsF: Fn(&T) -> NeighborIter,
     HeuristicF: Fn(&T) -> u32,
 {
-    shortest_distances_astar_impl(start, is_end, get_neighbors, heuristic, None)
+    // Never written to, since predecessors are not recorded
+    let mut unused_predecessors = FxHashMap::default();
+    shortest_distances_astar_impl::<false, _, _, _, _, _>(
+        start,
+        is_end,
+        get_neighbors,
+        heuristic,
+        &mut unused_predecessors,
+    )
 }
 
 /// `shortest_distances_astar`,
@@ -118,7 +133,13 @@ where
     GetNeighborsF: Fn(&T) -> NeighborIter,
     HeuristicF: Fn(&T) -> u32,
 {
-    shortest_distances_astar_impl(start, is_end, get_neighbors, heuristic, Some(predecessors))
+    shortest_distances_astar_impl::<true, _, _, _, _, _>(
+        start,
+        is_end,
+        get_neighbors,
+        heuristic,
+        predecessors,
+    )
 }
 
 /// Reconstructs the path leading to `end`, in end-to-start order.
