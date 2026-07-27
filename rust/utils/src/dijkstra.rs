@@ -25,11 +25,12 @@ impl<T: Ord> PartialOrd for DijkstraState<T> {
     }
 }
 
-pub fn shortest_distances_astar<T, GetEndF, GetNeighborsF, NeighborIter, HeuristicF>(
+fn shortest_distances_astar_impl<T, GetEndF, GetNeighborsF, NeighborIter, HeuristicF>(
     start: &T,
     is_end: GetEndF,
     get_neighbors: GetNeighborsF,
     heuristic: HeuristicF,
+    mut predecessors: Option<&mut FxHashMap<T, T>>,
 ) -> FxHashMap<T, u32>
 where
     T: Clone + Ord + Hash,
@@ -55,12 +56,18 @@ where
             match distances.entry(neighbor.data.clone()) {
                 Entry::Vacant(e) => {
                     e.insert(next_g);
+                    if let Some(preds) = predecessors.as_deref_mut() {
+                        preds.insert(neighbor.data.clone(), data.clone());
+                    }
                     let next_f = next_g + heuristic(&neighbor.data);
                     unvisited.push((Reverse(next_f), next_g, neighbor.data));
                 }
                 Entry::Occupied(mut e) => {
                     if (next_g < *e.get()) {
                         *e.get_mut() = next_g;
+                        if let Some(preds) = predecessors.as_deref_mut() {
+                            preds.insert(neighbor.data.clone(), data.clone());
+                        }
                         let next_f = next_g + heuristic(&neighbor.data);
                         unvisited.push((Reverse(next_f), next_g, neighbor.data));
                     }
@@ -69,6 +76,62 @@ where
         }
     }
     return distances;
+}
+
+pub fn shortest_distances_astar<T, GetEndF, GetNeighborsF, NeighborIter, HeuristicF>(
+    start: &T,
+    is_end: GetEndF,
+    get_neighbors: GetNeighborsF,
+    heuristic: HeuristicF,
+) -> FxHashMap<T, u32>
+where
+    T: Clone + Ord + Hash,
+    GetEndF: Fn(&T) -> bool,
+    NeighborIter: IntoIterator<Item = DijkstraState<T>>,
+    GetNeighborsF: Fn(&T) -> NeighborIter,
+    HeuristicF: Fn(&T) -> u32,
+{
+    shortest_distances_astar_impl(start, is_end, get_neighbors, heuristic, None)
+}
+
+/// `shortest_distances_astar`,
+/// additionally recording each node's predecessor
+/// on its shortest path from `start`.
+/// Reconstruct a path with `get_path`.
+pub fn shortest_distances_astar_with_predecessors<
+    T,
+    GetEndF,
+    GetNeighborsF,
+    NeighborIter,
+    HeuristicF,
+>(
+    start: &T,
+    is_end: GetEndF,
+    get_neighbors: GetNeighborsF,
+    heuristic: HeuristicF,
+    predecessors: &mut FxHashMap<T, T>,
+) -> FxHashMap<T, u32>
+where
+    T: Clone + Ord + Hash,
+    GetEndF: Fn(&T) -> bool,
+    NeighborIter: IntoIterator<Item = DijkstraState<T>>,
+    GetNeighborsF: Fn(&T) -> NeighborIter,
+    HeuristicF: Fn(&T) -> u32,
+{
+    shortest_distances_astar_impl(start, is_end, get_neighbors, heuristic, Some(predecessors))
+}
+
+/// Reconstructs the path leading to `end`, in end-to-start order.
+/// The node `start` was called with is not included,
+/// since it has no entry in `predecessors`.
+pub fn get_path<T: Clone + Eq + Hash>(predecessors: &FxHashMap<T, T>, end: &T) -> Vec<T> {
+    let mut path = Vec::new();
+    let mut current = predecessors.get_key_value(end);
+    while let Some((node, prev)) = current {
+        path.push(node.clone());
+        current = predecessors.get_key_value(prev);
+    }
+    path
 }
 
 pub fn shortest_distance_bidirectional_astar<
@@ -236,6 +299,25 @@ where
     GetNeighborsF: Fn(&T) -> NeighborIter,
 {
     shortest_distances_astar(start, is_end, get_neighbors, |_| 0)
+}
+
+/// `shortest_distances`,
+/// additionally recording each node's predecessor
+/// on its shortest path from `start`.
+/// Reconstruct a path with `get_path`.
+pub fn shortest_distances_with_predecessors<T, GetEndF, GetNeighborsF, NeighborIter>(
+    start: &T,
+    is_end: GetEndF,
+    get_neighbors: GetNeighborsF,
+    predecessors: &mut FxHashMap<T, T>,
+) -> FxHashMap<T, u32>
+where
+    T: Clone + Ord + Hash,
+    GetEndF: Fn(&T) -> bool,
+    NeighborIter: IntoIterator<Item = DijkstraState<T>>,
+    GetNeighborsF: Fn(&T) -> NeighborIter,
+{
+    shortest_distances_astar_with_predecessors(start, is_end, get_neighbors, |_| 0, predecessors)
 }
 
 /// Computes the length of the longest path from `start`
