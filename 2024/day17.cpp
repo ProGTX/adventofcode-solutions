@@ -4,6 +4,7 @@
 #include "../common/rust.h"
 
 #include <array>
+#include <limits>
 #include <print>
 #include <ranges>
 #include <span>
@@ -12,9 +13,10 @@ constexpr let max_3bit_end = (1 << 3);
 constexpr let max_3bit_mask = max_3bit_end - 1;
 constexpr let program_prefix = str{"Program: "};
 
-using registers_t = std::array<i32, 3>;
-using program_t = Vec<i32>;
+using registers_t = std::array<i64, 3>;
+using program_t = aoc::static_vector<u8, 16>;
 using results_t = program_t;
+using run_output_t = std::pair<results_t, registers_t>;
 
 enum opcodes_t {
   adv = 0,
@@ -45,18 +47,19 @@ auto parse(String const& filename) -> Input {
     } else {
       let register_line = str{line}.substr(program_prefix.size());
       let index = static_cast<int>(register_line[0] - 'A');
-      registers[index] = aoc::to_number<i32>(register_line.substr(3));
+      registers[index] = aoc::to_number<i64>(register_line.substr(3));
     }
   }
 
   return {std::move(program), registers};
 }
 
-fn run_program(std::span<const i32> program, registers_t registers) {
+fn run_program(std::span<const u8> program, registers_t registers)
+    -> run_output_t {
   int instruction_ptr = 0;
   auto results = results_t{};
 
-  let combo = [&](i32 value) {
+  let combo = [&](i64 value) {
     AOC_ASSERT(value < 7, "Invalid combo operand");
     if (value < 4) {
       return value;
@@ -114,7 +117,16 @@ fn run_program(std::span<const i32> program, registers_t registers) {
         AOC_UNREACHABLE("Invalid instruction");
     }
   }
-  return std::pair{results, registers};
+  return {results, registers};
+}
+
+// Just for the static_asserts
+template <size_t N>
+fn run_program(std::array<int, N> program, registers_t registers)
+    -> run_output_t {
+  let program_u8 =
+      program | aoc::views::transform_cast<u8>() | aoc::ranges::to<program_t>();
+  return run_program(program_u8, registers);
 }
 
 static_assert(1 == run_program(std::array{2, 6}, {0, 0, 9}).second[1]);
@@ -133,24 +145,39 @@ static_assert(44354 ==
 fn solve_case1(Input const& input) -> String {
   let[results, new_registers] = run_program(input.program, input.registers);
   return results |
-         stdv::transform([](i32 value) {
+         stdv::transform([](i64 value) {
            return String(1, '0' + static_cast<char>(value));
          }) |
          stdv::join_with(',') |
          aoc::collect_string();
 }
 
+fn solve_case2(Input const& input) -> i64 {
+  for (let A : Range{i64{}, std::numeric_limits<i64>::max()}) {
+    auto registers = input.registers;
+    registers[0] = A;
+    let result = run_program(input.program, registers);
+    if (stdr::equal(result.first, input.program)) {
+      return A;
+    }
+  }
+  AOC_UNREACHABLE("A not found");
+}
+
 int main() {
   std::println("Part 1");
   let example = parse("day17.example");
   AOC_EXPECT_RESULT("4,6,3,5,6,3,5,2,1,0", solve_case1(example));
+  let example2 = parse("day17.example2");
+  AOC_EXPECT_RESULT("5,7,3,0", solve_case1(example2));
   let input = parse("day17.input");
   AOC_EXPECT_RESULT("1,7,6,5,1,0,5,0,7", solve_case1(input));
 
   std::println("Part 2");
+  AOC_EXPECT_RESULT(117440, solve_case2(example2));
   aoc::return_incomplete();
-  // AOC_EXPECT_RESULT(117440, solve_case2(example));
   // AOC_EXPECT_RESULT(1337, solve_case2(input));
+  // AOC_EXPECT_RESULT(1337, solve_case2(example));
 
   AOC_RETURN_CHECK_RESULT();
 }
