@@ -1,6 +1,7 @@
 use aoc::string::NameToId;
 use itertools::Itertools;
 use rustc_hash::FxHashSet;
+use std::thread;
 
 // Every node name is two lowercase letters, so 26*26 ids is enough for any input.
 const MAX_NODES: usize = 26 * 26;
@@ -76,32 +77,65 @@ fn solve_case1((graph, names): &(Graph, Vec<String>)) -> usize {
     triangles.len()
 }
 
-fn solve_case2((graph, names): &(Graph, Vec<String>)) -> String {
-    let mut unique_candidates = FxHashSet::default();
-    for (id, connections) in graph.iter().enumerate() {
-        let degree = connections.len();
-        debug_assert!(degree < u32::BITS as usize, "neighbor mask needs more bits");
-        for mask in 0u32..(1u32 << degree) {
-            // +1 for `id` itself, needs at least 3 to matter (see part 1)
-            if mask.count_ones() as usize + 1 < 3 {
-                continue;
-            }
-            let mut bits = CandidateBits::default();
-            set_bit(&mut bits, id);
-            for (i, &neighbor) in connections.iter().enumerate() {
-                if mask & (1 << i) != 0 {
-                    set_bit(&mut bits, neighbor);
-                }
-            }
-            unique_candidates.insert(bits);
+// All subsets of one node's neighbors, plus the node itself, as candidate bitmasks.
+fn candidates_for_node(id: usize, connections: &[usize], out: &mut FxHashSet<CandidateBits>) {
+    let degree = connections.len();
+    debug_assert!(degree < u32::BITS as usize, "neighbor mask needs more bits");
+    for mask in 0u32..(1u32 << degree) {
+        // +1 for `id` itself, needs at least 3 to matter (see part 1)
+        if mask.count_ones() as usize + 1 < 3 {
+            continue;
         }
+        let mut bits = CandidateBits::default();
+        set_bit(&mut bits, id);
+        for (i, &neighbor) in connections.iter().enumerate() {
+            if mask & (1 << i) != 0 {
+                set_bit(&mut bits, neighbor);
+            }
+        }
+        out.insert(bits);
     }
+}
+
+fn solve_case2((graph, names): &(Graph, Vec<String>)) -> String {
+    const MAX_PARALLELISM: usize = 16;
+    let num_threads = thread::available_parallelism()
+        .map_or(1, |n| n.get())
+        .min(MAX_PARALLELISM);
+    let chunk_size = graph.len().div_ceil(num_threads).max(1);
+
+    // Every node's neighbor-subset generation is independent of every other node's,
+    // so the id range is split across threads, each deduping into its own local set.
+    let local_sets: Vec<FxHashSet<CandidateBits>> = thread::scope(|scope| {
+        graph
+            .chunks(chunk_size)
+            .enumerate()
+            .map(|(chunk_idx, nodes)| {
+                let start_id = chunk_idx * chunk_size;
+                scope.spawn(move || {
+                    let mut local = FxHashSet::default();
+                    for (offset, connections) in nodes.iter().enumerate() {
+                        candidates_for_node(start_id + offset, connections, &mut local);
+                    }
+                    local
+                })
+            })
+            .collect_vec()
+            .into_iter()
+            .map(|handle| handle.join().unwrap())
+            .collect()
+    });
 
     // Bucket by size instead of sorting: candidate sizes only span a small range,
-    // so this is one O(n) pass instead of O(n log n) comparisons
-    // each moving an 88-byte element.
+    // so this is one O(n) pass instead of O(n log n) comparisons each moving an
+    // 88-byte element.
+    // This also skips merging the per-thread sets into one:
+    // the same clique candidate can come out of more than one thread
+    // (once per member, and members can land in different chunks),
+    // but a duplicate bitmask just becomes a harmless repeat in the same bucket,
+    // since `find` below only needs one match and stops at the first.
     let mut by_size = Vec::new();
-    for bits in unique_candidates {
+    for bits in local_sets.into_iter().flatten() {
         let size = popcount(&bits) as usize;
         if by_size.len() <= size {
             by_size.resize_with(size + 1, Vec::new);
