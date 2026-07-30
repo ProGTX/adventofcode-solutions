@@ -14,7 +14,12 @@
 // so 26*26 ids is enough for any input.
 constexpr usize max_nodes = 26 * 26;
 
-using Graph = Vec<Vec<i32>>;
+// The subset mask in candidates_for_node is a u32,
+// so a node can have at most 31 neighbors.
+// Real inputs stay well under it.
+constexpr usize max_degree = 13;
+using Connections = aoc::static_vector<i32, max_degree>;
+using Graph = Vec<Connections>;
 
 struct Input {
   Graph graph;
@@ -30,16 +35,13 @@ struct std::hash<Triangle> : aoc::packed_hash {};
 static_assert(aoc::hashable<Triangle>);
 
 // A clique candidate as a bitmask over node ids instead of a sorted Vec<i32>.
-// Building and hashing one is then a handful of word ops with no heap alloc,
+// Building one is then a handful of word ops with no heap alloc,
 // which matters since solve_case2 does this millions of times.
 constexpr usize candidate_words = (max_nodes + 63) / 64;
 struct CandidateBits {
   std::array<u64, candidate_words> words{};
   constexpr bool operator==(CandidateBits const&) const = default;
 };
-template <>
-struct std::hash<CandidateBits> : aoc::packed_hash {};
-static_assert(aoc::hashable<CandidateBits>);
 
 fn set_bit(CandidateBits& bits, i32 id) {
   bits.words[static_cast<usize>(id) / 64] |=
@@ -95,8 +97,8 @@ fn solve_case1(Input const& input) -> i32 {
       continue;
     }
     let& connections = input.graph[t_id];
-    for (usize i = 0; i < connections.size(); ++i) {
-      for (usize j = i + 1; j < connections.size(); ++j) {
+    for (let i : aoc::views::indices_of(connections)) {
+      for (let j : aoc::views::indices_of(connections)) {
         let a = connections[i];
         let b = connections[j];
         if (!stdr::contains(input.graph[static_cast<usize>(a)], b)) {
@@ -113,10 +115,12 @@ fn solve_case1(Input const& input) -> i32 {
 
 // All subsets of one node's neighbors, plus the node itself,
 // as candidate bitmasks.
-fn candidates_for_node(i32 id, Vec<i32> const& connections,
-                       std::unordered_set<CandidateBits>& out) {
+// Different masks always set a different combination of id-bits,
+// so this never produces the same bitmask twice for a single node:
+// no dedup needed here, just a plain append.
+fn candidates_for_node(i32 id, Connections const& connections,
+                       Vec<CandidateBits>& out) {
   let degree = connections.size();
-  AOC_ASSERT(degree < 32, "neighbor mask needs more bits");
   for (u32 mask = 0; mask < (u32{1} << degree); ++mask) {
     // +1 for `id` itself, needs at least 3 to matter (see part 1)
     if (static_cast<usize>(std::popcount(mask)) + 1 < 3) {
@@ -129,7 +133,7 @@ fn candidates_for_node(i32 id, Vec<i32> const& connections,
         set_bit(bits, connections[i]);
       }
     }
-    out.insert(bits);
+    out.push_back(bits);
   }
 }
 
@@ -141,38 +145,57 @@ fn solve_case2(Input const& input) -> String {
 
   // Every node's neighbor-subset generation is independent of every other
   // node's, so the id range is split across threads,
-  // each deduping into its own local set.
-  auto local_sets = Vec<std::unordered_set<CandidateBits>>(num_threads);
+  // each appending to its own local vector.
+  auto local_candidates = Vec<Vec<CandidateBits>>(num_threads);
   {
     auto threads = Vec<std::jthread>{};
     threads.reserve(num_threads);
-    for (usize t = 0; t < num_threads; ++t) {
+    for (let t : Range{0uz, num_threads}) {
       let start_id = t * chunk_size;
       let end_id = std::min(start_id + chunk_size, input.graph.size());
       threads.emplace_back([&, start_id, end_id, t] {
+        // One upfront reserve for the whole chunk
+        // instead of growing incrementally:
+        // reserve() sizes to exactly what's asked,
+        // so calling it once per node would force a fresh reallocation
+        // and a copy of everything accumulated so far on almost every node.
+        auto chunk_total = usize{0};
+        for (auto id = start_id; id < end_id; ++id) {
+          chunk_total += (usize{1} << input.graph[id].size());
+        }
+        local_candidates[t].reserve(chunk_total);
         for (auto id = start_id; id < end_id; ++id) {
           candidates_for_node(static_cast<i32>(id), input.graph[id],
-                              local_sets[t]);
+                              local_candidates[t]);
         }
       });
     }
   } // all threads join here
 
-  // Bucket by size instead of sorting: candidate sizes only span a small
-  // range, so this is one O(n) pass instead of O(n log n) comparisons each
+  // Bucket by size instead of sorting:
+  // sizes span a small range, so this is O(n) instead of O(n log n) comparisons
   // moving an 88-byte element.
-  // This also skips merging the per-thread sets into one:
-  // the same clique candidate can come out of more than one thread
-  // (once per member, and members can land in different chunks),
-  // but a duplicate bitmask just becomes a harmless repeat in the same
-  // bucket, since the search below only needs one match and stops at the first.
-  auto by_size = Vec<Vec<CandidateBits>>{};
-  for (let& set : local_sets) {
-    for (let& bits : set) {
+  // Duplicates aren't deduped (same clique can come from more than one member)
+  // since a repeat is harmless: the search below just needs one match.
+  // A counting pass sizes each bucket exactly first,
+  // so the fill pass never reallocates partway through 4M+ candidates.
+  auto size_counts = Vec<usize>{};
+  for (let& candidates : local_candidates) {
+    for (let& bits : candidates) {
       let size = static_cast<usize>(popcount(bits));
-      if (by_size.size() <= size) {
-        by_size.resize(size + 1);
+      if (size_counts.size() <= size) {
+        size_counts.resize(size + 1);
       }
+      ++size_counts[size];
+    }
+  }
+  auto by_size = Vec<Vec<CandidateBits>>(size_counts.size());
+  for (let size : Range{0uz, size_counts.size()}) {
+    by_size[size].reserve(size_counts[size]);
+  }
+  for (let& candidates : local_candidates) {
+    for (let& bits : candidates) {
+      let size = static_cast<usize>(popcount(bits));
       by_size[size].push_back(bits);
     }
   }

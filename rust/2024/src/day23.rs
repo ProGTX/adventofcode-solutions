@@ -9,7 +9,7 @@ const MAX_NODES: usize = 26 * 26;
 type Graph = Vec<Vec<usize>>;
 
 // A clique candidate as a bitmask over node ids instead of a sorted Vec<usize>.
-// Building and hashing one is then a handful of word ops with no heap allocation,
+// Building one is then a handful of word ops with no heap allocation,
 // which matters since solve_case2 does this millions of times.
 const WORDS: usize = MAX_NODES.div_ceil(64);
 type CandidateBits = [u64; WORDS];
@@ -78,7 +78,10 @@ fn solve_case1((graph, names): &(Graph, Vec<String>)) -> usize {
 }
 
 // All subsets of one node's neighbors, plus the node itself, as candidate bitmasks.
-fn candidates_for_node(id: usize, connections: &[usize], out: &mut FxHashSet<CandidateBits>) {
+// Different masks always set a different combination of id-bits, so this never
+// produces the same bitmask twice for a single node: no dedup needed here,
+// just a plain append.
+fn candidates_for_node(id: usize, connections: &[usize], out: &mut Vec<CandidateBits>) {
     let degree = connections.len();
     debug_assert!(degree < u32::BITS as usize, "neighbor mask needs more bits");
     for mask in 0u32..(1u32 << degree) {
@@ -93,7 +96,7 @@ fn candidates_for_node(id: usize, connections: &[usize], out: &mut FxHashSet<Can
                 set_bit(&mut bits, neighbor);
             }
         }
-        out.insert(bits);
+        out.push(bits);
     }
 }
 
@@ -105,15 +108,21 @@ fn solve_case2((graph, names): &(Graph, Vec<String>)) -> String {
     let chunk_size = graph.len().div_ceil(num_threads).max(1);
 
     // Every node's neighbor-subset generation is independent of every other node's,
-    // so the id range is split across threads, each deduping into its own local set.
-    let local_sets: Vec<FxHashSet<CandidateBits>> = thread::scope(|scope| {
+    // so the id range is split across threads, each appending to its own local vector.
+    let local_candidates: Vec<Vec<CandidateBits>> = thread::scope(|scope| {
         graph
             .chunks(chunk_size)
             .enumerate()
             .map(|(chunk_idx, nodes)| {
                 let start_id = chunk_idx * chunk_size;
                 scope.spawn(move || {
-                    let mut local = FxHashSet::default();
+                    // One upfront reserve for the whole chunk
+                    // instead of growing incrementally:
+                    // without it, `push` still grows amortized,
+                    // but ends up copying everything accumulated so far on
+                    // several of the reallocations along the way.
+                    let chunk_total: usize = nodes.iter().map(|c| 1usize << c.len()).sum();
+                    let mut local = Vec::with_capacity(chunk_total);
                     for (offset, connections) in nodes.iter().enumerate() {
                         candidates_for_node(start_id + offset, connections, &mut local);
                     }
@@ -126,16 +135,14 @@ fn solve_case2((graph, names): &(Graph, Vec<String>)) -> String {
             .collect()
     });
 
-    // Bucket by size instead of sorting: candidate sizes only span a small range,
-    // so this is one O(n) pass instead of O(n log n) comparisons each moving an
-    // 88-byte element.
-    // This also skips merging the per-thread sets into one:
-    // the same clique candidate can come out of more than one thread
-    // (once per member, and members can land in different chunks),
-    // but a duplicate bitmask just becomes a harmless repeat in the same bucket,
-    // since `find` below only needs one match and stops at the first.
+    // Bucket by size instead of sorting:
+    // sizes span a small range,
+    // so this is O(n) instead of O(n log n) comparisons moving an 88-byte element.
+    // Duplicates aren't deduped
+    // (the same clique can come from more than one member)
+    // since a repeat is harmless: the search below just needs one match.
     let mut by_size = Vec::new();
-    for bits in local_sets.into_iter().flatten() {
+    for bits in local_candidates.into_iter().flatten() {
         let size = popcount(&bits) as usize;
         if by_size.len() <= size {
             by_size.resize_with(size + 1, Vec::new);
