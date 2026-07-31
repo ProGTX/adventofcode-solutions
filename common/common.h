@@ -24,6 +24,7 @@ import aoc;
 #include "combinations.h"
 #include "compiler.h"
 #include "concepts.h"
+#include "dijkstra.h"
 #include "flat.h"
 #include "grid.h"
 #include "math.h"
