@@ -1,4 +1,5 @@
-use aoc::dijkstra::{DijkstraState, longest_distances};
+use aoc::algorithm::critical_distances;
+use aoc::dijkstra::DijkstraState;
 use aoc::grid::{BASIC_NEIGHBOR_DIFFS, Grid, Ipos};
 
 type Island = Grid<char>;
@@ -14,7 +15,7 @@ fn solve_case1(island_map: &Island) -> u32 {
         (island_map.num_rows - 1) as isize,
     );
 
-    let distances = longest_distances(
+    let distances = critical_distances(
         &start,
         |pos| *pos == end,
         |pos| {
