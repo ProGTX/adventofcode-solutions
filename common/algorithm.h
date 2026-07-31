@@ -14,6 +14,7 @@
 #ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
 #include <concepts>
+#include <cstddef>
 #include <deque>
 #include <functional>
 #include <optional>
@@ -72,10 +73,11 @@ constexpr auto flood_fill(State start, NeighborsFn&& get_neighbors) {
 /// analogous to shortest_distances_dijkstra.
 template <class ReturnT = void, class Node, class NeighborsFn>
   requires std::totally_ordered<Node>
-constexpr auto longest_distances(Node start_node, NeighborsFn&& get_neighbors) {
-  return longest_distances<ReturnT>(std::move(start_node),
-                                    constant_value<bool>{},
-                                    std::forward<NeighborsFn>(get_neighbors));
+constexpr auto critical_distances(Node start_node,
+                                  NeighborsFn&& get_neighbors) {
+  return critical_distances<ReturnT>(std::move(start_node),
+                                     constant_value<bool>{},
+                                     std::forward<NeighborsFn>(get_neighbors));
 }
 
 template <class ReturnT = void, class Node, class EndReachedFn,
@@ -83,8 +85,8 @@ template <class ReturnT = void, class Node, class EndReachedFn,
   requires std::totally_ordered<Node> && requires(Node node) {
     { std::declval<EndReachedFn>()(node) } -> std::convertible_to<bool>;
   }
-constexpr auto longest_distances(Node start_node, EndReachedFn&& end_reached,
-                                 NeighborsFn&& get_neighbors) {
+constexpr auto critical_distances(Node start_node, EndReachedFn&& end_reached,
+                                  NeighborsFn&& get_neighbors) {
   using distances_t = std::conditional_t<std::is_void_v<ReturnT>,
                                          default_map<Node, int>, ReturnT>;
 
@@ -147,6 +149,52 @@ constexpr auto longest_distances(Node start_node, EndReachedFn&& end_reached,
   }
 
   return distances;
+}
+
+/// Longest simple path from `start` in a weighted graph
+/// whose nodes are indexed 0..num_nodes.
+///
+/// get_neighbors expands a node into its successors,
+/// each paired with an edge weight (dijkstra_neighbor_t::distance).
+/// end_reached takes a node and how many nodes the path visits
+/// including that one, so both "this is the exit"
+/// and "every node has been visited" are expressible.
+/// The search stops there, and returns the heaviest such path,
+/// or nullopt if no path reaches one without revisiting a node.
+///
+/// No memoization: a node's value depends on which nodes the path already used.
+/// Longest path is NP-hard once the graph has cycles,
+/// so this is an exhaustive walk with backtracking.
+template <class EndReachedFn, class NeighborsFn>
+  requires requires(EndReachedFn end_reached, NeighborsFn get_neighbors,
+                    std::size_t node, std::size_t num_visited) {
+    { end_reached(node, num_visited) } -> std::convertible_to<bool>;
+    { get_neighbors(node) } -> std::ranges::input_range;
+  }
+constexpr std::optional<int> longest_simple_path(std::size_t num_nodes,
+                                                 std::size_t start,
+                                                 EndReachedFn&& end_reached,
+                                                 NeighborsFn&& get_neighbors) {
+  auto visited = std::vector<bool>(num_nodes);
+  const auto search = [&](this const auto& self_search, const std::size_t node,
+                          const std::size_t num_visited) -> std::optional<int> {
+    if (end_reached(node, num_visited)) {
+      return 0;
+    }
+    visited[node] = true;
+    auto longest = std::optional<int>{};
+    for (const auto& neighbor : get_neighbors(node)) {
+      if (visited[neighbor.node]) {
+        continue;
+      }
+      if (const auto rest = self_search(neighbor.node, num_visited + 1)) {
+        longest = std::max(longest, std::optional{*rest + neighbor.distance});
+      }
+    }
+    visited[node] = false;
+    return longest;
+  };
+  return search(start, 1);
 }
 
 /// Generic depth-first search with memoization, using a caller-owned cache.

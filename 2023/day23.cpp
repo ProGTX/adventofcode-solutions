@@ -16,7 +16,7 @@ fn solve_case1(island_t const& island_map) -> u32 {
   let end = point{static_cast<i32>(island_map.num_columns()) - 2,
                   static_cast<i32>(island_map.num_rows()) - 1};
 
-  let distances = aoc::longest_distances(
+  let distances = aoc::critical_distances(
       start, [&](const point& pos) { return pos == end; },
       [&](const point& pos) {
         auto neighbors =
