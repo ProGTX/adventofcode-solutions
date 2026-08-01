@@ -149,7 +149,7 @@ class static_vector {
   // Add elements
   template <class... Args>
   constexpr reference emplace_back(Args&&... args) {
-    this->push_back(value_type{std::forward<Args>(args)...});
+    this->push_back(value_type(std::forward<Args>(args)...));
     return this->back();
   }
   constexpr void push_back(const value_type& x) {
