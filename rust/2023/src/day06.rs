@@ -6,8 +6,14 @@ struct Input {
 fn parse(filename: &str) -> Input {
     let lines = aoc::file::read_lines(filename);
     Input {
-        time_tokens: lines[0]["Time:".len()..].split_whitespace().map(String::from).collect(),
-        dist_tokens: lines[1]["Distance:".len()..].split_whitespace().map(String::from).collect(),
+        time_tokens: lines[0]["Time:".len()..]
+            .split_whitespace()
+            .map(String::from)
+            .collect(),
+        dist_tokens: lines[1]["Distance:".len()..]
+            .split_whitespace()
+            .map(String::from)
+            .collect(),
     }
 }
 
@@ -27,8 +33,16 @@ fn num_ways_to_win(total_time: i64, record_distance: i64) -> i64 {
 }
 
 fn solve_case1(input: &Input) -> i64 {
-    let total_times: Vec<i64> = input.time_tokens.iter().map(|s| s.parse().unwrap()).collect();
-    let record_distances: Vec<i64> = input.dist_tokens.iter().map(|s| s.parse().unwrap()).collect();
+    let total_times: Vec<i64> = input
+        .time_tokens
+        .iter()
+        .map(|s| s.parse().unwrap())
+        .collect();
+    let record_distances: Vec<i64> = input
+        .dist_tokens
+        .iter()
+        .map(|s| s.parse().unwrap())
+        .collect();
     debug_assert_eq!(
         total_times.len(),
         record_distances.len(),

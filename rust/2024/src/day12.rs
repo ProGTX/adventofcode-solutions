@@ -66,7 +66,9 @@ fn perimeter(garden: &Garden, region: &Region) -> Vec<Side> {
         ]
         .array_windows::<2>()
         {
-            *occurence.entry(ClosedRange::new(side[0], side[1])).or_default() += 1;
+            *occurence
+                .entry(ClosedRange::new(side[0], side[1]))
+                .or_default() += 1;
         }
     }
     return occurence
