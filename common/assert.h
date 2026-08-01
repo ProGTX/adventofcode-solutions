@@ -8,6 +8,16 @@
 #define AOC_ASSERT_HELPER(condition, message) __assume(condition)
 #elif defined(__has_builtin)
 #if __has_builtin(__builtin_assume)
+#ifdef AOC_COMPILER_CLANG
+// Most of our conditions call functions,
+// which Clang treats as having potential side effects,
+// so it drops the assumption and warns about it.
+// The dropped assumption is fine, the warning is just noise.
+// Push/pop around the expansion doesn't work here,
+// the warning also fires from template instantiations
+// that happen long after the macro has been expanded.
+#pragma clang diagnostic ignored "-Wassume"
+#endif // AOC_COMPILER_CLANG
 #define AOC_ASSERT_HELPER(condition, message) __builtin_assume(condition)
 #else // __builtin_assume not available
 #define AOC_ASSERT_HELPER(condition, message) ((void)0)
