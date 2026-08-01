@@ -10,7 +10,6 @@ using garden_t = aoc::char_grid<>;
 using positions_t = Vec<point>;
 
 constexpr let plot = '.';
-constexpr let rock = '#';
 
 /**
  * This function performs a single step of movement for the pots in the garden.

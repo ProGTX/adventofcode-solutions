@@ -141,7 +141,7 @@ fn solve_case1(Input const& input) -> int {
 }
 
 fn solve_case2(Input const& input) -> int {
-  let & [ dimensions, _ ] = input;
+  let & [ dimensions, blizzard_cache ] = input;
   let start_pos = point{1, 0};
   let end_pos = point{dimensions.x - 2, dimensions.y - 1};
   let[t1, d1] = find_distance(input, start_pos, end_pos, 0);

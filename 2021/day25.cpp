@@ -59,11 +59,6 @@ fn solve_case1(Seafloor const& seafloor) -> u32 {
   }
 }
 
-fn solve_case2(Seafloor const& seafloor) -> u32 {
-  // TODO: Implement Part 2
-  return 0;
-}
-
 int main() {
   std::println("Part 1");
   let example = parse("day25.example");
