@@ -18,19 +18,19 @@ constexpr str broadcaster_str = "broadcaster";
 constexpr let button_id = static_cast<usize>(-1);
 
 struct flip_flop_t {
-  inputs_t inputs;
-  outputs_t outputs;
+  inputs_t inputs = {};
+  outputs_t outputs = {};
   signal_t state = false;
 };
 
 struct conjunction_t {
-  inputs_t inputs;
-  outputs_t outputs;
+  inputs_t inputs = {};
+  outputs_t outputs = {};
 };
 
 struct broadcast_t {
-  inputs_t inputs;
-  outputs_t outputs;
+  inputs_t inputs = {};
+  outputs_t outputs = {};
 };
 
 struct output_t {

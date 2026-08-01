@@ -613,9 +613,9 @@ class sparse_grid : protected grid<T, row_storage_t, std::map<point_class, T>> {
 // Read from file
 
 struct char_grid_config_input {
-  std::optional<char> padding;
-  std::optional<char> start_char;
-  std::optional<char> end_char;
+  std::optional<char> padding = {};
+  std::optional<char> start_char = {};
+  std::optional<char> end_char = {};
 };
 struct char_grid_config_output {
   using point = point_type<int>;
