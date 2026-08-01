@@ -13,7 +13,12 @@ struct link_t {
   int distance;
 };
 
-using connections_t = std::vector<std::vector<link_t>>;
+// There are exactly this many connections
+// from one city to all other cities in the input data
+constexpr usize MAX_LINKS = 7;
+
+using links_t = aoc::static_vector<link_t, MAX_LINKS>;
+using connections_t = std::vector<links_t>;
 
 connections_t parse(const std::string& filename) {
   auto connections = connections_t{};
@@ -30,76 +35,53 @@ connections_t parse(const std::string& filename) {
   return connections;
 }
 
-// Greedy nearest neighbor: from every starting city,
-// repeatedly hop to the closest city not visited yet.
-// This is a heuristic, not an exhaustive search -
-// a cheap first hop can force an expensive tail
-// and nothing here backs out of it -
-// but it does find the optimum for this input.
-// This function assumes the graph is fully connected
-constexpr int shortest_distance(const connections_t& connections) {
-  auto best = std::numeric_limits<int>::max();
-  auto current_path = aoc::flat_set<int>{};
-  let on_path = [&](const int id) { return current_path.contains(id); };
-  for (let& [ from_id, place ] : connections | stdv::enumerate) {
-    AOC_ASSERT(stdr::is_sorted(place, stdr::less{}, &link_t::distance),
-               "Destinations must be sorted by distance");
-    auto current_link = place;
-    current_path.clear();
-    current_path.insert(from_id);
-    auto current_distance = 0;
-    while (current_path.size() < connections.size()) {
-      let it = stdr::find_if_not(current_link, on_path, &link_t::to_id);
-      AOC_ASSERT(it != std::end(current_link), "Graph must be fully connected");
-      current_path.insert(it->to_id);
-      current_distance += it->distance;
-      current_link = connections[it->to_id];
-    }
-    if (current_distance < best) {
-      best = current_distance;
-    }
-  }
-  return best;
-}
-
-int solve_case1(const std::string& filename) {
-  auto connections = parse(filename);
-  for (auto& place : connections) {
-    stdr::sort(place, stdr::less{}, &link_t::distance);
-  }
-  return shortest_distance(connections);
-}
-
-int solve_case2(const std::string& filename) {
-  let connections = parse(filename);
-  let num_places = connections.size();
+// Only the longest route is searched for directly.
+// Every complete route visits every city,
+// so it always has exactly `num_cities - 1` edges -
+// which means the shortest route is the longest one
+// over the complemented weights (max_distance - distance),
+// and its real length is `(num_cities - 1) * max_distance` minus what's found.
+template <bool LONGEST>
+int solve_case(const connections_t& connections) {
+  let num_cities = connections.size();
+  let max_distance =
+      stdr::max(connections | stdv::join | stdv::transform(&link_t::distance));
   // Any city may be the start, the route is finished once it has visited all.
   // Only 8 cities, so searching every route exhaustively is cheap.
   auto best = 0;
-  for (let start : Range{0uz, num_places}) {
+  for (let start : Range{0uz, num_cities}) {
     let distance = aoc::longest_simple_path(
-        num_places, start,
+        num_cities, start,
         [&](const usize, const usize num_visited) {
-          return num_visited == num_places;
+          return num_visited == num_cities;
         },
-        [&](const usize place) {
-          return connections[place] | stdv::transform([](const link_t& link) {
+        [&](const usize city) {
+          return connections[city] | stdv::transform([&](const link_t& link) {
                    return aoc::dijkstra_neighbor_t<usize>{
-                       static_cast<usize>(link.to_id), link.distance};
+                       .node = static_cast<usize>(link.to_id),
+                       .distance = LONGEST ? link.distance
+                                           : max_distance - link.distance};
                  });
         });
     best = std::max(best, distance.value_or(0));
   }
-  return best;
+  if constexpr (LONGEST) {
+    return best;
+  } else {
+    return static_cast<int>(num_cities - 1) * max_distance - best;
+  }
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(605, solve_case1("day09.example"));
-  AOC_EXPECT_RESULT(141, solve_case1("day09.input"));
+  let example = parse("day09.example");
+  AOC_EXPECT_RESULT(605, solve_case<false>(example));
+  let input = parse("day09.input");
+  AOC_EXPECT_RESULT(141, solve_case<false>(input));
 
   std::println("Part 2");
-  AOC_EXPECT_RESULT(982, solve_case2("day09.example"));
-  AOC_EXPECT_RESULT(736, solve_case2("day09.input"));
+  AOC_EXPECT_RESULT(982, solve_case<true>(example));
+  AOC_EXPECT_RESULT(736, solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

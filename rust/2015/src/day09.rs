@@ -1,7 +1,7 @@
 use aoc::algorithm::longest_simple_path;
 use aoc::dijkstra::DijkstraState;
 use aoc::string::NameToId;
-use rustc_hash::FxHashSet;
+use arrayvec::ArrayVec;
 
 #[derive(Clone)]
 struct LinkT {
@@ -9,7 +9,12 @@ struct LinkT {
     distance: u32,
 }
 
-type ConnectionsT = Vec<Vec<LinkT>>;
+// There are exactly this many connections
+// from one city to all other cities in the input data
+const MAX_LINKS: usize = 7;
+
+type LinksT = ArrayVec<LinkT, MAX_LINKS>;
+type ConnectionsT = Vec<LinksT>;
 
 fn parse(filename: &str) -> ConnectionsT {
     let mut name_to_id = NameToId::new();
@@ -32,78 +37,57 @@ fn parse(filename: &str) -> ConnectionsT {
     connections
 }
 
-// Greedy nearest neighbor: from every starting city,
-// repeatedly hop to the closest city not visited yet.
-// This is a heuristic, not an exhaustive search -
-// a cheap first hop can force an expensive tail
-// and nothing here backs out of it -
-// but it does find the optimum for this input.
-fn shortest_distance(connections: ConnectionsT) -> u32 {
-    let mut best = u32::MAX;
-    let mut current_path = FxHashSet::default();
-    for (from_id, place) in connections.iter().enumerate() {
-        debug_assert!(
-            place.is_sorted_by_key(|link| link.distance),
-            "Destinations must be sorted by distance"
-        );
-        let mut current_link = place;
-        current_path.clear();
-        current_path.insert(from_id);
-        let mut current_distance = 0u32;
-        while current_path.len() < connections.len() {
-            let it = current_link
-                .iter()
-                .find(|link: &&LinkT| !current_path.contains(&link.to_id));
-            debug_assert!(it.is_some(), "Graph must be fully connected");
-            let link = it.unwrap();
-            current_path.insert(link.to_id);
-            current_distance += link.distance;
-            current_link = &connections[link.to_id];
-        }
-        if current_distance < best {
-            best = current_distance;
-        }
-    }
-    best
-}
-
-fn solve_case1(filename: &str) -> u32 {
-    let mut connections = parse(filename);
-    for place in &mut connections {
-        place.sort_by(|lhs, rhs| lhs.distance.cmp(&rhs.distance));
-    }
-    shortest_distance(connections)
-}
-
-fn solve_case2(filename: &str) -> u32 {
-    let connections = parse(filename);
-    let num_places = connections.len();
-    // Any city may be the start, and the route is finished once it has visited all.
+// Only the longest route is searched for directly.
+// Every complete route visits every city,
+// so it always has exactly `num_cities - 1` edges -
+// which means the shortest route is the longest one
+// over the complemented weights (max_distance - distance),
+// and its real length is `(num_cities - 1) * max_distance` minus what's found.
+fn solve_case<const LONGEST: bool>(connections: &ConnectionsT) -> u32 {
+    let num_cities = connections.len();
+    let max_distance = connections
+        .iter()
+        .flatten()
+        .map(|link| link.distance)
+        .max()
+        .unwrap();
+    // Any city may be the start, the route is finished once it has visited all.
     // Only 8 cities, so searching every route exhaustively is cheap.
-    (0..num_places)
+    let best = (0..num_cities)
         .filter_map(|start| {
             longest_simple_path(
-                num_places,
+                num_cities,
                 start,
-                |_place, num_visited| num_visited == num_places,
-                |place| {
-                    connections[place].iter().map(|link| DijkstraState {
+                |_city, num_visited| num_visited == num_cities,
+                |city| {
+                    connections[city].iter().map(|link| DijkstraState {
                         data: link.to_id,
-                        distance: link.distance,
+                        distance: if LONGEST {
+                            link.distance
+                        } else {
+                            max_distance - link.distance
+                        },
                     })
                 },
             )
         })
         .max()
-        .unwrap()
+        .unwrap();
+    if LONGEST {
+        best
+    } else {
+        (num_cities as u32 - 1) * max_distance - best
+    }
 }
 
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(605, solve_case1("day09.example"));
-    aoc::expect_result!(141, solve_case1("day09.input"));
+    let example = parse("day09.example");
+    aoc::expect_result!(605, solve_case::<false>(&example));
+    let input = parse("day09.input");
+    aoc::expect_result!(141, solve_case::<false>(&input));
 
     println!("Part 2");
-    aoc::expect_result!(982, solve_case2("day09.example"));
-    aoc::expect_result!(736, solve_case2("day09.input"));
+    aoc::expect_result!(982, solve_case::<true>(&example));
+    aoc::expect_result!(736, solve_case::<true>(&input));
 }
