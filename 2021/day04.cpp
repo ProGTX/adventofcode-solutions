@@ -101,7 +101,12 @@ class board : public aoc::array_grid<int, 5> {
   bool has_bingo_hit = false;
 };
 
-int solve_case(const std::string& filename, int game_rounds) {
+struct game_t {
+  std::vector<int> bingo_numbers;
+  std::vector<board> boards;
+};
+
+game_t parse(const std::string& filename) {
   std::vector<board> boards;
   board* current_board_ptr = nullptr;
 
@@ -120,6 +125,13 @@ int solve_case(const std::string& filename, int game_rounds) {
     auto row = aoc::split<board::row_t, true>(line, ' ');
     current_board_ptr->add(row);
   }
+
+  return {std::move(bingo_numbers), std::move(boards)};
+}
+
+// The boards get marked as the game is played, so they are taken by value
+int solve_case(game_t game, int game_rounds) {
+  auto [bingo_numbers, boards] = std::move(game);
 
   if (game_rounds < 0) {
     game_rounds = boards.size();
@@ -167,10 +179,14 @@ end_rounds:
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(4512, solve_case("day04.example", 1));
-  AOC_EXPECT_RESULT(64084, solve_case("day04.input", 1));
+  const auto example = parse("day04.example");
+  AOC_EXPECT_RESULT(4512, solve_case(example, 1));
+  const auto input = parse("day04.input");
+  AOC_EXPECT_RESULT(64084, solve_case(input, 1));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(1924, solve_case("day04.example", -1));
-  AOC_EXPECT_RESULT(12833, solve_case("day04.input", -1));
+  AOC_EXPECT_RESULT(1924, solve_case(example, -1));
+  AOC_EXPECT_RESULT(12833, solve_case(input, -1));
+
   AOC_RETURN_CHECK_RESULT();
 }

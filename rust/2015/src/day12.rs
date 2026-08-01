@@ -82,21 +82,29 @@ fn sum_non_red(s: &str) -> i32 {
     *value_stack.last().unwrap()
 }
 
-fn solve_case1(filename: &str) -> i32 {
-    let input = std::fs::read_to_string(filename).unwrap();
-    sum(input.trim())
+fn parse(filename: &str) -> String {
+    std::fs::read_to_string(filename)
+        .unwrap()
+        .trim()
+        .to_string()
 }
 
-fn solve_case2(filename: &str) -> i32 {
-    let input = std::fs::read_to_string(filename).unwrap();
-    sum_non_red(input.trim())
+fn solve_case1(input: &str) -> i32 {
+    sum(input)
+}
+
+fn solve_case2(input: &str) -> i32 {
+    sum_non_red(input)
 }
 
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(6, solve_case1("day12.example"));
-    aoc::expect_result!(156366, solve_case1("day12.input"));
+    let example = parse("day12.example");
+    aoc::expect_result!(6, solve_case1(&example));
+    let input = parse("day12.input");
+    aoc::expect_result!(156366, solve_case1(&input));
+
     println!("Part 2");
-    aoc::expect_result!(4, solve_case2("day12.example"));
-    aoc::expect_result!(96852, solve_case2("day12.input"));
+    aoc::expect_result!(4, solve_case2(&example));
+    aoc::expect_result!(96852, solve_case2(&input));
 }

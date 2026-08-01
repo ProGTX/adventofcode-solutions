@@ -86,14 +86,18 @@ constexpr point first_problematic_byte(const memspace_t& memspace,
   return falling_bytes[high - 1];
 }
 
-template <point grid_size, int num_fallen, bool check_closed>
-auto solve_case(const std::string& filename) {
+std::vector<point> parse(const std::string& filename) {
   std::vector<point> falling_bytes;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
     falling_bytes.push_back(aoc::split<point>(line, ','));
   }
 
+  return falling_bytes;
+}
+
+template <point grid_size, int num_fallen, bool check_closed>
+auto solve_case(const std::vector<point>& falling_bytes) {
   memspace_t memspace{
       stdv::repeat(empty, grid_size.y * grid_size.x) | aoc::collect_string(),
       grid_size.y, grid_size.x};
@@ -109,12 +113,14 @@ auto solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(22, (solve_case<{7, 7}, 12, false>("day18.example")));
-  AOC_EXPECT_RESULT(234, (solve_case<{71, 71}, 1024, false>("day18.input")));
+  const auto example = parse("day18.example");
+  AOC_EXPECT_RESULT(22, (solve_case<{7, 7}, 12, false>(example)));
+  const auto input = parse("day18.input");
+  AOC_EXPECT_RESULT(234, (solve_case<{71, 71}, 1024, false>(input)));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT((point{6, 1}),
-                    (solve_case<{7, 7}, 12, true>("day18.example")));
-  AOC_EXPECT_RESULT((point{58, 19}),
-                    (solve_case<{71, 71}, 1024, true>("day18.input")));
+  AOC_EXPECT_RESULT((point{6, 1}), (solve_case<{7, 7}, 12, true>(example)));
+  AOC_EXPECT_RESULT((point{58, 19}), (solve_case<{71, 71}, 1024, true>(input)));
+
   AOC_RETURN_CHECK_RESULT();
 }

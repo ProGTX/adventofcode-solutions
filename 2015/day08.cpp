@@ -8,6 +8,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <vector>
 
 constexpr int num_control_chars(std::string_view str) {
   AOC_ASSERT((str.size() >= 2) && (str.front() == '"') && (str.back() == '"'),
@@ -48,23 +49,29 @@ static_assert(6 == num_encode_chars(R"("aaa\"aaa")"));
 static_assert(5 == num_encode_chars(R"("\x27")"));
 static_assert(8 == num_encode_chars(R"("\\\\zkisyjpbzandqikqjqvee")"));
 
-int solve_case1(const std::string& filename) {
-  return aoc::ranges::accumulate(
-      aoc::views::read_lines(filename) | stdv::transform(&num_control_chars),
-      0);
+using lines_t = std::vector<std::string>;
+
+lines_t parse(const std::string& filename) { return aoc::read_lines(filename); }
+
+int solve_case1(const lines_t& lines) {
+  return aoc::ranges::accumulate(lines | stdv::transform(&num_control_chars),
+                                 0);
 }
 
-int solve_case2(const std::string& filename) {
-  return aoc::ranges::accumulate(
-      aoc::views::read_lines(filename) | stdv::transform(&num_encode_chars), 0);
+int solve_case2(const lines_t& lines) {
+  return aoc::ranges::accumulate(lines | stdv::transform(&num_encode_chars), 0);
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(12, solve_case1("day08.example"));
-  AOC_EXPECT_RESULT(1333, solve_case1("day08.input"));
+  const auto example = parse("day08.example");
+  AOC_EXPECT_RESULT(12, solve_case1(example));
+  const auto input = parse("day08.input");
+  AOC_EXPECT_RESULT(1333, solve_case1(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(19, solve_case2("day08.example"));
-  AOC_EXPECT_RESULT(2046, solve_case2("day08.input"));
+  AOC_EXPECT_RESULT(19, solve_case2(example));
+  AOC_EXPECT_RESULT(2046, solve_case2(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

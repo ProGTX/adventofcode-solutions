@@ -95,25 +95,24 @@ constexpr int sum_boxes(const boxes_t& boxes) {
   });
 }
 
-template <bool lens_sort>
-int solve_case(const std::string& filename) {
-
+steps_t parse(const std::string& filename) {
   steps_t steps;
-  instructions_t instructions;
-
   for (std::string_view line : aoc::views::read_lines(filename)) {
     steps = aoc::split<steps_t>(line, ',');
-    if constexpr (lens_sort) {
-      for (const auto& step : steps) {
-        instructions.push_back(split_label(step));
-      }
-    }
   }
+  return steps;
+}
 
+template <bool lens_sort>
+int solve_case(const steps_t& steps) {
   int sum = 0;
   if constexpr (!lens_sort) {
     sum = sum_steps(steps);
   } else {
+    instructions_t instructions;
+    for (const auto& step : steps) {
+      instructions.push_back(split_label(step));
+    }
     sum = sum_boxes(sort_boxes(instructions));
   }
   return sum;
@@ -121,10 +120,14 @@ int solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(1320, (solve_case<false>("day15.example")));
-  AOC_EXPECT_RESULT(510273, (solve_case<false>("day15.input")));
+  const auto example = parse("day15.example");
+  AOC_EXPECT_RESULT(1320, (solve_case<false>(example)));
+  const auto input = parse("day15.input");
+  AOC_EXPECT_RESULT(510273, (solve_case<false>(input)));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(145, (solve_case<true>("day15.example")));
-  AOC_EXPECT_RESULT(212449, (solve_case<true>("day15.input")));
+  AOC_EXPECT_RESULT(145, (solve_case<true>(example)));
+  AOC_EXPECT_RESULT(212449, (solve_case<true>(input)));
+
   AOC_RETURN_CHECK_RESULT();
 }

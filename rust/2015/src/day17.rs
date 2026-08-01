@@ -13,18 +13,21 @@ where
     acc
 }
 
-fn solve_case<const LITERS: u32, const COUNT_WAYS: bool>(filename: &str) -> u32 {
-    let containers = std::fs::read_to_string(filename)
+fn parse(filename: &str) -> Vec<u32> {
+    std::fs::read_to_string(filename)
         .unwrap()
         .lines()
         .map(|line| line.parse().unwrap())
-        .collect::<Vec<u32>>();
+        .collect()
+}
+
+fn solve_case<const LITERS: u32, const COUNT_WAYS: bool>(containers: &[u32]) -> u32 {
     let mut count = [0; 21];
     for combination in std::iter::repeat([0, 1])
         .take(containers.len())
         .multi_cartesian_product()
     {
-        let exact_match = dot_product(&containers, &combination) == LITERS;
+        let exact_match = dot_product(containers, &combination) == LITERS;
         if (!COUNT_WAYS) {
             count[0] += exact_match as u32;
         } else if (exact_match) {
@@ -41,9 +44,12 @@ fn solve_case<const LITERS: u32, const COUNT_WAYS: bool>(filename: &str) -> u32 
 
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(4, solve_case::<25, false>("day17.example"));
-    aoc::expect_result!(1304, solve_case::<150, false>("day17.input"));
+    let example = parse("day17.example");
+    aoc::expect_result!(4, solve_case::<25, false>(&example));
+    let input = parse("day17.input");
+    aoc::expect_result!(1304, solve_case::<150, false>(&input));
+
     println!("Part 2");
-    aoc::expect_result!(3, solve_case::<25, true>("day17.example"));
-    aoc::expect_result!(18, solve_case::<150, true>("day17.input"));
+    aoc::expect_result!(3, solve_case::<25, true>(&example));
+    aoc::expect_result!(18, solve_case::<150, true>(&input));
 }

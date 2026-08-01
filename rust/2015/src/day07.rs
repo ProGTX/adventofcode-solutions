@@ -153,13 +153,13 @@ fn solve_wire(inputs: &mut [GateT], start: SignalT) -> StrictSignalT {
     }
 }
 
-fn solve_case1(filename: &str) -> StrictSignalT {
-    let (mut inputs, a, _) = parse(filename);
+fn solve_case1(circuit: &(Vec<GateT>, SignalT, SignalT)) -> StrictSignalT {
+    let (mut inputs, a, _) = circuit.clone();
     solve_wire(&mut inputs, a)
 }
 
-fn solve_case2(filename: &str) -> StrictSignalT {
-    let (mut inputs, a, b) = parse(filename);
+fn solve_case2(circuit: &(Vec<GateT>, SignalT, SignalT)) -> StrictSignalT {
+    let (mut inputs, a, b) = circuit.clone();
     let mut inputs_copy = inputs.clone();
     let result = solve_wire(&mut inputs_copy, a);
     inputs[input_id(b)] = GateT {
@@ -172,9 +172,12 @@ fn solve_case2(filename: &str) -> StrictSignalT {
 
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(114, solve_case1("day07.example"));
-    aoc::expect_result!(16076, solve_case1("day07.input"));
+    let example = parse("day07.example");
+    aoc::expect_result!(114, solve_case1(&example));
+    let input = parse("day07.input");
+    aoc::expect_result!(16076, solve_case1(&input));
+
     println!("Part 2");
-    aoc::expect_result!(28, solve_case2("day07.example"));
-    aoc::expect_result!(2797, solve_case2("day07.input"));
+    aoc::expect_result!(28, solve_case2(&example));
+    aoc::expect_result!(2797, solve_case2(&input));
 }

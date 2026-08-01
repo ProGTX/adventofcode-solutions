@@ -59,10 +59,12 @@ constexpr int largest_basins(const heightmap_t& heightmap) {
   return stdr::fold_left(std::span{basins}.subspan(0, 3), 1, std::multiplies{});
 }
 
-template <bool basin>
-int solve_case(const std::string& filename) {
-  heightmap_t heightmap = aoc::read_char_grid(filename);
+heightmap_t parse(const std::string& filename) {
+  return aoc::read_char_grid(filename);
+}
 
+template <bool basin>
+int solve_case(const heightmap_t& heightmap) {
   int sum = 0;
   if constexpr (!basin) {
     sum = sum_risk_levels(heightmap);
@@ -75,10 +77,14 @@ int solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(15, solve_case<false>("day09.example"));
-  AOC_EXPECT_RESULT(580, solve_case<false>("day09.input"));
+  const auto example = parse("day09.example");
+  AOC_EXPECT_RESULT(15, solve_case<false>(example));
+  const auto input = parse("day09.input");
+  AOC_EXPECT_RESULT(580, solve_case<false>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(1134, solve_case<true>("day09.example"));
-  AOC_EXPECT_RESULT(856716, solve_case<true>("day09.input"));
+  AOC_EXPECT_RESULT(1134, solve_case<true>(example));
+  AOC_EXPECT_RESULT(856716, solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

@@ -112,5 +112,6 @@ int main() {
   std::println("Part 2");
   AOC_EXPECT_RESULT("MCD", solve_case<true>(example));
   AOC_EXPECT_RESULT("MGDMPSZTM", solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

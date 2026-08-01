@@ -19,8 +19,8 @@ fn parse(filename: &str) -> Vec<Reindeer> {
         .collect()
 }
 
-fn solve_case1<const SECONDS: u32>(filename: &str) -> u32 {
-    parse(filename)
+fn solve_case1<const SECONDS: u32>(flock: &[Reindeer]) -> u32 {
+    flock
         .iter()
         .map(|reindeer| {
             let cycle_time = reindeer.fly + reindeer.rest;
@@ -34,8 +34,7 @@ fn solve_case1<const SECONDS: u32>(filename: &str) -> u32 {
         .unwrap()
 }
 
-fn solve_case2<const SECONDS: u32>(filename: &str) -> u32 {
-    let flock = parse(filename);
+fn solve_case2<const SECONDS: u32>(flock: &[Reindeer]) -> u32 {
     let mut distances = [0u32; 9];
     let mut score = [0u32; 9];
     debug_assert!(flock.len() <= score.len(), "Too many reindeer");
@@ -63,9 +62,12 @@ fn solve_case2<const SECONDS: u32>(filename: &str) -> u32 {
 
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(1120, solve_case1::<1000>("day14.example"));
-    aoc::expect_result!(2660, solve_case1::<2503>("day14.input"));
+    let example = parse("day14.example");
+    aoc::expect_result!(1120, solve_case1::<1000>(&example));
+    let input = parse("day14.input");
+    aoc::expect_result!(2660, solve_case1::<2503>(&input));
+
     println!("Part 2");
-    aoc::expect_result!(689, solve_case2::<1000>("day14.example"));
-    aoc::expect_result!(1256, solve_case2::<2503>("day14.input"));
+    aoc::expect_result!(689, solve_case2::<1000>(&example));
+    aoc::expect_result!(1256, solve_case2::<2503>(&input));
 }

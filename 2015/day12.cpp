@@ -101,9 +101,10 @@ fn sum_non_red(str s) -> i32 {
   return value_stack.back();
 }
 
+String parse(String const& filename) { return aoc::read_single_line(filename); }
+
 template <bool red>
-fn solve_case(String const& filename) -> i32 {
-  let line = aoc::read_single_line(filename);
+fn solve_case(str line) -> i32 {
   if constexpr (!red) {
     return sum(line);
   } else {
@@ -113,10 +114,14 @@ fn solve_case(String const& filename) -> i32 {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(6, solve_case<false>("day12.example"));
-  AOC_EXPECT_RESULT(156366, solve_case<false>("day12.input"));
+  let example = parse("day12.example");
+  AOC_EXPECT_RESULT(6, solve_case<false>(example));
+  let input = parse("day12.input");
+  AOC_EXPECT_RESULT(156366, solve_case<false>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(4, solve_case<true>("day12.example"));
-  AOC_EXPECT_RESULT(96852, solve_case<true>("day12.input"));
+  AOC_EXPECT_RESULT(4, solve_case<true>(example));
+  AOC_EXPECT_RESULT(96852, solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

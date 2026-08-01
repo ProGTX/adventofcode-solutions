@@ -50,10 +50,12 @@ constexpr int_t get_score(std::string_view navigation_line) {
 
 static_assert(294 == get_score<true>("<{([{{}}[<[[[<>{}]]]>[]]"));
 
-template <bool autocomplete>
-int_t solve_case(const std::string& filename) {
-  auto navigation_lines = aoc::read_lines(filename);
+std::vector<std::string> parse(const std::string& filename) {
+  return aoc::read_lines(filename);
+}
 
+template <bool autocomplete>
+int_t solve_case(const std::vector<std::string>& navigation_lines) {
   int_t sum = 0;
   auto scores = navigation_lines |
                 stdv::transform(&get_score<autocomplete>) |
@@ -72,10 +74,14 @@ int_t solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(26397, solve_case<false>("day10.example"));
-  AOC_EXPECT_RESULT(319233, solve_case<false>("day10.input"));
+  const auto example = parse("day10.example");
+  AOC_EXPECT_RESULT(26397, solve_case<false>(example));
+  const auto input = parse("day10.input");
+  AOC_EXPECT_RESULT(319233, solve_case<false>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(288957, solve_case<true>("day10.example"));
-  AOC_EXPECT_RESULT(1118976874, solve_case<true>("day10.input"));
+  AOC_EXPECT_RESULT(288957, solve_case<true>(example));
+  AOC_EXPECT_RESULT(1118976874, solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

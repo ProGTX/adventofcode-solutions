@@ -86,5 +86,6 @@ int main() {
                     (solve_case1<200000000000000, 400000000000000>(input)));
 
   aoc::return_incomplete();
+
   AOC_RETURN_CHECK_RESULT();
 }

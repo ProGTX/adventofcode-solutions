@@ -16,8 +16,12 @@ fn find_marker<const WINDOW_SIZE: usize>(s: &str) -> usize {
         + WINDOW_SIZE // Convert window start index to end position (1-indexed)
 }
 
-fn solve_case<const WINDOW_SIZE: usize>(filename: &str) -> Vec<usize> {
+fn parse(filename: &str) -> Vec<String> {
     aoc::file::read_lines(filename)
+}
+
+fn solve_case<const WINDOW_SIZE: usize>(lines: &[String]) -> Vec<usize> {
+    lines
         .iter()
         .map(|line| find_marker::<WINDOW_SIZE>(line))
         .collect()
@@ -25,10 +29,12 @@ fn solve_case<const WINDOW_SIZE: usize>(filename: &str) -> Vec<usize> {
 
 fn main() {
     println!("Part 1");
-    assert_eq!(vec![7, 5, 6, 10, 11], solve_case::<4>("day06.example"));
-    assert_eq!(vec![1361], solve_case::<4>("day06.input"));
+    let example = parse("day06.example");
+    assert_eq!(vec![7, 5, 6, 10, 11], solve_case::<4>(&example));
+    let input = parse("day06.input");
+    assert_eq!(vec![1361], solve_case::<4>(&input));
 
     println!("Part 2");
-    assert_eq!(vec![19, 23, 23, 29, 26], solve_case::<14>("day06.example"));
-    assert_eq!(vec![3263], solve_case::<14>("day06.input"));
+    assert_eq!(vec![19, 23, 23, 29, 26], solve_case::<14>(&example));
+    assert_eq!(vec![3263], solve_case::<14>(&input));
 }

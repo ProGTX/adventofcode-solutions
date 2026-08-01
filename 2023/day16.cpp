@@ -100,11 +100,12 @@ constexpr int energize(const machine_t& machine, beam_t start) {
   return stdr::count(energized_machine, energized);
 }
 
+machine_t parse(const std::string& filename) {
+  return aoc::read_char_grid(filename);
+}
+
 template <bool optimize>
-int solve_case(const std::string& filename) {
-
-  machine_t machine = aoc::read_char_grid(filename);
-
+int solve_case(const machine_t& machine) {
   int sum = 0;
   if constexpr (!optimize) {
     sum = energize(machine, beam_t{point{}, aoc::get_diff(aoc::east)});
@@ -128,10 +129,14 @@ int solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(46, (solve_case<false>("day16.example")));
-  AOC_EXPECT_RESULT(7798, (solve_case<false>("day16.input")));
+  const auto example = parse("day16.example");
+  AOC_EXPECT_RESULT(46, (solve_case<false>(example)));
+  const auto input = parse("day16.input");
+  AOC_EXPECT_RESULT(7798, (solve_case<false>(input)));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(51, (solve_case<true>("day16.example")));
-  AOC_EXPECT_RESULT(8026, (solve_case<true>("day16.input")));
+  AOC_EXPECT_RESULT(51, (solve_case<true>(example)));
+  AOC_EXPECT_RESULT(8026, (solve_case<true>(input)));
+
   AOC_RETURN_CHECK_RESULT();
 }

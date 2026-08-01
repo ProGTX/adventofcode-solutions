@@ -31,27 +31,30 @@ fn num_encode_chars(s: &str) -> u32 {
     (s.chars().filter(|&c| (c == '"') || (c == '\\')).count() + 2) as u32
 }
 
-fn solve_case1(filename: &str) -> u32 {
+fn parse(filename: &str) -> Vec<String> {
     std::fs::read_to_string(filename)
         .unwrap()
         .lines()
-        .map(num_control_chars)
-        .sum()
+        .map(String::from)
+        .collect()
 }
 
-fn solve_case2(filename: &str) -> u32 {
-    std::fs::read_to_string(filename)
-        .unwrap()
-        .lines()
-        .map(num_encode_chars)
-        .sum()
+fn solve_case1(lines: &[String]) -> u32 {
+    lines.iter().map(|line| num_control_chars(line)).sum()
+}
+
+fn solve_case2(lines: &[String]) -> u32 {
+    lines.iter().map(|line| num_encode_chars(line)).sum()
 }
 
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(12, solve_case1("day08.example"));
-    aoc::expect_result!(1333, solve_case1("day08.input"));
+    let example = parse("day08.example");
+    aoc::expect_result!(12, solve_case1(&example));
+    let input = parse("day08.input");
+    aoc::expect_result!(1333, solve_case1(&input));
+
     println!("Part 2");
-    aoc::expect_result!(19, solve_case2("day08.example"));
-    aoc::expect_result!(2046, solve_case2("day08.input"));
+    aoc::expect_result!(19, solve_case2(&example));
+    aoc::expect_result!(2046, solve_case2(&input));
 }

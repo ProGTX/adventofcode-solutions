@@ -9,6 +9,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <vector>
 
 constexpr bool contains_three_vowels(std::string_view str) {
   int count = 0;
@@ -59,20 +60,28 @@ static_assert(is_nice2("xxyxx"));
 static_assert(!is_nice2("uurcxstgmygtbstg"));
 static_assert(!is_nice2("ieodomkazucvgmuy"));
 
-int solve_case1(const std::string& filename) {
-  return stdr::count_if(aoc::views::read_lines(filename), &is_nice1);
+using lines_t = std::vector<std::string>;
+
+lines_t parse(const std::string& filename) { return aoc::read_lines(filename); }
+
+int solve_case1(const lines_t& lines) {
+  return stdr::count_if(lines, &is_nice1);
 }
 
-int solve_case2(const std::string& filename) {
-  return stdr::count_if(aoc::views::read_lines(filename), &is_nice2);
+int solve_case2(const lines_t& lines) {
+  return stdr::count_if(lines, &is_nice2);
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(2, solve_case1("day05.example"));
-  AOC_EXPECT_RESULT(258, solve_case1("day05.input"));
+  const auto example = parse("day05.example");
+  AOC_EXPECT_RESULT(2, solve_case1(example));
+  const auto input = parse("day05.input");
+  AOC_EXPECT_RESULT(258, solve_case1(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(1, solve_case2("day05.example"));
-  AOC_EXPECT_RESULT(53, solve_case2("day05.input"));
+  AOC_EXPECT_RESULT(1, solve_case2(example));
+  AOC_EXPECT_RESULT(53, solve_case2(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

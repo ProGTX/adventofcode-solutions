@@ -167,23 +167,24 @@ fn next_password(Vec<u32> password) -> Vec<u32> {
   return password;
 }
 
-String next_password_str(str const& password) {
-  return to_string(next_password(to_numbers(password)));
-}
+String parse(const String& filename) { return aoc::read_single_line(filename); }
 
-String solve_case(const String& filename) {
-  return next_password_str(aoc::read_single_line(filename));
+String solve_case(str const& password) {
+  return to_string(next_password(to_numbers(password)));
 }
 
 int main() {
   std::println("Part 1");
-  const auto example_solved = solve_case("day11.example");
+  let example = parse("day11.example");
+  const auto example_solved = solve_case(example);
   AOC_EXPECT_RESULT("ghjaabcc", example_solved);
-  const auto input_solved = solve_case("day11.input");
+  let input = parse("day11.input");
+  const auto input_solved = solve_case(input);
   AOC_EXPECT_RESULT("hxbxxyzz", input_solved);
 
   std::println("Part 2");
-  AOC_EXPECT_RESULT("ghjbbcdd", next_password_str(example_solved));
-  AOC_EXPECT_RESULT("hxcaabcc", next_password_str(input_solved));
+  AOC_EXPECT_RESULT("ghjbbcdd", solve_case(example_solved));
+  AOC_EXPECT_RESULT("hxcaabcc", solve_case(input_solved));
+
   AOC_RETURN_CHECK_RESULT();
 }

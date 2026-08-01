@@ -103,5 +103,6 @@ int main() {
   std::println("Part 2");
   AOC_EXPECT_RESULT(30, (solve_case<5, 8, true>(example)));
   AOC_EXPECT_RESULT(14624680, (solve_case<10, 25, true>(input)));
+
   AOC_RETURN_CHECK_RESULT();
 }

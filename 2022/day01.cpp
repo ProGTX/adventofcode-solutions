@@ -34,5 +34,6 @@ int main() {
   std::println("Part 2");
   AOC_EXPECT_RESULT(45000, solve_case2(example));
   AOC_EXPECT_RESULT(213159, solve_case2(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

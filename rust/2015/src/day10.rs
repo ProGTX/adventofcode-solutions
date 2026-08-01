@@ -15,13 +15,17 @@ fn look_and_say(input: &Vec<u32>, output: &mut Vec<u32>) {
     }
 }
 
-fn solve_case<const ITERATIONS: usize>(filename: &str) -> usize {
-    let mut input = std::fs::read_to_string(filename)
+fn parse(filename: &str) -> Vec<u32> {
+    std::fs::read_to_string(filename)
         .unwrap()
         .trim()
         .chars()
         .map(|c| c.to_digit(10).unwrap())
-        .collect::<Vec<u32>>();
+        .collect()
+}
+
+fn solve_case<const ITERATIONS: usize>(digits: &[u32]) -> usize {
+    let mut input = digits.to_vec();
     let mut output = Vec::new();
     for _ in 0..ITERATIONS {
         look_and_say(&input, &mut output);
@@ -32,9 +36,12 @@ fn solve_case<const ITERATIONS: usize>(filename: &str) -> usize {
 
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(237746, solve_case::<40>("day10.example"));
-    aoc::expect_result!(360154, solve_case::<40>("day10.input"));
+    let example = parse("day10.example");
+    aoc::expect_result!(237746, solve_case::<40>(&example));
+    let input = parse("day10.input");
+    aoc::expect_result!(360154, solve_case::<40>(&input));
+
     println!("Part 2");
-    aoc::expect_result!(3369156, solve_case::<50>("day10.example"));
-    aoc::expect_result!(5103798, solve_case::<50>("day10.input"));
+    aoc::expect_result!(3369156, solve_case::<50>(&example));
+    aoc::expect_result!(5103798, solve_case::<50>(&input));
 }

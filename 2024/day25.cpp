@@ -39,8 +39,12 @@ constexpr int count_fitting(const std::span<const keyhole_storage_t> keys,
       0);
 }
 
-template <bool>
-int solve_case(const std::string& filename) {
+struct schematics_t {
+  std::vector<keyhole_storage_t> keys;
+  std::vector<keyhole_storage_t> locks;
+};
+
+schematics_t parse(const std::string& filename) {
   std::vector<keyhole_storage_t> keys;
   std::vector<keyhole_storage_t> locks;
   keyhole_storage_t* current_keyhole_ptr = nullptr;
@@ -75,21 +79,28 @@ int solve_case(const std::string& filename) {
     ++row;
   }
 
+  return {std::move(keys), std::move(locks)};
+}
+
+template <bool>
+int solve_case(const schematics_t& schematics) {
   int sum = 0;
-  sum = count_fitting(keys, locks);
+  sum = count_fitting(schematics.keys, schematics.locks);
 
   return sum;
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(3, solve_case<false>("day25.example"));
-  AOC_EXPECT_RESULT(3338, solve_case<false>("day25.input"));
+  const auto example = parse("day25.example");
+  AOC_EXPECT_RESULT(3, solve_case<false>(example));
+  const auto input = parse("day25.input");
+  AOC_EXPECT_RESULT(3338, solve_case<false>(input));
 
   std::println("Part 2");
   aoc::return_incomplete();
-  // AOC_EXPECT_RESULT(281, solve_case<true>("day25.example"));
-  // AOC_EXPECT_RESULT(53515, solve_case<true>("day25.input"));
+  // AOC_EXPECT_RESULT(281, solve_case<true>(example));
+  // AOC_EXPECT_RESULT(53515, solve_case<true>(input));
 
   AOC_RETURN_CHECK_RESULT();
 }

@@ -10,8 +10,12 @@
 #include <string>
 #include <string_view>
 
+std::string parse(const std::string& filename) {
+  return aoc::read_single_line(filename);
+}
+
 template <int num_santas>
-int deliveries(std::string_view directions) {
+int solve_case(std::string_view directions) {
   std::array<point, num_santas> santas{};
   std::array<std::map<point, int>, num_santas> visited{};
   for (auto& houses : visited) {
@@ -31,20 +35,16 @@ int deliveries(std::string_view directions) {
   return visited[0].size();
 }
 
-int solve_case1(const std::string& filename) {
-  return deliveries<1>(aoc::read_single_line(filename));
-}
-
-int solve_case2(const std::string& filename) {
-  return deliveries<2>(aoc::read_single_line(filename));
-}
-
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(4, solve_case1("day03.example"));
-  AOC_EXPECT_RESULT(2565, solve_case1("day03.input"));
+  const auto example = parse("day03.example");
+  AOC_EXPECT_RESULT(4, solve_case<1>(example));
+  const auto input = parse("day03.input");
+  AOC_EXPECT_RESULT(2565, solve_case<1>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(3, solve_case2("day03.example"));
-  AOC_EXPECT_RESULT(2639, solve_case2("day03.input"));
+  AOC_EXPECT_RESULT(3, solve_case<2>(example));
+  AOC_EXPECT_RESULT(2639, solve_case<2>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

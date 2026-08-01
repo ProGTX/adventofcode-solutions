@@ -12,15 +12,28 @@
 #include <string_view>
 #include <vector>
 
-int solve_part1(const std::string& filename) {
+struct command_t {
+  std::string command;
+  int number;
+};
+
+using commands_t = std::vector<command_t>;
+
+commands_t parse(const std::string& filename) {
+  commands_t commands;
+  for (std::string_view line : aoc::views::read_lines(filename)) {
+    auto values = aoc::split_once(line, ' ');
+    commands.emplace_back(std::string{values[0]},
+                          aoc::to_number<int>(values[1]));
+  }
+  return commands;
+}
+
+int solve_part1(const commands_t& commands) {
   int horizontal = 0;
   int depth = 0;
 
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto values = aoc::split_once(line, ' ');
-    auto command = values[0];
-    auto number = aoc::to_number<int>(values[1]);
-
+  for (const auto& [command, number] : commands) {
     if (command == "forward") {
       horizontal += number;
     } else if (command == "down") {
@@ -33,16 +46,12 @@ int solve_part1(const std::string& filename) {
   return (horizontal * depth);
 }
 
-int solve_part2(const std::string& filename) {
+int solve_part2(const commands_t& commands) {
   int horizontal = 0;
   int depth = 0;
   int aim = 0;
 
-  for (std::string_view line : aoc::views::read_lines(filename)) {
-    auto values = aoc::split_once(line, ' ');
-    auto command = values[0];
-    auto number = aoc::to_number<int>(values[1]);
-
+  for (const auto& [command, number] : commands) {
     if (command == "forward") {
       horizontal += number;
       depth += (aim * number);
@@ -58,11 +67,14 @@ int solve_part2(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(150, solve_part1("day02.example"));
-  AOC_EXPECT_RESULT(2120749, solve_part1("day02.input"));
+  const auto example = parse("day02.example");
+  AOC_EXPECT_RESULT(150, solve_part1(example));
+  const auto input = parse("day02.input");
+  AOC_EXPECT_RESULT(2120749, solve_part1(input));
 
   std::println("Part 2");
-  AOC_EXPECT_RESULT(900, solve_part2("day02.example"));
-  AOC_EXPECT_RESULT(2138382217, solve_part2("day02.input"));
+  AOC_EXPECT_RESULT(900, solve_part2(example));
+  AOC_EXPECT_RESULT(2138382217, solve_part2(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

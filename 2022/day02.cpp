@@ -99,5 +99,6 @@ int main() {
   std::println("Part 2");
   AOC_EXPECT_RESULT(12, solve_case2(example));
   AOC_EXPECT_RESULT(10274, solve_case2(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

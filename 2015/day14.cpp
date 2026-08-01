@@ -27,9 +27,9 @@ auto parse(String const& filename) -> Vec<Reindeer> {
 }
 
 template <u32 SECONDS>
-fn solve_case1(String const& filename) -> u32 {
-  return stdr::max(
-      parse(filename) | stdv::transform([](Reindeer const& reindeer) {
+fn solve_case1(Vec<Reindeer> const& flock) -> u32 {
+  return stdr::max( //
+      flock | stdv::transform([](Reindeer const& reindeer) {
         let cycle_time = reindeer.fly + reindeer.rest;
         let num_cycles = SECONDS / cycle_time;
         let remainder = SECONDS % cycle_time;
@@ -40,8 +40,7 @@ fn solve_case1(String const& filename) -> u32 {
 }
 
 template <u32 SECONDS>
-fn solve_case2(String const& filename) -> u32 {
-  let flock = parse(filename);
+fn solve_case2(Vec<Reindeer> const& flock) -> u32 {
   auto distances = std::array<u32, 9>{};
   auto score = std::array<u32, 9>{};
   AOC_ASSERT(flock.size() <= score.size(), "Too many reindeer");
@@ -71,10 +70,14 @@ fn solve_case2(String const& filename) -> u32 {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(1120, solve_case1<1000>("day14.example"));
-  AOC_EXPECT_RESULT(2660, solve_case1<2503>("day14.input"));
+  let example = parse("day14.example");
+  AOC_EXPECT_RESULT(1120, solve_case1<1000>(example));
+  let input = parse("day14.input");
+  AOC_EXPECT_RESULT(2660, solve_case1<2503>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(689, solve_case2<1000>("day14.example"));
-  AOC_EXPECT_RESULT(1256, solve_case2<2503>("day14.input"));
+  AOC_EXPECT_RESULT(689, solve_case2<1000>(example));
+  AOC_EXPECT_RESULT(1256, solve_case2<2503>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

@@ -158,10 +158,16 @@ constexpr int tiles_on_best_paths(const maze_t& maze, point start_pos,
   return tiles.size();
 }
 
-template <bool tiles>
-int solve_case(const std::string& filename) {
-  auto [maze, config] = aoc::read_char_grid(
+using maze_input_t = std::pair<maze_t, aoc::char_grid_config_output>;
+
+maze_input_t parse(const std::string& filename) {
+  return aoc::read_char_grid(
       filename, {.padding = {}, .start_char = start, .end_char = end});
+}
+
+template <bool tiles>
+int solve_case(const maze_input_t& input) {
+  const auto& [maze, config] = input;
 
   int sum = 0;
   if constexpr (!tiles) {
@@ -175,18 +181,23 @@ int solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(7036, solve_case<false>("day16.example"));
-  AOC_EXPECT_RESULT(11048, solve_case<false>("day16.example2"));
+  const auto example = parse("day16.example");
+  AOC_EXPECT_RESULT(7036, solve_case<false>(example));
+  const auto example2 = parse("day16.example2");
+  AOC_EXPECT_RESULT(11048, solve_case<false>(example2));
   // https://www.reddit.com/r/adventofcode/comments/1hfhgl1/2024_day_16_part_1_alternate_test_case/
-  AOC_EXPECT_RESULT(21148, solve_case<false>("day16.example3"));
+  const auto example3 = parse("day16.example3");
+  AOC_EXPECT_RESULT(21148, solve_case<false>(example3));
   // https://www.reddit.com/r/adventofcode/comments/1hgyuqm/2024_day_16_part_1/
-  AOC_EXPECT_RESULT(5027, solve_case<false>("day16.example4"));
-  AOC_EXPECT_RESULT(94436, solve_case<false>("day16.input"));
+  const auto example4 = parse("day16.example4");
+  AOC_EXPECT_RESULT(5027, solve_case<false>(example4));
+  const auto input = parse("day16.input");
+  AOC_EXPECT_RESULT(94436, solve_case<false>(input));
 
   std::println("Part 2");
-  AOC_EXPECT_RESULT(45, solve_case<true>("day16.example"));
-  AOC_EXPECT_RESULT(64, solve_case<true>("day16.example2"));
-  AOC_EXPECT_RESULT(481, solve_case<true>("day16.input"));
+  AOC_EXPECT_RESULT(45, solve_case<true>(example));
+  AOC_EXPECT_RESULT(64, solve_case<true>(example2));
+  AOC_EXPECT_RESULT(481, solve_case<true>(input));
 
   AOC_RETURN_CHECK_RESULT();
 }

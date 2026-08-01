@@ -61,15 +61,13 @@ fn max_happiness(matrix: &Grid<i32>) -> i32 {
         .unwrap_or(0)
 }
 
-fn solve_case1(filename: &str) -> i32 {
-    let connections = parse(filename);
-    max_happiness(&adjacency_matrix(&connections))
+fn solve_case1(connections: &Connections) -> i32 {
+    max_happiness(&adjacency_matrix(connections))
 }
 
-fn solve_case2(filename: &str) -> i32 {
-    let connections = parse(filename);
+fn solve_case2(connections: &Connections) -> i32 {
     let n = connections.len();
-    let base = adjacency_matrix(&connections);
+    let base = adjacency_matrix(connections);
     let n2 = n + 1;
     let mut matrix = Grid::new(0i32, n2, n2);
     for row in 0..n {
@@ -82,10 +80,12 @@ fn solve_case2(filename: &str) -> i32 {
 
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(330, solve_case1("day13.example"));
-    aoc::expect_result!(664, solve_case1("day13.input"));
+    let example = parse("day13.example");
+    aoc::expect_result!(330, solve_case1(&example));
+    let input = parse("day13.input");
+    aoc::expect_result!(664, solve_case1(&input));
 
     println!("Part 2");
-    aoc::expect_result!(286, solve_case2("day13.example"));
-    aoc::expect_result!(640, solve_case2("day13.input"));
+    aoc::expect_result!(286, solve_case2(&example));
+    aoc::expect_result!(640, solve_case2(&input));
 }

@@ -55,9 +55,8 @@ fn score_cookie<const KCAL_500: bool>(ingredients: &[Ingredient], teaspoon_stack
     .product();
 }
 
-fn solve_case<const KCAL_500: bool>(filename: &str) -> u32 {
+fn solve_case<const KCAL_500: bool>(ingredients: &[Ingredient]) -> u32 {
     const LIMIT: u32 = 100;
-    let ingredients = parse(filename);
     let mut max_score = 0;
     let mut teaspoon_stack = Vec::<u32>::new();
     teaspoon_stack.push(0);
@@ -79,7 +78,7 @@ fn solve_case<const KCAL_500: bool>(filename: &str) -> u32 {
         }
         if (teaspoon_stack.len() == (ingredients.len() - 1)) {
             teaspoon_stack.push(LIMIT - teaspoons);
-            let score = score_cookie::<KCAL_500>(&ingredients, &teaspoon_stack);
+            let score = score_cookie::<KCAL_500>(ingredients, &teaspoon_stack);
             max_score = max_score.max(score);
             teaspoon_stack.pop();
             *teaspoon_stack.last_mut().unwrap() += 1;
@@ -93,9 +92,12 @@ fn solve_case<const KCAL_500: bool>(filename: &str) -> u32 {
 
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(62842880, solve_case::<false>("day15.example"));
-    aoc::expect_result!(21367368, solve_case::<false>("day15.input"));
+    let example = parse("day15.example");
+    aoc::expect_result!(62842880, solve_case::<false>(&example));
+    let input = parse("day15.input");
+    aoc::expect_result!(21367368, solve_case::<false>(&input));
+
     println!("Part 2");
-    aoc::expect_result!(57600000, solve_case::<true>("day15.example"));
-    aoc::expect_result!(1766400, solve_case::<true>("day15.input"));
+    aoc::expect_result!(57600000, solve_case::<true>(&example));
+    aoc::expect_result!(1766400, solve_case::<true>(&input));
 }

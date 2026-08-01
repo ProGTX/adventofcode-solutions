@@ -106,11 +106,12 @@ constexpr int most_bananas(std::span<const int> secrets) {
   return stdr::max(value_total);
 }
 
-template <bool change_sequence>
-int_t solve_case(const std::string& filename) {
-  auto buyer_starters =
-      aoc::views::read_numbers<int>(filename) | aoc::collect_vec<int>();
+std::vector<int> parse(const std::string& filename) {
+  return aoc::views::read_numbers<int>(filename) | aoc::collect_vec<int>();
+}
 
+template <bool change_sequence>
+int_t solve_case(const std::vector<int>& buyer_starters) {
   int_t sum = 0;
   if constexpr (!change_sequence) {
     sum = sum_secrets(buyer_starters);
@@ -123,15 +124,18 @@ int_t solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(37327623, solve_case<false>("day22.example"));
-  AOC_EXPECT_RESULT(20215960478, solve_case<false>("day22.input"));
+  const auto example = parse("day22.example");
+  AOC_EXPECT_RESULT(37327623, solve_case<false>(example));
+  const auto input = parse("day22.input");
+  AOC_EXPECT_RESULT(20215960478, solve_case<false>(input));
+
   std::println("Part 2");
 
   // The following two calls can't be static_assert because of compiler limits
   AOC_EXPECT_RESULT(9, most_bananas(std::array{123}));
   AOC_EXPECT_RESULT(23, most_bananas(std::array{1, 2, 3, 2024}));
-  AOC_EXPECT_RESULT(24, solve_case<true>("day22.example"));
-  AOC_EXPECT_RESULT(2221, solve_case<true>("day22.input"));
+  AOC_EXPECT_RESULT(24, solve_case<true>(example));
+  AOC_EXPECT_RESULT(2221, solve_case<true>(input));
 
   AOC_RETURN_CHECK_RESULT();
 }

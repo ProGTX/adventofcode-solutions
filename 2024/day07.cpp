@@ -76,14 +76,30 @@ static_assert(292 == evaluate_equation<true>(292, std::array{11, 6, 16, 20}));
 static_assert(3125401 ==
               evaluate_equation<true>(3125401, std::array{62, 456, 52, 5, 1}));
 
-template <bool concat>
-int_t solve_case(const std::string& filename) {
-  int_t sum = 0;
+struct equation_t {
+  int_t test_value;
+  operands_t operands;
+};
+
+using equations_t = std::vector<equation_t>;
+
+equations_t parse(const std::string& filename) {
+  equations_t equations;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
     auto [test_value_str, operands_str] = aoc::split_once(line, ':');
-    auto test_value = aoc::to_number<int_t>(test_value_str);
-    auto operands = aoc::split<operands_t>(operands_str.substr(1), ' ');
+    equations.emplace_back(aoc::to_number<int_t>(test_value_str),
+                           aoc::split<operands_t>(operands_str.substr(1), ' '));
+  }
+
+  return equations;
+}
+
+template <bool concat>
+int_t solve_case(const equations_t& equations) {
+  int_t sum = 0;
+
+  for (const auto& [test_value, operands] : equations) {
     sum += evaluate_equation<concat>(test_value, operands);
   }
 
@@ -92,10 +108,14 @@ int_t solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(3749, solve_case<false>("day07.example"));
-  AOC_EXPECT_RESULT(5702958180383, solve_case<false>("day07.input"));
+  const auto example = parse("day07.example");
+  AOC_EXPECT_RESULT(3749, solve_case<false>(example));
+  const auto input = parse("day07.input");
+  AOC_EXPECT_RESULT(5702958180383, solve_case<false>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(11387, solve_case<true>("day07.example"));
-  AOC_EXPECT_RESULT(92612386119138, solve_case<true>("day07.input"));
+  AOC_EXPECT_RESULT(11387, solve_case<true>(example));
+  AOC_EXPECT_RESULT(92612386119138, solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

@@ -22,11 +22,15 @@ void look_and_say(Vec<u32> const& input, Vec<u32>& output) {
   }
 }
 
+Vec<u32> parse(const std::string& filename) {
+  return aoc::read_single_line(filename) |
+         aoc::views::to_number<u32>() |
+         aoc::collect_vec<u32>();
+}
+
 template <int iterations>
-int solve_case(const std::string& filename) {
-  auto input = aoc::read_single_line(filename) |
-               aoc::views::to_number<u32>() |
-               aoc::collect_vec<u32>();
+int solve_case(Vec<u32> const& digits) {
+  auto input = digits;
   auto output = decltype(input){};
   for ([[maybe_unused]] auto index : stdv::iota(0, iterations)) {
     look_and_say(input, output);
@@ -37,10 +41,14 @@ int solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(237746, solve_case<40>("day10.example"));
-  AOC_EXPECT_RESULT(360154, solve_case<40>("day10.input"));
+  let example = parse("day10.example");
+  AOC_EXPECT_RESULT(237746, solve_case<40>(example));
+  let input = parse("day10.input");
+  AOC_EXPECT_RESULT(360154, solve_case<40>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(3369156, solve_case<50>("day10.example"));
-  AOC_EXPECT_RESULT(5103798, solve_case<50>("day10.input"));
+  AOC_EXPECT_RESULT(3369156, solve_case<50>(example));
+  AOC_EXPECT_RESULT(5103798, solve_case<50>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

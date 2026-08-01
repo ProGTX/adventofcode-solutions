@@ -62,8 +62,7 @@ fn score_cookie(std::span<const Ingredient> ingredients,
 }
 
 template <bool KCAL_500>
-fn solve_case(String const& filename) -> u32 {
-  let ingredients = parse(filename);
+fn solve_case(Vec<Ingredient> const& ingredients) -> u32 {
   auto max_score = 0u;
   for (let& teaspoon_stack : ingredients | aoc::views::counted_combinations(
                                                aoc::combinations_args<u32>{
@@ -80,10 +79,14 @@ fn solve_case(String const& filename) -> u32 {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(62842880, solve_case<false>("day15.example"));
-  AOC_EXPECT_RESULT(21367368, solve_case<false>("day15.input"));
+  let example = parse("day15.example");
+  AOC_EXPECT_RESULT(62842880, solve_case<false>(example));
+  let input = parse("day15.input");
+  AOC_EXPECT_RESULT(21367368, solve_case<false>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(57600000, solve_case<true>("day15.example"));
-  AOC_EXPECT_RESULT(1766400, solve_case<true>("day15.input"));
+  AOC_EXPECT_RESULT(57600000, solve_case<true>(example));
+  AOC_EXPECT_RESULT(1766400, solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

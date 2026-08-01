@@ -64,8 +64,10 @@ int main() {
   AOC_EXPECT_RESULT(4, (solve_case<4, false>(example)));
   let input = parse("day18.input");
   AOC_EXPECT_RESULT(1061, (solve_case<100, false>(input)));
+
   std::println("Part 2");
   AOC_EXPECT_RESULT(17, (solve_case<5, true>(example)));
   AOC_EXPECT_RESULT(1006, (solve_case<100, true>(input)));
+
   AOC_RETURN_CHECK_RESULT();
 }

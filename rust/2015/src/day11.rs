@@ -152,12 +152,15 @@ fn next_password(password: &Vec<u32>) -> Vec<u32> {
     next
 }
 
-fn next_password_str(password: &str) -> String {
-    to_string(&next_password(&to_numbers(&password)))
+fn parse(filename: &str) -> String {
+    std::fs::read_to_string(filename)
+        .unwrap()
+        .trim()
+        .to_string()
 }
 
-fn solve_case(filename: &str) -> String {
-    next_password_str(&std::fs::read_to_string(filename).unwrap().trim())
+fn solve_case(password: &str) -> String {
+    to_string(&next_password(&to_numbers(&password)))
 }
 
 fn main() {
@@ -181,12 +184,14 @@ fn main() {
     assert!(is_valid_password(&ghjaabcc));
 
     println!("Part 1");
-    let example_solved = solve_case("day11.example");
+    let example = parse("day11.example");
+    let example_solved = solve_case(&example);
     aoc::expect_result!("ghjaabcc", &example_solved);
-    let input_solved = solve_case("day11.input");
+    let input = parse("day11.input");
+    let input_solved = solve_case(&input);
     aoc::expect_result!("hxbxxyzz", &input_solved);
 
     println!("Part 2");
-    aoc::expect_result!("ghjbbcdd", next_password_str(&example_solved));
-    aoc::expect_result!("hxcaabcc", next_password_str(&input_solved));
+    aoc::expect_result!("ghjbbcdd", solve_case(&example_solved));
+    aoc::expect_result!("hxcaabcc", solve_case(&input_solved));
 }

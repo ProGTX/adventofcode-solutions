@@ -52,8 +52,7 @@ constexpr int safety_factor(std::span<const robot_t> robots) {
                          std::multiplies{});
 }
 
-template <point grid_size, int seconds>
-int solve_case(const std::string& filename) {
+std::vector<robot_t> parse(const std::string& filename) {
   std::vector<robot_t> robots;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
@@ -63,6 +62,11 @@ int solve_case(const std::string& filename) {
     robots.push_back({position, velocity});
   }
 
+  return robots;
+}
+
+template <point grid_size, int seconds>
+int solve_case(const std::vector<robot_t>& robots) {
   int sum = 0;
   sum = safety_factor<grid_size>(move_all_robots<grid_size, seconds>(robots));
 
@@ -71,13 +75,15 @@ int solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(12, (solve_case<{11, 7}, 100>("day14.example")));
-  AOC_EXPECT_RESULT(221655456, (solve_case<{101, 103}, 100>("day14.input")));
+  const auto example = parse("day14.example");
+  AOC_EXPECT_RESULT(12, (solve_case<{11, 7}, 100>(example)));
+  const auto input = parse("day14.input");
+  AOC_EXPECT_RESULT(221655456, (solve_case<{101, 103}, 100>(input)));
 
   std::println("Part 2");
   aoc::return_incomplete();
-  // AOC_EXPECT_RESULT(281, (solve_case<{11,7},true>("day14.example")));
-  // AOC_EXPECT_RESULT(53515, (solve_case<{101, 103},true>("day14.input")));
+  // AOC_EXPECT_RESULT(281, (solve_case<{11,7},true>(example)));
+  // AOC_EXPECT_RESULT(53515, (solve_case<{101, 103},true>(input)));
 
   AOC_RETURN_CHECK_RESULT();
 }

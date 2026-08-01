@@ -79,8 +79,14 @@ constexpr int_t get_z(std::span<const int> wires) {
   return number;
 }
 
-template <bool>
-int_t solve_case(const std::string& filename) {
+struct device_t {
+  std::vector<int> wires;
+  std::vector<gate_t> outputs;
+  int input_id_end;
+  int regular_wire_id_end;
+};
+
+device_t parse(const std::string& filename) {
   aoc::flat_map<std::string, int> wire_ids;
   std::vector<int> wires;
   std::vector<gate_t> outputs;
@@ -145,22 +151,30 @@ int_t solve_case(const std::string& filename) {
 
   const auto regular_wire_id_end = wire_id;
 
-  int_t sum = 0;
-  sum = get_z(solve_wires(wires, outputs, input_id_end, regular_wire_id_end));
+  return {std::move(wires), std::move(outputs), input_id_end,
+          regular_wire_id_end};
+}
 
-  return sum;
+template <bool>
+int_t solve_case(const device_t& device) {
+  auto wires = device.wires;
+  return get_z(solve_wires(wires, device.outputs, device.input_id_end,
+                           device.regular_wire_id_end));
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(4, solve_case<false>("day24.example"));
-  AOC_EXPECT_RESULT(2024, solve_case<false>("day24.example2"));
-  AOC_EXPECT_RESULT(64755511006320, solve_case<false>("day24.input"));
+  const auto example = parse("day24.example");
+  AOC_EXPECT_RESULT(4, solve_case<false>(example));
+  const auto example2 = parse("day24.example2");
+  AOC_EXPECT_RESULT(2024, solve_case<false>(example2));
+  const auto input = parse("day24.input");
+  AOC_EXPECT_RESULT(64755511006320, solve_case<false>(input));
 
   std::println("Part 2");
   aoc::return_incomplete();
-  // AOC_EXPECT_RESULT(281, solve_case<true>("day24.example"));
-  // AOC_EXPECT_RESULT(53515, solve_case<true>("day24.input"));
+  // AOC_EXPECT_RESULT(281, solve_case<true>(example));
+  // AOC_EXPECT_RESULT(53515, solve_case<true>(input));
 
   AOC_RETURN_CHECK_RESULT();
 }

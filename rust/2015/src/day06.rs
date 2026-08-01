@@ -32,42 +32,68 @@ fn parse_point(s: &str, separator: &str) -> (usize, usize) {
     (column_s.parse().unwrap(), row_s.parse().unwrap())
 }
 
-fn solve_case<const BRIGHTNESS: bool>(filename: &str) -> u32 {
-    let mut lights = Grid::new(0, 1000, 1000);
+enum OpT {
+    TurnOn,
+    TurnOff,
+    Toggle,
+}
+
+struct Instruction {
+    op: OpT,
+    begin: (usize, usize),
+    end: (usize, usize),
+}
+
+fn parse(filename: &str) -> Vec<Instruction> {
+    let mut instructions = Vec::new();
     for line in std::fs::read_to_string(filename).unwrap().lines() {
-        let (operation, rest) = if line.starts_with(TURN_ON) {
-            (
-                if !BRIGHTNESS {
-                    turn_on_fn1 as OpFnT
-                } else {
-                    turn_on_fn2 as OpFnT
-                },
-                &line[TURN_ON.len()..],
-            )
+        let (op, rest) = if line.starts_with(TURN_ON) {
+            (OpT::TurnOn, &line[TURN_ON.len()..])
         } else if line.starts_with(TURN_OFF) {
-            (
-                if !BRIGHTNESS {
-                    turn_off_fn1 as OpFnT
-                } else {
-                    turn_off_fn2 as OpFnT
-                },
-                &line[TURN_OFF.len()..],
-            )
+            (OpT::TurnOff, &line[TURN_OFF.len()..])
         } else if line.starts_with(TOGGLE) {
-            (
-                if !BRIGHTNESS {
-                    toggle_fn1 as OpFnT
-                } else {
-                    toggle_fn2 as OpFnT
-                },
-                &line[TOGGLE.len()..],
-            )
+            (OpT::Toggle, &line[TOGGLE.len()..])
         } else {
             unreachable!("Unexpected line: {}", line)
         };
         let (begin, end) = rest.split_once(THROUGH).unwrap();
-        let (beginx, beginy) = parse_point(begin, ",");
-        let (endx, endy) = parse_point(end, ",");
+        instructions.push(Instruction {
+            op,
+            begin: parse_point(begin, ","),
+            end: parse_point(end, ","),
+        });
+    }
+    instructions
+}
+
+fn solve_case<const BRIGHTNESS: bool>(instructions: &[Instruction]) -> u32 {
+    let mut lights = Grid::new(0, 1000, 1000);
+    for instruction in instructions {
+        let operation = match instruction.op {
+            OpT::TurnOn => {
+                if !BRIGHTNESS {
+                    turn_on_fn1 as OpFnT
+                } else {
+                    turn_on_fn2 as OpFnT
+                }
+            }
+            OpT::TurnOff => {
+                if !BRIGHTNESS {
+                    turn_off_fn1 as OpFnT
+                } else {
+                    turn_off_fn2 as OpFnT
+                }
+            }
+            OpT::Toggle => {
+                if !BRIGHTNESS {
+                    toggle_fn1 as OpFnT
+                } else {
+                    toggle_fn2 as OpFnT
+                }
+            }
+        };
+        let (beginx, beginy) = instruction.begin;
+        let (endx, endy) = instruction.end;
 
         for row in beginy..(endy + 1) {
             for column in beginx..(endx + 1) {
@@ -86,9 +112,12 @@ fn solve_case<const BRIGHTNESS: bool>(filename: &str) -> u32 {
 
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(998996, solve_case::<false>("day06.example"));
-    aoc::expect_result!(569999, solve_case::<false>("day06.input"));
+    let example = parse("day06.example");
+    aoc::expect_result!(998996, solve_case::<false>(&example));
+    let input = parse("day06.input");
+    aoc::expect_result!(569999, solve_case::<false>(&input));
+
     println!("Part 2");
-    aoc::expect_result!(1001996, solve_case::<true>("day06.example"));
-    aoc::expect_result!(17836115, solve_case::<true>("day06.input"));
+    aoc::expect_result!(1001996, solve_case::<true>(&example));
+    aoc::expect_result!(17836115, solve_case::<true>(&input));
 }

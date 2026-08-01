@@ -55,8 +55,10 @@ static constexpr const auto or_str = "OR"sv;
 static constexpr const auto lshift_str = "LSHIFT"sv;
 static constexpr const auto rshift_str = "RSHIFT"sv;
 
-std::tuple<std::vector<gate_t>, signal_t, signal_t> parse(
-    const std::string& filename) {
+// The gates, plus the IDs of wires "a" and "b"
+using circuit_t = std::tuple<std::vector<gate_t>, signal_t, signal_t>;
+
+circuit_t parse(const std::string& filename) {
   auto name_to_id = aoc::name_to_id(first_wire_id);
   const auto get_signal = [&](std::string_view wire_name) -> signal_t {
     if (std::isdigit(wire_name[0])) {
@@ -146,8 +148,8 @@ constexpr strict_signal_t solve_wire(const std::span<gate_t> inputs,
 }
 
 template <bool override>
-strict_signal_t solve_case(const std::string& filename) {
-  auto [inputs, a, b] = parse(filename);
+strict_signal_t solve_case(circuit_t circuit) {
+  auto [inputs, a, b] = std::move(circuit);
   strict_signal_t result = 0;
   {
     auto inputs_copy = [&]() {
@@ -172,10 +174,14 @@ strict_signal_t solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(114, solve_case<false>("day07.example"));
-  AOC_EXPECT_RESULT(16076, solve_case<false>("day07.input"));
+  const auto example = parse("day07.example");
+  AOC_EXPECT_RESULT(114, solve_case<false>(example));
+  const auto input = parse("day07.input");
+  AOC_EXPECT_RESULT(16076, solve_case<false>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(28, solve_case<true>("day07.example"));
-  AOC_EXPECT_RESULT(2797, solve_case<true>("day07.input"));
+  AOC_EXPECT_RESULT(28, solve_case<true>(example));
+  AOC_EXPECT_RESULT(2797, solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

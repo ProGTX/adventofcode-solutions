@@ -59,6 +59,7 @@ fn main() {
     aoc::expect_result!(4, solve_case::<4, false>(&example));
     let input = parse("day18.input");
     aoc::expect_result!(1061, solve_case::<100, false>(&input));
+
     println!("Part 2");
     aoc::expect_result!(17, solve_case::<5, true>(&example));
     aoc::expect_result!(1006, solve_case::<100, true>(&input));

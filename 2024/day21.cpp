@@ -2,6 +2,4 @@
 
 #include "../common/common.h"
 
-int main() {
-  aoc::return_incomplete();
-}
+int main() { aoc::return_incomplete(); }

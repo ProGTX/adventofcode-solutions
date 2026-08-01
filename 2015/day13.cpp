@@ -69,13 +69,11 @@ fn max_happiness(aoc::grid<int> const& matrix) -> int {
   return best;
 }
 
-fn solve_case1(const std::string& filename) -> int {
-  let connections = parse(filename);
+fn solve_case1(connections_t const& connections) -> int {
   return max_happiness(adjacency_matrix(connections));
 }
 
-fn solve_case2(const std::string& filename) -> int {
-  let connections = parse(filename);
+fn solve_case2(connections_t const& connections) -> int {
   auto base = adjacency_matrix(connections);
   let n = base.num_rows();
   auto extended = aoc::grid<int>(0, n + 1, n + 1);
@@ -89,12 +87,14 @@ fn solve_case2(const std::string& filename) -> int {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(330, solve_case1("day13.example"));
-  AOC_EXPECT_RESULT(664, solve_case1("day13.input"));
+  let example = parse("day13.example");
+  AOC_EXPECT_RESULT(330, solve_case1(example));
+  let input = parse("day13.input");
+  AOC_EXPECT_RESULT(664, solve_case1(input));
 
   std::println("Part 2");
-  AOC_EXPECT_RESULT(286, solve_case2("day13.example"));
-  AOC_EXPECT_RESULT(640, solve_case2("day13.input"));
+  AOC_EXPECT_RESULT(286, solve_case2(example));
+  AOC_EXPECT_RESULT(640, solve_case2(input));
 
   AOC_RETURN_CHECK_RESULT();
 }

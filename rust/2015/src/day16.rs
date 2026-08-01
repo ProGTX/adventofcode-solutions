@@ -1,6 +1,25 @@
 use std::collections::HashMap;
 
-fn solve_case<const RANGES: bool>(filename: &str) -> u32 {
+// Each aunt is described by exactly three known compounds
+type Sue = Vec<(String, u32)>;
+
+fn parse(filename: &str) -> Vec<Sue> {
+    std::fs::read_to_string(filename)
+        .unwrap()
+        .lines()
+        .map(|line| {
+            let (_, info) = line.split_once(": ").unwrap();
+            info.split(", ")
+                .map(|info| {
+                    let (key, value) = info.split_once(": ").unwrap();
+                    (key.to_string(), value.parse::<u32>().unwrap())
+                })
+                .collect()
+        })
+        .collect()
+}
+
+fn solve_case<const RANGES: bool>(sues: &[Sue]) -> u32 {
     let generous_sue = HashMap::from([
         ("children", 3),
         ("cats", 7),
@@ -14,17 +33,11 @@ fn solve_case<const RANGES: bool>(filename: &str) -> u32 {
         ("perfumes", 1),
     ]);
 
-    for (index, line) in std::fs::read_to_string(filename)
-        .unwrap()
-        .lines()
-        .enumerate()
-    {
-        let (_, info) = line.split_once(": ").unwrap();
-        let split_info = info.split(", ");
-        let matches = split_info.into_iter().all(|info| {
-            let (key, value) = info.split_once(": ").unwrap();
+    for (index, sue) in sues.iter().enumerate() {
+        let matches = sue.iter().all(|(key, value)| {
+            let key = key.as_str();
             let required = *generous_sue.get(key).unwrap();
-            let actual = value.parse::<u32>().unwrap();
+            let actual = *value;
             if (!RANGES) {
                 return actual == required;
             } else {
@@ -44,7 +57,9 @@ fn solve_case<const RANGES: bool>(filename: &str) -> u32 {
 
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(373, solve_case::<false>("day16.input"));
+    let input = parse("day16.input");
+    aoc::expect_result!(373, solve_case::<false>(&input));
+
     println!("Part 2");
-    aoc::expect_result!(260, solve_case::<true>("day16.input"));
+    aoc::expect_result!(260, solve_case::<true>(&input));
 }

@@ -10,6 +10,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <vector>
 
 using int_t = std::int64_t;
 
@@ -35,16 +36,24 @@ int_t simulate_fish(school<production_length>& fish) {
          aoc::ranges::accumulate(brood, int_t{0});
 }
 
-template <int num_days, int production_length, int maturing_length>
-int_t solve_case(const std::string& filename) {
-  using lanternfish = school<production_length>;
-  lanternfish fish{};
-
+std::vector<int> parse(const std::string& filename) {
+  std::vector<int> fish_stages;
   for (std::string_view line : aoc::views::read_lines(filename)) {
     auto stages = aoc::split_to_vec<int>(line, ',');
     for (const int fish_stage : stages) {
-      ++fish[fish_stage];
+      fish_stages.push_back(fish_stage);
     }
+  }
+  return fish_stages;
+}
+
+template <int num_days, int production_length, int maturing_length>
+int_t solve_case(const std::vector<int>& fish_stages) {
+  using lanternfish = school<production_length>;
+  lanternfish fish{};
+
+  for (const int fish_stage : fish_stages) {
+    ++fish[fish_stage];
   }
 
   int_t num_fish =
@@ -54,13 +63,15 @@ int_t solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(26, (solve_case<18, 7, 2>("day06.example")));
-  AOC_EXPECT_RESULT(5934, (solve_case<80, 7, 2>("day06.example")));
-  AOC_EXPECT_RESULT(371379, (solve_case<80, 7, 2>("day06.input")));
+  const auto example = parse("day06.example");
+  AOC_EXPECT_RESULT(26, (solve_case<18, 7, 2>(example)));
+  AOC_EXPECT_RESULT(5934, (solve_case<80, 7, 2>(example)));
+  const auto input = parse("day06.input");
+  AOC_EXPECT_RESULT(371379, (solve_case<80, 7, 2>(input)));
 
   std::println("Part 2");
-  AOC_EXPECT_RESULT(26984457539, (solve_case<256, 7, 2>("day06.example")));
-  AOC_EXPECT_RESULT(1674303997472, (solve_case<256, 7, 2>("day06.input")));
+  AOC_EXPECT_RESULT(26984457539, (solve_case<256, 7, 2>(example)));
+  AOC_EXPECT_RESULT(1674303997472, (solve_case<256, 7, 2>(input)));
 
   AOC_RETURN_CHECK_RESULT();
 }

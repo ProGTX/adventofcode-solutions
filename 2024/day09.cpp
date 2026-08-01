@@ -172,13 +172,17 @@ constexpr int_t compact_from_disk_map(std::string_view disk_map) {
 
 static_assert(60 == compact_from_disk_map<false>("12345"));
 
-template <bool nonfragment>
-int_t solve_case(const std::string& filename) {
+std::string parse(const std::string& filename) {
   std::string disk_map;
   for (std::string line : aoc::views::read_lines(filename)) {
     disk_map = std::move(line);
     break;
   }
+  return disk_map;
+}
+
+template <bool nonfragment>
+int_t solve_case(const std::string& disk_map) {
   auto sum = compact_from_disk_map<nonfragment>(disk_map);
 
   return sum;
@@ -186,10 +190,14 @@ int_t solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(1928, solve_case<false>("day09.example"));
-  AOC_EXPECT_RESULT(6432869891895, solve_case<false>("day09.input"));
+  const auto example = parse("day09.example");
+  AOC_EXPECT_RESULT(1928, solve_case<false>(example));
+  const auto input = parse("day09.input");
+  AOC_EXPECT_RESULT(6432869891895, solve_case<false>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(2858, solve_case<true>("day09.example"));
-  AOC_EXPECT_RESULT(6467290479134, solve_case<true>("day09.input"));
+  AOC_EXPECT_RESULT(2858, solve_case<true>(example));
+  AOC_EXPECT_RESULT(6467290479134, solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

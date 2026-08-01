@@ -95,8 +95,7 @@ int_t lowest_fuel_all(crabs_t const& crabs) {
   return lowest_cost;
 }
 
-template <bool progressive_cost>
-int_t solve_case(const std::string& filename) {
+crabs_t parse(const std::string& filename) {
   crabs_t crabs;
 
   for (std::string_view line : aoc::views::read_lines(filename)) {
@@ -111,6 +110,11 @@ int_t solve_case(const std::string& filename) {
     }
   }
 
+  return crabs;
+}
+
+template <bool progressive_cost>
+int_t solve_case(crabs_t const& crabs) {
   int_t cost = 0;
   if constexpr (!progressive_cost) {
     cost = lowest_fuel_deltas(crabs);
@@ -122,10 +126,14 @@ int_t solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(37, (solve_case<false>("day07.example")));
-  AOC_EXPECT_RESULT(355592, (solve_case<false>("day07.input")));
+  const auto example = parse("day07.example");
+  AOC_EXPECT_RESULT(37, (solve_case<false>(example)));
+  const auto input = parse("day07.input");
+  AOC_EXPECT_RESULT(355592, (solve_case<false>(input)));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(168, (solve_case<true>("day07.example")));
-  AOC_EXPECT_RESULT(101618069, (solve_case<true>("day07.input")));
+  AOC_EXPECT_RESULT(168, (solve_case<true>(example)));
+  AOC_EXPECT_RESULT(101618069, (solve_case<true>(input)));
+
   AOC_RETURN_CHECK_RESULT();
 }

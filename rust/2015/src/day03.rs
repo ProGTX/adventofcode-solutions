@@ -2,7 +2,14 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-fn deliveries<const NUM_SANTAS: usize>(directions: &str) -> i32 {
+fn parse(filename: &str) -> std::io::Result<String> {
+    let file = File::open(filename)?;
+    let mut line = String::new();
+    BufReader::new(file).read_line(&mut line)?;
+    Ok(line)
+}
+
+fn solve_case<const NUM_SANTAS: usize>(directions: &str) -> i32 {
     let mut santas = [(0, 0); NUM_SANTAS];
     let mut visited: [HashMap<(i32, i32), usize>; NUM_SANTAS] = std::array::from_fn(|_| {
         let mut map = HashMap::new();
@@ -30,25 +37,14 @@ fn deliveries<const NUM_SANTAS: usize>(directions: &str) -> i32 {
     visited[0].len() as i32
 }
 
-fn solve_case1(filename: &str) -> std::io::Result<i32> {
-    let file = File::open(filename)?;
-    let mut line = String::new();
-    BufReader::new(file).read_line(&mut line)?;
-    Ok(deliveries::<1>(&line))
-}
-
-fn solve_case2(filename: &str) -> std::io::Result<i32> {
-    let file = File::open(filename)?;
-    let mut line = String::new();
-    BufReader::new(file).read_line(&mut line)?;
-    Ok(deliveries::<2>(&line))
-}
-
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(4, solve_case1("day03.example").unwrap());
-    aoc::expect_result!(2565, solve_case1("day03.input").unwrap());
+    let example = parse("day03.example").unwrap();
+    aoc::expect_result!(4, solve_case::<1>(&example));
+    let input = parse("day03.input").unwrap();
+    aoc::expect_result!(2565, solve_case::<1>(&input));
+
     println!("Part 2");
-    aoc::expect_result!(3, solve_case2("day03.example").unwrap());
-    aoc::expect_result!(2639, solve_case2("day03.input").unwrap());
+    aoc::expect_result!(3, solve_case::<2>(&example));
+    aoc::expect_result!(2639, solve_case::<2>(&input));
 }

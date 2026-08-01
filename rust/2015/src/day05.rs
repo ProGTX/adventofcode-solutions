@@ -40,25 +40,29 @@ fn is_nice2(s: &str) -> bool {
     pair_repeats && letter_repeats
 }
 
-fn solve_case1(filename: &str) -> io::Result<i32> {
+fn parse(filename: &str) -> io::Result<Vec<String>> {
     Ok(std::fs::read_to_string(filename)?
         .lines()
-        .filter(|s| is_nice1(s))
-        .count() as i32)
+        .map(String::from)
+        .collect())
 }
 
-fn solve_case2(filename: &str) -> io::Result<i32> {
-    Ok(std::fs::read_to_string(filename)?
-        .lines()
-        .filter(|s| is_nice2(s))
-        .count() as i32)
+fn solve_case1(lines: &[String]) -> i32 {
+    lines.iter().filter(|s| is_nice1(s)).count() as i32
+}
+
+fn solve_case2(lines: &[String]) -> i32 {
+    lines.iter().filter(|s| is_nice2(s)).count() as i32
 }
 
 fn main() {
     println!("Part 1");
-    aoc::expect_result!(2, solve_case1("day05.example").unwrap());
-    aoc::expect_result!(258, solve_case1("day05.input").unwrap());
+    let example = parse("day05.example").unwrap();
+    aoc::expect_result!(2, solve_case1(&example));
+    let input = parse("day05.input").unwrap();
+    aoc::expect_result!(258, solve_case1(&input));
+
     println!("Part 2");
-    aoc::expect_result!(1, solve_case2("day05.example").unwrap());
-    aoc::expect_result!(53, solve_case2("day05.input").unwrap());
+    aoc::expect_result!(1, solve_case2(&example));
+    aoc::expect_result!(53, solve_case2(&input));
 }

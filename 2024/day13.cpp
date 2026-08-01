@@ -74,9 +74,10 @@ constexpr const std::string_view prize_prefix = "Prize: ";
 constexpr const std::string_view ax_prefix = "A: X+";
 constexpr const std::string_view y_prefix = " Y+";
 
-template <bool correct_conversion>
-int_t solve_case(const std::string& filename) {
-  std::vector<claw_machine> machines;
+using machines_t = std::vector<claw_machine>;
+
+machines_t parse(const std::string& filename) {
+  machines_t machines;
   machines.emplace_back();
 
   for (std::string_view line :
@@ -94,9 +95,6 @@ int_t solve_case(const std::string& filename) {
     if (prefix == prize_prefix) {
       current.prize = point_t{aoc::to_number<int_t>(x.substr(2)),
                               aoc::to_number<int_t>(y.substr(y_prefix.size()))};
-      if constexpr (correct_conversion) {
-        current.prize += point_t{correction, correction};
-      }
     } else if (line[0] == 'A') {
       current.a = point_t{aoc::to_number<int_t>(x.substr(ax_prefix.size())),
                           aoc::to_number<int_t>(y.substr(y_prefix.size()))};
@@ -105,6 +103,18 @@ int_t solve_case(const std::string& filename) {
                           aoc::to_number<int_t>(y.substr(y_prefix.size()))};
     } else {
       AOC_UNREACHABLE("Parsing failure");
+    }
+  }
+
+  return machines;
+}
+
+template <bool correct_conversion>
+int_t solve_case(const machines_t& parsed_machines) {
+  auto machines = parsed_machines;
+  if constexpr (correct_conversion) {
+    for (auto& machine : machines) {
+      machine.prize += point_t{correction, correction};
     }
   }
 
@@ -117,11 +127,14 @@ int_t solve_case(const std::string& filename) {
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(480, solve_case<false>("day13.example"));
-  AOC_EXPECT_RESULT(38714, solve_case<false>("day13.input"));
+  const auto example = parse("day13.example");
+  AOC_EXPECT_RESULT(480, solve_case<false>(example));
+  const auto input = parse("day13.input");
+  AOC_EXPECT_RESULT(38714, solve_case<false>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT((459236326669 + 416082282239),
-                    solve_case<true>("day13.example"));
-  AOC_EXPECT_RESULT(74015623345775, solve_case<true>("day13.input"));
+  AOC_EXPECT_RESULT((459236326669 + 416082282239), solve_case<true>(example));
+  AOC_EXPECT_RESULT(74015623345775, solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }

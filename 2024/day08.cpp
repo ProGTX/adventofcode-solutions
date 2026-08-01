@@ -63,8 +63,12 @@ constexpr int calculate_antinodes(const antennas_t& antennas,
   return antinodes.size();
 }
 
-template <bool harmonics>
-int solve_case(const std::string& filename) {
+struct map_t {
+  antennas_t antennas;
+  point grid_size;
+};
+
+map_t parse(const std::string& filename) {
   point grid_size{0, 0};
   antennas_t antennas;
 
@@ -81,17 +85,26 @@ int solve_case(const std::string& filename) {
     ++row;
   }
 
-  auto sum = calculate_antinodes<harmonics>(antennas, grid_size);
+  return {std::move(antennas), grid_size};
+}
+
+template <bool harmonics>
+int solve_case(const map_t& map) {
+  auto sum = calculate_antinodes<harmonics>(map.antennas, map.grid_size);
 
   return sum;
 }
 
 int main() {
   std::println("Part 1");
-  AOC_EXPECT_RESULT(14, solve_case<false>("day08.example"));
-  AOC_EXPECT_RESULT(220, solve_case<false>("day08.input"));
+  const auto example = parse("day08.example");
+  AOC_EXPECT_RESULT(14, solve_case<false>(example));
+  const auto input = parse("day08.input");
+  AOC_EXPECT_RESULT(220, solve_case<false>(input));
+
   std::println("Part 2");
-  AOC_EXPECT_RESULT(34, solve_case<true>("day08.example"));
-  AOC_EXPECT_RESULT(813, solve_case<true>("day08.input"));
+  AOC_EXPECT_RESULT(34, solve_case<true>(example));
+  AOC_EXPECT_RESULT(813, solve_case<true>(input));
+
   AOC_RETURN_CHECK_RESULT();
 }
