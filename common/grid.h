@@ -9,11 +9,13 @@
 #include "ranges.h"
 #include "static_vector.h"
 #include "string.h"
+#include "utility.h"
 
 #ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
 #include <array>
 #include <functional>
+#include <iterator>
 #include <map>
 #include <optional>
 #include <print>
@@ -476,6 +478,49 @@ using char_grid = grid<char, row_storage_t, Container>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // sparse_grid
+
+// https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp
+
+/// Iterates over the mapped values of a map, skipping over the keys.
+template <class map_iterator>
+struct map_value_iterator {
+ protected:
+  using map_iterator_t = map_iterator;
+  using map_value_t = map_iterator_t::value_type;
+
+ public:
+  using iterator_category = std::random_access_iterator_tag;
+  using difference_type = std::ptrdiff_t;
+  using value_type = decltype(std::declval<map_value_t>().second);
+  using pointer = value_type*;
+  using reference = value_type&;
+
+  constexpr map_value_iterator(map_iterator map_it) : m_map_it{map_it} {}
+
+  constexpr reference operator*() const { return m_map_it->second; }
+
+  constexpr pointer operator->() { return &m_map_it->second; }
+
+  constexpr map_value_iterator& operator++() {
+    ++m_map_it;
+    return *this;
+  }
+  constexpr map_value_iterator operator++(int) {
+    map_value_iterator tmp = *this;
+    ++(*this);
+    return tmp;
+  }
+
+  constexpr friend bool operator==(const map_value_iterator& lhs,
+                                   const map_value_iterator& rhs) {
+    return lhs.m_map_it == rhs.m_map_it;
+  };
+
+ private:
+  map_iterator_t m_map_it;
+};
+template <class map_iterator>
+map_value_iterator(map_iterator) -> map_value_iterator<map_iterator>;
 
 template <class T, T empty_value_param = T{},
           class point_class = point_type<int>,

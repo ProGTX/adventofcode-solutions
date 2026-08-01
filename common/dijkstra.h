@@ -3,14 +3,15 @@
 
 #include "compiler.h"
 #include "concepts.h"
+#include "functional.h"
 #include "range_to.h"
-#include "utility.h"
 
 #ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
 #include <array>
 #include <compare>
 #include <concepts>
+#include <cstddef>
 #include <functional>
 #include <map>
 #include <optional>
@@ -27,6 +28,40 @@
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {
+
+/**
+ * Simple priority queue because the std one isn't constexpr in C++23,
+ * should be in C++26.
+ */
+template <class T, class Compare = std::less<T>>
+class priority_queue {
+  std::vector<T> m_heap;
+  [[no_unique_address]] Compare m_comp;
+
+ public:
+  constexpr priority_queue() = default;
+  constexpr explicit priority_queue(Compare comp) : m_comp{std::move(comp)} {}
+
+  constexpr void push(T val) {
+    m_heap.push_back(std::move(val));
+    std::push_heap(m_heap.begin(), m_heap.end(), m_comp);
+  }
+
+  template <class... Args>
+  constexpr void emplace(Args&&... args) {
+    m_heap.emplace_back(std::forward<Args>(args)...);
+    std::push_heap(m_heap.begin(), m_heap.end(), m_comp);
+  }
+
+  constexpr void pop() {
+    std::pop_heap(m_heap.begin(), m_heap.end(), m_comp);
+    m_heap.pop_back();
+  }
+
+  constexpr const T& top() const { return m_heap.front(); }
+  constexpr bool empty() const { return m_heap.empty(); }
+  constexpr std::size_t size() const { return m_heap.size(); }
+};
 
 // A map-like container usable for Dijkstra distances:
 // keyed on Key, with an int-valued, mutable mapped type.

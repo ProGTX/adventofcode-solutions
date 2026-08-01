@@ -9,7 +9,9 @@
 #include <concepts>
 #include <functional>
 #include <iterator>
+#include <string>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 #endif
 
@@ -57,6 +59,22 @@ concept has_value_type =
 
 template <class Container>
 concept reservable = ranges::detail::reservable_container<Container>;
+
+/// Returns the maximum number of elements possible for a container.
+///
+/// For fixed size containers, this is their static size.
+/// For dynamic containers, it's `npos`.
+template <class output_t>
+constexpr size_t static_size() {
+  if constexpr (requires {
+                  std::tuple_size<std::remove_cvref_t<output_t>>::value;
+                }) {
+    return std::tuple_size<std::remove_cvref_t<output_t>>::value;
+  } else {
+    return std::string::npos;
+  }
+}
+static_assert(4 == static_size<std::array<int, 4>>());
 
 template <class T>
 struct is_array_class : std::false_type {};

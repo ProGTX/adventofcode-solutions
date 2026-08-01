@@ -4,7 +4,9 @@
 #include "compiler.h"
 #include "concepts.h"
 #include "flat.h"
+#include "parse.h"
 #include "range_to.h"
+#include "ranges.h"
 #include "utility.h"
 
 #ifndef AOC_MODULE_SUPPORT

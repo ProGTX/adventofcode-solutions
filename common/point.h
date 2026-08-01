@@ -3,9 +3,9 @@
 
 #include "assert.h"
 #include "compiler.h"
+#include "hash.h"
 #include "math.h"
 #include "ranges.h"
-#include "utility.h"
 
 #ifndef AOC_MODULE_SUPPORT
 #include <array>
@@ -19,9 +19,149 @@
 #include <ranges>
 #include <span>
 #include <type_traits>
+#include <utility>
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {
+
+/// The number of scalar components a type is made of.
+///
+/// Specialized by the point types below,
+/// closed_range uses it to pick between interval and line segment logic.
+template <class T>
+struct arity : public std::integral_constant<int, 1> {};
+
+template <class T>
+constexpr inline auto arity_v = arity<T>::value;
+
+template <class T>
+struct closed_range {
+  T begin;
+  T end;
+
+  constexpr closed_range(T first_, T last_)
+      : begin{std::move(first_)}, end{std::move(last_)} {
+    if (end < begin) {
+      // Ensure the range is ordered
+      std::swap(begin, end);
+    }
+  }
+
+  constexpr T direction() const { return end - begin; }
+
+  constexpr bool contains(const closed_range& other) const
+    requires(arity_v<T> == 1)
+  {
+    return (other.begin >= begin) && (other.end <= end);
+  }
+
+  // Given three collinear points p, q, r, the function checks if
+  // point q lies on line segment 'pr'
+  constexpr bool contains(const T& q) const
+    requires(arity_v<T> >= 2)
+  {
+    bool contains = get<0>(q) <= std::ranges::max(get<0>(begin), get<0>(end)) &&
+                    get<0>(q) >= std::ranges::min(get<0>(begin), get<0>(end)) &&
+                    get<1>(q) <= std::ranges::max(get<1>(begin), get<1>(end)) &&
+                    get<1>(q) >= std::ranges::min(get<1>(begin), get<1>(end));
+    if constexpr (arity_v<T> > 2) {
+      contains = contains &&
+                 get<2>(q) <= std::ranges::max(get<2>(begin), get<2>(end)) &&
+                 get<2>(q) >= std::ranges::min(get<2>(begin), get<2>(end));
+    }
+    return contains;
+  }
+
+  constexpr bool overlaps_with(const closed_range& other) const {
+    const bool overlaps = (begin <= other.end) && (end >= other.begin);
+    if constexpr (arity_v<T> == 2) {
+      return overlaps && overlaps_with_2d(other);
+    } else if constexpr (arity_v<T> == 3) {
+      return overlaps && overlaps_with_3d(other);
+    } else {
+      return overlaps;
+    }
+  }
+
+  // https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+  constexpr bool overlaps_with_2d(const closed_range& other) const
+    requires(arity_v<T> == 2)
+  {
+    const auto& p1 = begin;
+    const auto& q1 = end;
+    const auto& p2 = other.begin;
+    const auto& q2 = other.end;
+
+    // Find the four orientations needed for general and special cases
+    auto o1 = orientation(p1, q1, p2);
+    auto o2 = orientation(p1, q1, q2);
+    auto o3 = orientation(p2, q2, p1);
+    auto o4 = orientation(p2, q2, q1);
+
+    // General case
+    if ((o1 != o2) && (o3 != o4)) {
+      return true;
+    }
+
+    // Special Cases
+
+    // p1, q1 and p2 are collinear and p2 lies on segment p1q1
+    if ((o1 == 0) && contains(p2)) {
+      return true;
+    }
+    // p1, q1 and q2 are collinear and q2 lies on segment p1q1
+    if ((o2 == 0) && contains(q2)) {
+      return true;
+    }
+    // p2, q2 and p1 are collinear and p1 lies on segment p2q2
+    if ((o3 == 0) && other.contains(p1)) {
+      return true;
+    }
+    // p2, q2 and q1 are collinear and q1 lies on segment p2q2
+    if ((o4 == 0) && other.contains(q1)) {
+      return true;
+    }
+
+    return false; // Doesn't fall in any of the above cases
+  }
+
+  // https://stackoverflow.com/a/63288956
+  // https://forum.unity.com/threads/line-intersection.17384/
+  constexpr bool overlaps_with_3d(const closed_range& other) const
+    requires(arity_v<T> == 3)
+  {
+    const auto dir = direction();
+    const auto other_dir = other.direction();
+
+    // Handle single points
+    if (dir == T{}) {
+      return other.contains(begin);
+    } else if (other_dir == T{}) {
+      return contains(other.begin);
+    }
+
+    const auto begin_diff = other.begin - begin;
+    const auto directions_cross = dir.cross(other_dir);
+    const auto planar_factor = begin_diff.dot(directions_cross);
+    const auto dirs_cross_sqr_magnitude = directions_cross.sqr_magnitude();
+
+    const bool coplanar = (abs(planar_factor) == 0);
+    const bool parallel = (dirs_cross_sqr_magnitude == 0);
+    const bool lines_intersect = coplanar && !parallel;
+    if (!lines_intersect) {
+      return false;
+    }
+
+    const auto begin_cross_dir_other = begin_diff.cross(other_dir);
+    const auto crossing_point_factor =
+        begin_cross_dir_other.dot(directions_cross) /
+        static_cast<float>(dirs_cross_sqr_magnitude);
+    return (crossing_point_factor >= 0) && (crossing_point_factor <= 1);
+  }
+
+  constexpr bool operator==(const closed_range&) const = default;
+  constexpr auto operator<=>(const closed_range&) const = default;
+};
 
 struct fill_tag {};
 
@@ -503,6 +643,14 @@ static_assert(16.5f ==
 } // AOC_EXPORT_NAMESPACE(aoc)
 
 template <class T>
+struct std::formatter<aoc::closed_range<T>> {
+  constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+  auto format(const aoc::closed_range<T>& r, std::format_context& ctx) const {
+    return std::format_to(ctx.out(), "[{},{}]", r.begin, r.end);
+  }
+};
+
+template <class T>
 struct std::formatter<aoc::point_type<T>> {
   constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
   auto format(const aoc::point_type<T>& p, std::format_context& ctx) const {
@@ -537,6 +685,16 @@ struct std::formatter<aoc::min_max_helper> {
 };
 
 namespace std {
+template <class T>
+struct hash<aoc::closed_range<T>> {
+  constexpr size_t operator()(const aoc::closed_range<T>& value) const {
+    auto combine = aoc::hash_combine{};
+    combine(value.begin);
+    combine(value.end);
+    return combine.seed;
+  }
+};
+
 template <class T>
 struct hash<aoc::point_type<T>> {
   constexpr size_t operator()(const aoc::point_type<T>& value) const {

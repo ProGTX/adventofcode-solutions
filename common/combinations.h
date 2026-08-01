@@ -3,6 +3,7 @@
 
 #include "assert.h"
 #include "compiler.h"
+#include "concepts.h"
 #include "ranges.h"
 #include "static_vector.h"
 #include "utility.h"

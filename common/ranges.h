@@ -2,8 +2,9 @@
 #define AOC_RANGES_H
 
 #include "compiler.h"
+#include "functional.h"
+#include "parse.h"
 #include "range_to.h"
-#include "utility.h"
 
 #ifndef AOC_MODULE_SUPPORT
 #include <algorithm>

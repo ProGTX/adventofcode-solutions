@@ -1,15 +1,16 @@
 #ifndef AOC_ALGORITHM_H
 #define AOC_ALGORITHM_H
 
+#include "assert.h"
 #include "compiler.h"
 #include "concepts.h"
 #include "dijkstra.h"
 #include "flat.h"
+#include "functional.h"
 #include "point.h"
 #include "range_to.h"
 #include "ranges.h"
 #include "string.h"
-#include "utility.h"
 
 #ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
@@ -19,6 +20,7 @@
 #include <functional>
 #include <optional>
 #include <ranges>
+#include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
@@ -27,6 +29,71 @@
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {
+
+/// Swaps the rows and columns of a container of containers.
+template <std::ranges::common_range Container>
+constexpr Container transpose(const Container& container) {
+  Container transposed_container;
+  const auto num_rows = std::size(container);
+  AOC_ASSERT(num_rows > 0, "Cannot transpose empty container");
+  const auto num_columns = std::size(container[0]);
+  AOC_ASSERT(num_columns > 0, "Cannot transpose empty container");
+  transposed_container.resize(num_columns);
+  for (unsigned row = 0; row < num_rows; ++row) {
+    for (unsigned column = 0; column < num_columns; ++column) {
+      transposed_container[column].resize(num_rows);
+      transposed_container[column][row] = container[row][column];
+    }
+  }
+  return transposed_container;
+}
+#if defined(AOC_COMPILER_MSVC)
+static_assert(std::ranges::equal(transpose(std::vector{
+                                     std::vector{1, 2, 3},
+                                     std::vector{4, 5, 6},
+                                     std::vector{7, 8, 9},
+                                     std::vector{10, 11, 12},
+                                 }),
+                                 std::vector{
+                                     std::vector{1, 4, 7, 10},
+                                     std::vector{2, 5, 8, 11},
+                                     std::vector{3, 6, 9, 12},
+                                 }));
+#endif
+#if !defined(AOC_COMPILER_GCC)
+static_assert(std::ranges::equal(transpose(std::vector<std::string>{
+                                     "123",
+                                     "456",
+                                     "789",
+                                     "ABC",
+                                 }),
+                                 std::vector<std::string>{
+                                     "147A",
+                                     "258B",
+                                     "369C",
+                                 }));
+#endif
+#if 0
+// TODO
+static_assert(std::ranges::equal(transpose(std::vector{
+                                     std::array{1, 2, 3},
+                                     std::array{4, 5, 6},
+                                     std::array{7, 8, 9},
+                                     std::array{10, 11, 12},
+                                 }),
+                                 std::vector{
+                                     std::array{1, 4, 7, 10},
+                                     std::array{2, 5, 8, 11},
+                                     std::array{3, 6, 9, 12},
+                                 }));
+#endif
+
+/// Pops the last element off a vector and returns it.
+constexpr auto pop_stack(specialization_of<std::vector> auto&& container) {
+  auto elem = std::move(container.back());
+  container.resize(container.size() - 1);
+  return elem;
+}
 
 /// Explores every state reachable from `start` via BFS.
 /// get_neighbors expands a state into its adjacent states
