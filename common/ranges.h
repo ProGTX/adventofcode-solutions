@@ -269,14 +269,18 @@ constexpr auto transform_cast() {
 /// Dereferences each element
 inline constexpr auto deref =
     std::views::transform([](auto&& ptr) -> decltype(auto) { return *ptr; });
-static_assert([] {
+// A named function rather than a lambda invoked in place: GCC 15 tries to
+// export the lambda's local variables and rejects them as declared in an
+// unnamed namespace.
+constexpr auto impl_test_deref() {
   auto arr = std::array{1, 2, 3};
   auto ptrs = std::array{&arr[0], &arr[1], &arr[2]};
   for (auto& x : ptrs | deref) {
     x += 10;
   }
   return std::ranges::equal(arr, std::array{11, 12, 13});
-}());
+}
+static_assert(impl_test_deref());
 
 template <class T>
 constexpr auto to_number(int base = 10) {

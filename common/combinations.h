@@ -39,8 +39,12 @@ constexpr auto get_empty_combination(ElementsR&& elements,
       return elements;
     };
   }());
-  if constexpr (const auto N = static_size<underlying_type>();
-                N != std::string::npos) {
+  // N is deliberately not an if-constexpr init-statement:
+  // a variable declared there has no linkage,
+  // and GCC 15 then treats `static_vector<counter_type, N>`
+  // as a TU-local entity that this exported function must not expose.
+  constexpr auto N = static_size<underlying_type>();
+  if constexpr (N != std::string::npos) {
     return static_vector<counter_type, N>(std::ranges::size(elements),
                                           single_min);
   } else {

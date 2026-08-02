@@ -24,11 +24,12 @@ if (AOC_DISABLE_MODULES)
   set(AOC_MODULE_SUPPORT OFF)
 elseif (((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND
       (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "16.0")) OR
-    # GCC 14 gives module linkage to std declarations
+    # GCC gives module linkage to std declarations
     # coming in through the global module fragment,
-    # which clashes with headers included alongside `import aoc`
+    # which clashes with headers included alongside `import aoc`.
+    # Verified still broken in 15.1, so try again on 16.
     ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") AND
-      (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "15.0")) OR
+      (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "16.0")) OR
     ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") AND
       (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "17.4")))
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
