@@ -142,8 +142,10 @@ fn solve_case2(island_t const& island_map) -> u32 {
 
   let longest = aoc::longest_simple_path(
       graph.size(), start,
-      [end = end](const usize node, const usize) { return node == end; },
-      [&graph](const usize node) -> const auto& { return graph[node]; });
+      [end = end](const usize node, const usize)
+          AOC_FORCE_INLINE { return node == end; },
+      [&graph](const usize node)
+          AOC_FORCE_INLINE -> const auto& { return graph[node]; });
 
   return static_cast<u32>(longest.value());
 }
