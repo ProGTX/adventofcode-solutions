@@ -15,14 +15,42 @@
 
 AOC_EXPORT_NAMESPACE(aoc) {
 
+/**
+ * Folds the high half of a hash down into the low half.
+ *
+ * The combine step below only moves information upward:
+ * `+` carries low to high and `^` not at all,
+ * so with a constant seed its low bits say nothing about the key's high bits.
+ * libstdc++ hides that behind prime bucket counts,
+ * whose modulo folds the whole word back in.
+ * MSVC sizes buckets as powers of two and keeps only the low bits,
+ * so a key that varies in its high half
+ * collapses into a handful of buckets
+ * and every lookup degrades to a linear scan.
+ *
+ * One round is enough to fix bucketing.
+ * https://prng.di.unimi.it/splitmix64.c has the full-avalanche version.
+ */
+AOC_NO_SANITIZE_WRAPAROUND
+constexpr std::size_t hash_mix(std::size_t value) {
+  // Knuth's multiplicative constant, 2^64 divided by the golden ratio.
+  // Being odd is what matters: it spreads the low bits upward
+  // while staying invertible, and truncating for a 32 bit size_t keeps it odd.
+  value *= static_cast<std::size_t>(0x9e3779b97f4a7c15);
+  // Only reaches down half a word, which is all bucket selection looks at
+  return value ^ (value >> (4 * sizeof(std::size_t)));
+}
+
 /// https://www.boost.org/doc/libs/1_86_0/libs/container_hash/doc/html/hash.html#notes_hash_combine
 struct hash_combine {
-  std::size_t seed;
+  // Non-zero so hashing nothing differs from hashing a zero.
+  // 2^31-1, the largest prime that fits a signed 32 bit int
+  std::size_t seed{2'147'483'647};
 
-  // Wraparound is intentional here
   AOC_NO_SANITIZE_WRAPAROUND
   constexpr void operator()(std::size_t value) {
-    seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    // 0x9e3779b9 is 2^32 divided by golden ratio
+    seed ^= hash_mix(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   }
 
   template <std::ranges::input_range R>
@@ -84,10 +112,9 @@ struct packed_hash {
         for (std::size_t j = 0; (j < chunk) && ((i + j) < size); ++j) {
           word[j] = bytes[i + j];
         }
-        // Feeding size_t hits hash_combine's constexpr overload
-        // Handing it the byte array instead would pick the range overload
-        // and hash each std::byte through std::hash,
-        // which isn't guaranteed in current standard libraries
+        // Feeding size_t hits hash_combine's scalar overload
+        // Handing it the byte array instead would pick the range overload,
+        // folding one byte per round rather than one word
         combine(std::bit_cast<std::size_t>(word));
       }
     }
