@@ -24,7 +24,7 @@ struct cube_config_t {
   int green{0};
   int blue{0};
 
-  bool operator==(const cube_config_t&) const = default;
+  constexpr bool operator==(const cube_config_t&) const = default;
 
   constexpr bool contains(const cube_config_t& other) const {
     return (red >= other.red) && (green >= other.green) && (blue >= other.blue);

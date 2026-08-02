@@ -20,7 +20,7 @@ struct hash_combine {
   std::size_t seed;
 
   // Wraparound is intentional here
-  [[clang::no_sanitize("unsigned-integer-overflow", "unsigned-shift-base")]]
+  AOC_NO_SANITIZE_WRAPAROUND
   constexpr void operator()(std::size_t value) {
     seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   }

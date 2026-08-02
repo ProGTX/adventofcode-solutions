@@ -172,8 +172,13 @@ class grid {
 
   template <class container_dependent = container_type>
     requires((static_row_length > 0) && (static_data_size > 0))
+  // Requires clause above means both of these are the compile time constants,
+  // so take them directly rather than through the accessors:
+  // those read members, and calling them before the members are initialized
+  // is what GCC warns about.
   explicit constexpr grid(const value_type& value)
-      : m_row_length{this->row_length()}, m_num_rows(this->num_rows()) {
+      : m_row_length{static_row_length},
+        m_num_rows{static_data_size / static_row_length} {
     std::ranges::fill(m_data, value);
   }
 
@@ -182,7 +187,8 @@ class grid {
                       const typename Container::value_type& value) {
       Container(count, value);
     }
-  constexpr grid(value_type value, std::size_t num_rows, std::size_t num_columns)
+  constexpr grid(value_type value, std::size_t num_rows,
+                 std::size_t num_columns)
       : m_data(num_rows * num_columns, value),
         m_row_length{num_columns},
         m_num_rows(num_rows) {}
@@ -259,7 +265,8 @@ class grid {
     }
   }
 
-  constexpr std::size_t linear_index(std::size_t row, std::size_t column) const {
+  constexpr std::size_t linear_index(std::size_t row,
+                                     std::size_t column) const {
     return row * this->row_length() + column;
   }
   constexpr std::size_t linear_index(point pos) const {

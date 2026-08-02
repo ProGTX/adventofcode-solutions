@@ -52,4 +52,11 @@
 #define AOC_FORCE_INLINE
 #endif
 
+#ifdef AOC_COMPILER_CLANG
+#define AOC_NO_SANITIZE_WRAPAROUND                                             \
+  [[clang::no_sanitize("unsigned-integer-overflow", "unsigned-shift-base")]]
+#else
+#define AOC_NO_SANITIZE_WRAPAROUND
+#endif
+
 #endif // AOC_COMPILER_H

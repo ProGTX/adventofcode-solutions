@@ -57,7 +57,7 @@ fn solve_case2(Vec<Reindeer> const& flock) -> u32 {
         distances | stdv::enumerate | aoc::collect_vec<index_dist_t>();
     stdr::sort(distances_sorted, stdr::greater{}, &index_dist_t::second);
     let farthest_dist = distances_sorted.front().second;
-    for (let[index, dist] : distances_sorted) {
+    for (let& [index, dist] : distances_sorted) {
       if (dist == farthest_dist) {
         score[index] += 1;
       } else {
