@@ -39,7 +39,22 @@
   }
 
 // In theory we could use std::unreachable,
-// but it seems to conflict with modules
-#define AOC_UNREACHABLE(message) AOC_ASSERT(false, message)
+// but it seems to conflict with modules - the builtin needs no header.
+//
+// The assert on its own is not enough to mark the path as unreachable:
+// it only throws while the expression is being evaluated at compile time,
+// so in a Release build control simply runs off the end of the function
+// and every caller warns about a missing return.
+#ifndef AOC_COMPILER_MSVC
+#define AOC_UNREACHABLE_IMPL() __builtin_unreachable()
+#else
+#define AOC_UNREACHABLE_IMPL() __assume(false)
+#endif
+
+#define AOC_UNREACHABLE(message)                                               \
+  do {                                                                         \
+    AOC_ASSERT(false, message);                                                \
+    AOC_UNREACHABLE_IMPL();                                                    \
+  } while (false)
 
 #endif // AOC_ASSERT_H

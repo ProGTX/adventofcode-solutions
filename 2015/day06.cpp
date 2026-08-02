@@ -63,7 +63,7 @@ instructions_t parse(const std::string& filename) {
       boundaries =
           aoc::split<boundaries_t>(line.substr(toggle.size()), through);
     } else {
-      AOC_UNREACHABLE("Invalid beginning of line")
+      AOC_UNREACHABLE("Invalid beginning of line");
     }
     instructions.emplace_back(op, aoc::split<point>(boundaries[0], ','),
                               aoc::split<point>(boundaries[1], ','));
