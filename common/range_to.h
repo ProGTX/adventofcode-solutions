@@ -246,8 +246,7 @@ template <typename ToContainer, typename... Args>
 using to_container_fn = to_container::fn<ToContainer, Args...>;
 } // namespace detail
 
-template <template <typename...> class ContT, typename... Args,
-          auto val = detail::to_container{}>
+template <template <typename...> class ContT, typename... Args>
   requires(!std::ranges::range<Args> && ...)
 constexpr auto to(Args&&... args)
     -> detail::to_container_fn<detail::wrap<ContT>, Args...> {
@@ -264,7 +263,7 @@ constexpr auto to(Rng&& rng, Args&&... args) {
       std::forward<Rng>(rng), std::forward<Args>(args)...);
 }
 
-template <typename Cont, typename... Args, auto val = detail::to_container{}>
+template <typename Cont, typename... Args>
   requires(!std::ranges::range<Args> && ...)
 constexpr auto to(Args&&... args) -> detail::to_container_fn<Cont, Args...> {
   detail::to_container_fn<Cont, Args...> fn;
