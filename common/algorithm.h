@@ -242,26 +242,39 @@ constexpr std::optional<int> longest_simple_path(std::size_t num_nodes,
                                                  std::size_t start,
                                                  EndReachedFn&& end_reached,
                                                  NeighborsFn&& get_neighbors) {
-  auto visited = std::vector<bool>(num_nodes);
+  // Not vector<bool>:
+  // its packed proxy references cost a shift and a mask per access,
+  // and none of that inlines in a Debug build.
+  // The search probes this several times per edge,
+  // which made it 3x the cost of the whole walk.
+  auto visited = std::vector<char>(num_nodes);
+  // The recursion passes a plain int rather than an optional,
+  // with -1 for "no path from here".
+  // Path weights are non-negative, so it cannot be mistaken for a real answer,
+  // and the hot loop avoids constructing, comparing, and assigning
+  // an optional per edge.
+  constexpr auto no_path = -1;
   const auto search = [&](this const auto& self_search, const std::size_t node,
-                          const std::size_t num_visited) -> std::optional<int> {
+                          const std::size_t num_visited) -> int {
     if (end_reached(node, num_visited)) {
       return 0;
     }
     visited[node] = true;
-    auto longest = std::optional<int>{};
+    auto longest = no_path;
     for (const auto& neighbor : get_neighbors(node)) {
       if (visited[neighbor.node]) {
         continue;
       }
-      if (const auto rest = self_search(neighbor.node, num_visited + 1)) {
-        longest = std::max(longest, std::optional{*rest + neighbor.distance});
+      const auto rest = self_search(neighbor.node, num_visited + 1);
+      if (rest != no_path) {
+        longest = std::max(longest, rest + neighbor.distance);
       }
     }
     visited[node] = false;
     return longest;
   };
-  return search(start, 1);
+  const auto longest = search(start, 1);
+  return (longest != no_path) ? std::optional{longest} : std::nullopt;
 }
 
 /// Generic depth-first search with memoization, using a caller-owned cache.
