@@ -31,10 +31,19 @@ using namespace std::string_view_literals;
 
 constexpr auto collect_string() { return ranges::to<std::string>(); }
 
+// https://stackoverflow.com/a/68121694
 template <class value_type, std::ranges::range R>
 constexpr value_type construct_string(R&& r) {
-  // https://stackoverflow.com/a/68121694
-  return value_type(&*r.begin(), std::ranges::distance(r));
+  // Deliberately not `&*r.begin()`:
+  // for an empty range that dereferences the end iterator.
+  // On a string that just reads the null terminator, which is real memory,
+  // so the sanitizers stay quiet - but it is still UB,
+  // and MSVC's Debug iterator checks reject it outright.
+  const auto size = static_cast<std::size_t>(std::ranges::distance(r));
+  if (size == 0) {
+    return value_type{};
+  }
+  return value_type(std::ranges::data(r), size);
 }
 
 // https://stackoverflow.com/a/63050738/793006

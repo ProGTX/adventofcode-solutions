@@ -31,18 +31,25 @@ fn north_load(platform_t const& platform) -> i32 {
 
 fn single_rock_fall(platform_it start_it, platform_it begin_it,
                     platform_it end_it, isize fall_stride) {
-  auto previous_it = start_it;
+  // Stepping in offsets instead of iterators:
+  // `start_it + fall_stride` is formed before the range check,
+  // so a negative stride at the near edge seeks outside [begin_it, end_it].
+  // Checked iterators reject that
+  // even when the result is only compared and never dereferenced
+  let size = end_it - begin_it;
+  let start_index = start_it - begin_it;
+  auto previous_index = start_index;
   // Rock falls
-  for (auto current_it = start_it + fall_stride;
-       (current_it >= begin_it) && (current_it < end_it);
-       current_it += fall_stride) {
-    if (*current_it != empty) {
+  for (auto current_index = start_index + fall_stride;
+       (current_index >= 0) && (current_index < size);
+       current_index += fall_stride) {
+    if (begin_it[current_index] != empty) {
       break;
     }
-    previous_it = current_it;
+    previous_index = current_index;
   }
-  if (previous_it != start_it) {
-    *previous_it = round_rock;
+  if (previous_index != start_index) {
+    begin_it[previous_index] = round_rock;
     *start_it = empty;
   }
 }
@@ -50,9 +57,13 @@ fn single_rock_fall(platform_it start_it, platform_it begin_it,
 fn rocks_fall_vertical(platform_t& platform, point fall_diff) {
   AOC_ASSERT(fall_diff.x == 0, "Invalid fall_diff for vertical function");
   let fall_stride = static_cast<isize>(platform.row_length()) * fall_diff.y;
-  auto row_it = (fall_stride < 0) ? platform.begin_row(0)
-                                  : platform.begin_row(platform.num_rows() - 1);
-  for (let _ : Range{0uz, platform.num_rows()}) {
+  // Walking rows by index: advancing the iterator a row at a time
+  // steps it outside the buffer on the final iteration,
+  // which checked iterators reject
+  let num_rows = platform.num_rows();
+  for (let step : Range{0uz, num_rows}) {
+    let row = (fall_stride < 0) ? step : (num_rows - 1 - step);
+    let row_it = platform.begin_row(row);
     for (let col : Range{0uz, platform.row_length()}) {
       let start_it = row_it + static_cast<isize>(col);
       if (*start_it != round_rock) {
@@ -60,7 +71,6 @@ fn rocks_fall_vertical(platform_t& platform, point fall_diff) {
       }
       single_rock_fall(start_it, platform.begin(), platform.end(), fall_stride);
     }
-    row_it -= fall_stride;
   }
 }
 

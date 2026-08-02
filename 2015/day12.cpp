@@ -12,18 +12,18 @@
 fn sum(str s_view) -> i32 {
   auto value = 0;
   while (!s_view.empty()) {
-    let digit_it =
-        stdr::find_if(s_view, [](char c) { return std::isdigit(c); });
-    if (digit_it == std::end(s_view)) {
+    // Positions instead of iterators:
+    // searching a `substr` yields iterators into that temporary view,
+    // so comparing them against iterators of `s_view` mixes two ranges
+    constexpr let digits = str{"0123456789"};
+    let digit_pos = s_view.find_first_of(digits);
+    if (digit_pos == str::npos) {
       break;
     }
-    let digit_pos = std::distance(std::begin(s_view), digit_it);
     AOC_ASSERT(digit_pos > 0, "Assuming number not at beginning of string");
-    let nondigit_it = stdr::find_if(s_view.substr(digit_pos + 1),
-                                    [](char c) { return !std::isdigit(c); });
-    AOC_ASSERT(nondigit_it != std::end(s_view),
+    let nondigit_pos = s_view.find_first_not_of(digits, digit_pos + 1);
+    AOC_ASSERT(nondigit_pos != str::npos,
                "Assuming number is never at the end");
-    let nondigit_pos = std::distance(digit_it, nondigit_it) + digit_pos;
     let current =
         aoc::to_number<i32>(s_view.substr(digit_pos, nondigit_pos - digit_pos));
     value += (s_view[digit_pos - 1] == '-') ? -current : current;

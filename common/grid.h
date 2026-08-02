@@ -416,12 +416,17 @@ class grid {
 
   template <class Return, class Begin>
   constexpr auto column_view_detail(Begin begin_zero, int column) const {
-    const auto tmp_end =
-        this->begin_row(this->num_rows() - 1) + column + this->row_length();
+    // End the subrange one past the column's last element
+    // rather than a full row past it.
+    // Striding never dereferences that far,
+    // but forming the out-of-range iterator at all
+    // is rejected by checked iterators.
+    // The length still yields num_rows strided elements.
+    const auto length = static_cast<std::ptrdiff_t>(
+        (this->num_rows() - 1) * this->row_length() + 1);
     auto start = begin_zero + column;
-    auto view =
-        std::ranges::subrange(start, start + std::distance(start, tmp_end)) |
-        std::views::stride(this->row_length());
+    auto view = std::ranges::subrange(start, start + length) |
+                std::views::stride(this->row_length());
     if constexpr (std::same_as<Return, void>) {
       return view;
     } else {
