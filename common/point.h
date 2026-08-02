@@ -702,7 +702,8 @@ struct hash<aoc::point_type<T>> {
       // Pack both values into std::size_t with no collisions
       using U = std::make_unsigned_t<T>;
       return static_cast<std::size_t>(static_cast<U>(value.x)) |
-             (static_cast<std::size_t>(static_cast<U>(value.y)) << (sizeof(T) * 8));
+             (static_cast<std::size_t>(static_cast<U>(value.y))
+              << (sizeof(T) * 8));
     } else {
       auto combine = aoc::hash_combine{};
       combine(value.x);
@@ -714,7 +715,8 @@ struct hash<aoc::point_type<T>> {
 
 template <class T, int dims>
 struct hash<aoc::nd_point_type<T, dims>> {
-  constexpr std::size_t operator()(const aoc::nd_point_type<T, dims>& value) const {
+  constexpr std::size_t operator()(
+      const aoc::nd_point_type<T, dims>& value) const {
     if constexpr (sizeof(T) * dims <= sizeof(std::size_t)) {
       // Pack all components into std::size_t with no collisions
       using U = std::make_unsigned_t<T>;

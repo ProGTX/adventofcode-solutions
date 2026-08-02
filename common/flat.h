@@ -320,7 +320,9 @@ class flat_map {
       vit_ -= n;
       return *this;
     }
-    constexpr reference operator[](std::ptrdiff_t n) const { return *(*this + n); }
+    constexpr reference operator[](std::ptrdiff_t n) const {
+      return *(*this + n);
+    }
     constexpr friend iterator_detail operator+(iterator_detail it,
                                                std::ptrdiff_t n) {
       it += n;
@@ -337,7 +339,7 @@ class flat_map {
       return it;
     }
     constexpr friend std::ptrdiff_t operator-(const iterator_detail& it,
-                                         const iterator_detail& jt) {
+                                              const iterator_detail& jt) {
       return std::ptrdiff_t(it.kit_ - jt.kit_);
     }
 

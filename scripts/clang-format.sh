@@ -1,7 +1,7 @@
 #!/bin/sh
 
 repo_root=$(realpath $(dirname "$0")/..)
-clang_format_exe="${CLANG_FORMAT:-clang-format-20}"
+clang_format_exe="${CLANG_FORMAT:-clang-format-22}"
 num_threads=$(nproc)
 
 find $repo_root -regex ".*\.\(h\|cpp\)" \

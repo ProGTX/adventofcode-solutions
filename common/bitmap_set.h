@@ -42,7 +42,8 @@ class bitmap_set {
  private:
   using word_type = std::uint64_t;
   static constexpr const std::size_t word_bits = 64;
-  static constexpr const std::size_t num_words = (Limit + word_bits - 1) / word_bits;
+  static constexpr const std::size_t num_words =
+      (Limit + word_bits - 1) / word_bits;
 
  public:
   using value_type = T;
@@ -65,8 +66,9 @@ class bitmap_set {
     }
 
     constexpr T operator*() const {
-      return static_cast<T>(m_word_index * word_bits +
-                            static_cast<std::size_t>(std::countr_zero(m_remaining)));
+      return static_cast<T>(
+          m_word_index * word_bits +
+          static_cast<std::size_t>(std::countr_zero(m_remaining)));
     }
 
     constexpr const_iterator& operator++() {
