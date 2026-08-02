@@ -38,7 +38,10 @@ fn solve_case(Input const& pattern) -> rock_index_t {
   constexpr int top_most_index = 1;
   constexpr int bottom_most_index = 3;
 
-  constexpr let initial_rock_displacement = grid_point{2, 3};
+  // static so that it has storage of its own: GCC 14 ICEs (make_decl_rtl, at
+  // varasm.cc:1443) on a member access to a local constexpr aggregate that a
+  // lambda captures by reference and that then gets inlined
+  static constexpr let initial_rock_displacement = grid_point{2, 3};
 
   constexpr let rock_structures = std::invoke([&] {
     std::array<rock_t, 5> rocks;

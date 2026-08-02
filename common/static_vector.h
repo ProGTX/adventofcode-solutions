@@ -206,7 +206,11 @@ class static_vector {
   }
 
  private:
-  container_type m_data;
+  // Value-initialized so that the elements past m_size are never indeterminate:
+  // GCC rejects an object with indeterminate members
+  // as the result of a constant expression.
+  // T has to be default constructible anyway in this implementation.
+  container_type m_data{};
   size_t m_size = 0;
 };
 
