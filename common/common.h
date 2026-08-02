@@ -6,6 +6,9 @@
 #define AOC_INCLUDE_FROM_COMMON
 #include "assert.h"
 #include "compiler.h"
+// Not part of the module: it needs the CRT headers directly,
+// and every test wants it regardless of how the rest of aoc is pulled in
+#include "crt_report.h"
 
 #if !defined(AOC_DISABLE_MODULES) &&                                           \
     defined(AOC_MODULE_SUPPORT) &&                                             \
