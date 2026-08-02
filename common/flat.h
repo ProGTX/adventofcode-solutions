@@ -261,7 +261,7 @@ class flat_map {
   template <class KeyIt, class MappedIt>
   class iterator_detail {
    public:
-    using difference_type = ptrdiff_t;
+    using difference_type = std::ptrdiff_t;
     using value_type =
         std::pair<const typename std::iterator_traits<KeyIt>::value_type,
                   typename std::iterator_traits<MappedIt>::value_type>;
@@ -310,35 +310,35 @@ class flat_map {
       --*this;
       return result;
     }
-    constexpr iterator_detail& operator+=(ptrdiff_t n) {
+    constexpr iterator_detail& operator+=(std::ptrdiff_t n) {
       kit_ += n;
       vit_ += n;
       return *this;
     }
-    constexpr iterator_detail& operator-=(ptrdiff_t n) {
+    constexpr iterator_detail& operator-=(std::ptrdiff_t n) {
       kit_ -= n;
       vit_ -= n;
       return *this;
     }
-    constexpr reference operator[](ptrdiff_t n) const { return *(*this + n); }
+    constexpr reference operator[](std::ptrdiff_t n) const { return *(*this + n); }
     constexpr friend iterator_detail operator+(iterator_detail it,
-                                               ptrdiff_t n) {
+                                               std::ptrdiff_t n) {
       it += n;
       return it;
     }
-    constexpr friend iterator_detail operator+(ptrdiff_t n,
+    constexpr friend iterator_detail operator+(std::ptrdiff_t n,
                                                iterator_detail it) {
       it += n;
       return it;
     }
     constexpr friend iterator_detail operator-(iterator_detail it,
-                                               ptrdiff_t n) {
+                                               std::ptrdiff_t n) {
       it -= n;
       return it;
     }
-    constexpr friend ptrdiff_t operator-(const iterator_detail& it,
+    constexpr friend std::ptrdiff_t operator-(const iterator_detail& it,
                                          const iterator_detail& jt) {
-      return ptrdiff_t(it.kit_ - jt.kit_);
+      return std::ptrdiff_t(it.kit_ - jt.kit_);
     }
 
     constexpr bool operator==(const iterator_detail&) const = default;

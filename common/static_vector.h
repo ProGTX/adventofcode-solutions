@@ -20,7 +20,7 @@ AOC_EXPORT_NAMESPACE(aoc) {
 // https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0843r2.html
 // Can be replaced by std::inplace_vector in C++26
 // https://en.cppreference.com/w/cpp/container/inplace_vector.html
-template <class T, size_t N>
+template <class T, std::size_t N>
 class static_vector {
  private:
   // Not quite the proper way to implement it, but good enough for here
@@ -32,7 +32,7 @@ class static_vector {
   using const_pointer = const T*;
   using reference = value_type&;
   using const_reference = const value_type&;
-  using size_type = size_t;
+  using size_type = std::size_t;
   using difference_type = std::make_signed_t<size_type>;
   using iterator = typename container_type::iterator; //[container.requirements]
   using const_iterator =
@@ -61,7 +61,7 @@ class static_vector {
   }
   template <std::input_iterator I, std::sentinel_for<I> S>
   constexpr static_vector(I first, S last)
-      : m_size{static_cast<size_t>(std::ranges::distance(first, last))} {
+      : m_size{static_cast<std::size_t>(std::ranges::distance(first, last))} {
     std::ranges::copy(first, last, std::begin(m_data));
   }
   constexpr static_vector(std::initializer_list<value_type> il)
@@ -211,7 +211,7 @@ class static_vector {
   // as the result of a constant expression.
   // T has to be default constructible anyway in this implementation.
   container_type m_data{};
-  size_t m_size = 0;
+  std::size_t m_size = 0;
 };
 
 constexpr auto impl_test_insert(int pos) {
@@ -256,7 +256,7 @@ namespace detail {
 template <class T>
 struct is_static_vector : std::false_type {};
 
-template <class T, size_t N>
+template <class T, std::size_t N>
 struct is_static_vector<static_vector<T, N>> : std::true_type {};
 
 } // namespace detail
@@ -265,7 +265,7 @@ template <class T>
 concept is_static_vector =
     detail::is_static_vector<std::remove_cvref_t<T>>::value;
 
-template <class T, size_t N>
+template <class T, std::size_t N>
 constexpr auto collect_static_vec() {
   return ranges::to<static_vector<T, N>>();
 }
@@ -274,7 +274,7 @@ constexpr auto collect_static_vec() {
 
 namespace std {
 
-template <class T, size_t N>
+template <class T, std::size_t N>
 struct tuple_size<aoc::static_vector<T, N>>
     : std::integral_constant<std::size_t, N> {};
 

@@ -283,7 +283,7 @@ struct point_type {
   constexpr iterator end() noexcept { return (&y) + 1; }
   constexpr const_iterator end() const noexcept { return (&y) + 1; }
 
-  template <size_t I>
+  template <std::size_t I>
   constexpr friend value_type get(const point_type& p) {
     if constexpr (I == 0) {
       return p.x;
@@ -504,7 +504,7 @@ class nd_point_type {
   constexpr iterator end() noexcept { return m_data.end(); }
   constexpr const_iterator end() const noexcept { return m_data.end(); }
 
-  template <size_t I>
+  template <std::size_t I>
   constexpr friend value_type get(const nd_point_type& np) {
     static_assert(I < dims);
     return np[I];
@@ -687,7 +687,7 @@ struct std::formatter<aoc::min_max_helper> {
 namespace std {
 template <class T>
 struct hash<aoc::closed_range<T>> {
-  constexpr size_t operator()(const aoc::closed_range<T>& value) const {
+  constexpr std::size_t operator()(const aoc::closed_range<T>& value) const {
     auto combine = aoc::hash_combine{};
     combine(value.begin);
     combine(value.end);
@@ -697,12 +697,12 @@ struct hash<aoc::closed_range<T>> {
 
 template <class T>
 struct hash<aoc::point_type<T>> {
-  constexpr size_t operator()(const aoc::point_type<T>& value) const {
-    if constexpr (sizeof(T) * 2 <= sizeof(size_t)) {
-      // Pack both values into size_t with no collisions
+  constexpr std::size_t operator()(const aoc::point_type<T>& value) const {
+    if constexpr (sizeof(T) * 2 <= sizeof(std::size_t)) {
+      // Pack both values into std::size_t with no collisions
       using U = std::make_unsigned_t<T>;
-      return static_cast<size_t>(static_cast<U>(value.x)) |
-             (static_cast<size_t>(static_cast<U>(value.y)) << (sizeof(T) * 8));
+      return static_cast<std::size_t>(static_cast<U>(value.x)) |
+             (static_cast<std::size_t>(static_cast<U>(value.y)) << (sizeof(T) * 8));
     } else {
       auto combine = aoc::hash_combine{};
       combine(value.x);
@@ -714,14 +714,14 @@ struct hash<aoc::point_type<T>> {
 
 template <class T, int dims>
 struct hash<aoc::nd_point_type<T, dims>> {
-  constexpr size_t operator()(const aoc::nd_point_type<T, dims>& value) const {
-    if constexpr (sizeof(T) * dims <= sizeof(size_t)) {
-      // Pack all components into size_t with no collisions
+  constexpr std::size_t operator()(const aoc::nd_point_type<T, dims>& value) const {
+    if constexpr (sizeof(T) * dims <= sizeof(std::size_t)) {
+      // Pack all components into std::size_t with no collisions
       using U = std::make_unsigned_t<T>;
-      size_t result = 0;
+      std::size_t result = 0;
       for (int i = 0; i < dims; ++i) {
-        result |= static_cast<size_t>(static_cast<U>(value[i]))
-                  << (static_cast<size_t>(i) * sizeof(T) * 8);
+        result |= static_cast<std::size_t>(static_cast<U>(value[i]))
+                  << (static_cast<std::size_t>(i) * sizeof(T) * 8);
       }
       return result;
     } else {

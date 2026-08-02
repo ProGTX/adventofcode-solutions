@@ -235,7 +235,7 @@ struct to_container {
                  container_t<ToContainer, Rng, Args...>, Rng>
   constexpr friend auto operator|(Rng&& rng, fn<ToContainer, Args...>&& f)
       -> container_t<ToContainer, Rng, Args...> {
-    return [&]<size_t... I>(std::index_sequence<I...>) {
+    return [&]<std::size_t... I>(std::index_sequence<I...>) {
       return f(std::forward<Rng>(rng),
                std::forward<Args>(std::get<I>(f.args))...);
     }(std::make_index_sequence<sizeof...(Args)>());

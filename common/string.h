@@ -511,7 +511,7 @@ constexpr return_t binary_to_number(const char* str) {
   return binary_to_number<one, return_t, std::string_view, true>(
       std::string_view{str});
 }
-template <char one = '1', class return_t = unsigned, size_t size>
+template <char one = '1', class return_t = unsigned, std::size_t size>
 constexpr return_t binary_to_number(const char str[size]) {
   return binary_to_number<one, return_t, std::string_view, true>(
       std::string_view{str, size});

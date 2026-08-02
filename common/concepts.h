@@ -65,7 +65,7 @@ concept reservable = ranges::detail::reservable_container<Container>;
 /// For fixed size containers, this is their static size.
 /// For dynamic containers, it's `npos`.
 template <class output_t>
-constexpr size_t static_size() {
+constexpr std::size_t static_size() {
   if constexpr (requires {
                   std::tuple_size<std::remove_cvref_t<output_t>>::value;
                 }) {

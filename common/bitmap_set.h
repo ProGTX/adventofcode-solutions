@@ -34,19 +34,19 @@ AOC_EXPORT_NAMESPACE(aoc) {
  * because producers routinely overshoot the range.
  * insert() does require its argument to be in range.
  */
-template <class T, size_t Limit>
+template <class T, std::size_t Limit>
   requires std::integral<T> &&
            (!std::same_as<std::remove_cv_t<T>, bool>) &&
            (Limit > 0)
 class bitmap_set {
  private:
   using word_type = std::uint64_t;
-  static constexpr const size_t word_bits = 64;
-  static constexpr const size_t num_words = (Limit + word_bits - 1) / word_bits;
+  static constexpr const std::size_t word_bits = 64;
+  static constexpr const std::size_t num_words = (Limit + word_bits - 1) / word_bits;
 
  public:
   using value_type = T;
-  static constexpr const size_t limit = Limit;
+  static constexpr const std::size_t limit = Limit;
 
   /// Walks the set bits in increasing order,
   /// consuming the current word one lowest-set-bit at a time.
@@ -59,14 +59,14 @@ class bitmap_set {
     using pointer = void;
 
     constexpr const_iterator() = default;
-    constexpr const_iterator(const word_type* words, size_t word_index)
+    constexpr const_iterator(const word_type* words, std::size_t word_index)
         : m_words(words), m_word_index(word_index) {
       seek_next_word();
     }
 
     constexpr T operator*() const {
       return static_cast<T>(m_word_index * word_bits +
-                            static_cast<size_t>(std::countr_zero(m_remaining)));
+                            static_cast<std::size_t>(std::countr_zero(m_remaining)));
     }
 
     constexpr const_iterator& operator++() {
@@ -101,7 +101,7 @@ class bitmap_set {
     }
 
     const word_type* m_words = nullptr;
-    size_t m_word_index = num_words;
+    std::size_t m_word_index = num_words;
     word_type m_remaining = 0;
   };
   using iterator = const_iterator;
@@ -146,10 +146,10 @@ class bitmap_set {
 
   /// The number of members, counted on demand rather than tracked,
   /// because insert() is the hot path and this rarely gets called.
-  constexpr size_t size() const {
-    auto count = size_t{0};
+  constexpr std::size_t size() const {
+    auto count = std::size_t{0};
     for (const auto word : m_bits) {
-      count += static_cast<size_t>(std::popcount(word));
+      count += static_cast<std::size_t>(std::popcount(word));
     }
     return count;
   }
@@ -163,7 +163,7 @@ class bitmap_set {
 
   /// Folds another set into this one.
   constexpr void union_with(const bitmap_set& other) {
-    for (size_t i = 0; i < num_words; ++i) {
+    for (std::size_t i = 0; i < num_words; ++i) {
       m_bits[i] |= other.m_bits[i];
     }
   }
@@ -171,8 +171,8 @@ class bitmap_set {
  private:
   /// Negative values wrap around to a huge index,
   /// so a single comparison against Limit covers both ends of the range
-  static constexpr size_t index_of(value_type value) {
-    return static_cast<size_t>(value);
+  static constexpr std::size_t index_of(value_type value) {
+    return static_cast<std::size_t>(value);
   }
 
   std::vector<word_type> m_bits;
