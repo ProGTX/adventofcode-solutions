@@ -38,9 +38,10 @@ static_assert(10 == calculate_distance(7, 2));
 static_assert(12 == calculate_distance(7, 3));
 
 fn num_ways_to_win(i64 total_time, i64 record_distance) -> i64 {
-  return stdr::count_if(Range{i64{1}, total_time}, [&](i64 button_time) {
-    return calculate_distance(total_time, button_time) > record_distance;
-  });
+  return static_cast<i64>(
+      stdr::count_if(Range{i64{1}, total_time}, [&](i64 button_time) {
+        return calculate_distance(total_time, button_time) > record_distance;
+      }));
 }
 
 static_assert(4 == num_ways_to_win(7, 9));

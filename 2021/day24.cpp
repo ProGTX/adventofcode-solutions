@@ -263,12 +263,15 @@ fn solve_case(std::span<const Instr> instructions,
       Range{0uz, instructions.size()} |
       stdv::filter([&](usize i) { return instructions[i].op == Op::Inp; }) |
       aoc::collect_vec<usize>();
+  // MSVC 14.51 fails member lookup of `back` on this vector
+  // (`size` and `operator[]` resolve fine), so index the last element instead
+  let num_starts = starts.size();
   auto blocks = Vec<std::span<const Instr>>{};
-  for (let i : Range{0uz, starts.size() - 1}) {
+  for (let i : Range{0uz, num_starts - 1}) {
     blocks.push_back(
         instructions.subspan(starts[i], starts[i + 1] - starts[i]));
   }
-  blocks.push_back(instructions.subspan(starts.back()));
+  blocks.push_back(instructions.subspan(starts[num_starts - 1]));
 
   // The following algorithm works based on this post:
   // https://www.reddit.com/r/adventofcode/comments/rnqabd/comment/hpu9wk3/

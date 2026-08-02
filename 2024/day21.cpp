@@ -42,8 +42,8 @@ fn keypad_grid(str keypad_text) {
 };
 
 fn solve_case1(Input const& input) -> u64 {
-  static constexpr let numeric_keypad = keypad_grid(NUMERIC_KEYPAD);
-  static constexpr let directional_keypad = keypad_grid(DIRECTIONAL_KEYPAD);
+  let numeric_keypad = keypad_grid(NUMERIC_KEYPAD);
+  let directional_keypad = keypad_grid(DIRECTIONAL_KEYPAD);
 
   // Moves an arm one step, or `None` if that leaves the keypad or hits the gap
   let move_arm = [](aoc::char_grid<> const& keypad, usize index,

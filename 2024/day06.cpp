@@ -123,11 +123,11 @@ fn interfere_with_guard(lab_map_t lab_map, point const start_pos) -> usize {
   // would catch the guard in a loop
   return aoc::ranges::accumulate(
       Range{1uz, lab_map.num_rows() - 1} | stdv::transform([&](usize row) {
-        return stdr::count_if(
+        return static_cast<usize>(stdr::count_if(
             Range{1uz, lab_map.num_columns() - 1}, [&](usize col) {
               return is_looping_obstacle(
                   point{static_cast<i32>(col), static_cast<i32>(row)});
-            });
+            }));
       }),
       usize{});
 }
