@@ -25,8 +25,11 @@ fn solve_case1(std::span<const range_t> ranges) -> u64 {
       ranges | stdv::transform([](range_t range) {
         return aoc::ranges::accumulate(
             range | stdv::filter([](u64 id) {
-              let id_str = std::to_string(id);
-              let s = str{id_str};
+              // Formatted into a stack buffer rather than via std::to_string:
+              // both parts format every id in every range, and even with SSO
+              // that constructs and destroys a string on each one.
+              auto buf = aoc::to_chars<20>(id);
+              let s = aoc::construct_string<str>(buf);
               let half = s.size() / 2;
               return (s.size() % 2 == 0) &&
                      (s.substr(0, half) == s.substr(half));
@@ -51,8 +54,8 @@ fn solve_case2(std::span<const range_t> ranges) -> u64 {
       ranges | stdv::transform([&](range_t range) {
         return aoc::ranges::accumulate(
             range | stdv::filter([&](u64 id) {
-              let id_str = std::to_string(id);
-              let s = str{id_str};
+              auto buf = aoc::to_chars<20>(id);
+              let s = aoc::construct_string<str>(buf);
               let size = s.size();
               let& divisors = all_divisors[size];
               // Skip 1

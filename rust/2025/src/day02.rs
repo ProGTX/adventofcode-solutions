@@ -19,6 +19,23 @@ fn parse(filename: &str) -> Vec<Range> {
     ranges
 }
 
+/// Writes n's decimal digits into buf and returns the slice holding them.
+///
+/// Both parts format every id in every range, and String would heap-allocate
+/// and free on each one where this reuses a stack buffer.
+fn digits(buf: &mut [u8; 20], mut n: u64) -> &[u8] {
+    let mut first = buf.len();
+    loop {
+        first -= 1;
+        buf[first] = b'0' + (n % 10) as u8;
+        n /= 10;
+        if n == 0 {
+            break;
+        }
+    }
+    &buf[first..]
+}
+
 fn solve_case1(ranges: &[Range]) -> u64 {
     ranges
         .iter()
@@ -26,10 +43,11 @@ fn solve_case1(ranges: &[Range]) -> u64 {
             range
                 .clone()
                 .into_iter()
-                .filter(|id| {
-                    let s = id.to_string();
+                .filter(|&id| {
+                    let mut buf = [0u8; 20];
+                    let s = digits(&mut buf, id);
                     let half = s.len() / 2;
-                    return (s.len() % 2 == 0) && (&s[..half] == &s[half..]);
+                    return (s.len() % 2 == 0) && (s[..half] == s[half..]);
                 })
                 .sum::<u64>()
         })
@@ -62,18 +80,15 @@ fn solve_case2(ranges: &[Range]) -> u64 {
                     if (id < 11) {
                         return false;
                     }
-                    let s = id.to_string();
+                    let mut buf = [0u8; 20];
+                    let s = digits(&mut buf, id);
                     let size = s.len();
                     let divisors = &all_divisors[size];
                     // Skip 1
                     return divisors[1..].iter().any(|&divisor| {
-                        let chunks = s.as_bytes().chunks(size / (divisor as usize));
-                        let mut chunks_it = chunks.into_iter();
-                        let first = str::from_utf8(chunks_it.next().unwrap()).unwrap();
-                        return chunks_it.all(|chunk| {
-                            let current = str::from_utf8(chunk).unwrap();
-                            current == first
-                        });
+                        let mut chunks = s.chunks(size / (divisor as usize));
+                        let first = chunks.next().unwrap();
+                        return chunks.all(|chunk| chunk == first);
                     });
                 })
                 .sum::<u64>()
