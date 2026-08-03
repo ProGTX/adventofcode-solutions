@@ -21,24 +21,37 @@ fn parse(filename: &str) -> Vec<Record> {
         .collect()
 }
 
-const DAMAGED: char = '#';
-const OPERATIONAL: char = '.';
-const UNKNOWN: char = '?';
+const DAMAGED: u8 = b'#';
+const OPERATIONAL: u8 = b'.';
+const UNKNOWN: u8 = b'?';
+
+// The search copies a state per neighbor and per cache entry,
+// so holding the springs and groups inline rather than on the heap
+// takes every allocation out of the hot loop.
+// Sized from the input: the longest record is 20 springs and 6 groups,
+// and unfolding five times gives 20*5 plus 4 separators, and 6*5 groups.
+const MAX_SPRINGS: usize = 20 * 5 + 4;
+const MAX_GROUPS: usize = 6 * 5;
+
+type Springs = ArrayVec<u8, MAX_SPRINGS>;
+type Groups = ArrayVec<u8, MAX_GROUPS>;
 
 #[derive(Clone, Default, Debug, Hash, PartialEq, Eq)]
 struct SearchState {
-    springs: String,
-    groups: Vec<u8>,
+    springs: Springs,
+    groups: Groups,
     damaged_before: u8,
 }
 
 fn arrangement_neighbors(state: &SearchState) -> ArrayVec<SearchState, 2> {
     let mut neighbors = ArrayVec::new();
-    let mut current_spring = state.springs.chars();
-    match current_spring.next() {
-        Some(DAMAGED) => {
-            let rest = current_spring.as_str();
-            let extra_damaged = rest.chars().take_while(|&c| c == DAMAGED).count();
+    let Some((&first, rest)) = state.springs.split_first() else {
+        // End of search, handled by end_reached
+        return neighbors;
+    };
+    match first {
+        DAMAGED => {
+            let extra_damaged = rest.iter().take_while(|&&c| c == DAMAGED).count();
             let total_damaged = state.damaged_before + 1 + extra_damaged as u8;
             if (extra_damaged + 1) == state.springs.len() {
                 // End of search, success if last group equals our count
@@ -47,13 +60,13 @@ fn arrangement_neighbors(state: &SearchState) -> ArrayVec<SearchState, 2> {
                 }
             } else {
                 neighbors.push(SearchState {
-                    springs: rest[extra_damaged..].to_owned(),
+                    springs: rest[extra_damaged..].iter().copied().collect(),
                     groups: state.groups.clone(),
                     damaged_before: total_damaged,
                 });
             }
         }
-        Some(OPERATIONAL) => {
+        OPERATIONAL => {
             let mut new_groups = state.groups.clone();
             if state.damaged_before > 0 {
                 // A damaged group located before current spring
@@ -62,27 +75,23 @@ fn arrangement_neighbors(state: &SearchState) -> ArrayVec<SearchState, 2> {
                     return neighbors;
                 }
                 // Close the group
-                new_groups = state.groups[1..].to_owned();
+                new_groups = state.groups[1..].iter().copied().collect();
             }
-            let rest = current_spring.as_str();
-            let skip = rest.chars().take_while(|&c| c == OPERATIONAL).count();
+            let skip = rest.iter().take_while(|&&c| c == OPERATIONAL).count();
             neighbors.push(SearchState {
-                springs: rest[skip..].to_owned(),
+                springs: rest[skip..].iter().copied().collect(),
                 groups: new_groups,
                 damaged_before: 0,
             });
         }
-        Some(UNKNOWN) => {
+        UNKNOWN => {
             // Two options to explore
             let mut state1 = state.clone();
-            state1.springs.replace_range(0..1, &DAMAGED.to_string());
+            state1.springs[0] = DAMAGED;
             let mut state2 = state.clone();
-            state2.springs.replace_range(0..1, &OPERATIONAL.to_string());
+            state2.springs[0] = OPERATIONAL;
             neighbors.push(state1);
             neighbors.push(state2);
-        }
-        None => {
-            // End of search, handled by end_reached
         }
         _ => unreachable!("Invalid value"),
     }
@@ -95,8 +104,12 @@ fn count_arrangements<const FACTOR: usize>(records: &[Record]) -> u64 {
         .iter()
         .map(|record| {
             let start = SearchState {
-                springs: vec![record.springs.as_str(); FACTOR].join("?"),
-                groups: record.groups.repeat(FACTOR),
+                springs: vec![record.springs.as_str(); FACTOR]
+                    .join("?")
+                    .into_bytes()
+                    .into_iter()
+                    .collect(),
+                groups: record.groups.repeat(FACTOR).into_iter().collect(),
                 damaged_before: 0,
             };
             cache.clear();
