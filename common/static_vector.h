@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <array>
 #include <bit>
+#include <charconv>
+#include <concepts>
 #include <cstddef>
 #include <functional>
 #include <iterator>
@@ -273,6 +275,15 @@ concept is_static_vector =
 template <class T, std::size_t N>
 constexpr auto collect_static_vec() {
   return ranges::to<static_vector<T, N>>();
+}
+
+template <std::size_t N, std::integral T>
+constexpr static_vector<char, N> to_chars(T value, int base = 10) {
+  auto result = static_vector<char, N>('\0', N);
+  const auto [end_ptr, error_code] =
+      std::to_chars(result.data(), result.data() + N, value, base);
+  result.resize(std::distance(result.data(), end_ptr));
+  return result;
 }
 
 } // AOC_EXPORT_NAMESPACE(aoc)
