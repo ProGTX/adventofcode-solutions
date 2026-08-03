@@ -215,9 +215,7 @@ using ZOutputCache = std::array<ZSet, NUM_BLOCKS>;
 // since each one consumes the set produced by the block after it.
 fn valid_z_inputs(std::span<const Instr> block, ZSet const& valid_output)
     -> ZSet {
-  constexpr let max_parallelism = 16uz;
-  let num_threads = std::min<usize>(
-      max_parallelism, std::max(1u, std::thread::hardware_concurrency()));
+  let num_threads = static_cast<usize>(aoc::num_worker_threads());
   // A chunk covers whole batches, so the threads write disjoint z values
   let per_thread =
       (static_cast<usize>(Z_LIMIT) + num_threads - 1) / num_threads;

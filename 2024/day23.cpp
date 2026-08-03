@@ -138,9 +138,7 @@ fn candidates_for_node(i32 id, Connections const& connections,
 }
 
 fn solve_case2(Input const& input) -> String {
-  constexpr usize min_parallelism = 8;
-  let num_threads =
-      std::max(min_parallelism, usize{std::thread::hardware_concurrency()});
+  let num_threads = static_cast<usize>(aoc::num_worker_threads());
   let chunk_size = (input.graph.size() + num_threads - 1) / num_threads;
 
   // Every node's neighbor-subset generation is independent of every other

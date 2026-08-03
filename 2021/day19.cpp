@@ -132,9 +132,9 @@ fn align_all(std::span<Scanner const> scanners)
     unaligned.push_back(static_cast<u8>(i));
   }
 
-  constexpr let max_parallelism = 16;
-  let parallelism = std::min<usize>(
-      max_parallelism, std::max(1u, std::thread::hardware_concurrency()));
+  constexpr let max_parallelism = 16uz;
+  let parallelism =
+      std::min(max_parallelism, static_cast<usize>(aoc::num_worker_threads()));
   while (!unaligned.empty()) {
     using AlignResult = std::pair<u8, std::pair<Scanner, Point3D>>;
     auto found = Option<AlignResult>{};

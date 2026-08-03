@@ -147,7 +147,7 @@ fn count_arrangements(std::span<Record const> records) -> u64 {
 
 template <usize factor>
 fn solve_case(Input const& records) -> u64 {
-  let num_threads = std::max<usize>(std::thread::hardware_concurrency(), 1uz);
+  let num_threads = static_cast<usize>(aoc::num_worker_threads());
   let chunk_size =
       std::max((records.size() + num_threads - 1) / num_threads, 1uz);
 

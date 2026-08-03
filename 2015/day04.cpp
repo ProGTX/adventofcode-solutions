@@ -17,7 +17,7 @@ auto parse(String const& filename) -> String {
 
 template <bool Part2>
 fn solve_case(str key) -> u32 {
-  let num_threads = std::max(1u, std::thread::hardware_concurrency());
+  let num_threads = aoc::num_worker_threads();
   auto result = std::atomic<u32>{std::numeric_limits<u32>::max()};
 
   auto search = [&, key](u32 start) {
