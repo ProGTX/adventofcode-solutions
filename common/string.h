@@ -178,7 +178,19 @@ struct __read_lines {
   std::ifstream m_file;
 };
 
-inline __read_lines read_lines{};
+// MSVC does not emit a definition for an
+// exported non-constexpr `inline` variable from a module interface unit,
+// which makes `read_lines` an unresolved external in every consumer.
+// A constexpr callable wrapping a function-local static
+// gives the same single shared instance without relying on that.
+struct __read_lines_fn {
+  template <class... Args>
+  constexpr auto operator()(Args&&... args) const {
+    static __read_lines instance;
+    return instance(std::forward<Args>(args)...);
+  }
+};
+constexpr inline __read_lines_fn read_lines{};
 
 template <class T, class... Args>
 constexpr auto read_numbers(const std::string& filename, Args... args) {
