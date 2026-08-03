@@ -34,19 +34,39 @@ constexpr inline char operational = '.';
 constexpr inline char damaged = '#';
 constexpr inline char unknown = '?';
 
+// The search copies a state per neighbor and per cache entry,
+// so holding the springs and groups inline rather than on the heap
+// takes every allocation out of the hot loop.
+// That matters most where allocation is contended -
+// the MSVC debug CRT serializes it -
+// but it is a win everywhere.
+// Sized from the input: the longest record is 20 springs and 6 groups,
+// and unfolding five times gives 20*5 plus 4 separators, and 6*5 groups.
+constexpr usize MAX_SPRINGS = 20 * 5 + 4;
+constexpr usize MAX_GROUPS = 6 * 5;
+
+using Springs = aoc::static_vector<char, MAX_SPRINGS>;
+using Groups = aoc::static_vector<u8, MAX_GROUPS>;
+
 struct SearchState {
-  String springs;
-  Vec<u8> groups;
+  Springs springs;
+  Groups groups;
   u8 damaged_before;
 
   constexpr bool operator==(SearchState const&) const = default;
+
+  constexpr str springs_view() const {
+    return str{springs.begin(), springs.end()};
+  }
 };
 
 template <>
 struct std::hash<SearchState> {
   size_t operator()(SearchState const& state) const {
     auto combine = aoc::hash_combine{};
-    combine(state.springs);
+    // Hash the springs in one pass as a view rather than char by char,
+    // which is what the range overload would do
+    combine(state.springs_view());
     combine(state.groups);
     combine(state.damaged_before);
     return combine.seed;
@@ -63,29 +83,31 @@ fn arrangement_neighbors(SearchState const& state) -> Neighbors {
     return neighbors;
   }
   {
-    switch (state.springs.front()) {
+    let springs = state.springs_view();
+    switch (springs.front()) {
       case damaged: {
-        let rest = str{state.springs}.substr(1);
+        let rest = springs.substr(1);
         let extra_damaged = static_cast<u8>(stdr::distance(
             rest | stdv::take_while([](char c) { return c == damaged; })));
         let total_damaged =
             static_cast<u8>(state.damaged_before + 1 + extra_damaged);
-        if ((extra_damaged + 1) == state.springs.size()) {
+        if ((extra_damaged + 1) == springs.size()) {
           // End of search, success if last group equals our count
           if ((state.groups.size() == 1) &&
               (state.groups.back() == total_damaged)) {
             neighbors.emplace_back();
           }
         } else {
+          let tail = rest.substr(extra_damaged);
           neighbors.emplace_back(
-              SearchState{.springs = String{rest.substr(extra_damaged)},
+              SearchState{.springs = Springs(tail.begin(), tail.end()),
                           .groups = state.groups,
                           .damaged_before = total_damaged});
         }
         break;
       }
       case operational: {
-        auto new_groups = Vec<u8>{};
+        auto new_groups = Groups{};
         if (state.damaged_before > 0) {
           if (state.groups.empty() ||
               (state.groups.front() != state.damaged_before)) {
@@ -93,16 +115,18 @@ fn arrangement_neighbors(SearchState const& state) -> Neighbors {
             break;
           }
           // Close the group
-          new_groups = Vec<u8>(state.groups.begin() + 1, state.groups.end());
+          new_groups = Groups(state.groups.begin() + 1, state.groups.end());
         } else {
           new_groups = state.groups;
         }
-        let rest = str{state.springs}.substr(1);
+        let rest = springs.substr(1);
         let skip = static_cast<usize>(stdr::distance(
             rest | stdv::take_while([](char c) { return c == operational; })));
-        neighbors.emplace_back(SearchState{.springs = String{rest.substr(skip)},
-                                           .groups = std::move(new_groups),
-                                           .damaged_before = 0});
+        let tail = rest.substr(skip);
+        neighbors.emplace_back(
+            SearchState{.springs = Springs(tail.begin(), tail.end()),
+                        .groups = std::move(new_groups),
+                        .damaged_before = 0});
         break;
       }
       case unknown: {
@@ -127,13 +151,20 @@ fn count_arrangements(std::span<Record const> records) -> u64 {
   auto cache = Cache{};
   return aoc::ranges::accumulate(
       records | stdv::transform([&](Record const& record) {
-        let start =
-            SearchState{.springs = aoc::ranges::join(
-                            stdv::repeat(record.springs, factor), unknown),
-                        .groups = stdv::repeat(record.groups, factor) |
-                                  stdv::join |
-                                  aoc::collect_vec<u8>(),
-                        .damaged_before = 0};
+        let unfolded_springs =
+            aoc::ranges::join(stdv::repeat(record.springs, factor), unknown);
+        let unfolded_groups = stdv::repeat(record.groups, factor) |
+                              stdv::join |
+                              aoc::collect_vec<u8>();
+        AOC_ASSERT(unfolded_springs.size() <= MAX_SPRINGS,
+                   "Record is longer than the fixed springs capacity");
+        AOC_ASSERT(unfolded_groups.size() <= MAX_GROUPS,
+                   "Record has more groups than the fixed capacity");
+        let start = SearchState{
+            .springs =
+                Springs(unfolded_springs.begin(), unfolded_springs.end()),
+            .groups = Groups(unfolded_groups.begin(), unfolded_groups.end()),
+            .damaged_before = 0};
         cache.clear();
         return aoc::dfs_uniform(
             cache, start,
