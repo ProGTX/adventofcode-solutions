@@ -141,13 +141,23 @@ fn solve_case2((graph, names): &(Graph, Vec<String>)) -> String {
     // Duplicates aren't deduped
     // (the same clique can come from more than one member)
     // since a repeat is harmless: the search below just needs one match.
-    let mut by_size = Vec::new();
-    for bits in local_candidates.into_iter().flatten() {
-        let size = popcount(&bits) as usize;
-        if by_size.len() <= size {
-            by_size.resize_with(size + 1, Vec::new);
+    // A counting pass sizes each bucket exactly first,
+    // so the fill pass never reallocates partway through 4M+ candidates -
+    // growing a bucket copies every 88-byte element already in it.
+    let mut size_counts = Vec::new();
+    for bits in local_candidates.iter().flatten() {
+        let size = popcount(bits) as usize;
+        if size_counts.len() <= size {
+            size_counts.resize(size + 1, 0);
         }
-        by_size[size].push(bits);
+        size_counts[size] += 1;
+    }
+    let mut by_size = size_counts
+        .iter()
+        .map(|&count| Vec::with_capacity(count))
+        .collect_vec();
+    for bits in local_candidates.into_iter().flatten() {
+        by_size[popcount(&bits) as usize].push(bits);
     }
 
     let clique = by_size
