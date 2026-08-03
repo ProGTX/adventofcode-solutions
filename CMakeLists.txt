@@ -15,6 +15,25 @@ set(AOC_RELEASE_CHECK_EXPR
   $<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>
 )
 
+if (MSVC)
+  # MSVC Debug defaults to /Ob0, so every STL and range adaptor template
+  # stays an out-of-line call.
+  # These solutions are template heavy,
+  # which is why Debug here runs far slower than a Clang -O0 build.
+  # /Ob1 inlines what is marked inline while leaving the code debuggable,
+  # but /RTC1 disables inlining outright, so it has to go for /Ob1 to do anything.
+  string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+  add_compile_options($<$<CONFIG:Debug>:/Ob1>)
+
+  # _ITERATOR_DEBUG_LEVEL defaults to 2 in Debug,
+  # which tracks iterator invalidation by threading every live iterator
+  # onto a heap allocated container proxy.
+  # That bookkeeping dominates Debug runtime here.
+  # Level 1 keeps the range and validity checks -
+  # the ones that catch real bugs - without the proxy.
+  add_compile_definitions($<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=1>)
+endif()
+
 if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
     (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
   add_compile_definitions(_GLIBCXX_ASSERTIONS)
