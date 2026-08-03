@@ -1,4 +1,4 @@
-use aoc::dijkstra::{DijkstraState, shortest_distances};
+use aoc::dijkstra::{DijkstraState, shortest_distances_multi};
 use aoc::direction::Direction;
 use aoc::grid::Grid;
 use aoc::point::Point;
@@ -56,21 +56,15 @@ fn least_heat_loss<const MIN: u8, const MAX: u8>(city_block: &Input) -> u32 {
 
     let end_reached = |node: &Node| node.pos == end_pos && node.consecutive >= MIN;
 
-    [Direction::East, Direction::South]
+    let starts = [Direction::East, Direction::South].map(|direction| Node {
+        pos: Pos::default(),
+        direction: direction.diff(),
+        consecutive: 0,
+    });
+    shortest_distances_multi(&starts, end_reached, get_neighbors)
         .into_iter()
-        .flat_map(|direction| {
-            let start = Node {
-                pos: Pos::default(),
-                direction: direction.diff(),
-                consecutive: 0,
-            };
-            let distances = shortest_distances(&start, end_reached, get_neighbors);
-            distances
-                .into_iter()
-                .filter(|(node, _)| end_reached(node))
-                .map(|(_, distance)| distance)
-                .min()
-        })
+        .filter(|(node, _)| end_reached(node))
+        .map(|(_, distance)| distance)
         .min()
         .unwrap()
 }

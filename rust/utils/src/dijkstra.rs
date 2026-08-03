@@ -33,7 +33,7 @@ fn shortest_distances_astar_impl<
     NeighborIter,
     HeuristicF,
 >(
-    start: &T,
+    starts: &[T],
     is_end: GetEndF,
     get_neighbors: GetNeighborsF,
     heuristic: HeuristicF,
@@ -49,8 +49,10 @@ where
     let mut distances: FxHashMap<T, u32> = FxHashMap::default();
     // Heap entries: (Reverse(f), g, data) — sorted by f = g + h, min-first.
     let mut unvisited: BinaryHeap<(Reverse<u32>, u32, T)> = BinaryHeap::new();
-    distances.insert(start.clone(), 0_u32);
-    unvisited.push((Reverse(heuristic(start)), 0, start.clone()));
+    for start in starts {
+        distances.insert(start.clone(), 0_u32);
+        unvisited.push((Reverse(heuristic(start)), 0, start.clone()));
+    }
     while let Some((_, g, data)) = unvisited.pop() {
         if (is_end(&data)) {
             break;
@@ -101,7 +103,7 @@ where
     // Never written to, since predecessors are not recorded
     let mut unused_predecessors = FxHashMap::default();
     shortest_distances_astar_impl::<false, _, _, _, _, _>(
-        start,
+        std::slice::from_ref(start),
         is_end,
         get_neighbors,
         heuristic,
@@ -134,7 +136,7 @@ where
     HeuristicF: Fn(&T) -> u32,
 {
     shortest_distances_astar_impl::<true, _, _, _, _, _>(
-        start,
+        std::slice::from_ref(start),
         is_end,
         get_neighbors,
         heuristic,
@@ -320,6 +322,33 @@ where
     GetNeighborsF: Fn(&T) -> NeighborIter,
 {
     shortest_distances_astar(start, is_end, get_neighbors, |_| 0)
+}
+
+/// `shortest_distances` seeded with several equally valid starting nodes.
+///
+/// One search over all of them, rather than one search per start:
+/// a node reachable from two starts is then settled once, at its better distance,
+/// instead of being expanded again in a second run.
+pub fn shortest_distances_multi<T, GetEndF, GetNeighborsF, NeighborIter>(
+    starts: &[T],
+    is_end: GetEndF,
+    get_neighbors: GetNeighborsF,
+) -> FxHashMap<T, u32>
+where
+    T: Clone + Ord + Hash,
+    GetEndF: Fn(&T) -> bool,
+    NeighborIter: IntoIterator<Item = DijkstraState<T>>,
+    GetNeighborsF: Fn(&T) -> NeighborIter,
+{
+    // Never written to, since predecessors are not recorded
+    let mut unused_predecessors = FxHashMap::default();
+    shortest_distances_astar_impl::<false, _, _, _, _, _>(
+        starts,
+        is_end,
+        get_neighbors,
+        |_| 0,
+        &mut unused_predecessors,
+    )
 }
 
 /// `shortest_distances`,
