@@ -64,9 +64,7 @@ template <>
 struct std::hash<SearchState> {
   size_t operator()(SearchState const& state) const {
     auto combine = aoc::hash_combine{};
-    // Hash the springs in one pass as a view rather than char by char,
-    // which is what the range overload would do
-    combine(state.springs_view());
+    combine(state.springs);
     combine(state.groups);
     combine(state.damaged_before);
     return combine.seed;

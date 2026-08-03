@@ -68,6 +68,25 @@ struct hash_combine {
 };
 
 /**
+ * Whether hash_combine can consume a value of this type.
+ *
+ * The range overload above only asks that the argument be a range,
+ * and a body is not part of a signature,
+ * so `requires { combine(value); }` would accept a range
+ * whose elements have no hash and only fail once instantiated.
+ * One level in covers the shapes used here;
+ * deeper nesting reports false and falls back to an ordered container
+ * insted of failing to compile.
+ */
+template <class T>
+concept hash_combinable =
+    std::convertible_to<T, std::size_t> ||
+    hashable<T> ||
+    (std::ranges::input_range<T> &&
+     (std::convertible_to<std::ranges::range_reference_t<T>, std::size_t> ||
+      hashable<std::ranges::range_value_t<T>>));
+
+/**
  * Hashes a value over its whole object representation,
  * for types that are just packed bytes with no meaningful sub-structure.
  *

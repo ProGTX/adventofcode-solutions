@@ -4,13 +4,18 @@
 #include "assert.h"
 #include "compiler.h"
 #include "concepts.h"
+#include "hash.h"
 #include "range_to.h"
 #include "ranges.h"
 
 #ifndef AOC_MODULE_SUPPORT
 #include <algorithm>
 #include <array>
+#include <bit>
+#include <cstddef>
+#include <functional>
 #include <iterator>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #endif
@@ -278,12 +283,90 @@ template <class T, std::size_t N>
 struct tuple_size<aoc::static_vector<T, N>>
     : std::integral_constant<std::size_t, N> {};
 
+/**
+ * Hashes the live elements only:
+ * pop_back() and erase() leave the old ones in storage,
+ * so equal vectors can differ past size() and must still hash alike.
+ *
+ * With a unique object representation those bytes fold one size_t at a time.
+ * Not plain trivially copyable: a padded type is trivially copyable,
+ * but two equal values may disagree on padding and would hash differently.
+ */
+template <class T, std::size_t N>
+  requires std::has_unique_object_representations_v<T> ||
+           aoc::hash_combinable<T>
+struct hash<aoc::static_vector<T, N>> {
+  constexpr std::size_t operator()(
+      const aoc::static_vector<T, N>& value) const {
+    auto combine = aoc::hash_combine{};
+    // Without the size, {1, 2} and {1, 2, 0} fold to the same zero padded word
+    combine(value.size());
+
+    if constexpr (aoc::character<T>) {
+      // Much faster to hash string_view directly
+      // TODO: This branch is not constexpr usable
+      combine(std::basic_string_view<T>{value.begin(), value.end()});
+    } else if constexpr (std::has_unique_object_representations_v<T>) {
+      constexpr auto chunk = sizeof(std::size_t);
+      // Filled a byte at a time and folded once full,
+      // so an element that straddles a word boundary
+      // still costs one round per word rather than one per element
+      auto word = std::array<std::byte, chunk>{};
+      auto filled = std::size_t{0};
+      for (const auto& elem : value) {
+        // bit_cast rather than memcpy so this stays usable in constexpr
+        const auto bytes =
+            std::bit_cast<std::array<std::byte, sizeof(T)>>(elem);
+        for (const auto byte : bytes) {
+          word[filled] = byte;
+          ++filled;
+          if (filled == chunk) {
+            combine(std::bit_cast<std::size_t>(word));
+            word = {};
+            filled = 0;
+          }
+        }
+      }
+      if (filled > 0) {
+        // Trailing partial word, zero padded by the reset above
+        combine(std::bit_cast<std::size_t>(word));
+      }
+    } else {
+      for (const auto& elem : value) {
+        combine(elem);
+      }
+    }
+    return combine.seed;
+  }
+};
+
 } // namespace std
 
 AOC_EXPORT_NAMESPACE(aoc) {
 
 static_assert(4 == static_size<static_vector<int, 4>>());
 
-}
+static_assert(hashable<static_vector<int, 4>>);
+
+namespace impl_hash_test {
+using vec_t = static_vector<int, 4>;
+constexpr auto hash_of(vec_t const& vec) { return std::hash<vec_t>{}(vec); }
+
+// pop_back() leaves the removed element in storage,
+// so this only matches if the hash stops at size()
+constexpr auto popped = [] {
+  auto vec = vec_t{1, 2, 3};
+  vec.pop_back();
+  return hash_of(vec);
+}();
+static_assert(popped == hash_of(vec_t{1, 2}));
+
+// A trailing zero is part of the value, so it has to change the hash
+// even though it adds no non-zero bytes
+static_assert(hash_of(vec_t{1, 2}) != hash_of(vec_t{1, 2, 0}));
+static_assert(hash_of(vec_t{1, 2}) != hash_of(vec_t{2, 1}));
+} // namespace impl_hash_test
+
+} // AOC_EXPORT_NAMESPACE(aoc)
 
 #endif // AOC_STATIC_VECTOR_H

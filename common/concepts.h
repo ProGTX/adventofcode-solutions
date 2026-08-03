@@ -102,6 +102,11 @@ concept hashable = requires(const std::remove_cvref_t<T>& value) {
   } -> std::convertible_to<std::size_t>;
 };
 
+/// The types basic_string_view is specialized for.
+template <class T>
+concept character =
+    contains_type<T, char, wchar_t, char8_t, char16_t, char32_t>;
+
 static_assert(contains_type<std::string_view, std::string_view>);
 static_assert(contains_type<std::string_view, int, std::string_view>);
 
