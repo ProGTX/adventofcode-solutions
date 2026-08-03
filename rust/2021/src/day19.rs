@@ -79,8 +79,15 @@ fn rotations(scanner: &Scanner) -> impl Iterator<Item = Scanner> + '_ {
 // and the scanner's world-space position,
 // or None if no match found.
 fn try_align(all_beacons: &FxHashSet<Point3D>, scanner: &Scanner) -> Option<(Scanner, Point3D)> {
+    // Hoisted out of the rotation loop and cleared instead of rebuilt:
+    // it holds one offset per (beacon, rotated beacon) pair,
+    // so a fresh map would grow from empty to a few thousand -
+    // rehashing everything at each doubling -
+    // and do it again for all 24 rotations.
+    let mut offset_counts =
+        FxHashMap::with_capacity_and_hasher(all_beacons.len() * scanner.len(), Default::default());
     for rotated in rotations(scanner) {
-        let mut offset_counts = FxHashMap::default();
+        offset_counts.clear();
         for &a in all_beacons {
             for &b in &rotated {
                 *offset_counts.entry(a - b).or_insert(0) += 1;

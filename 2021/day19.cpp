@@ -92,8 +92,16 @@ fn try_align(std::unordered_set<Point3D> const& all_beacons,
              Scanner const& scanner) -> Option<std::pair<Scanner, Point3D>> {
   // Both containers are keyed by Point3D purely for existence/tally checks,
   // never for sorted iteration, so hashing is faster over regular map
+  //
+  // Hoisted out of the rotation loop and cleared instead of rebuilt:
+  // it holds one offset per (beacon, rotated beacon) pair,
+  // so a fresh map would climb from 8 buckets to a few thousand -
+  // rehashing everything at each doubling -
+  // and do it again for all 24 rotations.
+  auto offset_counts = std::unordered_map<Point3D, usize>{};
+  offset_counts.reserve(all_beacons.size() * scanner.size());
   for (let& rotated : rotations(scanner)) {
-    auto offset_counts = std::unordered_map<Point3D, usize>{};
+    offset_counts.clear();
     for (let& a : all_beacons) {
       for (let& b : rotated) {
         offset_counts[a - b]++;
