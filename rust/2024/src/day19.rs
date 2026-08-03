@@ -26,17 +26,25 @@ fn num_possible_designs_reachable(design: &str, patterns: &[String]) -> i64 {
             end_found.get()
         },
         |current: &String| {
+            // Every node is a prefix of design,
+            // so testing the pattern against what is left of design
+            // is the same as testing `current + pattern` against all of it -
+            // but it rejects without building the string.
+            // Formatting one per pattern and discarding all but the few that
+            // match is what made this a slow solution.
+            let rest = &design[current.len()..];
             patterns
                 .iter()
-                .filter_map(|pattern| {
-                    let neighbor = format!("{current}{pattern}");
-                    design.starts_with(neighbor.as_str()).then(|| {
-                        let distance = (design.len() - neighbor.len() + 1) as u32;
-                        DijkstraState {
-                            data: neighbor,
-                            distance,
-                        }
-                    })
+                .filter(|pattern| rest.starts_with(pattern.as_str()))
+                .map(|pattern| {
+                    let mut neighbor = String::with_capacity(current.len() + pattern.len());
+                    neighbor.push_str(current);
+                    neighbor.push_str(pattern);
+                    let distance = (design.len() - neighbor.len() + 1) as u32;
+                    DijkstraState {
+                        data: neighbor,
+                        distance,
+                    }
                 })
                 .collect::<Vec<_>>()
         },

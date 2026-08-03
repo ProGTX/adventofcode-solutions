@@ -43,11 +43,17 @@ fn num_possible_designs<false>(str design, std::span<const String> patterns)
       },
       [&](String const& current) {
         auto neighbors = Vec<aoc::dijkstra_neighbor_t<String>>{};
+        // Every node is a prefix of design,
+        // so matching the pattern against what is left of design
+        // is the same as matching `current + pattern` against all of it -
+        // but it rejects without building the string,
+        // where concatenating first allocated once per pattern per node.
+        let rest = design.substr(current.size());
         for (String const& pattern : patterns) {
-          auto neighbor = current + pattern;
-          if (design.starts_with(neighbor)) {
-            neighbors.emplace_back(std::move(neighbor),
-                                   design.size() - neighbor.size() + 1);
+          if (rest.starts_with(pattern)) {
+            neighbors.emplace_back(
+                current + pattern,
+                design.size() - current.size() - pattern.size() + 1);
           }
         }
         return neighbors;
