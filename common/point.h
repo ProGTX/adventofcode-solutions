@@ -701,9 +701,13 @@ struct hash<aoc::point_type<T>> {
     if constexpr (sizeof(T) * 2 <= sizeof(std::size_t)) {
       // Pack both values into std::size_t with no collisions
       using U = std::make_unsigned_t<T>;
-      return static_cast<std::size_t>(static_cast<U>(value.x)) |
-             (static_cast<std::size_t>(static_cast<U>(value.y))
-              << (sizeof(T) * 8));
+      const auto packed = static_cast<std::size_t>(static_cast<U>(value.x)) |
+                          (static_cast<std::size_t>(static_cast<U>(value.y))
+                           << (sizeof(T) * 8));
+      // Packing alone leaves y in the high bits, which MSVC drops when it
+      // masks a hash down to a bucket, so every column shares one bucket.
+      // hash_mix is a bijection, so this stays collision free
+      return aoc::hash_mix(packed);
     } else {
       auto combine = aoc::hash_combine{};
       combine(value.x);
@@ -725,7 +729,9 @@ struct hash<aoc::nd_point_type<T, dims>> {
         result |= static_cast<std::size_t>(static_cast<U>(value[i]))
                   << (static_cast<std::size_t>(i) * sizeof(T) * 8);
       }
-      return result;
+      // Same reason as point_type above: the later components live in the
+      // high bits, which bucket selection would otherwise ignore
+      return aoc::hash_mix(result);
     } else {
       return aoc::packed_hash{}(value);
     }
