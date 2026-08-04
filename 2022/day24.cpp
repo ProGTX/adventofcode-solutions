@@ -102,7 +102,10 @@ fn find_distance(Input const& input, const point start_pos, const point end_pos,
       [&](search_state_t const& current) {
         let next_time = (current.time + 1) % period;
         let& new_blizzards = blizzard_cache[static_cast<usize>(next_time)];
-        auto neighbors = Vec<aoc::dijkstra_neighbor_t<search_state_t>>{};
+        // Four directions plus waiting in place, so this fits on the stack -
+        // a Vec here would malloc and free once per expanded node
+        auto neighbors =
+            aoc::static_vector<aoc::dijkstra_neighbor_t<search_state_t>, 5>{};
         for (let dir : aoc::basic_sky_directions) {
           let new_pos = current.pos + aoc::get_diff<int>(dir);
           if ((new_pos != start_pos) &&
