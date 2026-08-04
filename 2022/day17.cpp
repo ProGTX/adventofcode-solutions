@@ -31,16 +31,15 @@ fn move_rock(rock_t& rock, grid_point delta) {
 
 template <rock_index_t num_rocks>
 fn solve_case(Input const& pattern) -> rock_index_t {
-  constexpr let use_sparse_grid = num_rocks > 10000;
-
   constexpr int left_most_index = 0;
   constexpr int right_most_index = 4;
   constexpr int top_most_index = 1;
   constexpr int bottom_most_index = 3;
 
-  // static so that it has storage of its own: GCC 14 ICEs (make_decl_rtl, at
-  // varasm.cc:1443) on a member access to a local constexpr aggregate that a
-  // lambda captures by reference and that then gets inlined
+  // static so that it has storage of its own:
+  // GCC 14 ICEs (make_decl_rtl, at varasm.cc:1443)
+  // on a member access to a local constexpr aggregate
+  // that a lambda captures by reference and that then gets inlined
   static constexpr let initial_rock_displacement = grid_point{2, 3};
 
   constexpr let rock_structures = std::invoke([&] {
@@ -74,13 +73,12 @@ fn solve_case(Input const& pattern) -> rock_index_t {
   // Just use rocks as the walls, no need to do bounds checking
   using chamber_row_t = std::array<char, chamber_width + 2>;
 
-  auto chamber = std::invoke([] {
-    if constexpr (use_sparse_grid) {
-      return aoc::sparse_grid<char, char{}, grid_point, chamber_row_t>{};
-    } else {
-      return aoc::grid<char, chamber_row_t, std::vector<char>>{};
-    }
-  });
+  // Dense even for the 10^12 rock case:
+  // the cycle skip below advances the rock index without adding rows,
+  // so the chamber only ever holds the few thousand rocks actually simulated.
+  // A sparse grid would turn every cell test in the settling loop
+  // into a hash lookup for no reduction in rows.
+  auto chamber = aoc::grid<char, chamber_row_t, std::vector<char>>{};
 
   // And use rocks for the floor
   {
