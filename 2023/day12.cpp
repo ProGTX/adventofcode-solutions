@@ -10,7 +10,6 @@
 #include <span>
 #include <string>
 #include <thread>
-#include <unordered_map>
 #include <vector>
 
 struct Record {
@@ -62,7 +61,10 @@ struct SearchState {
 
 template <>
 struct std::hash<SearchState> {
-  size_t operator()(SearchState const& state) const {
+  // hash_combine avalanches, so the map can skip its own mixing step
+  using is_avalanching = void;
+
+  constexpr size_t operator()(SearchState const& state) const {
     auto combine = aoc::hash_combine{};
     combine(state.springs);
     combine(state.groups);
@@ -72,7 +74,7 @@ struct std::hash<SearchState> {
 };
 
 using Neighbors = aoc::static_vector<SearchState, 2>;
-using Cache = std::unordered_map<SearchState, u64>;
+using Cache = aoc::hash_map<SearchState, u64>;
 
 fn arrangement_neighbors(SearchState const& state) -> Neighbors {
   auto neighbors = Neighbors{};

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 4.0)
 project(adventofcode VERSION 2022 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -60,6 +60,9 @@ elseif (((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND
 else()
   set(AOC_MODULE_SUPPORT OFF)
 endif()
+
+# Before the aoc module below, which imports unordered_dense's module
+add_subdirectory(external)
 
 if (AOC_MODULE_SUPPORT)
   # Add module library aoc
@@ -129,8 +132,6 @@ function(add_sample sample_name year)
       SKIP_RETURN_CODE ${AOC_SKIP_RETURN_CODE}
   )
 endfunction()
-
-add_subdirectory(external)
 
 find_program(CARGO_EXECUTABLE cargo)
 if(NOT CARGO_EXECUTABLE)

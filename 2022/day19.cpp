@@ -9,7 +9,6 @@
 #include <limits>
 #include <print>
 #include <ranges>
-#include <unordered_map>
 
 constexpr let NUM_ROBOTS = 4uz;
 constexpr let NUM_RESOURCES = NUM_ROBOTS;
@@ -166,7 +165,7 @@ fn try_build_robot(Blueprint const& blueprint, Resources const& max_resources,
   return None;
 }
 
-using Cache = std::unordered_map<SearchNode, u16>;
+using Cache = aoc::hash_map<SearchNode, u16>;
 
 fn max_open_geodes_cached(Cache& cache, u16& current_best,
                           Blueprint const& blueprint,

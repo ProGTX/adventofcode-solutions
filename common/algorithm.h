@@ -22,8 +22,6 @@
 #include <ranges>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 #endif
@@ -105,8 +103,8 @@ template <class ReturnT = void, class State, class NeighborsFn>
     { get_neighbors(state) } -> std::ranges::input_range;
   }
 constexpr auto flood_fill(State start, NeighborsFn&& get_neighbors) {
-  auto visited = std::conditional_t<std::is_void_v<ReturnT>,
-                                    std::unordered_set<State>, ReturnT>{};
+  auto visited =
+      std::conditional_t<std::is_void_v<ReturnT>, hash_set<State>, ReturnT>{};
   auto queue = std::deque<State>{};
   visited.insert(start);
   queue.push_back(std::move(start));
@@ -336,7 +334,7 @@ template <class ReturnT = void, class Value = std::uint64_t, class State,
 constexpr auto dfs(State start_state, EndReachedFn&& end_reached,
                    NeighborsFn&& get_neighbors, CombineFn&& combine = {}) {
   auto cache = std::conditional_t<std::is_void_v<ReturnT>,
-                                  std::unordered_map<State, Value>, ReturnT>{};
+                                  hash_map<State, Value>, ReturnT>{};
   dfs(cache, std::move(start_state), std::forward<EndReachedFn>(end_reached),
       std::forward<NeighborsFn>(get_neighbors),
       std::forward<CombineFn>(combine));
@@ -380,7 +378,7 @@ template <class ReturnT = void, class Value = std::uint64_t, class State,
 constexpr auto dfs_uniform(State start_state, EndReachedFn&& end_reached,
                            NeighborsFn&& get_neighbors) {
   auto cache = std::conditional_t<std::is_void_v<ReturnT>,
-                                  std::unordered_map<State, Value>, ReturnT>{};
+                                  hash_map<State, Value>, ReturnT>{};
   dfs_uniform(cache, std::move(start_state),
               std::forward<EndReachedFn>(end_reached),
               std::forward<NeighborsFn>(get_neighbors));

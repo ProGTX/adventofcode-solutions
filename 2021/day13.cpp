@@ -6,11 +6,10 @@
 #include <print>
 #include <ranges>
 #include <string>
-#include <unordered_set>
 
 using Point = aoc::point_type<usize>;
 
-using Dots = std::unordered_set<Point>;
+using Dots = aoc::hash_set<Point>;
 using Folds = Vec<Point>;
 using Input = std::pair<Dots, Folds>;
 

@@ -8,8 +8,6 @@
 #include <span>
 #include <string>
 #include <thread>
-#include <unordered_map>
-#include <unordered_set>
 
 static constexpr usize max_scanners = 32;
 static constexpr usize max_beacons = 32;
@@ -88,8 +86,8 @@ fn rotations(Scanner const& scanner) -> aoc::static_vector<Scanner, 24> {
 // so the scanners overlap.
 // Return the rotated+translated beacons in world coordinates
 // and the scanner's world-space position, or None if no match found.
-fn try_align(std::unordered_set<Point3D> const& all_beacons,
-             Scanner const& scanner) -> Option<std::pair<Scanner, Point3D>> {
+fn try_align(aoc::hash_set<Point3D> const& all_beacons, Scanner const& scanner)
+    -> Option<std::pair<Scanner, Point3D>> {
   // Both containers are keyed by Point3D purely for existence/tally checks,
   // never for sorted iteration, so hashing is faster over regular map
   //
@@ -98,7 +96,7 @@ fn try_align(std::unordered_set<Point3D> const& all_beacons,
   // so a fresh map would climb from 8 buckets to a few thousand -
   // rehashing everything at each doubling -
   // and do it again for all 24 rotations.
-  auto offset_counts = std::unordered_map<Point3D, usize>{};
+  auto offset_counts = aoc::hash_map<Point3D, usize>{};
   offset_counts.reserve(all_beacons.size() * scanner.size());
   for (let& rotated : rotations(scanner)) {
     offset_counts.clear();
@@ -130,10 +128,10 @@ fn try_align(std::unordered_set<Point3D> const& all_beacons,
 // once an intermediate scanner has been merged.
 // Unaligned scanners are tried in parallel, chunked by hardware concurrency.
 fn align_all(std::span<Scanner const> scanners)
-    -> std::pair<std::unordered_set<Point3D>,
+    -> std::pair<aoc::hash_set<Point3D>,
                  aoc::static_vector<Point3D, max_scanners>> {
   auto all_beacons =
-      std::unordered_set<Point3D>{scanners[0].begin(), scanners[0].end()};
+      aoc::hash_set<Point3D>{scanners[0].begin(), scanners[0].end()};
   auto scanner_positions = aoc::static_vector<Point3D, max_scanners>{{0, 0, 0}};
   auto unaligned = aoc::static_vector<u8, max_scanners>{};
   for (usize i = 1; i < scanners.size(); ++i) {

@@ -20,6 +20,7 @@ import aoc;
 
 #else
 
+#include <ankerl/unordered_dense.h>
 // Include same headers as the module
 #include "algorithm.h"
 #include "assert.h"

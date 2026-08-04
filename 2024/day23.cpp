@@ -8,7 +8,6 @@
 #include <bit>
 #include <print>
 #include <thread>
-#include <unordered_set>
 
 // Every node name is two lowercase letters,
 // so 26*26 ids is enough for any input.
@@ -91,7 +90,7 @@ auto parse(String const& filename) -> Input {
 }
 
 fn solve_case1(Input const& input) -> i32 {
-  auto triangles = std::unordered_set<Triangle>{};
+  auto triangles = aoc::hash_set<Triangle>{};
   for (usize t_id = 0; t_id < input.names.size(); ++t_id) {
     if (!input.names[t_id].starts_with('t')) {
       continue;

@@ -687,6 +687,8 @@ struct std::formatter<aoc::min_max_helper> {
 namespace std {
 template <class T>
 struct hash<aoc::closed_range<T>> {
+  using is_avalanching = void;
+
   constexpr std::size_t operator()(const aoc::closed_range<T>& value) const {
     auto combine = aoc::hash_combine{};
     combine(value.begin);
@@ -695,19 +697,18 @@ struct hash<aoc::closed_range<T>> {
   }
 };
 
+// Both point types are laid out as their components back to back,
+// so folding the whole object representation covers every one of them.
+// Types that have no unique object representation
+// (e.g floats because of NaNs) fall back to combining.
 template <class T>
 struct hash<aoc::point_type<T>> {
+  using is_avalanching = void;
+
   constexpr std::size_t operator()(const aoc::point_type<T>& value) const {
-    if constexpr (sizeof(T) * 2 <= sizeof(std::size_t)) {
-      // Pack both values into std::size_t with no collisions
-      using U = std::make_unsigned_t<T>;
-      const auto packed = static_cast<std::size_t>(static_cast<U>(value.x)) |
-                          (static_cast<std::size_t>(static_cast<U>(value.y))
-                           << (sizeof(T) * 8));
-      // Packing alone leaves y in the high bits, which MSVC drops when it
-      // masks a hash down to a bucket, so every column shares one bucket.
-      // hash_mix is a bijection, so this stays collision free
-      return aoc::hash_mix(packed);
+    if constexpr (std::has_unique_object_representations_v<
+                      aoc::point_type<T>>) {
+      return aoc::packed_hash{}(value);
     } else {
       auto combine = aoc::hash_combine{};
       combine(value.x);
@@ -719,21 +720,19 @@ struct hash<aoc::point_type<T>> {
 
 template <class T, int dims>
 struct hash<aoc::nd_point_type<T, dims>> {
+  using is_avalanching = void;
+
   constexpr std::size_t operator()(
       const aoc::nd_point_type<T, dims>& value) const {
-    if constexpr (sizeof(T) * dims <= sizeof(std::size_t)) {
-      // Pack all components into std::size_t with no collisions
-      using U = std::make_unsigned_t<T>;
-      std::size_t result = 0;
-      for (int i = 0; i < dims; ++i) {
-        result |= static_cast<std::size_t>(static_cast<U>(value[i]))
-                  << (static_cast<std::size_t>(i) * sizeof(T) * 8);
-      }
-      // Same reason as point_type above: the later components live in the
-      // high bits, which bucket selection would otherwise ignore
-      return aoc::hash_mix(result);
-    } else {
+    if constexpr (std::has_unique_object_representations_v<
+                      aoc::nd_point_type<T, dims>>) {
       return aoc::packed_hash{}(value);
+    } else {
+      auto combine = aoc::hash_combine{};
+      for (int i = 0; i < dims; ++i) {
+        combine(value[i]);
+      }
+      return combine.seed;
     }
   }
 };

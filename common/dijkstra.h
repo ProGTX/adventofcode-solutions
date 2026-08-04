@@ -4,6 +4,7 @@
 #include "compiler.h"
 #include "concepts.h"
 #include "functional.h"
+#include "hash.h"
 #include "range_to.h"
 
 #ifndef AOC_MODULE_SUPPORT
@@ -21,8 +22,6 @@
 #include <span>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 #endif
@@ -110,15 +109,13 @@ constexpr auto dijkstra_uniform_neighbors(
 /// Default associative map for the search algorithms
 template <class Key, class T>
 using default_map =
-    std::conditional_t<hashable<Key>,
-                       std::unordered_map<std::remove_cvref_t<Key>, T>,
+    std::conditional_t<hashable<Key>, hash_map<std::remove_cvref_t<Key>, T>,
                        std::map<std::remove_cvref_t<Key>, T>>;
 
 /// Default associative set for the search algorithms
 template <class Key>
 using default_set =
-    std::conditional_t<hashable<Key>,
-                       std::unordered_set<std::remove_cvref_t<Key>>,
+    std::conditional_t<hashable<Key>, hash_set<std::remove_cvref_t<Key>>,
                        std::set<std::remove_cvref_t<Key>>>;
 
 // Node needs the explicit remove_cvref_t here

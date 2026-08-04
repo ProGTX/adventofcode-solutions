@@ -4,7 +4,6 @@
 #include "../common/rust.h"
 
 #include <print>
-#include <unordered_map>
 
 inline constexpr char round_rock = 'O';
 inline constexpr char cube_rock = '#';
@@ -147,7 +146,7 @@ fn solve_case(platform_t const& input) -> i32 {
     // and calculate the state of the cycle at point N:
     // x = (N-S) % A
 
-    auto cycle_map = std::unordered_map<String, i32>{};
+    auto cycle_map = aoc::hash_map<String, i32>{};
     constexpr auto num_iter = i32{1000000000};
 
     for (let i : Range{i32{}, num_iter}) {

@@ -8,7 +8,6 @@
 #include <print>
 #include <ranges>
 #include <span>
-#include <unordered_set>
 
 using garden_t = aoc::char_grid<>;
 // Every region is a set of linear indices into the same garden,

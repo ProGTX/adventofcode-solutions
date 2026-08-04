@@ -17,6 +17,7 @@ module;
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <deque>
 #include <exception>
 #include <fstream>
@@ -40,13 +41,16 @@ module;
 #include <thread>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
 
 export module aoc;
+
+// hash.h names ankerl::unordered_dense in its exported aliases and hashes.
+// Imported rather than included so the header does not land
+// in the global module fragment of every consumer.
+import ankerl.unordered_dense;
 
 #include "algorithm.h"
 #include "assert.h"

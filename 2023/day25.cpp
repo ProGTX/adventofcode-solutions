@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <print>
 #include <ranges>
-#include <unordered_map>
 
 using Graph = Vec<Vec<usize>>;
 
@@ -25,7 +24,7 @@ struct std::hash<GraphArc> : aoc::packed_hash {};
 static_assert(aoc::hashable<GraphArc>);
 
 // How many remaining units of flow each arc can still carry
-using Residual = std::unordered_map<GraphArc, i32>;
+using Residual = aoc::hash_map<GraphArc, i32>;
 
 // The puzzle states the two groups are held together by exactly three wires
 constexpr usize CUT_SIZE = 3;
