@@ -8,7 +8,6 @@
 #include <limits>
 #include <print>
 #include <ranges>
-#include <unordered_map>
 
 using elf_t = point;
 using elves_t = Vec<elf_t>;
@@ -30,54 +29,77 @@ fn parse(String const& filename) -> elves_t {
 
 fn simulate(elves_t& elves, int num_rounds) -> int {
   // current -> proposed
-  using elf_simulation_t = std::unordered_map<point, point>;
+  using elf_simulation_t = aoc::hash_map<point, point>;
 
   auto elf_simulation = elf_simulation_t{};
   for (let elf : elves) {
     elf_simulation[elf] = elf;
   }
 
-  auto possible_proposals =
-      aoc::as_consteval(std::array<std::array<aoc::facing_t, 3>, 4>{
-          std::array{aoc::north, aoc::northeast, aoc::northwest},
-          std::array{aoc::south, aoc::southwest, aoc::southeast},
-          std::array{aoc::west, aoc::southwest, aoc::northwest},
-          std::array{aoc::east, aoc::northeast, aoc::southeast},
-      });
+  // Offsets rather than facings: the rotation below reorders these every round,
+  // so a facing here would be decoded through get_diff's switch on every one of
+  // the millions of neighbor tests, rather than once at startup.
+  // Each entry leads with the direction the elf actually moves in.
+  let diffs = [](let... facings) {
+    return std::array{aoc::get_diff<int>(facings)...};
+  };
+  auto possible_proposals = std::array{
+      diffs(aoc::north, aoc::northeast, aoc::northwest),
+      diffs(aoc::south, aoc::southwest, aoc::southeast),
+      diffs(aoc::west, aoc::southwest, aoc::northwest),
+      diffs(aoc::east, aoc::northeast, aoc::southeast),
+  };
+  constexpr let all_sky_diffs = [] {
+    auto result = std::array<point, aoc::all_sky_directions.size()>{};
+    for (usize i = 0; i < result.size(); ++i) {
+      result[i] = aoc::get_diff<int>(aoc::all_sky_directions[i]);
+    }
+    return result;
+  }();
 
-  let is_empty = [&](point pos, let& directions) {
-    return stdr::all_of(
-        directions | stdv::transform(aoc::get_diff<int>),
-        [&](point diff) { return !elf_simulation.contains(pos + diff); });
+  let is_empty = [&](point pos, let& direction_diffs) {
+    return stdr::all_of(direction_diffs, [&](point diff) {
+      return !elf_simulation.contains(pos + diff);
+    });
   };
 
   let propose = [&](auto& entry) {
     auto& [current, proposed] = entry;
     proposed = current;
-    if (is_empty(current, aoc::all_sky_directions)) {
+    if (is_empty(current, all_sky_diffs)) {
       return;
     }
-    for (let& directions : possible_proposals) {
-      if (is_empty(current, directions)) {
-        proposed = current + aoc::get_diff(directions[0]);
+    for (let& direction_diffs : possible_proposals) {
+      if (is_empty(current, direction_diffs)) {
+        proposed = current + direction_diffs[0];
         break;
       }
     }
   };
 
+  auto counts = aoc::hash_map<point, int>{};
+  auto new_simulation = elf_simulation_t{};
   let execute = [&] {
-    auto counts = std::unordered_map<point, int>{};
+    // Reused across rounds: the elf count never changes,
+    // so clear() keeps the buckets both maps already grew into
+    counts.clear();
+    new_simulation.clear();
     for (let& [ current, proposed ] : elf_simulation) {
       if (current != proposed) {
         ++counts[proposed];
       }
     }
-    auto new_simulation = elf_simulation_t{};
     for (let& [ current, proposed ] : elf_simulation) {
-      let dest = (counts[proposed] == 1) ? proposed : current;
+      // find instead of operator[], which would enter every stationary elf's
+      // own position into counts and grow it past the elves that actually move
+      let it = counts.find(proposed);
+      let dest =
+          ((it != counts.end()) && (it->second == 1)) ? proposed : current;
       new_simulation[dest] = dest;
     }
-    elf_simulation = std::move(new_simulation);
+    // swap instead of move-assign, so next round's clear() finds the buckets
+    // this round already grew into
+    elf_simulation.swap(new_simulation);
   };
 
   int round = 0;
