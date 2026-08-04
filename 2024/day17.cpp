@@ -123,7 +123,7 @@ fn run_program(std::span<const u8> program, registers_t registers)
 }
 
 // Just for the static_asserts
-template <size_t N>
+template <usize N>
 fn run_program(std::array<int, N> program, registers_t registers)
     -> run_output_t {
   let program_u8 =

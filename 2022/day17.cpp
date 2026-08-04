@@ -178,7 +178,7 @@ fn solve_case(Input const& pattern) -> rock_index_t {
 
   // State key: what uniquely identifies the simulation state
   // rock_type, pattern_index, surface_hash
-  using CycleKey = std::tuple<int, int, size_t>;
+  using CycleKey = std::tuple<int, int, usize>;
   // State value: where this state was last seen
   struct SeenState {
     rock_index_t rock_index;
@@ -194,10 +194,10 @@ fn solve_case(Input const& pattern) -> rock_index_t {
   // and only thousands of states visited before a cycle is found,
   // the collision probability is negligible.
   let surface_hash = [&] {
-    size_t hash = 0;
+    auto hash = 0uz;
     for (rock_index_t k = 0; (k < 30) && ((current_height - 1 - k) >= 0); ++k) {
       for (char c : chamber.get_row(current_height - 1 - k)) {
-        hash = hash * 131 + static_cast<size_t>(c);
+        hash = hash * 131 + static_cast<usize>(c);
       }
     }
     return hash;

@@ -12,7 +12,7 @@
 template <u32 target, bool Part2>
 fn solve_case() -> u32 {
   constexpr let multiplier = Part2 ? 11u : 10u;
-  constexpr let size = static_cast<size_t>(target / multiplier);
+  constexpr let size = static_cast<usize>(target / multiplier);
   auto presents = Vec<u32>(size + 1, 0u);
   for (let elf : Range{1uz, size + 1}) {
     let last = Part2 ? std::min(elf * 50uz, size) : size;

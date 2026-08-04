@@ -26,7 +26,7 @@ struct std::hash<node_t> {
   // hash_combine avalanches, so the map can skip its own mixing step
   using is_avalanching = void;
 
-  constexpr size_t operator()(node_t const& node) const {
+  constexpr usize operator()(node_t const& node) const {
     auto combine = aoc::hash_combine{};
     combine(node.pos);
     combine(node.direction);

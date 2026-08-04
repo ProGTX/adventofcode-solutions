@@ -97,7 +97,7 @@ struct std::hash<SearchState> {
   // hash_combine avalanches, so the map can skip its own mixing step
   using is_avalanching = void;
 
-  constexpr size_t operator()(SearchState const& state) const {
+  constexpr usize operator()(SearchState const& state) const {
     auto combine = aoc::hash_combine{};
     combine(state.pos);
     combine(state.trail);

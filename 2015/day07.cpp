@@ -22,7 +22,7 @@ using wire_id_t = signal_t;
 using strict_signal_t = std::uint16_t;
 constexpr const wire_id_t first_wire_id = 1u << 16;
 constexpr bool is_value(signal_t signal) { return signal < first_wire_id; }
-constexpr size_t input_id(wire_id_t wire_id) {
+constexpr std::size_t input_id(wire_id_t wire_id) {
   AOC_ASSERT(wire_id >= first_wire_id, "Invalid wire ID");
   return wire_id - first_wire_id;
 }
@@ -104,7 +104,7 @@ circuit_t parse(const std::string& filename) {
       gate.rhs = get_signal(rhs);
     }
     const auto index = input_id(output_wire);
-    inputs.resize(std::max(static_cast<size_t>(index + 1), inputs.size()));
+    inputs.resize(std::max(static_cast<std::size_t>(index + 1), inputs.size()));
     inputs[index] = gate;
   }
   return {inputs, get_signal("a"), get_signal("b")};

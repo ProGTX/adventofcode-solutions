@@ -49,10 +49,10 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 option(AOC_DISABLE_MODULES "Explicitly disables modules, `import std` included" OFF)
 option(AOC_DISABLE_IMPORT_STD "Explicitly disables `import std`" OFF)
 
-# `import std` is only known good on MSVC so far,
-# so that is the only place it turns itself on.
-# Clang and GCC can have it enabled, but not everything works yet,
-# so it takes an explicit opt-in.
+# `import std` is known good on MSVC and on GCC 16,
+# so those are the places it turns itself on.
+# Clang can have it enabled, but not everything works yet,
+# so there it takes an explicit opt-in.
 option(AOC_ENABLE_IMPORT_STD
   "Opts in to `import std` on compilers where it is not on by default" OFF)
 
@@ -102,7 +102,9 @@ endif()
 #  - GCC gives module linkage to std declarations
 #    coming in through the global module fragment,
 #    which clashes with headers included alongside `import aoc`.
-#    Verified still broken in 15.1, so try again on 16.
+#    Verified still broken in 15.1.
+#    16 works, but only through `import std`, which empties that fragment -
+#    and only with the two workarounds further down.
 #  - MSVC 19.40 is VS 2022 17.10, the first toolset shipping the STL std module.
 #    Older toolsets could build the module in principle,
 #    but not the way it is written now: it only stays clear of the GMF clashes
@@ -113,6 +115,7 @@ set(AOC_MIN_MODULES_MSVC "19.40")
 
 # Minimum compiler versions for `import std`:
 #  - Clang needs 18.1.2 for the modules.json key spelling CMake reads.
+#    There seems to be a bug in Clang, though, with pipe operators not working.
 #  - GCC ships the std module from 15, but the module gate above binds first.
 #  - MSVC as above. Verified on 19.51, 19.40 is the documented floor.
 set(AOC_MIN_IMPORT_STD_Clang "18.1.2")
@@ -126,7 +129,9 @@ set(AOC_IMPORT_STD OFF)
 # and then turned down by a version or capability check further on
 set(aoc_want_import_std OFF)
 if ((NOT AOC_DISABLE_IMPORT_STD) AND
-    (AOC_ENABLE_IMPORT_STD OR (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")))
+    (AOC_ENABLE_IMPORT_STD OR
+     (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR
+     (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")))
   set(aoc_want_import_std ON)
 endif()
 
@@ -173,6 +178,19 @@ endif()
 
 if (AOC_IMPORT_STD)
   add_compile_definitions(AOC_IMPORT_STD)
+endif()
+
+if (AOC_IMPORT_STD AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
+  # 1. Ubuntu turns on _FORTIFY_SOURCE at -O2,
+  #    which brings inline glibc memset and memcpy wrappers.
+  #    When going through the std module, this causes GCC 16 to ICE.
+  # 2. GCC 16 defaults to ABI version 21,
+  #   whose mangling of constrained function templates
+  #   collides with itself once the same specialization
+  #    arrives both from the std module and from the aoc module,
+  #    giving "mangling of X conflicts with a previous mangle".
+  #    Version 20 mangles it the old way and the collision goes away.
+  string(APPEND CMAKE_CXX_FLAGS " -U_FORTIFY_SOURCE -fabi-version=20")
 endif()
 
 message(STATUS "aoc: module support ${AOC_MODULE_SUPPORT}, import std ${AOC_IMPORT_STD}")
