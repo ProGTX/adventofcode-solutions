@@ -116,43 +116,64 @@ class combinations_view : public std::ranges::view_interface<
       }
 
       const auto size = parent->num_elems;
+      const auto& args = parent->args;
 
       // Try to increment from the last position
       auto pos = size - 1;
 
       while (true) {
-        if (combination[pos] < parent->args.single_max) {
-          ++combination[pos];
-          ++prefix_sum;
+        // Everything before pos is fixed,
+        // and the positions after it can still contribute anything in
+        // `[remaining * single_min, remaining * single_max]`.
+        // So the sums reachable through a value v at pos
+        // form a contiguous window that slides with v,
+        // which pins the feasible v to a contiguous range -
+        // stepping one at a time only to re-test the same inequality
+        // is what made this walk `0..single_max` on every dead end.
+        const auto before =
+            static_cast<counter_type>(prefix_sum - combination[pos]);
+        const auto remaining = static_cast<counter_type>(size - pos - 1);
+        const auto floor_sum =
+            static_cast<counter_type>(before + remaining * args.single_min);
+        const auto ceil_sum =
+            static_cast<counter_type>(before + remaining * args.single_max);
 
-          // Check if this path can lead to valid combinations
-          const auto remaining = static_cast<counter_type>(size - pos - 1);
-          const auto max_possible =
-              prefix_sum + remaining * parent->args.single_max;
-          const auto min_possible =
-              prefix_sum + remaining * parent->args.single_min;
+        // v must reach all_min even with every later position maxed out
+        const auto lo =
+            (args.all_min <= ceil_sum)
+                ? args.single_min
+                : std::max(args.single_min,
+                           static_cast<counter_type>(args.all_min - ceil_sum));
+        // and stay under all_max even with every later position at its minimum
+        const auto hi =
+            (args.all_max < floor_sum)
+                ? args.single_min // empty range, hi < lo forces a backtrack
+                : std::min(args.single_max,
+                           static_cast<counter_type>(args.all_max - floor_sum));
+        const auto next =
+            std::max(static_cast<counter_type>(combination[pos] + 1), lo);
 
-          if ((max_possible >= parent->args.all_min) &&
-              (min_possible <= parent->args.all_max)) {
-            // Reset positions after current one to minimum
-            std::ranges::fill(combination | std::views::drop(pos + 1),
-                              parent->args.single_min);
-            const auto total_sum =
-                prefix_sum + remaining * parent->args.single_min;
+        if ((combination[pos] < args.single_max) &&
+            (next <= hi) &&
+            (args.all_max >= floor_sum)) {
+          combination[pos] = next;
 
-            if ((total_sum >= parent->args.all_min) &&
-                (total_sum <= parent->args.all_max)) {
-              prefix_sum = total_sum;
-              return; // Found valid combination
-            }
+          // Reset positions after current one to minimum
+          std::ranges::fill(combination | std::views::drop(pos + 1),
+                            args.single_min);
+          const auto total_sum = static_cast<counter_type>(floor_sum + next);
+          prefix_sum = total_sum;
 
-            // Otherwise continue searching
-            prefix_sum = total_sum;
-            pos = size - 1;
-            continue;
+          // hi already caps the sum at all_max, so only the floor can fail,
+          // and it takes larger values further right to lift it
+          if (total_sum >= args.all_min) {
+            return; // Found valid combination
           }
-          // If pruned, continue incrementing
-        } else if (pos == 0) {
+          pos = size - 1;
+          continue;
+        }
+
+        if (pos == 0) {
           break;
         } else {
           // Backtrack
