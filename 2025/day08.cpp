@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <limits>
 #include <print>
 #include <ranges>
 #include <set>
+#endif
 
 using Boxes = Vec<std::array<i64, 3>>;
 constexpr let usize_max = std::numeric_limits<usize>::max();

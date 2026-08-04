@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <optional>
 #include <print>
@@ -11,6 +12,7 @@
 #include <string_view>
 #include <type_traits>
 #include <vector>
+#endif
 
 using memspace_t = aoc::char_grid<>;
 constexpr const char corrupted = '#';

@@ -5,6 +5,7 @@
 #include "compiler.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <charconv>
 #include <concepts>
 #include <iterator>
@@ -14,6 +15,7 @@
 #include <string_view>
 #include <system_error>
 #include <utility>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {

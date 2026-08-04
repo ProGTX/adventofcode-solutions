@@ -3,9 +3,11 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <ranges>
+#endif
 
 Vec<u32> parse(String const& filename) {
   return aoc::views::read_numbers<u32>(filename) | aoc::collect_vec<u32>();

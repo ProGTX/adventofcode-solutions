@@ -3,8 +3,10 @@
 
 #include "compiler.h"
 
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <string_view>
+#endif
 
 struct MD5_CTX {
   unsigned int state[4];

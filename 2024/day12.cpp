@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <print>
 #include <ranges>
 #include <span>
+#endif
 
 using garden_t = aoc::char_grid<>;
 // Every region is a set of linear indices into the same garden,

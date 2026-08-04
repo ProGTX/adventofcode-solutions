@@ -5,12 +5,14 @@
 #include "compiler.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <bit>
 #include <cmath>
 #include <concepts>
 #include <cstdint>
 #include <type_traits>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {

@@ -3,9 +3,11 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <print>
 #include <span>
+#endif
 
 fn parse(String const& filename) -> Vec<String> {
   return aoc::read_lines(filename);

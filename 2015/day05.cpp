@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <map>
@@ -10,6 +11,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 constexpr bool contains_three_vowels(std::string_view str) {
   int count = 0;

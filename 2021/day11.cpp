@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <limits>
 #include <print>
 #include <ranges>
 #include <set>
+#endif
 
 using EnergyLevels = aoc::char_grid<>;
 constexpr let usize_max = std::numeric_limits<usize>::max();

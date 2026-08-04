@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <cstdlib>
@@ -11,6 +12,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#endif
 
 // A signal can be a wire ID or an an actual value
 // We unify them by storing values as 16-bit numbers,

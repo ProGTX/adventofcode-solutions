@@ -3,9 +3,11 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <limits>
 #include <print>
 #include <span>
+#endif
 
 auto parse(String const& filename) -> String {
   return aoc::read_file(filename);

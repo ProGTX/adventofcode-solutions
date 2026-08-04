@@ -3,7 +3,9 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <print>
+#endif
 
 inline constexpr char round_rock = 'O';
 inline constexpr char cube_rock = '#';

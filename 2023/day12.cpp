@@ -3,6 +3,7 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <future>
 #include <print>
@@ -11,6 +12,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#endif
 
 struct Record {
   String springs;

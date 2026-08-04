@@ -3,12 +3,14 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <functional>
 #include <print>
 #include <span>
 #include <string>
+#endif
 
 using node_t = std::pair<int, int>;
 using node_select_func_t = decltype(&node_t::first);

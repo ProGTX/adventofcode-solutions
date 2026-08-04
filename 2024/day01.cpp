@@ -3,8 +3,10 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <print>
 #include <ranges>
+#endif
 
 struct Input {
   Vec<i32> left;

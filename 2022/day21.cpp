@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <functional>
 #include <print>
+#endif
 
 using value_t = aoc::ratio<i64>;
 using operation_t = std::function<value_t(value_t, value_t)>;

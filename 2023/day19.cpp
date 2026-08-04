@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <print>
 #include <variant>
+#endif
 
 constexpr str start_name = "in";
 

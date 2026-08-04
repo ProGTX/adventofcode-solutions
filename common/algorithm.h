@@ -13,6 +13,7 @@
 #include "string.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <concepts>
 #include <cstddef>
@@ -24,6 +25,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {

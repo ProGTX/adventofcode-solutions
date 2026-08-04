@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <bit>
 #include <print>
 #include <ranges>
+#endif
 
 using pattern_t = Vec<String>;
 using num_pattern_t = Vec<u32>;

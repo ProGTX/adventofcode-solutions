@@ -3,6 +3,7 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <future>
@@ -12,6 +13,7 @@
 #include <thread>
 #include <variant>
 #include <vector>
+#endif
 
 enum class Reg : usize {
   W = 0,

@@ -2,12 +2,14 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <limits>
 #include <optional>
 #include <print>
 #include <ranges>
 #include <string>
 #include <type_traits>
+#endif
 
 constexpr const char empty = '.';
 constexpr const char start = 'S';

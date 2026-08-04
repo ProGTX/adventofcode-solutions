@@ -3,9 +3,11 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <ranges>
+#endif
 
 using Forrest = aoc::char_grid<>;
 using Score = aoc::grid<u32>;

@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <compare>
 #include <print>
 #include <span>
+#endif
 
 using city_block_t = aoc::grid<int>;
 

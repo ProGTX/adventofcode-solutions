@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <cctype>
 #include <print>
 #include <ranges>
 #include <variant>
+#endif
 
 struct Packet;
 using PacketList = Vec<Packet>;

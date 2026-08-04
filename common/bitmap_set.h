@@ -5,6 +5,7 @@
 #include "compiler.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <bit>
 #include <concepts>
@@ -13,6 +14,7 @@
 #include <ranges>
 #include <type_traits>
 #include <vector>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {

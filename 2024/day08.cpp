@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <map>
 #include <print>
@@ -9,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 constexpr const char empty_space = '.';
 using antennas_t = aoc::flat_map<char, aoc::static_vector<point, 4>>;

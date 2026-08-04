@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <print>
 #include <ranges>
+#endif
 
 fn to_numbers(str const& s) -> Vec<u32> {
   return s |

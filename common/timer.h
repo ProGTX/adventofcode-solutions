@@ -6,8 +6,10 @@
 #include "compiler.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <chrono>
 #include <print>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {

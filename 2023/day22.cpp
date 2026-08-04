@@ -3,8 +3,10 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
+#endif
 
 using coord_t = aoc::nd_point_type<int, 3>;
 using brick_t = aoc::closed_range<coord_t>;

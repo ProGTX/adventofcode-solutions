@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <print>
 #include <ranges>
 #include <stdexcept>
+#endif
 
 constexpr let CRT_WIDTH = 40;
 constexpr let CRT_HEIGHT = 6;

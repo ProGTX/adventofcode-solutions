@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <map>
 #include <print>
 #include <ranges>
+#endif
 
 // Each aunt is described by exactly three known compounds
 struct Compound {

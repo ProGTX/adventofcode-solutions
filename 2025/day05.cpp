@@ -3,9 +3,11 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <ranges>
+#endif
 
 using range_t = aoc::point_type<u64>;
 using Input = std::pair<Vec<range_t>, Vec<u64>>;

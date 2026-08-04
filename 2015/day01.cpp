@@ -2,10 +2,12 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <fstream>
 #include <print>
 #include <string>
 #include <string_view>
+#endif
 
 std::string parse(const std::string& filename) {
   return aoc::read_single_line(filename);

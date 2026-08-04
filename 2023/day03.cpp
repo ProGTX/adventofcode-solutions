@@ -3,9 +3,11 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <ranges>
+#endif
 
 auto parse(String const& filename) -> Vec<String> {
   return aoc::read_lines(filename);

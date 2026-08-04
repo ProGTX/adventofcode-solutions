@@ -3,9 +3,11 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <ranges>
+#endif
 
 template <u32 target, bool Part2>
 fn solve_case() -> u32 {

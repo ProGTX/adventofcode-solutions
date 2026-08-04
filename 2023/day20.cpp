@@ -3,12 +3,14 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <concepts>
 #include <map>
 #include <print>
 #include <variant>
+#endif
 
 using signal_t = bool;
 using inputs_t = std::map<usize, signal_t>;

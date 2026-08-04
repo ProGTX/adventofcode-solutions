@@ -5,8 +5,9 @@
 #include "concepts.h"
 
 #ifndef AOC_MODULE_SUPPORT
-#include <algorithm>
 #include <ankerl/unordered_dense.h>
+#ifndef AOC_IMPORT_STD
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <cstddef>
@@ -15,6 +16,7 @@
 #include <ranges>
 #include <string_view>
 #include <type_traits>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {
@@ -32,7 +34,7 @@ AOC_EXPORT_NAMESPACE(aoc) {
  *
  * @note Unlike std::unordered_map,
  * insert invalidates iterators and references whenever the value vector grows.
- * 
+ *
  * https://martin.ankerl.com/2022/08/27/hashmap-bench-01/
  */
 template <class Key, class T, class Hash = ankerl::unordered_dense::hash<Key>,

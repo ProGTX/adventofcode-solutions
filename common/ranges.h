@@ -7,11 +7,13 @@
 #include "range_to.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <functional>
 #include <iterator>
 #include <numeric>
 #include <ranges>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {

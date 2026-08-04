@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <numeric>
 #include <print>
 #include <ranges>
+#endif
 
 // Each cell stores a bitmask of which blizzard directions are present.
 // Bit index = static_cast<int>(facing_t): east=0, south=1, west=2, north=3.

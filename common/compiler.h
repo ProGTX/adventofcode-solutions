@@ -9,6 +9,15 @@
 #undef AOC_MODULE_SUPPORT
 #endif
 
+// AOC_IMPORT_STD comes from CMake and makes the headers
+// pull the standard library in through `import std` (in common.h)
+// instead of including std headers.
+// std is a module like any other,
+// so turning modules off has to turn this off too.
+#if defined(AOC_IMPORT_STD) && defined(AOC_DISABLE_MODULES)
+#undef AOC_IMPORT_STD
+#endif
+
 #ifndef AOC_EXPORT
 #define AOC_EXPORT
 #elifdef AOC_DISABLE_MODULES

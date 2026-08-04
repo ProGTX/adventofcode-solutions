@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <iterator>
 #include <print>
 #include <set>
 #include <span>
+#endif
 
 // The input (pages) is limited to numbers below 100
 // For each page we store a list of pages that must come before it and after it

@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <ranges>
 #include <tuple>
+#endif
 
 using Lights = aoc::static_vector<u8, 10>;
 using Button = aoc::static_vector<usize, 9>;

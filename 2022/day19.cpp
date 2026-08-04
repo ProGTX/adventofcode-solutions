@@ -3,12 +3,14 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <future>
 #include <limits>
 #include <print>
 #include <ranges>
+#endif
 
 constexpr let NUM_ROBOTS = 4uz;
 constexpr let NUM_RESOURCES = NUM_ROBOTS;

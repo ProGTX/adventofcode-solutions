@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <cstdint>
 #include <print>
@@ -9,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 using int_t = std::int64_t;
 using point_t = aoc::point_type<int_t>;

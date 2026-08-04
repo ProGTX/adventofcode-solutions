@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <map>
 #include <print>
 #include <ranges>
 #include <string>
 #include <vector>
+#endif
 
 using Input = std::pair<u32, u32>;
 

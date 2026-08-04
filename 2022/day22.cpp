@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <ranges>
 #include <span>
+#endif
 
 using parsed_map_t = aoc::char_grid<>;
 constexpr let empty_char = ' ';

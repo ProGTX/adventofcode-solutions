@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <ranges>
 #include <set>
+#endif
 
 using Outputs = aoc::static_vector<usize, 20>;
 using Input = std::pair<Vec<Outputs>, aoc::name_to_id>;

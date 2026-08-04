@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <print>
 #include <ranges>
 #include <stdexcept>
+#endif
 
 using Moves = Vec<point>;
 using Visited = aoc::flat_set<point>;

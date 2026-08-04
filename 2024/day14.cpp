@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <functional>
@@ -10,6 +11,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 struct robot_t {
   point position;

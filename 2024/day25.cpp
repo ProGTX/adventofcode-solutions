@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <print>
@@ -10,6 +11,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 constexpr const auto keyhole_size = point{5, 7};
 constexpr const int max_height = keyhole_size.y - 2;

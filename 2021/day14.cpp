@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <print>
 #include <ranges>
 #include <string>
+#endif
 
 using Polymer = String;
 using Rules = std::array<std::array<char, 26>, 26>;

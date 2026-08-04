@@ -5,6 +5,7 @@
 #include "range_to.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <concepts>
 #include <functional>
@@ -13,6 +14,7 @@
 #include <string_view>
 #include <tuple>
 #include <type_traits>
+#endif
 #endif
 
 template <class T>

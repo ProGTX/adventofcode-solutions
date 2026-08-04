@@ -16,12 +16,14 @@ but only when all compilers support it (basically only GCC 15 is missing).
 #include "compiler.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <iterator>
 #include <ranges>
 #include <tuple>
 #include <utility>
 #include <vector>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {

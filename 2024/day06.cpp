@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <print>
 #include <ranges>
 #include <type_traits>
+#endif
 
 constexpr let empty_space = '.';
 constexpr let obstacle = '#';

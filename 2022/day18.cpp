@@ -3,9 +3,11 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <print>
+#endif
 
 using Droplet = aoc::nd_point_type<i32, 3>;
 using Input = aoc::flat_set<Droplet>;

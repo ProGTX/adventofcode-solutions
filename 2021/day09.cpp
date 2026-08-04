@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <functional>
@@ -11,6 +12,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 using heightmap_t = aoc::char_grid<>;
 constexpr const char wall = '9';

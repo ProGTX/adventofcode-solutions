@@ -3,9 +3,11 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <ranges>
+#endif
 
 using Terminator = aoc::closed_range<point>;
 using Input = std::pair<aoc::char_grid<>, Terminator>;

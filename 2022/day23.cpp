@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <limits>
 #include <print>
 #include <ranges>
+#endif
 
 using elf_t = point;
 using elves_t = Vec<elf_t>;

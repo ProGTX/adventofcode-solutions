@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <print>
 #include <ranges>
 #include <span>
+#endif
 
 using Report = aoc::static_vector<i8, 8>;
 

@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <bit>
 #include <cstdint>
 #include <print>
 #include <string>
+#endif
 
 // Returns the 1-indexed position after the first WINDOW_SIZE chars
 // where all chars are distinct

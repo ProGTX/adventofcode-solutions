@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -11,6 +12,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 using int_t = std::int64_t;
 constexpr const std::string_view opening_braces = "([{<";

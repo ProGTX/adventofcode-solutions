@@ -3,12 +3,14 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <numeric>
 #include <print>
 #include <span>
 #include <string>
 #include <vector>
+#endif
 
 using Algorithm = Vec<u8>;
 using Image = aoc::grid<u8>;

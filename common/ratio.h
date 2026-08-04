@@ -5,10 +5,12 @@
 #include "math.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <compare>
 #include <concepts>
 #include <numeric>
 #include <system_error>
+#endif
 #endif
 
 // Runtime ratio class to replace std::ratio

@@ -3,9 +3,11 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <cctype>
 #include <print>
 #include <ranges>
+#endif
 
 using Adjacency = Vec<Vec<usize>>;
 

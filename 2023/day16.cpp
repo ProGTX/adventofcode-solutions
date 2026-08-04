@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <print>
@@ -9,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 using namespace std::string_view_literals;
 

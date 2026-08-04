@@ -3,12 +3,14 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <cstdio>
 #include <print>
 #include <span>
 #include <string>
 #include <vector>
+#endif
 
 using RangeInclusive = aoc::closed_range<i32>;
 

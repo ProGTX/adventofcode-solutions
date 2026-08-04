@@ -3,12 +3,14 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <functional>
 #include <limits>
 #include <print>
 #include <ranges>
 #include <stdexcept>
+#endif
 
 using Item = u64;
 

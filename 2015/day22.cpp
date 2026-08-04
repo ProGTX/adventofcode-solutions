@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <limits>
 #include <print>
 #include <ranges>
 #include <variant>
+#endif
 
 struct Entity {
   u16 hp;

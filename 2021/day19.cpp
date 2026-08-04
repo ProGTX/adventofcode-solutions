@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <future>
 #include <print>
 #include <span>
 #include <string>
 #include <thread>
+#endif
 
 static constexpr usize max_scanners = 32;
 static constexpr usize max_beacons = 32;

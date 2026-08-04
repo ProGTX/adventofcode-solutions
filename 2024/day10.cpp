@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <ranges>
 #include <span>
+#endif
 
 // Highest value on the map is 9, so 11 can never be reached
 constexpr let trailhead_char = '0';

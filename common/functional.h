@@ -4,12 +4,14 @@
 #include "compiler.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <concepts>
 #include <functional>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <variant>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {

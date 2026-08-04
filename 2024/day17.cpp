@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <limits>
 #include <print>
 #include <ranges>
 #include <span>
+#endif
 
 constexpr let max_3bit_end = (1 << 3);
 constexpr let max_3bit_mask = max_3bit_end - 1;

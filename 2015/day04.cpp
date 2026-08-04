@@ -3,6 +3,7 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <atomic>
 #include <charconv>
 #include <cstring>
@@ -10,6 +11,7 @@
 #include <print>
 #include <thread>
 #include <vector>
+#endif
 
 auto parse(String const& filename) -> String {
   return String{aoc::trim(aoc::read_file(filename))};

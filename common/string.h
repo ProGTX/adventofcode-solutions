@@ -10,6 +10,7 @@
 #include "utility.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <concepts>
 #include <exception>
@@ -23,6 +24,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {

@@ -3,9 +3,11 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <print>
 #include <ranges>
 #include <span>
+#endif
 
 struct Input {
   Vec<String> patterns;

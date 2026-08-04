@@ -13,14 +13,30 @@
 #if !defined(AOC_DISABLE_MODULES) &&                                           \
     defined(AOC_MODULE_SUPPORT) &&                                             \
     !defined(__INTELLISENSE__)
-
+// Pure module path
 import aoc;
 
+#ifdef AOC_IMPORT_STD
+import std;
+#else
 #include <ranges>
+#endif // AOC_IMPORT_STD
 
 #else
+// Header path
 
+#ifdef AOC_IMPORT_STD
+// MSVC only tolerates textual std headers in a TU
+// that also imports std when they are parsed *before* the import.
+// unordered_dense is a plain header
+// that includes a good part of the standard library,
+// so it has to be hoisted here out of hash.h.
 #include <ankerl/unordered_dense.h>
+// The aoc headers below skip their own std includes, so this has to come first
+import std;
+
+#endif // AOC_IMPORT_STD
+
 // Include same headers as the module
 #include "algorithm.h"
 #include "assert.h"
@@ -46,10 +62,12 @@ import aoc;
 #include "utility.h"
 
 // We're using std::print and ranges in this file
+#ifndef AOC_IMPORT_STD
 #include <print>
 #include <ranges>
+#endif // AOC_IMPORT_STD
 
-#endif
+#endif // modules
 
 namespace stdr = std::ranges;
 namespace stdv = std::views;

@@ -9,6 +9,7 @@
 #include "concepts.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
@@ -18,6 +19,7 @@
 #include <print>
 #include <string>
 #include <thread>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {

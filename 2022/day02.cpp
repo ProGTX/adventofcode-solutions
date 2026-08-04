@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <print>
 #include <ranges>
 #include <span>
 #include <string_view>
+#endif
 
 auto parse(String const& filename) -> Vec<std::pair<char, char>> {
   return aoc::views::read_lines(filename) |

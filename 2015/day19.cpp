@@ -3,12 +3,14 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <map>
 #include <print>
 #include <ranges>
 #include <set>
 #include <span>
+#endif
 
 using String10T = aoc::static_vector<String, 10>;
 using ReplacementsT = std::map<String, String10T>;

@@ -3,6 +3,7 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <memory>
 #include <print>
@@ -10,6 +11,7 @@
 #include <span>
 #include <string>
 #include <variant>
+#endif
 
 // Snailfish number
 struct SFN {

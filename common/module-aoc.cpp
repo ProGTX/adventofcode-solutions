@@ -1,5 +1,18 @@
 module;
 
+// compiler.h is macros only, safe to pull in ahead of the module declaration
+// just to find out whether AOC_IMPORT_STD is set
+#include "compiler.h"
+
+#ifdef AOC_IMPORT_STD
+
+// `import std` does not carry macros across
+// and in a Debug build AOC_ASSERT expands to assert(),
+// so this one header still has to be textual
+#include <cassert>
+
+#else
+
 // TODO: This only seems to work with Clang, not with MSVC or GCC
 
 // WORKAROUND: Our header files being exported also include these headers,
@@ -45,7 +58,16 @@ module;
 #include <variant>
 #include <vector>
 
+#endif // AOC_IMPORT_STD
+
 export module aoc;
+
+#ifdef AOC_IMPORT_STD
+// With no std headers in the global module fragment
+// there is nothing for the textual declarations in a consumer to clash with,
+// which is what used to break this module on MSVC and GCC.
+import std;
+#endif
 
 // hash.h names ankerl::unordered_dense in its exported aliases and hashes.
 // Imported rather than included so the header does not land

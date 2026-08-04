@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <print>
@@ -10,6 +11,7 @@
 #include <string_view>
 #include <type_traits>
 #include <vector>
+#endif
 
 // Determine the ASCII code for the current character of the string.
 // Increase the current value by the ASCII code you just determined.

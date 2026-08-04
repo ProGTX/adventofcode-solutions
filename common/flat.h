@@ -5,6 +5,7 @@
 #include "concepts.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <compare>
 #include <concepts>
@@ -15,6 +16,7 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {

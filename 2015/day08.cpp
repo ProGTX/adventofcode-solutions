@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <print>
@@ -9,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 constexpr int num_control_chars(std::string_view str) {
   AOC_ASSERT((str.size() >= 2) && (str.front() == '"') && (str.back() == '"'),

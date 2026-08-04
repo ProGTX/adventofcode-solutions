@@ -4,12 +4,14 @@
 // that make C++ look more like Rust,
 // aka Carcinization of C++
 
+#ifndef AOC_IMPORT_STD
 #include <cstdint>
 #include <optional>
 #include <ranges>
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 #define let const auto
 #define fn [[nodiscard]] constexpr auto

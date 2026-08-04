@@ -2,6 +2,7 @@
 
 #include "../common/common.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <fstream>
@@ -9,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 using dims_t = aoc::nd_point_type<int, 3>;
 using boxes_t = std::vector<dims_t>;

@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <print>
 #include <ranges>
 #include <span>
 #include <string_view>
+#endif
 
 struct range : public aoc::closed_range<int> {
   using base_t = aoc::closed_range<int>;

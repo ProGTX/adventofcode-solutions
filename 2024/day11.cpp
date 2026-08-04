@@ -3,8 +3,10 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <print>
 #include <ranges>
+#endif
 
 using stones_t = Vec<u64>;
 using blink_state_t = aoc::point_type<u64>; // x: stone, y: blink_counter

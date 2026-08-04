@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <ranges>
 #include <span>
+#endif
 
 using Bitset = aoc::static_vector<u8, 12>;
 using Counter = aoc::static_vector<i16, 12>;

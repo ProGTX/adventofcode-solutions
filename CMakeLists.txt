@@ -1,4 +1,42 @@
 cmake_minimum_required(VERSION 4.0)
+
+# `import std` is still behind an experimental gate
+# that only opens for a UUID matching the exact CMake in use.
+# This has to be set before project():
+# the value is read while the CXX compiler is being detected
+# and that detection is what fills in CMAKE_CXX_COMPILER_IMPORT_STD.
+#
+# The UUID can change with a minor or even a patch version,
+# so the table is keyed on the release the value first appeared in,
+# and the newest entry at or below the running CMake wins.
+# https://github.com/Kitware/CMake/blob/v4.4.2/Help/dev/experimental.rst
+#
+# Getting this wrong is not fatal.
+# CMake newer than the last row here costs us `import std`
+# until the table grows a line.
+set(AOC_IMPORT_STD_GATE_VERSIONS
+  "4.0.0" # .. 4.0.2
+  "4.0.3" # .. 4.2.7
+  "4.3.0" # .. 4.3.4
+  "4.4.0" # .. 4.4.2, newest known
+)
+set(AOC_IMPORT_STD_GATE_UUIDS
+  "a9e1cf81-9932-4810-974b-6eccaf14e457"
+  "d0edc3af-4c50-42ea-a356-e2862fe7a444"
+  "451f2fe2-a8a2-47c3-bc32-94786d8fc91b"
+  "f35a9ac6-8463-4d38-8eec-5d6008153e7d"
+)
+
+list(LENGTH AOC_IMPORT_STD_GATE_VERSIONS aoc_gate_count)
+math(EXPR aoc_gate_last "${aoc_gate_count} - 1")
+foreach (aoc_gate_index RANGE ${aoc_gate_last})
+  list(GET AOC_IMPORT_STD_GATE_VERSIONS ${aoc_gate_index} aoc_gate_version)
+  if (CMAKE_VERSION VERSION_GREATER_EQUAL "${aoc_gate_version}")
+    list(GET AOC_IMPORT_STD_GATE_UUIDS ${aoc_gate_index}
+      CMAKE_EXPERIMENTAL_CXX_IMPORT_STD)
+  endif()
+endforeach()
+
 project(adventofcode VERSION 2022 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -8,7 +46,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 enable_testing()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-option(AOC_DISABLE_MODULES "Explicitly disables modules" OFF)
+option(AOC_DISABLE_MODULES "Explicitly disables modules, `import std` included" OFF)
+option(AOC_DISABLE_IMPORT_STD "Explicitly disables `import std`" OFF)
+
+# `import std` is only known good on MSVC so far,
+# so that is the only place it turns itself on.
+# Clang and GCC can have it enabled, but not everything works yet,
+# so it takes an explicit opt-in.
+option(AOC_ENABLE_IMPORT_STD
+  "Opts in to `import std` on compilers where it is not on by default" OFF)
 
 add_compile_definitions(AOC_CXX_STANDARD=${CMAKE_CXX_STANDARD})
 set(AOC_RELEASE_CHECK_EXPR
@@ -51,26 +97,91 @@ if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR
   add_compile_definitions(_GLIBCXX_ASSERTIONS)
 endif()
 
-if (AOC_DISABLE_MODULES)
-  set(AOC_MODULE_SUPPORT OFF)
-elseif (((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND
-      (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "16.0")) OR
-    # GCC gives module linkage to std declarations
-    # coming in through the global module fragment,
-    # which clashes with headers included alongside `import aoc`.
-    # Verified still broken in 15.1, so try again on 16.
-    ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") AND
-      (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "16.0")) OR
-    ((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") AND
-      (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "17.4")))
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    add_compile_definitions(AOC_MODULE_SUPPORT_AOC_STD)
+# Minimum compiler versions for the aoc module:
+#  - Clang 16 is the first release the module builds on.
+#  - GCC gives module linkage to std declarations
+#    coming in through the global module fragment,
+#    which clashes with headers included alongside `import aoc`.
+#    Verified still broken in 15.1, so try again on 16.
+#  - MSVC 19.40 is VS 2022 17.10, the first toolset shipping the STL std module.
+#    Older toolsets could build the module in principle,
+#    but not the way it is written now: it only stays clear of the GMF clashes
+#    by taking the standard library through `import std`.
+set(AOC_MIN_MODULES_Clang "16.0")
+set(AOC_MIN_MODULES_GNU "16.0")
+set(AOC_MIN_MODULES_MSVC "19.40")
+
+# Minimum compiler versions for `import std`:
+#  - Clang needs 18.1.2 for the modules.json key spelling CMake reads.
+#  - GCC ships the std module from 15, but the module gate above binds first.
+#  - MSVC as above. Verified on 19.51, 19.40 is the documented floor.
+set(AOC_MIN_IMPORT_STD_Clang "18.1.2")
+set(AOC_MIN_IMPORT_STD_GNU "15.0")
+set(AOC_MIN_IMPORT_STD_MSVC "19.40")
+
+set(AOC_MODULE_SUPPORT OFF)
+set(AOC_IMPORT_STD OFF)
+
+# Whether `import std` is even being asked for, as opposed to being asked for
+# and then turned down by a version or capability check further on
+set(aoc_want_import_std OFF)
+if ((NOT AOC_DISABLE_IMPORT_STD) AND
+    (AOC_ENABLE_IMPORT_STD OR (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")))
+  set(aoc_want_import_std ON)
+endif()
+
+if (NOT AOC_DISABLE_MODULES)
+  set(aoc_min_modules "${AOC_MIN_MODULES_${CMAKE_CXX_COMPILER_ID}}")
+  if (aoc_min_modules AND
+      (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "${aoc_min_modules}"))
+    set(AOC_MODULE_SUPPORT ON)
   endif()
-  set(AOC_MODULE_SUPPORT ON)
+
+  set(aoc_min_import_std "${AOC_MIN_IMPORT_STD_${CMAKE_CXX_COMPILER_ID}}")
+  if (aoc_want_import_std AND aoc_min_import_std AND
+      (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "${aoc_min_import_std}"))
+    if (CMAKE_GENERATOR MATCHES "^Visual Studio")
+      # MSBuild finds, builds and references the STL's std module by itself.
+      # CMake's own `import std` support is not wired up for this generator,
+      # so the experimental gate above does nothing here.
+      set(AOC_IMPORT_STD ON)
+    elseif ("23" IN_LIST CMAKE_CXX_COMPILER_IMPORT_STD)
+      # Everywhere else CMake builds the std module, but only once the
+      # experimental gate has matched this CMake version and it has found the
+      # standard library's module metadata.
+      set(AOC_IMPORT_STD ON)
+      set(CMAKE_CXX_MODULE_STD ON)
+    endif()
+  endif()
+
+  # Clang can have either one on its own. MSVC and GCC cannot: their aoc module
+  # only builds while the global module fragment stays empty, which is exactly
+  # what `import std` buys, and `import std` without the aoc module leaves every
+  # single target compiling its own copy of the std module.
+  if ((NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND
+      (NOT (AOC_MODULE_SUPPORT AND AOC_IMPORT_STD)))
+    set(AOC_MODULE_SUPPORT OFF)
+    set(AOC_IMPORT_STD OFF)
+    set(CMAKE_CXX_MODULE_STD OFF)
+  endif()
+endif()
+
+if (AOC_MODULE_SUPPORT)
   add_compile_definitions(AOC_MODULE_SUPPORT)
   add_compile_definitions(AOC_EXPORT=export)
-else()
-  set(AOC_MODULE_SUPPORT OFF)
+endif()
+
+if (AOC_IMPORT_STD)
+  add_compile_definitions(AOC_IMPORT_STD)
+endif()
+
+message(STATUS "aoc: module support ${AOC_MODULE_SUPPORT}, import std ${AOC_IMPORT_STD}")
+if ((NOT AOC_IMPORT_STD) AND aoc_want_import_std AND
+    CMAKE_CXX_COMPILER_IMPORT_STD_ERROR_MESSAGE)
+  # Says which of the gate, the generator or the standard library's module
+  # metadata was missing, rather than leaving it to be guessed at
+  message(STATUS
+    "aoc: no import std - ${CMAKE_CXX_COMPILER_IMPORT_STD_ERROR_MESSAGE}")
 endif()
 
 # Before the aoc module below, which imports unordered_dense's module
@@ -84,12 +195,7 @@ if (AOC_MODULE_SUPPORT)
       FILE_SET CXX_MODULES FILES
         common/module-aoc.cpp
   )
-  add_library(aoc.std)
-  target_sources(aoc.std
-    PUBLIC
-      FILE_SET CXX_MODULES FILES
-        common/module-aoc-std.cpp
-  )
+  target_link_libraries(aoc PUBLIC unordered_dense::unordered_dense_module)
 endif()
 
 # We use this to mark incomplete tests as skipped
@@ -135,8 +241,12 @@ function(add_sample sample_name year)
   
   add_dependencies(year_${year} ${target})
 
+  # Header-only outside module builds.
+  # Inside one the module target carries the BMI
+  # and the include directory comes along with it either way.
+  target_link_libraries(${target} PRIVATE unordered_dense::unordered_dense)
   if (AOC_MODULE_SUPPORT)
-    target_link_libraries(${target} PRIVATE aoc aoc.std)
+    target_link_libraries(${target} PRIVATE aoc)
   endif()
 
   add_test(NAME ${target} COMMAND ${target})

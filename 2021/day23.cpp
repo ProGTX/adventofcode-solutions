@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <array>
 #include <optional>
 #include <print>
 #include <string>
 #include <vector>
+#endif
 
 using Hallway = std::array<char, 11>;
 using Rooms = std::array<std::array<char, 4>, 4>;

@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <bit>
 #include <print>
 #include <thread>
+#endif
 
 // Every node name is two lowercase letters,
 // so 26*26 ids is enough for any input.

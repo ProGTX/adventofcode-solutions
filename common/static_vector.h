@@ -9,6 +9,7 @@
 #include "ranges.h"
 
 #ifndef AOC_MODULE_SUPPORT
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <array>
 #include <bit>
@@ -20,6 +21,7 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#endif
 #endif
 
 AOC_EXPORT_NAMESPACE(aoc) {

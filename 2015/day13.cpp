@@ -3,11 +3,13 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <limits>
 #include <numeric>
 #include <print>
 #include <ranges>
+#endif
 
 struct link_t {
   int to_id;

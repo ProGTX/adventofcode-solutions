@@ -3,9 +3,11 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <ranges>
+#endif
 
 using Folder = aoc::static_vector<usize, 11>;
 using Filesystem = std::pair<Vec<Folder>, Vec<u32>>;

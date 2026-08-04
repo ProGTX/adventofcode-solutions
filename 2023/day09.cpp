@@ -3,10 +3,12 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <print>
 #include <span>
 #include <string>
+#endif
 
 using Reading = Vec<i32>;
 using Input = Vec<Reading>;

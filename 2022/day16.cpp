@@ -3,6 +3,7 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <algorithm>
 #include <bit>
 #include <limits>
@@ -12,6 +13,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#endif
 
 struct Valve {
   Vec<usize> tunnels;

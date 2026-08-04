@@ -3,7 +3,9 @@
 #include "../common/common.h"
 #include "../common/rust.h"
 
+#ifndef AOC_IMPORT_STD
 #include <print>
+#endif
 
 using island_t = aoc::char_grid<>;
 
