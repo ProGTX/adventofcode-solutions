@@ -25,6 +25,18 @@ if (MSVC)
   string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
   add_compile_options($<$<CONFIG:Debug>:/Ob1>)
 
+  # The memoized searches recurse once per step of the state they consume,
+  # and a Debug frame holds every range adaptor temporary that Release folds away -
+  # deep enough that 2023/day12 overflows the default 1 MB reserve.
+  # It only needs a little over 1 MB, so the margin was always thin.
+  # 8 MB is reserved address space rather than committed memory,
+  # and buys room to stop rediscovering this.
+  # This also sets the default for the std::async threads,
+  # which is where it actually overflows:
+  # they are created with a zero stack size,
+  # meaning "use the reserve recorded in the image header".
+  add_link_options($<$<CONFIG:Debug>:/STACK:8388608>)
+
   # _ITERATOR_DEBUG_LEVEL defaults to 2 in Debug,
   # which tracks iterator invalidation by threading every live iterator
   # onto a heap allocated container proxy.
