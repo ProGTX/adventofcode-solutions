@@ -174,6 +174,9 @@ endif()
 if (AOC_MODULE_SUPPORT)
   add_compile_definitions(AOC_MODULE_SUPPORT)
   add_compile_definitions(AOC_EXPORT=export)
+else()
+  # Don't scan for modules if they're disabled
+  set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
 if (AOC_IMPORT_STD)
