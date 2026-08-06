@@ -53,6 +53,7 @@ endfunction()
 
 add_subdirectory(utils)
 add_subdirectory(2015)
+add_subdirectory(2016)
 add_subdirectory(2021)
 add_subdirectory(2022)
 add_subdirectory(2023)
