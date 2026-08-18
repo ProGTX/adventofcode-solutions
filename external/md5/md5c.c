@@ -25,6 +25,8 @@ documentation and/or software.
 
 #include "md5.h"
 
+#include <string.h>
+
 /* Constants for MD5Transform routine.
  */
 
@@ -50,7 +52,8 @@ static void Encode PROTO_LIST
   ((unsigned char *, UINT4 *, unsigned int));
 static void Decode PROTO_LIST
   ((UINT4 *, unsigned char *, unsigned int));
-static void MD5_memcpy PROTO_LIST ((POINTER, POINTER, unsigned int));
+static void MD5_memcpy PROTO_LIST((POINTER restrict, POINTER restrict,
+                                   unsigned int));
 static void MD5_memset PROTO_LIST ((POINTER, int, unsigned int));
 
 static unsigned char PADDING[64] = {
@@ -306,30 +309,23 @@ unsigned int len;
    (((UINT4)input[j+2]) << 16) | (((UINT4)input[j+3]) << 24);
 }
 
-/* Note: Replace "for loop" with standard memcpy if possible.
+/* Standard memcpy.
  */
 
-static void MD5_memcpy (output, input, len)
-POINTER output;
-POINTER input;
+static inline void MD5_memcpy (output, input, len)
+POINTER restrict output;
+POINTER restrict input;
 unsigned int len;
 {
-  unsigned int i;
-
-  for (i = 0; i < len; i++)
-
- output[i] = input[i];
+  memcpy(output, input, len);
 }
 
-/* Note: Replace "for loop" with standard memset if possible.
+/* Standard memset.
  */
-static void MD5_memset (output, value, len)
+static inline void MD5_memset (output, value, len)
 POINTER output;
 int value;
 unsigned int len;
 {
-  unsigned int i;
-
-  for (i = 0; i < len; i++)
- ((char *)output)[i] = (char)value;
+  memset(output, value, len);
 }
