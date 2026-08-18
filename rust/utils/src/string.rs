@@ -39,3 +39,22 @@ impl NameToId {
         self.current_id.max(old_len)
     }
 }
+
+/// Writes n's decimal digits at the front of buf, returning how many it used.
+///
+/// Removes the need for `format!` which would allocate and free a String.
+pub fn write_u32(buf: &mut [u8], mut n: u32) -> usize {
+    let mut digits = [0u8; 10];
+    let mut first = digits.len();
+    loop {
+        first -= 1;
+        digits[first] = b'0' + (n % 10) as u8;
+        n /= 10;
+        if n == 0 {
+            break;
+        }
+    }
+    let len = digits.len() - first;
+    buf[..len].copy_from_slice(&digits[first..]);
+    len
+}
