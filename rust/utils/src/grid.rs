@@ -29,6 +29,10 @@ pub const ALL_NEIGHBOR_DIFFS: [Ipos; 8] = [
     Point::new(1, 1),
 ];
 
+const fn linear_index(num_columns: usize, row: usize, column: usize) -> usize {
+    row * num_columns + column
+}
+
 impl<T> Grid<T> {
     pub fn new(value: T, num_rows: usize, num_columns: usize) -> Self
     where
@@ -66,7 +70,7 @@ impl<T> Grid<T> {
     }
 
     pub const fn linear_index(&self, row: usize, column: usize) -> usize {
-        row * self.num_columns + column
+        linear_index(self.num_columns, row, column)
     }
 
     pub const fn linear_from_pos(&self, pos: Upos) -> usize {
@@ -103,27 +107,18 @@ impl<T> Grid<T> {
         let row_start = self.linear_index(row, 0);
         &mut self.data[row_start..row_start + self.num_columns]
     }
-    pub fn for_row_mut<F>(&mut self, row: usize, mut f: F)
-    where
-        F: FnMut(&mut T),
-    {
-        for column in 0..self.num_rows {
-            let index = self.linear_index(row, column);
-            f(&mut self.data[index]);
-        }
-    }
 
     pub fn column(&self, column: usize) -> impl Iterator<Item = &T> {
         (0..self.num_rows).map(move |row| &self.data[self.linear_index(row, column)])
     }
-    pub fn for_column_mut<F>(&mut self, column: usize, mut f: F)
-    where
-        F: FnMut(&mut T),
-    {
-        for row in 0..self.num_rows {
-            let index = self.linear_index(row, column);
-            f(&mut self.data[index]);
-        }
+    pub fn column_mut(&mut self, column: usize) -> impl Iterator<Item = &mut T> {
+        let num_columns = self.num_columns;
+        let ptr = self.data.as_mut_ptr();
+
+        (0..self.num_rows).map(move |row| {
+            let idx = linear_index(num_columns, row, column);
+            unsafe { &mut *ptr.add(idx) }
+        })
     }
 
     pub fn in_bounds_unsigned(&self, row: usize, column: usize) -> bool {
