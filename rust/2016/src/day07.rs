@@ -43,14 +43,40 @@ fn solve_case1(packets: &Input) -> usize {
         .count()
 }
 
+fn aba_list(s: &str) -> impl Iterator<Item = [u8; 3]> {
+    s.bytes()
+        .array_windows::<3>()
+        .filter(|w| (w[0] == w[2]) && (w[0] != w[1]))
+}
+
+fn solve_case2(packets: &Input) -> usize {
+    packets
+        .iter()
+        .filter(|packet| {
+            packet.outside.iter().any(|outer| {
+                aba_list(outer).any(|aba| {
+                    let bab = [aba[1], aba[0], aba[1]];
+                    packet
+                        .inside
+                        .iter()
+                        .any(|inner| inner.bytes().array_windows::<3>().any(|w| w == bab))
+                })
+            })
+        })
+        .count()
+}
+
 fn main() {
     println!("Part 1");
     let example = parse("day07.example");
     aoc::expect_result!(2, solve_case1(&example));
+    let example2 = parse("day07.example2");
+    aoc::expect_result!(0, solve_case1(&example2));
     let input = parse("day07.input");
     aoc::expect_result!(110, solve_case1(&input));
 
     println!("Part 2");
-    //aoc::expect_result!(1337, solve_case2(&example));
-    //aoc::expect_result!(1337, solve_case2(&input));
+    aoc::expect_result!(0, solve_case2(&example));
+    aoc::expect_result!(3, solve_case2(&example2));
+    aoc::expect_result!(242, solve_case2(&input));
 }
