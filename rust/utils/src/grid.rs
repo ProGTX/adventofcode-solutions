@@ -226,43 +226,46 @@ pub struct ConfigOutput {
 }
 
 impl Grid<char> {
-    pub fn from_lines_config(lines: &[String], config: ConfigInput) -> (Self, ConfigOutput) {
+    pub fn from_lines_config<S: AsRef<str>>(
+        lines: &[S],
+        config: ConfigInput,
+    ) -> (Self, ConfigOutput) {
         let padding = config.padding.is_some();
         let mut output_config = ConfigOutput::default();
-        let set_once = |optional_pos: &mut Option<Upos>,
-                        optional_char: &Option<char>,
-                        line: &String,
-                        row_id| {
-            *optional_pos = optional_pos.or_else(|| {
-                optional_char.and_then(|input_char| {
-                    line.chars()
-                        .position(|c| c == input_char)
-                        .map(|column_id| Upos {
-                            x: column_id + (padding as usize),
-                            y: row_id,
-                        })
-                })
-            });
-        };
+        let set_once =
+            |optional_pos: &mut Option<Upos>, optional_char: &Option<char>, line: &str, row_id| {
+                *optional_pos = optional_pos.or_else(|| {
+                    optional_char.and_then(|input_char| {
+                        line.chars()
+                            .position(|c| c == input_char)
+                            .map(|column_id| Upos {
+                                x: column_id + (padding as usize),
+                                y: row_id,
+                            })
+                    })
+                });
+            };
         let mut grid = {
             let mut padded_data = Vec::<char>::new();
             let num_rows = lines.len() + 2 * (padding as usize);
-            let num_columns = lines[0].len() + 2 * (padding as usize);
+            let first_line = lines[0].as_ref();
+            let num_columns = first_line.len() + 2 * (padding as usize);
             if (padding) {
                 padded_data.extend(std::iter::repeat(config.padding.unwrap()).take(num_columns));
             }
             let mut row_id = (padding as usize);
             for line in lines {
+                let line: &str = line.as_ref();
                 if (padding) {
                     padded_data.push(config.padding.unwrap());
                 }
                 set_once(
                     &mut output_config.start_pos,
                     &config.start_char,
-                    &line,
+                    line,
                     row_id,
                 );
-                set_once(&mut output_config.end_pos, &config.end_char, &line, row_id);
+                set_once(&mut output_config.end_pos, &config.end_char, line, row_id);
                 padded_data.extend(line.chars());
                 if (padding) {
                     padded_data.push(config.padding.unwrap());

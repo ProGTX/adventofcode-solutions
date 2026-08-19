@@ -1,7 +1,4 @@
-use aoc::{
-    grid::{ConfigInput, Grid, Ipos},
-    iter::CollectArrayVec,
-};
+use aoc::grid::{ConfigInput, Grid, Ipos};
 
 type Input = Vec<String>;
 
@@ -10,7 +7,7 @@ fn parse(filename: &str) -> Input {
 }
 
 fn solve_case<const COMPLICATED: bool>(input: &Input) -> String {
-    let keypad_str = (if !COMPLICATED {
+    let keypad_str = if !COMPLICATED {
         vec![
             "123", //
             "456", //
@@ -24,10 +21,7 @@ fn solve_case<const COMPLICATED: bool>(input: &Input) -> String {
             " ABC ", //
             "  D  ", //
         ]
-    })
-    .into_iter()
-    .map(|s| s.to_string())
-    .collect_array_vec::<5>();
+    };
 
     let (keypad, config) = Grid::from_lines_config(
         &keypad_str,

@@ -33,7 +33,7 @@ struct SearchState {
 
 fn solve_case1(input: &Input) -> u64 {
     let keypad_grid = |keypad: &str| {
-        let lines: Vec<_> = keypad.lines().map(str::to_string).collect();
+        let lines: Vec<_> = keypad.lines().collect();
         Grid::from_lines_config(&lines, ConfigInput::default()).0
     };
     let numeric_keypad = keypad_grid(NUMERIC_KEYPAD);
