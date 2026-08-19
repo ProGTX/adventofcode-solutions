@@ -55,14 +55,15 @@ fn parse(filename: &str) -> Input {
         .collect()
 }
 
-fn solve_case1(instructions: &Input) -> u32 {
+fn solve_case<const PRINT: bool>(instructions: &Input) -> String {
+    const LIT: char = '#';
     const DIMS: Upos = Upos::new(50, 6);
-    let mut screen = Grid::<bool>::new(false, DIMS.y, DIMS.x);
+    let mut screen = Grid::<char>::new(' ', DIMS.y, DIMS.x);
     for instruction in instructions {
         match instruction.op {
             Op::Rect => {
                 for row in 0..instruction.row {
-                    screen.row_mut(row)[..instruction.column].fill(true);
+                    screen.row_mut(row)[..instruction.column].fill(LIT);
                 }
             }
             Op::RotateRow => {
@@ -82,18 +83,44 @@ fn solve_case1(instructions: &Input) -> u32 {
             }
         }
     }
-    screen.data.iter().map(|&p| p as u32).sum()
+    if !PRINT {
+        screen
+            .data
+            .into_iter()
+            .filter(|&p| p == LIT)
+            .count()
+            .to_string()
+    } else {
+        screen.data.into_iter().collect()
+    }
 }
 
 fn main() {
     println!("Part 1");
     let example = parse("day08.example");
-    aoc::expect_result!(6, solve_case1(&example));
+    aoc::expect_result!("6", solve_case::<false>(&example));
     let input = parse("day08.input");
-    aoc::expect_result!(119, solve_case1(&input));
+    aoc::expect_result!("119", solve_case::<false>(&input));
 
     println!("Part 2");
-    aoc::return_incomplete();
-    //aoc::expect_result!(1337, solve_case2(&example));
-    //aoc::expect_result!(1337, solve_case2(&input));
+
+    const EXAMPLE: &str = concat!(
+        "    # #                                           ",
+        "# #                                               ",
+        " #                                                ",
+        " #                                                ",
+        "                                                  ",
+        "                                                  "
+    );
+    aoc::expect_result!(EXAMPLE, solve_case::<true>(&example));
+
+    const INPUT: &str = concat!(
+        "#### #### #  # ####  ### ####  ##   ##  ###   ##  ",
+        "   # #    #  # #    #    #    #  # #  # #  # #  # ",
+        "  #  ###  #### ###  #    ###  #  # #    #  # #  # ",
+        " #   #    #  # #     ##  #    #  # # ## ###  #  # ",
+        "#    #    #  # #       # #    #  # #  # #    #  # ",
+        "#### #    #  # #    ###  #     ##   ### #     ##  ",
+    );
+    aoc::expect_result!(INPUT, solve_case::<true>(&input));
 }
