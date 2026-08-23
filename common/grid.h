@@ -202,6 +202,32 @@ class grid {
                "of rows and columns");
   }
 
+  /// Fills the grid from any range of values,
+  /// so that a fixed size grid can be built
+  /// straight out of a string literal or any other view over its contents
+  template <std::ranges::input_range R>
+    requires(!std::same_as<std::remove_cvref_t<R>, Container>) &&
+                std::convertible_to<std::ranges::range_reference_t<R>,
+                                    value_type>
+  constexpr grid(R&& range, std::size_t num_rows, std::size_t num_columns)
+      : m_data{}, m_row_length{num_columns}, m_num_rows{num_rows} {
+    const auto count = num_rows * num_columns;
+    if constexpr (is_array_class_v<container_type>) {
+      AOC_ASSERT((count <= m_data.size()),
+                 "Container is not large enough for requested number"
+                 "of rows and columns");
+    } else {
+      m_data.resize(count);
+    }
+    if constexpr (std::ranges::sized_range<R>) {
+      AOC_ASSERT((count <= static_cast<std::size_t>(std::ranges::size(range))),
+                 "Range is too short for requested number"
+                 "of rows and columns");
+    }
+    std::ranges::copy_n(std::ranges::begin(range),
+                        static_cast<std::ptrdiff_t>(count), std::begin(m_data));
+  }
+
   template <class Row = row_t>
     requires requires(Row row) {
       std::ranges::copy_n(std::begin(row), 0, iterator{});
@@ -489,6 +515,15 @@ using array_grid =
 
 template <class row_storage_t = std::string, class Container = std::string>
 using char_grid = grid<char, row_storage_t, Container>;
+
+/// Builds a fixed size grid out of the rows of a single character literal
+template <std::size_t num_rows, std::size_t row_length>
+constexpr auto fixed_char_grid(std::string_view data) {
+  AOC_ASSERT((data.size() == (num_rows * row_length)),
+             "The literal has to hold whole rows");
+  return aoc::array_grid<char, row_length, num_rows>{data, num_rows,
+                                                     row_length};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // sparse_grid
