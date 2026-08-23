@@ -4,9 +4,10 @@
 #include "../common/rust.h"
 
 #ifndef AOC_IMPORT_STD
+#include <algorithm>
+#include <array>
 #include <atomic>
 #include <charconv>
-#include <cstring>
 #include <limits>
 #include <print>
 #include <thread>
@@ -23,12 +24,13 @@ fn solve_case(str key) -> u32 {
   auto result = std::atomic<u32>{std::numeric_limits<u32>::max()};
 
   auto search = [&, key](u32 start) {
-    char buf[64];
-    std::memcpy(buf, key.data(), key.size());
+    auto buffer = std::array<char, 64>{};
+    stdr::copy(key, std::begin(buffer));
     for (auto n = start; n < result.load(std::memory_order_relaxed);
          n += num_threads) {
-      let[end, _] = std::to_chars(buf + key.size(), buf + sizeof(buf), n);
-      let hash = aoc::md5(str{buf, end});
+      let[end, _] =
+          std::to_chars(std::begin(buffer) + key.size(), std::end(buffer), n);
+      let hash = aoc::md5(str{std::begin(buffer), end});
       if (hash[0] == 0 && hash[1] == 0 && (hash[2] & 0xF0u) == 0) {
         if constexpr (Part2) {
           if ((hash[2] & 0x0Fu) > 0) {
