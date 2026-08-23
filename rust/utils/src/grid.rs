@@ -121,11 +121,11 @@ impl<T> Grid<T> {
         })
     }
 
-    pub fn in_bounds_unsigned(&self, row: usize, column: usize) -> bool {
+    pub const fn in_bounds_unsigned(&self, row: usize, column: usize) -> bool {
         return (row < self.num_rows) && (column < self.num_columns);
     }
 
-    pub fn in_bounds_signed(&self, row: isize, column: isize) -> bool {
+    pub const fn in_bounds_signed(&self, row: isize, column: isize) -> bool {
         return (row >= 0)
             && (column >= 0)
             && self.in_bounds_unsigned(row as usize, column as usize);

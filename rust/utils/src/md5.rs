@@ -26,12 +26,16 @@ pub fn md5(input: &[u8]) -> [u8; 16] {
     }
 }
 
-pub fn md5_digest_to_hex(digest: [u8; 16]) -> [char; 32] {
+pub const fn md5_digest_to_hex(digest: [u8; 16]) -> [char; 32] {
     const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
     let mut s = ['0'; 32];
-    for (i, byte) in digest.iter().enumerate() {
+    // A `while` rather than a `for`, so this stays usable in a const context
+    let mut i = 0;
+    while i < digest.len() {
+        let byte = digest[i];
         s[2 * i] = HEX_CHARS[(byte >> 4) as usize] as char;
         s[2 * i + 1] = HEX_CHARS[(byte & 0x0f) as usize] as char;
+        i += 1;
     }
     s
 }

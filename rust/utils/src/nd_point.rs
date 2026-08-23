@@ -20,16 +20,16 @@ impl<T, const N: usize> NDPoint<T, N> {
         }
     }
 
-    pub fn x(&self) -> &T {
+    pub const fn x(&self) -> &T {
         &self.data[0]
     }
-    pub fn y(&self) -> &T {
+    pub const fn y(&self) -> &T {
         &self.data[1]
     }
-    pub fn z(&self) -> &T {
+    pub const fn z(&self) -> &T {
         &self.data[2]
     }
-    pub fn w(&self) -> &T {
+    pub const fn w(&self) -> &T {
         &self.data[3]
     }
 
@@ -40,16 +40,16 @@ impl<T, const N: usize> NDPoint<T, N> {
         NDPoint::from_fn(|i| self.data[i] * factor)
     }
 
-    pub fn x_mut(&mut self) -> &mut T {
+    pub const fn x_mut(&mut self) -> &mut T {
         &mut self.data[0]
     }
-    pub fn y_mut(&mut self) -> &mut T {
+    pub const fn y_mut(&mut self) -> &mut T {
         &mut self.data[1]
     }
-    pub fn z_mut(&mut self) -> &mut T {
+    pub const fn z_mut(&mut self) -> &mut T {
         &mut self.data[2]
     }
-    pub fn w_mut(&mut self) -> &mut T {
+    pub const fn w_mut(&mut self) -> &mut T {
         &mut self.data[3]
     }
 }
