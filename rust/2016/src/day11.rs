@@ -2,27 +2,28 @@ use aoc::dijkstra::DijkstraState;
 use aoc::string::NameToId;
 use itertools::Itertools;
 
-#[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
-struct Slot {
-    chip: bool,
-    generator: bool,
-}
+/// A floor holds one bit per element's chip, and one per its generator.
+type Floor = u16;
+const GENERATOR_SHIFT: usize = 8;
 
-type Floors = [Vec<Slot>; 4];
+type Floors = [Floor; 4];
 
-#[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 struct State {
     floors: Floors,
     elevator: usize,
 }
 
-fn parse(filename: &str) -> Floors {
-    let mut floors: Floors = [const { Vec::new() }; 4];
+/// The parsed floors, and how many elements they have room for
+type Input = (Floors, usize);
+
+fn parse(filename: &str) -> Input {
+    let mut floors: Floors = [0; 4];
     let mut elements = NameToId::new();
 
     for (floor, line) in aoc::file::read_lines(filename).iter().enumerate() {
         let words = line
-            .split_whitespace()
+            .split(' ')
             .map(|word| word.trim_matches([',', '.']))
             .collect_vec();
         for (i, &word) in words.iter().enumerate() {
@@ -33,76 +34,40 @@ fn parse(filename: &str) -> Floors {
                 _ => continue,
             };
             let id = elements.intern(name);
-            let slots = &mut floors[floor];
-            if slots.len() <= id {
-                slots.resize_with(id + 1, || Slot {
-                    chip: false,
-                    generator: false,
-                });
-            }
-            if chip {
-                slots[id].chip = true;
-            } else {
-                slots[id].generator = true;
-            }
+            floors[floor] |= 1_u16 << (id + if chip { 0 } else { GENERATOR_SHIFT });
         }
     }
 
-    let num_elements = floors.iter().map(|slots| slots.len()).max().unwrap();
-    for slots in &mut floors {
-        slots.resize_with(num_elements, || Slot {
-            chip: false,
-            generator: false,
-        });
-    }
+    // Two extra elements, for the parts added in part 2
+    let num_elements = elements.new_len(0) + 2;
+    debug_assert!(num_elements <= GENERATOR_SHIFT, "Too many elements");
 
-    return floors;
+    return (floors, num_elements);
 }
 
 /// A chip is fried unless it sits with its own generator,
 /// or the floor holds no generators at all.
-fn is_valid(slots: &[Slot]) -> bool {
-    if slots.iter().all(|slot| !slot.generator) {
-        return true;
-    }
-    return slots.iter().all(|slot| !slot.chip || slot.generator);
+fn is_valid(floor: Floor) -> bool {
+    let generators = floor >> GENERATOR_SHIFT;
+    return (generators == 0) || ((floor & !generators & 0xff) == 0);
 }
 
-/// An item on a floor: the element id and whether it's the chip or the generator
-type Item = (usize, bool);
-
-fn move_item(floors: &mut Floors, from: usize, to: usize, (id, chip): Item) {
-    if chip {
-        floors[from][id].chip = false;
-        floors[to][id].chip = true;
-    } else {
-        floors[from][id].generator = false;
-        floors[to][id].generator = true;
+fn solve_case<const EXTRA_PARTS: bool>((floors, num_elements): &Input) -> u32 {
+    // The extra parts start on the first floor, otherwise their bits stay unused
+    let mut start_floors = *floors;
+    if (EXTRA_PARTS) {
+        for id in (num_elements - 2)..(*num_elements) {
+            start_floors[0] |= (1_u16 << id) | (1_u16 << (id + GENERATOR_SHIFT));
+        }
     }
-}
-
-fn solve_case1(floors: &Floors) -> u32 {
-    let num_elements = floors[0].len();
-    let empty = vec![
-        Slot {
-            chip: false,
-            generator: false,
-        };
-        num_elements
-    ];
-    let full = vec![
-        Slot {
-            chip: true,
-            generator: true,
-        };
-        num_elements
-    ];
     let start = State {
-        floors: floors.clone(),
+        floors: start_floors,
         elevator: 0,
     };
+    // Everything ends up on the top floor
+    let all_items = start_floors[0] | start_floors[1] | start_floors[2] | start_floors[3];
     let end = State {
-        floors: [empty.clone(), empty.clone(), empty, full],
+        floors: [0, 0, 0, all_items],
         elevator: 3,
     };
 
@@ -111,16 +76,15 @@ fn solve_case1(floors: &Floors) -> u32 {
         |current| *current == end,
         |current| {
             let floor = current.elevator;
-            let items = current.floors[floor]
-                .iter()
-                .enumerate()
-                .flat_map(|(id, slot)| {
-                    slot.chip
-                        .then_some((id, true))
-                        .into_iter()
-                        .chain(slot.generator.then_some((id, false)))
-                })
-                .collect_vec();
+            // Each item on this floor, as a mask of the one bit that represents it
+            let mut items = Vec::new();
+            let mut left = current.floors[floor];
+            while (left != 0) {
+                // The lowest set bit, i.e. one chip or one generator
+                items.push(left & left.wrapping_neg());
+                // Clear it, leaving the items still to be listed
+                left &= left - 1;
+            }
 
             let mut neighbors = Vec::new();
             for next in [floor.wrapping_sub(1), floor + 1] {
@@ -129,14 +93,12 @@ fn solve_case1(floors: &Floors) -> u32 {
                 }
                 // Take one item, or a pair of them, along with the elevator
                 for (i, &first) in items.iter().enumerate() {
-                    let others = items[i + 1..].iter().map(|&item| Some(item));
-                    for second in std::iter::once(None).chain(others) {
-                        let mut floors = current.floors.clone();
-                        move_item(&mut floors, floor, next, first);
-                        if let Some(second) = second {
-                            move_item(&mut floors, floor, next, second);
-                        }
-                        if (is_valid(&floors[floor]) && is_valid(&floors[next])) {
+                    let pairs = items[i + 1..].iter().map(|second| first | second);
+                    for moved in std::iter::once(first).chain(pairs) {
+                        let mut floors = current.floors;
+                        floors[floor] &= !moved;
+                        floors[next] |= moved;
+                        if (is_valid(floors[floor]) && is_valid(floors[next])) {
                             neighbors.push(DijkstraState {
                                 data: State {
                                     floors,
@@ -158,10 +120,10 @@ fn solve_case1(floors: &Floors) -> u32 {
 fn main() {
     println!("Part 1");
     let example = parse("day11.example");
-    aoc::expect_result!(11, solve_case1(&example));
+    aoc::expect_result!(11, solve_case::<false>(&example));
     let input = parse("day11.input");
-    aoc::expect_result!(31, solve_case1(&input));
+    aoc::expect_result!(31, solve_case::<false>(&input));
 
     println!("Part 2");
-    aoc::return_incomplete();
+    aoc::expect_result!(55, solve_case::<true>(&input));
 }
