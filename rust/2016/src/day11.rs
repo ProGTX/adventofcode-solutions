@@ -52,6 +52,33 @@ fn is_valid(floor: Floor) -> bool {
     return (generators == 0) || ((floor & !generators & 0xff) == 0);
 }
 
+/// Elements are interchangeable, so a state is only its multiset of
+/// (chip floor, generator floor) pairs.
+/// Relabelling the elements into sorted order picks one representative
+/// per class of equivalent states.
+///
+/// https://www.reddit.com/r/adventofcode/comments/5hoia9/comment/db1v1ws/
+fn canonicalize(floors: Floors) -> Floors {
+    let mut elements = Vec::new();
+    for id in 0..GENERATOR_SHIFT {
+        let chip = floors.iter().position(|items| (items & (1 << id)) != 0);
+        let generator = floors
+            .iter()
+            .position(|items| (items & (1 << (id + GENERATOR_SHIFT))) != 0);
+        if let (Some(chip), Some(generator)) = (chip, generator) {
+            elements.push((chip, generator));
+        }
+    }
+    elements.sort_unstable();
+
+    let mut canonical: Floors = [0; 4];
+    for (id, (chip, generator)) in elements.into_iter().enumerate() {
+        canonical[chip] |= 1 << id;
+        canonical[generator] |= 1 << (id + GENERATOR_SHIFT);
+    }
+    return canonical;
+}
+
 fn solve_case<const EXTRA_PARTS: bool>((floors, num_elements): &Input) -> u32 {
     // The extra parts start on the first floor, otherwise their bits stay unused
     let mut start_floors = *floors;
@@ -61,13 +88,13 @@ fn solve_case<const EXTRA_PARTS: bool>((floors, num_elements): &Input) -> u32 {
         }
     }
     let start = State {
-        floors: start_floors,
+        floors: canonicalize(start_floors),
         elevator: 0,
     };
     // Everything ends up on the top floor
     let all_items = start_floors[0] | start_floors[1] | start_floors[2] | start_floors[3];
     let end = State {
-        floors: [0, 0, 0, all_items],
+        floors: canonicalize([0, 0, 0, all_items]),
         elevator: 3,
     };
 
@@ -86,27 +113,45 @@ fn solve_case<const EXTRA_PARTS: bool>((floors, num_elements): &Input) -> u32 {
                 left &= left - 1;
             }
 
+            // Every pair of items that could be taken along together
+            let mut pairs = Vec::new();
+            for (i, &first) in items.iter().enumerate() {
+                for second in &items[i + 1..] {
+                    pairs.push(first | second);
+                }
+            }
+
             let mut neighbors = Vec::new();
             for next in [floor.wrapping_sub(1), floor + 1] {
                 if (next >= 4) {
                     continue;
                 }
-                // Take one item, or a pair of them, along with the elevator
-                for (i, &first) in items.iter().enumerate() {
-                    let pairs = items[i + 1..].iter().map(|second| first | second);
-                    for moved in std::iter::once(first).chain(pairs) {
+                // Carrying a pair up is never worse than carrying a single item,
+                // and bringing a single item down is never worse than bringing a pair
+                // so only fall back to the other kind when the preferred one has no valid move
+                let groups = if (next > floor) {
+                    [&pairs, &items]
+                } else {
+                    [&items, &pairs]
+                };
+                let before = neighbors.len();
+                for group in groups {
+                    for &moved in group {
                         let mut floors = current.floors;
                         floors[floor] &= !moved;
                         floors[next] |= moved;
                         if (is_valid(floors[floor]) && is_valid(floors[next])) {
                             neighbors.push(DijkstraState {
                                 data: State {
-                                    floors,
+                                    floors: canonicalize(floors),
                                     elevator: next,
                                 },
                                 distance: 1,
                             });
                         }
+                    }
+                    if (neighbors.len() > before) {
+                        break;
                     }
                 }
             }
