@@ -31,6 +31,10 @@ fn parse(filename: &str) -> Input {
 }
 
 fn get_neighbors(state: &State, rooms: &Grid<u8>) -> ArrayVec<DijkstraState<State>, 4> {
+    // Reaching the vault ends the walk, there is nowhere left to go
+    if (state.pos == VAULT) {
+        return ArrayVec::new();
+    }
     // The same hash decides all four doors of this room
     let hash = md5(state.path.as_bytes());
     rooms
@@ -86,13 +90,43 @@ fn solve_case1(passcode: &Input) -> String {
         .unwrap();
 }
 
+/// The length of the longest path of moves that still reaches the vault
+///
+/// Every move appends to the path, so no state can ever repeat:
+/// the graph is a DAG, which is what `critical_distances` needs
+fn solve_case2(passcode: &Input) -> u32 {
+    let rooms = Grid::new(0_u8, 4, 4);
+    let start = State {
+        pos: START,
+        path: passcode.clone(),
+    };
+    // Every path to the vault has to be walked to its end,
+    // so the search cannot stop at the first one it settles
+    let distances = aoc::algorithm::critical_distances(
+        &start,    //
+        |_| false, //
+        |state| get_neighbors(state, &rooms),
+    );
+    return distances
+        .into_iter()
+        .filter(|(state, _)| state.pos == VAULT)
+        .map(|(_, distance)| distance)
+        .max()
+        .unwrap();
+}
+
 fn main() {
     println!("Part 1");
+    aoc::expect_result!("DDRRRD", solve_case1(&"ihgpwlah".to_string()));
+    aoc::expect_result!("DDUDRLRRUDRD", solve_case1(&"kglvqrro".to_string()));
     let example = parse("day17.example");
     aoc::expect_result!("DRURDRUDDLLDLUURRDULRLDUUDDDRR", solve_case1(&example));
     let input = parse("day17.input");
     aoc::expect_result!("RLDUDRDDRR", solve_case1(&input));
 
     println!("Part 2");
-    aoc::return_incomplete();
+    aoc::expect_result!(370, solve_case2(&"ihgpwlah".to_string()));
+    aoc::expect_result!(492, solve_case2(&"kglvqrro".to_string()));
+    aoc::expect_result!(830, solve_case2(&example));
+    aoc::expect_result!(590, solve_case2(&input));
 }
