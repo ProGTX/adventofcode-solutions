@@ -170,6 +170,14 @@ class grid {
   static constexpr auto static_data_size =
       is_array_class_v<container_type> ? container_type{}.size() : 0;
 
+  static constexpr std::size_t static_num_rows = [] {
+    if constexpr (static_row_length > 0) {
+      return static_data_size / static_row_length;
+    } else {
+      return std::size_t{0};
+    }
+  }();
+
   constexpr grid() {}
 
   template <class container_dependent = container_type>
@@ -502,11 +510,14 @@ class grid {
     m_row_length = row_length_;
   }
 
-  container_type m_data;
+  container_type m_data{};
 
  private:
-  std::size_t m_row_length = 0;
-  std::size_t m_num_rows = 0;
+  // A fixed size grid knows its shape from its container,
+  // so the default constructor can report it
+  // the same way every other constructor does
+  std::size_t m_row_length = static_row_length;
+  std::size_t m_num_rows = static_num_rows;
 };
 
 template <class T, std::size_t row_length, std::size_t num_rows = row_length>
