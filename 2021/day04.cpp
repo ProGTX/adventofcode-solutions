@@ -1,194 +1,107 @@
 // https://adventofcode.com/2021/day/4
 
 #include "../common/common.h"
+#include "../common/rust.h"
 
 #ifndef AOC_IMPORT_STD
 #include <algorithm>
-#include <array>
-#include <exception>
 #include <fstream>
-#include <iterator>
-#include <numeric>
-#include <optional>
 #include <print>
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 #endif
 
-class board : public aoc::array_grid<int, 5> {
- private:
-  using base_t = aoc::array_grid<int, 5>;
-  constexpr static auto m_size = 5 * 5;
+constexpr let board_size = 5uz;
 
- public:
-  constexpr board() {
-    for (auto& marker : markers) {
-      marker = false;
-    }
-  }
-
-  constexpr auto add(const row_t& row) {
-    if (this->is_complete()) {
-      AOC_NOT_CONSTEXPR(throw std::runtime_error("Cannot add any more rows"));
-    }
-    base_t::add_row(row);
-  }
-
-  constexpr bool mark(int number) {
-    int pos = 0;
-    for (; pos < size(); ++pos) {
-      if (m_data[pos] != number) {
-        continue;
-      }
-      // Hit a single number
-      markers[pos] = true;
-      break;
-    }
-    if (pos >= size()) {
-      // No bingo
-      return false;
-    }
-    has_bingo_hit = check_bingo(pos);
-    return has_bingo_hit;
-  }
-
-  constexpr bool has_bingo() const { return has_bingo_hit; }
-
-  constexpr bool is_complete() const { return (this->num_rows_dynamic() == 5); }
-
-  constexpr int sum_unmarked() const {
-    int sum = 0;
-    for (int pos = 0; pos < size(); ++pos) {
-      if (!markers[pos]) {
-        sum += m_data[pos];
-      }
-    }
-    return sum;
-  }
-
-  constexpr bool check_bingo(int position) const {
-    // Check current row
-    {
-      int row_num = position / 5;
-      const auto begin = std::begin(markers) + row_num * 5;
-      bool bingo =
-          stdr::all_of(stdr::subrange(begin, begin + 5), std::identity{});
-      if (bingo) {
-        return true;
-      }
-    }
-
-    // Check current column
-    {
-      int column_num = position % 5;
-      bool bingo = true;
-      for (int pos = column_num; pos < size(); pos += 5) {
-        if (!markers[pos]) {
-          bingo = false;
-          break;
-        }
-      }
-      if (bingo) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
- private:
-  std::array<bool, m_size> markers;
-  bool has_bingo_hit = false;
-};
+using Numbers = Vec<u32>;
+using board = aoc::array_grid<u32, board_size>;
 
 struct game_t {
-  std::vector<int> bingo_numbers;
-  std::vector<board> boards;
+  Numbers bingo_numbers;
+  Vec<board> boards;
 };
 
-game_t parse(const std::string& filename) {
-  std::vector<board> boards;
-  board* current_board_ptr = nullptr;
+auto parse(String const& filename) -> game_t {
+  auto file = std::ifstream{filename};
+  auto bingo_numbers = aoc::split_to_vec<u32>(aoc::read_single_line(file), ',');
 
-  std::ifstream file{filename};
-  auto bingo_numbers = aoc::split_to_vec<int>(aoc::read_single_line(file), ',');
-
-  for (std::string_view line :
-       aoc::views::read_lines(file, aoc::keep_empty{})) {
+  auto boards = Vec<board>{};
+  // The numbers of a single board, gathered until the board is complete
+  auto data = Numbers{};
+  for (str line : aoc::views::read_lines(file, aoc::keep_empty{})) {
     if (line.empty()) {
-      // Create new board
-      current_board_ptr = &boards.emplace_back();
-
-      // Don't do anything with the board yet
+      if (!data.empty()) {
+        boards.emplace_back(data, board_size, board_size);
+        data.clear();
+      }
       continue;
     }
-    auto row = aoc::split<board::row_t, true>(line, ' ');
-    current_board_ptr->add(row);
+    let row = aoc::split<board::row_t, true>(line, ' ');
+    data.insert(data.end(), row.begin(), row.end());
+  }
+  if (!data.empty()) {
+    boards.emplace_back(data, board_size, board_size);
   }
 
   return {std::move(bingo_numbers), std::move(boards)};
 }
 
-// The boards get marked as the game is played, so they are taken by value
-int solve_case(game_t game, int game_rounds) {
-  auto [bingo_numbers, boards] = std::move(game);
+// A marked number is zeroed out,
+// so a full row or column adds up to nothing
+fn check_bingo(board const& unmarked) -> bool {
+  return stdr::any_of(Range{0uz, board_size}, [&](usize start) {
+    return (aoc::ranges::accumulate(unmarked.row_view(start), u32{}) == 0) ||
+           (aoc::ranges::accumulate(unmarked.column_view(start), u32{}) == 0);
+  });
+}
 
-  if (game_rounds < 0) {
-    game_rounds = boards.size();
-  }
+template <bool all_rounds>
+fn solve_case(game_t const& game) -> u32 {
+  let & [ bingo_numbers, boards ] = game;
 
-  int winning_number = 0;
-  int starting_number_pos = 0;
-  int boards_remaining = boards.size();
-  board winning_board;
-  for (int round = 0; round < game_rounds; ++round) {
-    // Play as many rounds as needed until boards are exhausted
-    for (int number_pos = starting_number_pos;
-         number_pos < bingo_numbers.size(); ++number_pos) {
-      auto number = bingo_numbers[number_pos];
-      bool bingo = false;
-      for (auto& current_board : boards) {
-        if (current_board.has_bingo()) {
-          continue;
-        }
-        bool current_bingo = current_board.mark(number);
-        if (current_bingo) {
-          bingo = true;
-          --boards_remaining;
-          winning_number = number;
-          winning_board = current_board;
-          if (boards_remaining <= 0) {
-            // Exhausted all boards
-            goto end_rounds;
-          }
-        } else {
-          // We must continue marking the other boards
-        }
+  auto winners = aoc::hash_set<usize>{};
+  auto last = std::pair{u32{}, 0uz};
+  auto unmarked_boards = boards;
+  for (let number : bingo_numbers) {
+    for (let board_id : aoc::views::indices_of(boards)) {
+      let& current_board = boards[board_id];
+      auto& unmarked = unmarked_boards[board_id];
+
+      let index = aoc::ranges::position(current_board, number);
+      if (!index.has_value()) {
+        continue;
       }
-      ++starting_number_pos;
-      if (bingo) {
-        break;
+      unmarked.begin()[static_cast<isize>(*index)] = 0;
+      if (!check_bingo(unmarked)) {
+        continue;
+      } else if (!all_rounds || (winners.insert(board_id).second &&
+                                 (winners.size() == boards.size()))) {
+        last = {number, board_id};
+        goto end_rounds;
       }
     }
   }
 end_rounds:
 
-  auto score = winning_number * winning_board.sum_unmarked();
+  let[winning_number, winning_board] = last;
+  let score = winning_number *
+              aoc::ranges::accumulate(unmarked_boards[winning_board], u32{});
   return score;
 }
 
 int main() {
   std::println("Part 1");
-  const auto example = parse("day04.example");
-  AOC_EXPECT_RESULT(4512, solve_case(example, 1));
-  const auto input = parse("day04.input");
-  AOC_EXPECT_RESULT(64084, solve_case(input, 1));
+  let example = parse("day04.example");
+  AOC_EXPECT_RESULT(4512, (solve_case<false>(example)));
+  let input = parse("day04.input");
+  AOC_EXPECT_RESULT(64084, (solve_case<false>(input)));
 
   std::println("Part 2");
-  AOC_EXPECT_RESULT(1924, solve_case(example, -1));
-  AOC_EXPECT_RESULT(12833, solve_case(input, -1));
+  AOC_EXPECT_RESULT(1924, (solve_case<true>(example)));
+  AOC_EXPECT_RESULT(12833, (solve_case<true>(input)));
 
   AOC_RETURN_CHECK_RESULT();
 }
