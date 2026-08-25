@@ -1,4 +1,4 @@
-use itertools::Itertools;
+use itertools::{Either, Itertools};
 
 /// A scrambling operation, taken from the first two words of a line,
 /// with the position or letter values it works on
@@ -13,11 +13,11 @@ enum Op {
     MovePosition(usize, usize),
 }
 
-/// The scrambling operations, and the password they are run on
-type Input = (Vec<Op>, Vec<u8>);
+/// The scrambling operations
+type Input = Vec<Op>;
 
 fn parse(filename: &str) -> Input {
-    let instructions = aoc::file::read_lines(filename)
+    aoc::file::read_lines(filename)
         .iter()
         .map(|line| {
             let words = line.split_whitespace().collect_vec();
@@ -41,63 +41,91 @@ fn parse(filename: &str) -> Input {
                 _ => panic!("Invalid instruction: {line}"),
             }
         })
-        .collect_vec();
-    // The example scrambles a shorter password than the real input
-    let password = if (instructions.len() <= 8) {
-        b"abcde".to_vec()
-    } else {
-        b"abcdefgh".to_vec()
-    };
-    return (instructions, password);
+        .collect_vec()
 }
 
-/// The scrambled password
-fn solve_case1((instructions, password): &Input) -> String {
-    let mut scrambled = password.clone();
-    for op in instructions {
+/// The scrambled password, or with `REVERSE`,
+/// the password that scrambles into the given one
+fn solve_case<const REVERSE: bool>(instructions: &Input, password: &[u8]) -> String {
+    let mut password = password.to_vec();
+    // Undoing the scrambling means walking the operations backwards,
+    // each one undone rather than applied
+    let ops = if (REVERSE) {
+        Either::Left(instructions.iter().rev())
+    } else {
+        Either::Right(instructions.iter())
+    };
+    for op in ops {
         match *op {
             Op::SwapPosition(ix, iy) => {
-                scrambled.swap(ix, iy);
+                password.swap(ix, iy);
             }
             Op::SwapLetter(x, y) => {
-                let ix = scrambled.iter().position(|c| *c == x).unwrap();
-                let iy = scrambled.iter().position(|c| *c == y).unwrap();
-                scrambled.swap(ix, iy);
+                let ix = password.iter().position(|c| *c == x).unwrap();
+                let iy = password.iter().position(|c| *c == y).unwrap();
+                password.swap(ix, iy);
             }
             Op::RotateLeft(steps) => {
-                scrambled.rotate_left(steps);
+                if (REVERSE) {
+                    password.rotate_right(steps);
+                } else {
+                    password.rotate_left(steps);
+                }
             }
             Op::RotateRight(steps) => {
-                scrambled.rotate_right(steps);
+                if (REVERSE) {
+                    password.rotate_left(steps);
+                } else {
+                    password.rotate_right(steps);
+                }
             }
             Op::RotateBasedOnLetterPos(x) => {
-                let ix = scrambled.iter().position(|c| *c == x).unwrap();
-                // The rotation can be longer than the password itself
-                let steps = (1 + ix + ((ix >= 4) as usize)) % scrambled.len();
-                scrambled.rotate_right(steps);
+                let len = password.len();
+                let ix = password.iter().position(|c| *c == x).unwrap();
+                if (REVERSE) {
+                    // Which index the letter must have been at
+                    // for the rotation to have left it where it is now
+                    let ix_before = (0..len)
+                        .find(|before| ((2 * before + 1 + ((*before >= 4) as usize)) % len) == ix)
+                        .unwrap();
+                    let steps = (ix + len - ix_before) % len;
+                    password.rotate_left(steps);
+                } else {
+                    // The rotation can be longer than the password itself
+                    let steps = (1 + ix + ((ix >= 4) as usize)) % len;
+                    password.rotate_right(steps);
+                }
             }
             Op::ReversePositions(ifrom, ito) => {
-                scrambled[ifrom..ito + 1].reverse();
+                password[ifrom..ito + 1].reverse();
             }
             Op::MovePosition(ifrom, ito) => {
-                if (ifrom < ito) {
-                    scrambled[ifrom..ito + 1].rotate_left(1);
+                // Moving a letter back is the same move the other way round
+                let (ifrom, ito) = if (REVERSE) {
+                    (ito, ifrom)
                 } else {
-                    scrambled[ito..ifrom + 1].rotate_right(1);
+                    (ifrom, ito)
+                };
+                if (ifrom < ito) {
+                    password[ifrom..ito + 1].rotate_left(1);
+                } else {
+                    password[ito..ifrom + 1].rotate_right(1);
                 }
             }
         }
     }
-    return String::from_utf8(scrambled).unwrap();
+    return String::from_utf8(password).unwrap();
 }
 
 fn main() {
     println!("Part 1");
     let example = parse("day21.example");
-    aoc::expect_result!("decab", solve_case1(&example));
+    aoc::expect_result!("decab", solve_case::<false>(&example, b"abcde"));
     let input = parse("day21.input");
-    aoc::expect_result!("baecdfgh", solve_case1(&input));
+    aoc::expect_result!("baecdfgh", solve_case::<false>(&input, b"abcdefgh"));
 
     println!("Part 2");
-    aoc::return_incomplete();
+    // De-scrambling doesn't work on example input
+    aoc::expect_result!("abcdefgh", solve_case::<true>(&input, b"baecdfgh"));
+    aoc::expect_result!("cegdahbf", solve_case::<true>(&input, b"fbgdceah"));
 }
