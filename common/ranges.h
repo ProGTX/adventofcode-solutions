@@ -281,6 +281,20 @@ struct transform_filter_closure
 template <class F>
 transform_filter_closure(F) -> transform_filter_closure<F>;
 
+template <std::integral I>
+struct slice_closure : std::ranges::range_adaptor_closure<slice_closure<I>> {
+  I from;
+  I to;
+
+  template <std::ranges::random_access_range R>
+  constexpr auto operator()(R&& r) const {
+    using difference_t = std::ranges::range_difference_t<R>;
+    const auto first = std::ranges::begin(r);
+    return std::ranges::subrange(first + static_cast<difference_t>(from),
+                                 first + static_cast<difference_t>(to));
+  }
+};
+
 } // namespace detail
 
 namespace views {
@@ -344,6 +358,26 @@ inline constexpr auto indices = []<std::integral I>(I n) {
 static_assert(std::ranges::equal( //
     std::array{0, 1, 2, 3},       //
     indices(4)));
+
+/// The subrange of positions `[from, to)`,
+/// callable either way around: slice(r, 1, 4) or r | slice(1, 4)
+struct slice_fn {
+  template <std::ranges::random_access_range R, std::integral I>
+  constexpr auto operator()(R&& r, I from, I to) const {
+    return ::aoc::detail::slice_closure<I>{{}, from, to}(std::forward<R>(r));
+  }
+  template <std::integral I>
+  constexpr auto operator()(I from, I to) const {
+    return ::aoc::detail::slice_closure<I>{{}, from, to};
+  }
+};
+inline constexpr slice_fn slice;
+
+static_assert([] {
+  const auto values = std::array{1, 2, 3, 4, 5};
+  return std::ranges::equal(std::array{2, 3, 4}, slice(values, 1, 4)) &&
+         std::ranges::equal(std::array{2, 3, 4}, values | slice(1, 4));
+}());
 
 struct indices_of_fn : std::ranges::range_adaptor_closure<indices_of_fn> {
   template <std::ranges::sized_range R>

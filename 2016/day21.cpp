@@ -85,12 +85,6 @@ auto parse(String const& filename) -> Input {
          aoc::collect_vec<Op>();
 }
 
-/// The half open iterator range covering the closed range of positions
-fn slice(String& password, usize from, usize to) {
-  return stdr::subrange(password.begin() + static_cast<isize>(from),
-                        password.begin() + static_cast<isize>(to) + 1);
-}
-
 /// The scrambled password, or with `REVERSE`,
 /// the password that scrambles into the given one
 template <bool REVERSE>
@@ -140,16 +134,19 @@ fn solve_case(Input const& instructions, str password_in) -> String {
           }
         },
         [&](ReversePositions const& reverse) {
-          stdr::reverse(slice(password, reverse.from, reverse.to));
+          stdr::reverse(password |
+                        aoc::views::slice(reverse.from, reverse.to + 1));
         },
         [&](MovePosition const& move) {
           // Moving a letter back is the same move the other way round
           let[from, to] = REVERSE ? std::pair{move.to, move.from}
                                   : std::pair{move.from, move.to};
           if (from < to) {
-            aoc::ranges::rotate_left(slice(password, from, to));
+            aoc::ranges::rotate_left(password |
+                                     aoc::views::slice(from, to + 1));
           } else {
-            aoc::ranges::rotate_right(slice(password, to, from));
+            aoc::ranges::rotate_right(password |
+                                      aoc::views::slice(to, from + 1));
           }
         });
   };
