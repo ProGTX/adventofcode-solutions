@@ -23,8 +23,7 @@ fn to_bit(char c) -> u8 { return static_cast<u8>(c == '#'); }
 fn parse(String const& filename) -> Input {
   let lines =
       aoc::views::read_lines(filename) | aoc::collect_vec<std::string>();
-  auto algorithm =
-      lines[0] | stdv::transform(to_bit) | aoc::ranges::to<Algorithm>();
+  auto algorithm = lines[0] | stdv::transform(to_bit) | aocr::to<Algorithm>();
   constexpr let skip_lines = 1; // read_lines already skips empty lines
   let num_rows = lines.size() - skip_lines;
   let num_cols = lines[skip_lines].size();
@@ -74,7 +73,7 @@ fn solve_case(Input const& input) -> u32 {
   for (usize i = 0; i < ITERATIONS; ++i) {
     image = apply(algorithm, image);
   }
-  return aoc::ranges::accumulate(image, 0u);
+  return aocr::accumulate(image, 0u);
 }
 
 int main() {

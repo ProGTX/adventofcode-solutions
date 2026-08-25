@@ -66,12 +66,10 @@ fn num_ways_to_win(std::span<const i64> total_times,
 }
 
 fn solve_case1(Input const& input) -> i64 {
-  let total_times = input.time_tokens |
-                    aoc::views::to_number<i64>() |
-                    aoc::collect_vec<i64>();
-  let record_distances = input.dist_tokens |
-                         aoc::views::to_number<i64>() |
-                         aoc::collect_vec<i64>();
+  let total_times =
+      input.time_tokens | aocv::to_number<i64>() | aoc::collect_vec<i64>();
+  let record_distances =
+      input.dist_tokens | aocv::to_number<i64>() | aoc::collect_vec<i64>();
   return num_ways_to_win(total_times, record_distances);
 }
 

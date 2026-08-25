@@ -30,7 +30,7 @@ template <bool allow_slope>
 fn walkable_neighbors(island_t const& island_map, const point pos)
     -> aoc::static_vector<point, 4> {
   return aoc::basic_neighbor_diffs |
-         aoc::views::transform_filter([&](const point diff) -> Option<point> {
+         aocv::transform_filter([&](const point diff) -> Option<point> {
            let neighbor = pos + diff;
            if (!island_map.in_bounds(neighbor.y, neighbor.x)) {
              return None;

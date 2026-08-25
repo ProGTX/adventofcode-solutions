@@ -63,7 +63,7 @@ int_t solve_case(const std::vector<std::string>& navigation_lines) {
                 stdv::transform(&get_score<autocomplete>) |
                 aoc::collect_vec<int_t>();
   if constexpr (!autocomplete) {
-    sum = aoc::ranges::accumulate(scores, 0);
+    sum = aocr::accumulate(scores, 0);
   } else {
     stdr::sort(scores);
     const auto non_zero_it = stdr::find_if(scores, aoc::not_equal_to_value{0});

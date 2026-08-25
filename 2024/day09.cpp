@@ -30,8 +30,7 @@ constexpr filesystem_t expand(std::string_view disk_map) {
       current = id;
       ++id;
     }
-    auto repeated =
-        stdv::repeat(current, num) | aoc::ranges::to<filesystem_t>();
+    auto repeated = stdv::repeat(current, num) | aocr::to<filesystem_t>();
     filesystem.insert(filesystem.end(), repeated.begin(), repeated.end());
     is_empty = !is_empty;
   }
@@ -137,7 +136,7 @@ constexpr filesystem_t compact_nonfragment(filesystem_t filesystem) {
 }
 
 constexpr int_t checksum(std::span<const int> filesystem) {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate( //
       filesystem |
           stdv::enumerate |
           stdv::transform([](auto&& current) -> int_t {

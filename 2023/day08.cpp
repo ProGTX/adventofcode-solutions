@@ -45,7 +45,7 @@ fn parse(String const& filename) -> Input {
   auto ghost_starts = Vec<i32>{};
   auto ghost_ends = Vec<i32>{};
 
-  for (str line : aoc::views::read_lines(filename)) {
+  for (str line : aocv::read_lines(filename)) {
     let[node_name, lr_raw] =
         aoc::split_once<String>(line, '=', aoc::trimmer<>{});
     let lr = aoc::trim(lr_raw, " ()");
@@ -105,7 +105,7 @@ fn num_steps(std::span<const node_t> directions,
              std::span<const node_select_func_t> instructions,
              std::span<const i32> start_indexes,
              std::span<const i32> end_indexes) -> i64 {
-  return aoc::ranges::lcm( //
+  return aocr::lcm( //
       start_indexes | stdv::transform([&](i32 start_index) {
         return num_steps(directions, instructions, start_index, end_indexes);
       }));

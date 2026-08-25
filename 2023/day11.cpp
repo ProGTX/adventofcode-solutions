@@ -81,7 +81,7 @@ fn expand_space(Input const& input) -> space_t {
 }
 
 fn sum_distances(space_t const& space) -> i64 {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       stdv::cartesian_product(space, space) |
           aoc::views::transform_filter([](let& elem) -> Option<i64> {
             let[g1, g2] = elem;

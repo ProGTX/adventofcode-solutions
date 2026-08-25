@@ -11,7 +11,7 @@
 #endif
 
 auto parse(String const& filename) -> Vec<i32> {
-  return aoc::views::read_lines(filename) |
+  return aocv::read_lines(filename) |
          stdv::transform([](str line) {
            auto distance = aoc::to_number<i32>(line.substr(1));
            if (line[0] == 'L') {
@@ -24,7 +24,7 @@ auto parse(String const& filename) -> Vec<i32> {
 
 fn solve_case1(std::span<const i32> sequence) -> i32 {
   auto current = 50;
-  return aoc::ranges::accumulate( //
+  return aocr::accumulate( //
       sequence | stdv::transform([&](i32 rotation) {
         // Not fully correct calculation for the
         // modulo, but it identifies zeros correctly
@@ -36,7 +36,7 @@ fn solve_case1(std::span<const i32> sequence) -> i32 {
 
 fn solve_case2(std::span<const i32> sequence) -> i32 {
   auto current = 50;
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       sequence | stdv::transform([&](i32 rotation) {
         let current_zero = (current == 0);
         current += rotation;

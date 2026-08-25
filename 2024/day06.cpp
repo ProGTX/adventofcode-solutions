@@ -123,7 +123,7 @@ fn interfere_with_guard(lab_map_t lab_map, point const start_pos) -> usize {
 
   // Go through each point on the map and check if placing an obstacle there
   // would catch the guard in a loop
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       Range{1uz, lab_map.num_rows() - 1} | stdv::transform([&](usize row) {
         return static_cast<usize>(stdr::count_if(
             Range{1uz, lab_map.num_columns() - 1}, [&](usize col) {

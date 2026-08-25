@@ -112,8 +112,7 @@ device_t parse(const std::string& filename) {
 
   int input_id_end = 0;
   bool parsing_gates = false;
-  for (std::string_view line :
-       aoc::views::read_lines(filename, aoc::keep_empty{})) {
+  for (std::string_view line : aocv::read_lines(filename, aoc::keep_empty{})) {
     if (line.empty()) {
       parsing_gates = true;
       input_id_end = wire_id;

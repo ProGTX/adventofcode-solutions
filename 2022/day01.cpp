@@ -13,8 +13,7 @@
 auto parse(String const& filename) -> Vec<u32> {
   return aoc::split(aoc::trim(aoc::read_file(filename)), "\n\n") |
          stdv::transform([](str food) {
-           return aoc::ranges::accumulate(aoc::split_to_vec<u32>(food, '\n'),
-                                          0u);
+           return aocr::accumulate(aoc::split_to_vec<u32>(food, '\n'), 0u);
          }) |
          aoc::collect_vec<u32>();
 }
@@ -23,7 +22,7 @@ fn solve_case1(std::span<const u32> elves) -> u32 { return stdr::max(elves); }
 
 fn solve_case2(Vec<u32> elves) -> u32 {
   stdr::sort(elves, std::greater{});
-  return aoc::ranges::accumulate(elves | stdv::take(3), 0u);
+  return aocr::accumulate(elves | stdv::take(3), 0u);
 }
 
 int main() {

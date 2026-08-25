@@ -31,9 +31,9 @@ fn parse_move(str line) -> point {
 }
 
 auto parse(String const& filename) -> Moves {
-  return aoc::views::read_lines(filename) |
+  return aocv::read_lines(filename) |
          stdv::transform(parse_move) |
-         aoc::ranges::to<Moves>();
+         aocr::to<Moves>();
 }
 
 template <usize num_knots>

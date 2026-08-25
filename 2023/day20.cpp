@@ -152,7 +152,7 @@ fn parse(String const& filename) -> input_t {
   // so that we can set the inputs correctly for the conjunctions
   auto input_map = std::map<usize, Vec<usize>>{};
 
-  for (str line : aoc::views::read_lines(filename)) {
+  for (str line : aocv::read_lines(filename)) {
     let[from, to] = aoc::split_once<String>(line, " -> ");
     let name = ((from[0] == '%') || (from[0] == '&')) ? from.substr(1) : from;
     let id = name_to_id.intern(name);

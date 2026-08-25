@@ -239,7 +239,7 @@ fn max_open_geodes(Blueprint const& blueprint, Time time_left) -> u16 {
 }
 
 fn solve_case1(Vec<Blueprint> const& blueprints) -> u16 {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       blueprints | stdv::enumerate | stdv::transform([](let blue_pair) {
         let & [ id, blueprint ] = blue_pair;
         return static_cast<u16>(id + 1) * max_open_geodes(blueprint, 24);

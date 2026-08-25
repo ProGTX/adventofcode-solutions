@@ -30,14 +30,14 @@ fn parse_rock_lines(str line) -> RockLines {
            let & [ a, b ] = pair;
            return {to_point(a), to_point(b)};
          }) |
-         aoc::ranges::to<RockLines>();
+         aocr::to<RockLines>();
 }
 
 auto parse(String const& filename) -> RockLines {
   return aoc::views::read_lines(filename) |
          stdv::transform(parse_rock_lines) |
          stdv::join |
-         aoc::ranges::to<RockLines>();
+         aocr::to<RockLines>();
 }
 
 template <bool with_ground>

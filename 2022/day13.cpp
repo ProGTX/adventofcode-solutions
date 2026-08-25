@@ -72,7 +72,7 @@ auto parse(String const& filename) -> Input {
                parse_list_inner(second.substr(1, second.size() - 2)),
            };
          }) |
-         aoc::ranges::to<Input>();
+         aocr::to<Input>();
 }
 
 constexpr std::strong_ordering Packet::operator<=>(Packet const& other) const {
@@ -93,7 +93,7 @@ constexpr std::strong_ordering Packet::operator<=>(Packet const& other) const {
 }
 
 fn solve_case1(Input const& input) -> u32 {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       input | stdv::enumerate | stdv::filter([](let& index_val_pair) {
         let & [ first, second ] = std::get<1>(index_val_pair);
         return first < second;
@@ -110,8 +110,8 @@ fn solve_case2(Input const& input) -> u32 {
   packets.push_back(p2);
   packets.push_back(p6);
   stdr::sort(packets);
-  return (aoc::ranges::position(packets, p2).value() + 1) *
-         (aoc::ranges::position(packets, p6).value() + 1);
+  return (aocr::position(packets, p2).value() + 1) *
+         (aocr::position(packets, p6).value() + 1);
 }
 
 int main() {

@@ -71,6 +71,8 @@ import std;
 
 namespace stdr = std::ranges;
 namespace stdv = std::views;
+namespace aocr = aoc::ranges;
+namespace aocv = aoc::views;
 using point = aoc::point_type<int>;
 
 static bool g_success = true;

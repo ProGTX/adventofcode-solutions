@@ -12,7 +12,7 @@
 using Input = Vec<String>;
 
 fn parse(String const& filename) -> Input {
-  return aoc::views::read_lines(filename) | aoc::collect_vec<String>();
+  return aocv::read_lines(filename) | aoc::collect_vec<String>();
 }
 
 constexpr str NUMERIC_KEYPAD = "789\n"
@@ -110,7 +110,7 @@ fn solve_case1(Input const& input) -> u64 {
   let neighbors = [&](SearchState const& state) {
     return directional_keypad.data() |
            stdv::drop(1) |
-           aoc::views::transform_filter(
+           aocv::transform_filter(
                [&](char human_key)
                    -> Option<aoc::dijkstra_neighbor_t<SearchState>> {
                  let next_state = human_press(state, human_key);
@@ -163,7 +163,7 @@ fn solve_case1(Input const& input) -> u64 {
     return aoc::to_number<usize>(code.substr(0, digits_end));
   };
 
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       input | stdv::transform([&](str code) {
         return static_cast<u64>(shortest_sequence(code).size() * numeric(code));
       }),

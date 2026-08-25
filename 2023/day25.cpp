@@ -34,7 +34,7 @@ constexpr usize CUT_SIZE = 3;
 fn parse(String const& filename) -> Graph {
   auto name_to_id = aoc::name_to_id{};
   auto graph = Graph{};
-  for (str line : aoc::views::read_lines(filename)) {
+  for (str line : aocv::read_lines(filename)) {
     let[name, connections] = aoc::split_once(line, ':');
     let id = name_to_id.intern(aoc::trim(name));
     for (str connection : aoc::split_sstream(connections)) {
@@ -105,7 +105,7 @@ fn solve_case(Graph const& graph) -> usize {
   // so one arc per neighbor entry covers both directions of every connection,
   // each starting out unused
   auto full_residual = Residual{};
-  for (let node : aoc::views::indices_of(graph)) {
+  for (let node : aocv::indices_of(graph)) {
     for (let next : graph[node]) {
       full_residual.emplace(GraphArc{node, next}, 1);
     }
@@ -115,7 +115,7 @@ fn solve_case(Graph const& graph) -> usize {
   // but the sink has to end up on the other side of the cut,
   // which only shows in its flow
   let source = usize{0};
-  for (let sink : aoc::views::indices_of(graph) |
+  for (let sink : aocv::indices_of(graph) |
                       stdv::filter([&](usize s) { return s != source; })) {
     auto residual = full_residual;
     if (max_flow(graph, residual, source, sink) != CUT_SIZE) {

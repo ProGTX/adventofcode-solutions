@@ -91,7 +91,7 @@ fn perimeter(garden_t const& garden, region_t const& region) -> Vec<side_t> {
 }
 
 fn solve_case1(Input const& input) -> usize {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       input.regions | stdv::transform([&](region_t const& region) {
         return region.size() * perimeter(input.garden, region).size();
       }),
@@ -137,7 +137,7 @@ fn count_sides(garden_t const& garden, region_t const& region,
 
   // Within each bucket, count runs of consecutive positions:
   // each gap starts a new side, so a side is one run.
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       groups | stdv::values | stdv::transform([](Vec<int>& positions) {
         stdr::sort(positions);
         return 1 + stdr::count_if(positions | stdv::pairwise, [](auto pair) {
@@ -149,7 +149,7 @@ fn count_sides(garden_t const& garden, region_t const& region,
 }
 
 fn solve_case2(Input const& input) -> usize {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       input.regions | stdv::transform([&](region_t const& region) {
         let fence = perimeter(input.garden, region);
         return region.size() * count_sides(input.garden, region, fence);

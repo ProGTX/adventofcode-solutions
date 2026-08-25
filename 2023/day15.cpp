@@ -19,8 +19,7 @@
 // Set the current value to the remainder of dividing itself by 256.
 constexpr int hash_alg(std::string_view str) {
   return stdr::fold_left( //
-      str | aoc::views::transform_cast<int>(), 0,
-      [](int current_value, int ascii) {
+      str | aocv::transform_cast<int>(), 0, [](int current_value, int ascii) {
         current_value += ascii;
         current_value *= 17;
         current_value %= 256;
@@ -32,7 +31,7 @@ static_assert(hash_alg("HASH") == 52);
 using steps_t = std::vector<std::string>;
 
 constexpr int sum_steps(const steps_t& steps) {
-  return aoc::ranges::accumulate(steps | stdv::transform(hash_alg), 0);
+  return aocr::accumulate(steps | stdv::transform(hash_alg), 0);
 }
 
 constexpr steps_t test_case() {
@@ -99,7 +98,7 @@ constexpr int sum_boxes(const boxes_t& boxes) {
 
 steps_t parse(const std::string& filename) {
   steps_t steps;
-  for (std::string_view line : aoc::views::read_lines(filename)) {
+  for (std::string_view line : aocv::read_lines(filename)) {
     steps = aoc::split<steps_t>(line, ',');
   }
   return steps;

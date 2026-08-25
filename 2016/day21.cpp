@@ -45,7 +45,7 @@ using Op = std::variant<SwapPosition, SwapLetter, ReversePositions, RotateLeft,
 using Input = Vec<Op>;
 
 auto parse(String const& filename) -> Input {
-  return aoc::views::read_lines(filename) |
+  return aocv::read_lines(filename) |
          stdv::transform([](str line) -> Op {
            let words = aoc::split_to_vec<str>(line, ' ');
            let index = [&](usize word) {
@@ -103,16 +103,16 @@ fn solve_case(Input const& instructions, str password_in) -> String {
         },
         [&](RotateLeft const& rotate) {
           if constexpr (REVERSE) {
-            aoc::ranges::rotate_right(password, rotate.steps);
+            aocr::rotate_right(password, rotate.steps);
           } else {
-            aoc::ranges::rotate_left(password, rotate.steps);
+            aocr::rotate_left(password, rotate.steps);
           }
         },
         [&](RotateRight const& rotate) {
           if constexpr (REVERSE) {
-            aoc::ranges::rotate_left(password, rotate.steps);
+            aocr::rotate_left(password, rotate.steps);
           } else {
-            aoc::ranges::rotate_right(password, rotate.steps);
+            aocr::rotate_right(password, rotate.steps);
           }
         },
         [&](RotateBasedOnLetterPos const& rotate) {
@@ -126,27 +126,24 @@ fn solve_case(Input const& instructions, str password_in) -> String {
                       len) == ix;
             });
             let steps = (ix + len - ix_before) % len;
-            aoc::ranges::rotate_left(password, steps);
+            aocr::rotate_left(password, steps);
           } else {
             // The rotation can be longer than the password itself
             let steps = (1 + ix + static_cast<usize>(ix >= 4)) % len;
-            aoc::ranges::rotate_right(password, steps);
+            aocr::rotate_right(password, steps);
           }
         },
         [&](ReversePositions const& reverse) {
-          stdr::reverse(password |
-                        aoc::views::slice(reverse.from, reverse.to + 1));
+          stdr::reverse(password | aocv::slice(reverse.from, reverse.to + 1));
         },
         [&](MovePosition const& move) {
           // Moving a letter back is the same move the other way round
           let[from, to] = REVERSE ? std::pair{move.to, move.from}
                                   : std::pair{move.from, move.to};
           if (from < to) {
-            aoc::ranges::rotate_left(password |
-                                     aoc::views::slice(from, to + 1));
+            aocr::rotate_left(password | aocv::slice(from, to + 1));
           } else {
-            aoc::ranges::rotate_right(password |
-                                      aoc::views::slice(to, from + 1));
+            aocr::rotate_right(password | aocv::slice(to, from + 1));
           }
         });
   };

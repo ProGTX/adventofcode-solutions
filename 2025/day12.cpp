@@ -22,7 +22,7 @@ auto parse(String const& filename) -> Input {
   auto regions = Vec<RegionInfo>{};
   auto current_shape_idx = usize{0};
 
-  for (str line : aoc::views::read_lines(filename)) {
+  for (str line : aocv::read_lines(filename)) {
     if (line.ends_with(':')) {
       let[idx_str, rest] = aoc::split_once(line, ':');
       current_shape_idx = aoc::to_number<usize>(idx_str);
@@ -44,7 +44,7 @@ auto parse(String const& filename) -> Input {
 
 fn can_fit_into_region(Vec<usize> const& shape_areas, RegionInfo const& region)
     -> bool {
-  let presents_area = aoc::ranges::accumulate(
+  let presents_area = aocr::accumulate(
       region.counts | stdv::enumerate | stdv::transform([&](auto&& pair) {
         let & [ index, count ] = pair;
         return count * shape_areas[index];

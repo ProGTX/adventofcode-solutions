@@ -275,7 +275,7 @@ fn solve_case(Boss const& boss_orig) -> u32 {
           }
         },
         [&](PlayerTurnResult::PossiblePlays possible_plays) {
-          aoc::ranges::extend(game_stack, possible_plays.plays);
+          aocr::extend(game_stack, possible_plays.plays);
         });
   }
   return lowest_mana;

@@ -74,7 +74,7 @@ fn dots_to_string(Dots const& dots) -> String {
     }
     rows.push_back(std::move(row));
   }
-  return aoc::ranges::join(rows, '\n');
+  return aocr::join(rows, '\n');
 }
 
 fn solve_case2(Input const& input) -> Dots {

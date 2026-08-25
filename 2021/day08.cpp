@@ -18,7 +18,7 @@ using Input = std::pair<Vec<Pattern>, Vec<Output>>;
 fn parse_segment(str s) -> Segment {
   return s |
          stdv::transform([](char c) { return static_cast<u32>(c - 'a'); }) |
-         aoc::ranges::to<Segment>();
+         aocr::to<Segment>();
 }
 
 auto parse(String const& filename) -> Input {
@@ -49,7 +49,7 @@ constexpr let unique_lengths = std::array{
 
 fn solve_case1(Input const& input) -> u32 {
   let& outputs = input.second;
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       outputs | stdv::transform([&](Output const& output) {
         return static_cast<u32>(stdr::count_if(output, [&](Segment const& seg) {
           return stdr::contains(unique_lengths, static_cast<u32>(seg.size()));

@@ -40,7 +40,7 @@ fn index_of_max(str row) -> usize {
 
 template <usize TURN_NUM>
 fn solve_case(Batteries const& batteries) -> u64 {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       Range{0uz, batteries.num_rows()} | stdv::transform([&](usize row) {
         let current = batteries.row_view(row);
         let size = current.size();

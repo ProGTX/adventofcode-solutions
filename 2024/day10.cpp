@@ -79,7 +79,7 @@ fn get_score(top_map_t const& top_map, point trailhead) -> usize {
 static_assert(1 == get_score(test_map(), {1, 1}));
 
 fn solve_case1(Input const& input) -> usize {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       input.trailheads | stdv::transform([&](point trailhead) {
         return get_score(input.top_map, trailhead);
       }),
@@ -134,7 +134,7 @@ fn get_rating(top_map_t const& top_map, point trailhead) -> usize {
 }
 
 fn solve_case2(Input const& input) -> usize {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       input.trailheads | stdv::transform([&](point trailhead) {
         return get_rating(input.top_map, trailhead);
       }),

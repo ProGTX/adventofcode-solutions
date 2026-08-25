@@ -76,7 +76,7 @@ fn rotations(Scanner const& scanner) -> aoc::static_vector<Scanner, 24> {
   auto result = aoc::static_vector<Scanner, 24>{};
   for (let& transform : transforms) {
     result.push_back(
-        scanner | stdv::transform(transform) | aoc::ranges::to<Scanner>());
+        scanner | stdv::transform(transform) | aocr::to<Scanner>());
   }
   return result;
 }
@@ -115,7 +115,7 @@ fn try_align(aoc::hash_set<Point3D> const& all_beacons, Scanner const& scanner)
                      stdv::transform([&offset](Point3D p) -> Point3D {
                        return p + offset;
                      }) |
-                     aoc::ranges::to<Scanner>();
+                     aocr::to<Scanner>();
       return std::pair{aligned, offset};
     }
   }

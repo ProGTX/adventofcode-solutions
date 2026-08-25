@@ -100,7 +100,7 @@ unsigned solve_case(const instructions_t& instructions) {
   if constexpr (!brightness) {
     return stdr::count(lights, static_cast<cell_t>(1));
   } else {
-    return aoc::ranges::accumulate(lights, 0u);
+    return aocr::accumulate(lights, 0u);
   }
 }
 

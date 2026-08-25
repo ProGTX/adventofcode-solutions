@@ -35,7 +35,7 @@ constexpr std::vector<point> find_low_points(const heightmap_t& heightmap) {
 
 constexpr int sum_risk_levels(const heightmap_t& heightmap) {
   const auto low_points = find_low_points(heightmap);
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       low_points | stdv::transform([&](const point lp) {
         return aoc::to_number<int>(heightmap.at(lp.y, lp.x)) + 1;
       }),

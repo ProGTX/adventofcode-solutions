@@ -91,7 +91,7 @@ fn order_update(Vec<ordering_rule_t> const& rules, std::span<const i32> update)
 
 template <bool order>
 fn solve_case(Input const& input) -> i32 {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       input.updates | stdv::transform([&](update_t const& update) -> i32 {
         let index = index_of_correct_update(input.rules, update);
         if constexpr (!order) {

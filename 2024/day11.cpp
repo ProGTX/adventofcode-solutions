@@ -40,7 +40,7 @@ fn blink_neighbors(blink_state_t const& state)
 template <int times>
 fn solve_case(stones_t const& stones) -> u64 {
   // We need to use dynamic programming to speed up the calculation
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       stones | stdv::transform([](u64 stone) {
         let start = blink_state_t{stone, static_cast<u64>(times)};
         let num_stones = aoc::dfs_uniform(

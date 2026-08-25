@@ -81,7 +81,7 @@ fn get_neighbors(State const& state) {
         }
         return State{neighbor, state.path + direction};
       }) |
-      aoc::ranges::to<Neighbors>());
+      aocr::to<Neighbors>());
 }
 
 /// The shortest path of moves from the top-left room to the vault

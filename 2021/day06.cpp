@@ -25,7 +25,7 @@ int_t simulate_fish(school<production_length>& fish) {
 
   for (int day = 0; day < num_days; ++day) {
     const auto num_new_brood = fish.front();
-    aoc::ranges::rotate_left(fish);
+    aocr::rotate_left(fish);
 
     const auto num_new_matures = brood.front();
     std::shift_left(brood.begin(), brood.end(), 1);
@@ -34,8 +34,7 @@ int_t simulate_fish(school<production_length>& fish) {
     brood.back() = num_new_brood;
   }
 
-  return aoc::ranges::accumulate(fish, int_t{0}) +
-         aoc::ranges::accumulate(brood, int_t{0});
+  return aocr::accumulate(fish, int_t{0}) + aocr::accumulate(brood, int_t{0});
 }
 
 std::vector<int> parse(const std::string& filename) {

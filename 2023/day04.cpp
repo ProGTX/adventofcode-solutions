@@ -29,7 +29,7 @@ struct card_type {
 };
 
 auto parse(String const& filename) -> Vec<CardStrings> {
-  return aoc::views::read_lines(filename) |
+  return aocv::read_lines(filename) |
          stdv::transform([](str line) -> CardStrings {
            let[_, numbers] = aoc::split_once(line, ':');
            let[winning_str, actual_str] = aoc::split_once(numbers, '|');

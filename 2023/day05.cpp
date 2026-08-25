@@ -37,7 +37,7 @@ auto parse(String const& filename) -> Input {
   };
 
   Vec<single_mapping_t> mapping;
-  for (str line : aoc::views::read_lines(file)) {
+  for (str line : aocv::read_lines(file)) {
     if (!aoc::is_number(line[0])) {
       stdr::sort(mapping, std::less<>{}, &single_mapping_t::src);
       result.mappings.push_back(std::move(mapping));

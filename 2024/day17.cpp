@@ -40,7 +40,7 @@ auto parse(String const& filename) -> Input {
   auto program = program_t{};
   auto registers = registers_t{};
 
-  for (String line : aoc::views::read_lines(filename)) {
+  for (String line : aocv::read_lines(filename)) {
     if (line.empty()) {
       continue;
     }
@@ -126,8 +126,7 @@ fn run_program(std::span<const u8> program, registers_t registers)
 template <usize N>
 fn run_program(std::array<int, N> program, registers_t registers)
     -> run_output_t {
-  let program_u8 =
-      program | aoc::views::transform_cast<u8>() | aoc::ranges::to<program_t>();
+  let program_u8 = program | aocv::transform_cast<u8>() | aocr::to<program_t>();
   return run_program(program_u8, registers);
 }
 

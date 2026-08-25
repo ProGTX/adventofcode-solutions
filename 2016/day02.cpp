@@ -45,8 +45,8 @@ fn solve_case(Input const& input) -> String {
     }
   }();
 
-  auto pos = aoc::as_consteval(
-      keypad.position(aoc::ranges::position(keypad, '5').value()));
+  auto pos =
+      aoc::as_consteval(keypad.position(aocr::position(keypad, '5').value()));
   auto code = String{};
 
   for (let& line : input) {

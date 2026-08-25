@@ -17,7 +17,7 @@ struct Input {
 auto parse(String const& filename) -> Input {
   auto patterns = Vec<String>{};
   auto designs = Vec<String>{};
-  for (int row = 0; String line : aoc::views::read_lines(filename)) {
+  for (int row = 0; String line : aocv::read_lines(filename)) {
     if (row < 1) {
       patterns = aoc::split_to_vec<String>(line, ',', aoc::trimmer<String>());
     } else {
@@ -84,7 +84,7 @@ fn num_possible_designs<true>(str design, std::span<const String> patterns)
 
 template <bool all_options>
 fn solve_case(Input const& input) -> i64 {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate( //
       input.designs | stdv::transform([&](str design) {
         return num_possible_designs<all_options>(design, input.patterns);
       }),

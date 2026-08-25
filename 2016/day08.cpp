@@ -59,15 +59,13 @@ fn solve_case(Input const& instructions) -> String {
         }
         break;
       case Op::RotateRow:
-        aoc::ranges::rotate_right(screen.begin_row(instruction.row),
-                                  screen.end_row(instruction.row),
-                                  instruction.column);
+        aocr::rotate_right(screen.begin_row(instruction.row),
+                           screen.end_row(instruction.row), instruction.column);
         break;
       case Op::RotateColumn: {
         auto column = screen.column_view(instruction.column);
         let first = stdr::begin(column);
-        aoc::ranges::rotate_right(first, first + NUM_ROWS,
-                                  instruction.row);
+        aocr::rotate_right(first, first + NUM_ROWS, instruction.row);
         break;
       }
     }

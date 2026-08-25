@@ -23,9 +23,9 @@ auto parse(String const& filename) -> Vec<range_t> {
 }
 
 fn solve_case1(std::span<const range_t> ranges) -> u64 {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate( //
       ranges | stdv::transform([](range_t range) {
-        return aoc::ranges::accumulate(
+        return aocr::accumulate( //
             range | stdv::filter([](u64 id) {
               // Formatted into a stack buffer rather than via std::to_string:
               // both parts format every id in every range, and even with SSO
@@ -52,9 +52,9 @@ fn solve_case2(std::span<const range_t> ranges) -> u64 {
     }
     return divisors;
   }();
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       ranges | stdv::transform([&](range_t range) {
-        return aoc::ranges::accumulate(
+        return aocr::accumulate(
             range | stdv::filter([&](u64 id) {
               auto buf = aoc::to_chars<20>(id);
               let s = aoc::construct_string<str>(buf);

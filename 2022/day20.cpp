@@ -12,7 +12,7 @@
 using Input = Vec<i64>;
 
 fn parse(String const& filename) -> Input {
-  return aoc::views::read_numbers<i64>(filename) | aoc::ranges::to<Input>();
+  return aoc::views::read_numbers<i64>(filename) | aocr::to<Input>();
 }
 
 struct IndexedNum {

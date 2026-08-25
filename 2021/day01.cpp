@@ -23,7 +23,7 @@ fn solve_case2(std::span<const u32> depths) -> usize {
   return solve_case1(depths |
                      stdv::slide(3) |
                      stdv::transform([](auto&& window) {
-                       return aoc::ranges::accumulate(window, 0u);
+                       return aocr::accumulate(window, 0u);
                      }) |
                      aoc::collect_vec<u32>());
 }

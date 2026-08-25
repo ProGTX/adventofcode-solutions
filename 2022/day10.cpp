@@ -38,9 +38,9 @@ fn parse_instruction(str line) -> Instruction {
 }
 
 auto parse(String const& filename) -> Instructions {
-  return aoc::views::read_lines(filename) |
+  return aocv::read_lines(filename) |
          stdv::transform(parse_instruction) |
-         aoc::ranges::to<Instructions>();
+         aocr::to<Instructions>();
 }
 
 fn draw(Monitor& monitor, int cycle, int register_x) {

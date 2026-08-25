@@ -13,7 +13,7 @@ using brick_t = aoc::closed_range<coord_t>;
 using brick_list_t = Vec<brick_t>;
 
 fn parse(const std::string& filename) -> brick_list_t {
-  return aoc::views::read_lines(filename) |
+  return aocv::read_lines(filename) |
          stdv::transform([](str line) {
            let[first, last] = aoc::split_once(line, '~');
            return brick_t{aoc::split<coord_t>(first, ','),

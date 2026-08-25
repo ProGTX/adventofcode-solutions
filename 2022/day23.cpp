@@ -16,7 +16,7 @@ using elves_t = Vec<elf_t>;
 
 fn parse(String const& filename) -> elves_t {
   auto elves = elves_t{};
-  for (int linenum = 1; str line : aoc::views::read_lines(filename)) {
+  for (int linenum = 1; str line : aocv::read_lines(filename)) {
     let row = linenum - 1;
     for (int column = 0; char value : line) {
       if (value == '#') {
@@ -112,7 +112,7 @@ fn simulate(elves_t& elves, int num_rounds) -> int {
       break;
     }
     execute();
-    aoc::ranges::rotate_left(possible_proposals);
+    aocr::rotate_left(possible_proposals);
   }
 
   elves.clear();

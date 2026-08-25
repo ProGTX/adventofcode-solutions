@@ -47,7 +47,7 @@ auto parse(String const& filename) -> Instructions {
            }
            return instruction;
          }) |
-         aoc::ranges::to<Instructions>();
+         aocr::to<Instructions>();
 }
 
 template <u32 START_A>

@@ -37,8 +37,8 @@ struct std::hash<node_t> {
 
 fn parse(String const& filename) -> city_block_t {
   auto city_block = city_block_t{};
-  for (str line : aoc::views::read_lines(filename)) {
-    city_block.add_row(line | aoc::views::to_number<int>());
+  for (str line : aocv::read_lines(filename)) {
+    city_block.add_row(line | aocv::to_number<int>());
   }
   return city_block;
 }

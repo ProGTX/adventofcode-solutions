@@ -19,20 +19,20 @@ using Input = Vec<std::tuple<Lights, Buttons, Joltage>>;
 auto parse(String const& filename) -> Input {
   using tuple = Input::value_type;
   return //
-      aoc::views::read_lines(filename) |
+      aocv::read_lines(filename) |
       stdv::transform([](str line) {
         let[lights, rest] = aoc::split_once(line, "] (");
         let[buttons, joltage] = aoc::split_once(rest, ") {");
         return tuple{
             lights.substr(1) | stdv::transform([](char c) {
               return static_cast<u8>(c == '#');
-            }) | aoc::ranges::to<Lights>(),
+            }) | aocr::to<Lights>(),
             aoc::split(buttons, ") (") | stdv::transform([](str button) {
               return aoc::split<Button>(button, ',');
-            }) | aoc::ranges::to<Buttons>(),
+            }) | aocr::to<Buttons>(),
             aoc::split<Joltage>(joltage.substr(0, joltage.size() - 1), ',')};
       }) |
-      aoc::ranges::to<Input>();
+      aocr::to<Input>();
 }
 
 struct DijkstraLights {
@@ -52,12 +52,11 @@ struct DijkstraLights {
 };
 
 fn solve_case1(Input const& input) -> u32 {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       input | stdv::transform([](let& tuple) {
         let & [ lights, buttons, _ ] = tuple;
-        let start = DijkstraLights{lights |
-                                   aoc::views::transform_to_value(0) |
-                                   aoc::ranges::to<Lights>()};
+        let start = DijkstraLights{
+            lights | aocv::transform_to_value(0) | aocr::to<Lights>()};
         let target = DijkstraLights{lights};
         let distances = aoc::shortest_distances_dijkstra(
             start, target, [&](DijkstraLights const& current) {
@@ -112,12 +111,11 @@ struct DijkstraJoltage {
 };
 
 fn solve_case2(Input const& input) -> u64 {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       input | stdv::transform([](let& tuple) {
         let & [ _, buttons, joltage ] = tuple;
-        let start = DijkstraJoltage{joltage |
-                                    aoc::views::transform_to_value(0) |
-                                    aoc::ranges::to<Joltage>()};
+        let start = DijkstraJoltage{
+            joltage | aocv::transform_to_value(0) | aocr::to<Joltage>()};
         let target = DijkstraJoltage{joltage};
         let distances = aoc::shortest_distances_dijkstra(
             start, target, [&](DijkstraJoltage const& current) {

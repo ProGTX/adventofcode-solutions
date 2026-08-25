@@ -14,7 +14,7 @@ using Input = std::pair<Vec<range_t>, Vec<u64>>;
 
 auto parse(String const& filename) -> Input {
   using Point = aoc::point_type<u64>;
-  auto lines = aoc::views::read_lines(filename, aoc::keep_empty{});
+  auto lines = aocv::read_lines(filename, aoc::keep_empty{});
 
   auto ranges = lines |
                 stdv::take_while([](str line) { return !line.empty(); }) |
@@ -46,7 +46,7 @@ auto parse(String const& filename) -> Input {
     return ranges2;
   }();
 
-  auto ids = lines | aoc::views::to_number<u64>() | aoc::collect_vec<u64>();
+  auto ids = lines | aocv::to_number<u64>() | aoc::collect_vec<u64>();
   stdr::sort(ids);
 
   return {std::move(ranges), std::move(ids)};
@@ -63,7 +63,7 @@ fn solve_case1(Input const& input) -> usize {
 
 fn solve_case2(Input const& input) -> usize {
   let & [ ranges, _ ] = input;
-  return aoc::ranges::accumulate( //
+  return aocr::accumulate( //
       ranges | stdv::transform([](let& range) { return (range.y - range.x); }),
       usize{});
 }

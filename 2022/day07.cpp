@@ -39,7 +39,7 @@ auto parse(String const& filename) -> Filesystem {
         } else {
           current_dir.emplace_back(dir);
         }
-        current_dir_id = folder_ids.intern(aoc::ranges::join(current_dir, '/'));
+        current_dir_id = folder_ids.intern(aocr::join(current_dir, '/'));
       } else {
         // ls, handled on following lines
       }
@@ -50,12 +50,12 @@ auto parse(String const& filename) -> Filesystem {
         auto subfolder = current_dir;
         subfolder.push_back(std::move(name));
         folders[current_dir_id].push_back(
-            folder_ids.intern(aoc::ranges::join(subfolder, '/')));
+            folder_ids.intern(aocr::join(subfolder, '/')));
       } else {
         auto filename = current_dir;
         filename.push_back(std::move(name));
         folders[current_dir_id].push_back(
-            file_ids.intern(aoc::ranges::join(filename, '/')));
+            file_ids.intern(aocr::join(filename, '/')));
 
         let size = aoc::to_number<u32>(first);
         file_sizes.push_back(size);
@@ -68,20 +68,19 @@ auto parse(String const& filename) -> Filesystem {
 
 fn get_folder_size(Vec<Folder> const& folders, Vec<u32> const& file_sizes,
                    usize folder_id) -> u32 {
-  return aoc::ranges::accumulate(
-      folders[folder_id] | stdv::transform([&](usize id) {
-        if (id >= FILE_ID_START) {
-          return file_sizes[id - FILE_ID_START];
-        } else {
-          return get_folder_size(folders, file_sizes, id);
-        }
-      }),
-      u32{});
+  return aocr::accumulate(folders[folder_id] | stdv::transform([&](usize id) {
+                            if (id >= FILE_ID_START) {
+                              return file_sizes[id - FILE_ID_START];
+                            } else {
+                              return get_folder_size(folders, file_sizes, id);
+                            }
+                          }),
+                          u32{});
 }
 
 fn solve_case1(Filesystem const& filesystem) -> u32 {
   let & [ folders, file_sizes ] = filesystem;
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       Range{0uz, folders.size()} | //
           stdv::transform([&](usize folder_id) {
             return get_folder_size(folders, file_sizes, folder_id);

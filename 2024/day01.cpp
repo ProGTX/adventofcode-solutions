@@ -25,10 +25,10 @@ auto parse(String const& filename) -> Input {
 
 fn sum_diffs(Vec<i32> const& left_list, Vec<i32> const& right_list) -> i32 {
   AOC_ASSERT(left_list.size() == right_list.size(), "Lists must be same size");
-  let left = aoc::ranges::sorted(left_list);
-  let right = aoc::ranges::sorted(right_list);
+  let left = aocr::sorted(left_list);
+  let right = aocr::sorted(right_list);
 
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       stdv::zip_transform([](i32 l, i32 r) { return aoc::abs(r - l); }, //
                           left, right),
       0);
@@ -44,7 +44,7 @@ fn similarity_score(Vec<i32> const& left_list, Vec<i32> const& right_list)
     ++right_counts[value];
   }
 
-  return aoc::ranges::accumulate(
+  return aocr::accumulate( //
       left_list | stdv::transform([&](i32 value) {
         let it = right_counts.find(value);
         return value * (it == right_counts.end() ? 0 : it->second);

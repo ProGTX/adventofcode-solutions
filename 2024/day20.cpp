@@ -52,7 +52,7 @@ fn solve_case(Input const& input) -> u32 {
   stdr::reverse(track_cells);
 
   auto count = u32{};
-  for (let i : aoc::views::indices_of(track_cells)) {
+  for (let i : aocv::indices_of(track_cells)) {
     let cheat_start = track_cells[i];
     for (let j : Range{i + 1, track_cells.size()}) {
       let cheat_end = track_cells[j];

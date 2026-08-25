@@ -23,7 +23,7 @@ fn solve_case(Vec<u32> const& sizes) -> u32 {
   let size = containers.size();
   auto count = std::array<u32, (COUNT_WAYS ? size : 0) + 1>{};
   for (let& group : containers | aoc::views::binary_combinations()) {
-    let sum = aoc::ranges::accumulate(group | aoc::views::deref, 0u);
+    let sum = aocr::accumulate(group | aoc::views::deref, 0u);
     if (sum != LITERS) {
       continue;
     }

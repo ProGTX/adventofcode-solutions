@@ -26,7 +26,7 @@ auto parse(String const& filename) -> Input {
            return std::pair{range{aoc::split_once<int>(firstElfStr, '-')},
                             range{aoc::split_once<int>(secondElfStr, '-')}};
          }) |
-         aoc::ranges::to<Input>();
+         aocr::to<Input>();
 }
 
 template <bool use_overlaps>

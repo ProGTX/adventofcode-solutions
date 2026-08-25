@@ -24,7 +24,7 @@ auto parse(String const& filename) -> std::pair<Segments, Point> {
                         dimensions.max(segment.first).max(segment.second);
                     return segment;
                   }) |
-                  aoc::ranges::to<Segments>();
+                  aocr::to<Segments>();
   return {std::move(segments), dimensions + Point{1, 1}};
 }
 

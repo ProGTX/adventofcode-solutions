@@ -49,7 +49,7 @@ fn adjacency_matrix(connections_t const& connections) -> aoc::grid<int> {
 fn seating_happiness(Vec<int> const& seating, aoc::grid<int> const& matrix)
     -> int {
   let n = seating.size();
-  return aoc::ranges::accumulate( //
+  return aocr::accumulate( //
       Range{0uz, n} | stdv::transform([&](let id) {
         let a = seating[id];
         let b = seating[(id + 1) % n];
@@ -65,7 +65,7 @@ fn max_happiness(aoc::grid<int> const& matrix) -> int {
   auto best = std::numeric_limits<int>::min();
   do {
     auto seating = Vec<int>{0};
-    aoc::ranges::extend(seating, others);
+    aocr::extend(seating, others);
     best = std::max(best, seating_happiness(seating, matrix));
   } while (stdr::next_permutation(others).found);
   return best;

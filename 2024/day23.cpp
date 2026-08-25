@@ -76,7 +76,7 @@ fn to_ids(CandidateBits const& bits) -> Vec<i32> {
 auto parse(String const& filename) -> Input {
   auto name_to_id = aoc::name_to_id{};
   auto input = Input{};
-  for (str line : aoc::views::read_lines(filename)) {
+  for (str line : aocv::read_lines(filename)) {
     let[a, b] = aoc::split_once(line, '-');
     let a_id = static_cast<i32>(name_to_id.intern(a));
     let b_id = static_cast<i32>(name_to_id.intern(b));
@@ -98,8 +98,8 @@ fn solve_case1(Input const& input) -> i32 {
       continue;
     }
     let& connections = input.graph[t_id];
-    for (let i : aoc::views::indices_of(connections)) {
-      for (let j : aoc::views::indices_of(connections)) {
+    for (let i : aocv::indices_of(connections)) {
+      for (let j : aocv::indices_of(connections)) {
         let a = connections[i];
         let b = connections[j];
         if (!stdr::contains(input.graph[static_cast<usize>(a)], b)) {
@@ -223,7 +223,7 @@ fn solve_case2(Input const& input) -> String {
                }) |
                aoc::collect_vec<String>();
   stdr::sort(party);
-  return aoc::ranges::join(party, ',');
+  return aocr::join(party, ',');
 }
 
 int main() {

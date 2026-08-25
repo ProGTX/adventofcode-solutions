@@ -13,7 +13,7 @@
 using Game = Vec<String>;
 
 auto parse(String const& filename) -> Vec<Game> {
-  return aoc::views::read_lines(filename) |
+  return aocv::read_lines(filename) |
          stdv::transform([](str line) {
            let[_, game_str] = aoc::split_once(line, ':');
            return aoc::split_to_vec<String>(game_str, ';');
@@ -85,7 +85,7 @@ fn solve_case(Vec<Game> const& games) -> i32 {
   auto sum = i32{};
   for (let[id, rounds] : games | stdv::enumerate) {
     let rounds_sv =
-        rounds | aoc::views::transform_cast<str>() | aoc::collect_vec<str>();
+        rounds | aocv::transform_cast<str>() | aoc::collect_vec<str>();
     auto power = cube_power<config>(std::span<const str>{rounds_sv});
     if constexpr (config != config2) {
       power *= id + 1;

@@ -15,7 +15,7 @@ using Input = Vec<std::pair<String, i32>>;
 
 auto parse(String const& filename) -> Input {
   using Pair = Input::value_type;
-  return aoc::views::read_lines(filename) |
+  return aocv::read_lines(filename) |
          stdv::transform([](str line) {
            auto [hand_str, bid_str] = aoc::split_once(line, ' ');
            return Pair{String{hand_str}, aoc::to_number<i32>(bid_str)};
@@ -157,8 +157,8 @@ using bid_type = std::pair<hand_type<joker>, i32>;
 
 template <bool joker>
 fn total_winnings(Vec<bid_type<joker>> const& bids) -> i32 {
-  let sorted_bids = aoc::ranges::sorted(bids);
-  return aoc::ranges::accumulate(
+  let sorted_bids = aocr::sorted(bids);
+  return aocr::accumulate(
       sorted_bids | stdv::enumerate | stdv::transform([](let& elem) {
         let & [ i, bid ] = elem;
         return static_cast<i32>(i + 1) * bid.second;

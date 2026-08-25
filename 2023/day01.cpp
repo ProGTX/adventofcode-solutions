@@ -64,12 +64,11 @@ static_assert(find_number_from_words("5three37tfnkz") == 57);
 static_assert(find_number_from_words("57eight9fivefiveeight") == 58);
 
 fn solve_case1(std::span<const String> lines) -> i32 {
-  return aoc::ranges::accumulate(lines | stdv::transform(find_number), 0);
+  return aocr::accumulate(lines | stdv::transform(find_number), 0);
 }
 
 fn solve_case2(std::span<const String> lines) -> i32 {
-  return aoc::ranges::accumulate(
-      lines | stdv::transform(find_number_from_words), 0);
+  return aocr::accumulate(lines | stdv::transform(find_number_from_words), 0);
 }
 
 int main() {

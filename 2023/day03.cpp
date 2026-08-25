@@ -130,10 +130,10 @@ fn solve_case(Vec<String> const& lines) -> i32 {
   }
 
   if constexpr (!check_gears) {
-    return aoc::ranges::accumulate(
+    return aocr::accumulate(
         all_numbers | stdv::transform(&number_pair_t::second), i32{});
   } else {
-    return aoc::ranges::accumulate(gear_ratios, i32{});
+    return aocr::accumulate(gear_ratios, i32{});
   }
 }
 

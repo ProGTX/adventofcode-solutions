@@ -56,12 +56,11 @@ using lines_t = std::vector<std::string>;
 lines_t parse(const std::string& filename) { return aoc::read_lines(filename); }
 
 int solve_case1(const lines_t& lines) {
-  return aoc::ranges::accumulate(lines | stdv::transform(&num_control_chars),
-                                 0);
+  return aocr::accumulate(lines | stdv::transform(&num_control_chars), 0);
 }
 
 int solve_case2(const lines_t& lines) {
-  return aoc::ranges::accumulate(lines | stdv::transform(&num_encode_chars), 0);
+  return aocr::accumulate(lines | stdv::transform(&num_encode_chars), 0);
 }
 
 int main() {

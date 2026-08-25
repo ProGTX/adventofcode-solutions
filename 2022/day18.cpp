@@ -16,7 +16,7 @@ fn parse(String const& filename) -> Input {
   return aoc::views::read_lines(filename) |
          stdv::transform(
              [](str line) { return aoc::split<Droplet>(line, ','); }) |
-         aoc::ranges::to<Input>();
+         aocr::to<Input>();
 }
 
 // Coordinates run 0..21 in the input. The exterior fill reaches one cell
@@ -100,7 +100,7 @@ fn solve_case2(Input const& droplets) -> u32 {
   });
 
   // Each exterior air cell's droplet-neighbors are exterior surface faces
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       exterior | stdv::transform([&](Droplet const& current) {
         return static_cast<u32>(
             stdr::count_if(deltas, [&](Droplet const& delta) {

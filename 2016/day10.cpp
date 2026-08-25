@@ -74,7 +74,7 @@ fn solve_case(Input const& input) -> u32 {
   auto outputs = aoc::static_vector<u32, MAX_OUTPUTS>(input.num_outputs, 0u);
 
   auto bot_stack = Vec<usize>{};
-  bot_stack.push_back(aoc::ranges::position(values, 2uz, stdr::size).value());
+  bot_stack.push_back(aocr::position(values, 2uz, stdr::size).value());
 
   let give = [&](usize other, u32 value) {
     if (other >= FIRST_OUTPUT_ID) {

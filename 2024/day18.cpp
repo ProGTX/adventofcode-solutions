@@ -91,7 +91,7 @@ constexpr point first_problematic_byte(const memspace_t& memspace,
 std::vector<point> parse(const std::string& filename) {
   std::vector<point> falling_bytes;
 
-  for (std::string_view line : aoc::views::read_lines(filename)) {
+  for (std::string_view line : aocv::read_lines(filename)) {
     falling_bytes.push_back(aoc::split<point>(line, ','));
   }
 

@@ -27,7 +27,7 @@ fn qe(std::span<const u32> group) -> u64 {
 template <u32 NUM_GROUPS>
 fn solve_case(std::span<const u32> packages) -> u64 {
   // Assume all packages have unique weights and are sorted in decreasing order
-  let total_weight = aoc::ranges::accumulate(packages, 0u);
+  let total_weight = aocr::accumulate(packages, 0u);
   AOC_ASSERT((total_weight % NUM_GROUPS) == 0, "Invalid package configuration");
   let target_group_weight = total_weight / NUM_GROUPS;
   auto num_packages = 0uz;
@@ -42,18 +42,18 @@ fn solve_case(std::span<const u32> packages) -> u64 {
   }
   auto possible = Vec<Group>{};
   for (let index : Range{num_packages - 1, size}) {
-    possible = packages |
-               aoc::views::combinations(index + 1) |
-               stdv::filter([&](let& combo) {
-                 return aoc::ranges::dot_product(packages, combo) ==
-                        target_group_weight;
-               }) |
-               stdv::transform([&](let& combo) {
-                 let neighbor = aoc::binary_select_from_combination<Group>(
-                     packages, combo);
-                 return neighbor;
-               }) |
-               aoc::collect_vec<Group>();
+    possible =
+        packages |
+        aoc::views::combinations(index + 1) |
+        stdv::filter([&](let& combo) {
+          return aocr::dot_product(packages, combo) == target_group_weight;
+        }) |
+        stdv::transform([&](let& combo) {
+          let neighbor =
+              aoc::binary_select_from_combination<Group>(packages, combo);
+          return neighbor;
+        }) |
+        aoc::collect_vec<Group>();
     if (!possible.empty()) {
       break;
     }

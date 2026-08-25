@@ -79,7 +79,7 @@ fn parse_monkey(str block) -> Monkey {
 auto parse(String const& filename) -> Monkeys {
   return aoc::split(aoc::trim(aoc::read_file(filename)), "\n\n") |
          stdv::transform(parse_monkey) |
-         aoc::ranges::to<Monkeys>();
+         aocr::to<Monkeys>();
 }
 
 fn inspect(Operation operation, Item old) -> Item {

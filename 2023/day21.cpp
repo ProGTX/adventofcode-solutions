@@ -76,7 +76,7 @@ fn parse(String const& filename) -> input_t {
   garden_t garden;
   positions_t positions;
 
-  for (str line : aoc::views::read_lines(filename)) {
+  for (str line : aocv::read_lines(filename)) {
     garden.add_row(line);
     let start_pos = line.find('S');
     if (start_pos != str::npos) {

@@ -49,7 +49,7 @@ fn solve_case(Input const& input) -> u64 {
   if constexpr (!quantum) {
     return num_splits;
   } else {
-    return aoc::ranges::accumulate(row_timelines, u64{});
+    return aocr::accumulate(row_timelines, u64{});
   }
 }
 

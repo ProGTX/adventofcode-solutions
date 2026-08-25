@@ -22,7 +22,7 @@ fn parse(String const& filename) -> Input {
   auto lines = aoc::views::read_lines(filename);
   return str{*stdr::begin(lines)} |
          stdv::transform([](char c) { return (c == '<') ? -1 : 1; }) |
-         aoc::ranges::to<Input>();
+         aocr::to<Input>();
 }
 
 fn move_rock(rock_t& rock, grid_point delta) {

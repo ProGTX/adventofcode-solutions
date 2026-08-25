@@ -121,8 +121,8 @@ int_t solve_case(const machines_t& parsed_machines) {
   }
 
   int_t sum = 0;
-  sum = aoc::ranges::accumulate(
-      machines | stdv::transform(&claw_machine::lowest_cost), int_t{0});
+  sum = aocr::accumulate(machines | stdv::transform(&claw_machine::lowest_cost),
+                         int_t{0});
 
   return sum;
 }

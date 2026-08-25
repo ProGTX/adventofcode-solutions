@@ -100,7 +100,7 @@ fn reboot(std::span<Cuboid const> steps) -> u64 {
     }
     cuboids = std::move(new_cuboids);
   }
-  return static_cast<u64>(aoc::ranges::accumulate( //
+  return static_cast<u64>(aocr::accumulate( //
       cuboids | stdv::transform(
                     [](let& c) { return static_cast<i64>(c.size()) * c.sign; }),
       i64{}));

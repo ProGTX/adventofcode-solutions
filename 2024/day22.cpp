@@ -56,8 +56,8 @@ static_assert(15273692 == next_secret_repeat(100));
 static_assert(8667524 == next_secret_repeat(2024));
 
 constexpr int_t sum_secrets(std::span<const int> secrets) {
-  return aoc::ranges::accumulate(secrets | stdv::transform(&next_secret_repeat),
-                                 int_t{0});
+  return aocr::accumulate(secrets | stdv::transform(&next_secret_repeat),
+                          int_t{0});
 }
 
 constexpr int get_pattern(const std::array<int, 4>& diffs) {
@@ -101,7 +101,7 @@ constexpr int most_bananas(std::span<const int> secrets) {
           value_total[pattern] += current;
         }
       }
-      aoc::ranges::rotate_left(diffs);
+      aocr::rotate_left(diffs);
       previous = current;
     }
   }
@@ -109,7 +109,7 @@ constexpr int most_bananas(std::span<const int> secrets) {
 }
 
 std::vector<int> parse(const std::string& filename) {
-  return aoc::views::read_numbers<int>(filename) | aoc::collect_vec<int>();
+  return aocv::read_numbers<int>(filename) | aoc::collect_vec<int>();
 }
 
 template <bool change_sequence>

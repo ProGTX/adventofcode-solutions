@@ -49,7 +49,7 @@ static_assert(1 == count_xmas("MXMXAXMASX"sv));
 
 fn count_xmas_vertical(word_board_t const& board) -> u32 {
   let num_columns = board.num_columns();
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       Range{0uz, num_columns} | stdv::transform([&](usize column) {
         return count_xmas(
             board |
@@ -98,7 +98,7 @@ fn count_xmas_diagonal(word_board_t const& board) -> u32 {
   };
   // Count diagonals along the top
   // Skip first and last column because they contain empty terminators
-  let top_sum = aoc::ranges::accumulate(
+  let top_sum = aocr::accumulate(
       Range{1uz, num_columns - 1} | stdv::transform([&](usize column) {
         let start = board.linear_index(row_after_padding, column);
         return count_xmas(board |
@@ -115,7 +115,7 @@ fn count_xmas_diagonal(word_board_t const& board) -> u32 {
   // Count right diagonals along the left edge
   // Skip the first row because it was already counted in the first loop
   // Skip last row because it contais empty terminators
-  let left_edge_sum = aoc::ranges::accumulate(
+  let left_edge_sum = aocr::accumulate(
       Range{row_after_padding + 1, num_rows - 1} |
           stdv::transform([&](usize row) {
             return count_xmas(board |
@@ -129,7 +129,7 @@ fn count_xmas_diagonal(word_board_t const& board) -> u32 {
   // Skip the first row because it was already counted in the first loop
   // Skip last row because it contais empty terminators
   let right_edge_column = num_columns - 2;
-  let right_edge_sum = aoc::ranges::accumulate(
+  let right_edge_sum = aocr::accumulate(
       Range{row_after_padding + 1, num_rows - 1} |
           stdv::transform([&](usize row) {
             return count_xmas(
@@ -229,7 +229,7 @@ fn solve_case2(word_board_t const& board) -> u32 {
     return stdr::contains(x_mas_strings, str{area_str});
   };
   // Go through the board, but skip edges to avoid bound checking
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       Range{1uz, num_rows - 1} | stdv::transform([&](usize row) {
         return static_cast<u32>(
             stdr::count_if(Range{1uz, num_columns - 1},

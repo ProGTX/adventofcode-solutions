@@ -16,13 +16,13 @@ using Input = std::pair<Vec<Outputs>, aoc::name_to_id>;
 auto parse(String const& filename) -> Input {
   auto result = Vec<Outputs>{};
   auto name_to_id = aoc::name_to_id{};
-  for (str line : aoc::views::read_lines(filename)) {
+  for (str line : aocv::read_lines(filename)) {
     let[source_str, dest] = aoc::split_once(line, ": ");
     let source = name_to_id.intern(source_str);
     let outputs =
         aoc::split(dest, " ") |
         stdv::transform([&](str out) { return name_to_id.intern(out); }) |
-        aoc::ranges::to<Outputs>();
+        aocr::to<Outputs>();
     result.resize(name_to_id.new_size(result.size()));
     result[source] = outputs;
   }

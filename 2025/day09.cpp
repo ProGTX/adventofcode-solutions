@@ -15,10 +15,10 @@ using Polygon = Vec<Point>;
 using Rectangle = std::array<Point, 4>;
 
 auto parse(String const& filename) -> Polygon {
-  return aoc::views::read_lines(filename) |
+  return aocv::read_lines(filename) |
          stdv::transform(
              [](str line) { return aoc::split<Point>(line, ','); }) |
-         aoc::ranges::to<Polygon>();
+         aocr::to<Polygon>();
 }
 
 fn area(Point const& p1, Point const& p2) -> u64 {

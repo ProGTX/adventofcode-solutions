@@ -21,7 +21,7 @@ fn solve_case1(CharGrid const& char_grid) -> u64 {
     auto data = Vec<u64>{};
     for (let row_id : Range{0uz, char_grid.num_rows() - 1}) {
       let line = char_grid.row_view(row_id);
-      aoc::ranges::extend(data, aoc::split_sstream<u64>(line));
+      aocr::extend(data, aoc::split_sstream<u64>(line));
       if (num_columns == 0) {
         num_columns = data.size();
       }
@@ -32,7 +32,7 @@ fn solve_case1(CharGrid const& char_grid) -> u64 {
       char_grid.row_view(char_grid.num_rows() - 1) |
       stdv::filter([](char c) { return (c == '+') || (c == '*'); }) |
       aoc::collect_string();
-  return aoc::ranges::accumulate( //
+  return aocr::accumulate( //
       Range{0uz, numbers.num_columns()} | stdv::transform([&](let column_id) {
         let add = (operations[column_id] == '+');
         let init = add ? u64{} : 1;

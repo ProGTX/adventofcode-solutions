@@ -53,8 +53,8 @@ auto parse(String const& filename) -> game_t {
 // so a full row or column adds up to nothing
 fn check_bingo(board const& unmarked) -> bool {
   return stdr::any_of(Range{0uz, board_size}, [&](usize start) {
-    return (aoc::ranges::accumulate(unmarked.row_view(start), u32{}) == 0) ||
-           (aoc::ranges::accumulate(unmarked.column_view(start), u32{}) == 0);
+    return (aocr::accumulate(unmarked.row_view(start), u32{}) == 0) ||
+           (aocr::accumulate(unmarked.column_view(start), u32{}) == 0);
   });
 }
 
@@ -70,7 +70,7 @@ fn solve_case(game_t const& game) -> u32 {
       let& current_board = boards[board_id];
       auto& unmarked = unmarked_boards[board_id];
 
-      let index = aoc::ranges::position(current_board, number);
+      let index = aocr::position(current_board, number);
       if (!index.has_value()) {
         continue;
       }
@@ -87,8 +87,8 @@ fn solve_case(game_t const& game) -> u32 {
 end_rounds:
 
   let[winning_number, winning_board] = last;
-  let score = winning_number *
-              aoc::ranges::accumulate(unmarked_boards[winning_board], u32{});
+  let score =
+      winning_number * aocr::accumulate(unmarked_boards[winning_board], u32{});
   return score;
 }
 

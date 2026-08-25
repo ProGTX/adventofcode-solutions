@@ -94,9 +94,8 @@ fn canonicalize(Floors floors) -> Floors {
     let holds = [](usize bit) {
       return [bit](Floor items) { return (items & (1u << bit)) != 0; };
     };
-    let chip = aoc::ranges::position(floors, true, holds(id));
-    let generator =
-        aoc::ranges::position(floors, true, holds(id + GENERATOR_SHIFT));
+    let chip = aocr::position(floors, true, holds(id));
+    let generator = aocr::position(floors, true, holds(id + GENERATOR_SHIFT));
     if (chip.has_value() && generator.has_value()) {
       elements.emplace_back(*chip, *generator);
     }

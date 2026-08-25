@@ -32,7 +32,7 @@ constexpr bool overlaps(const keyhole_storage_t& key,
 
 constexpr int count_fitting(const std::span<const keyhole_storage_t> keys,
                             const std::span<const keyhole_storage_t> locks) {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       keys | stdv::transform([&](const keyhole_storage_t& key) {
         return stdr::count_if(locks, [&](const keyhole_storage_t& lock) {
           return !overlaps(key, lock);
@@ -52,7 +52,7 @@ schematics_t parse(const std::string& filename) {
   keyhole_storage_t* current_keyhole_ptr = nullptr;
 
   bool parsing_lock = false;
-  for (int row = 0; std::string_view line : aoc::views::read_lines(filename)) {
+  for (int row = 0; std::string_view line : aocv::read_lines(filename)) {
     if ((row % keyhole_size.y) == 0) {
       parsing_lock = (line == all_filled);
       if (parsing_lock) {

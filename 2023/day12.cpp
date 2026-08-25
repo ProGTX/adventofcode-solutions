@@ -22,7 +22,7 @@ struct Record {
 using Input = Vec<Record>;
 
 fn parse(String const& filename) -> Input {
-  return aoc::views::read_lines(filename) |
+  return aocv::read_lines(filename) |
          stdv::transform([](str line) {
            auto [springs, groups_str] = aoc::split_once<String>(line, ' ');
            return Record{std::move(springs),
@@ -151,10 +151,10 @@ fn arrangement_neighbors(SearchState const& state) -> Neighbors {
 template <usize factor>
 fn count_arrangements(std::span<Record const> records) -> u64 {
   auto cache = Cache{};
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       records | stdv::transform([&](Record const& record) {
         let unfolded_springs =
-            aoc::ranges::join(stdv::repeat(record.springs, factor), unknown);
+            aocr::join(stdv::repeat(record.springs, factor), unknown);
         let unfolded_groups = stdv::repeat(record.groups, factor) |
                               stdv::join |
                               aoc::collect_vec<u8>();
@@ -196,7 +196,7 @@ fn solve_case(Input const& records) -> u64 {
           std::span{records}.subspan(offset, count));
     }));
   }
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       futures | stdv::transform([](auto& f) { return f.get(); }), u64{0});
 }
 

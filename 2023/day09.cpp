@@ -14,7 +14,7 @@ using Reading = Vec<i32>;
 using Input = Vec<Reading>;
 
 fn parse(String const& filename) -> Input {
-  return aoc::views::read_lines(filename) |
+  return aocv::read_lines(filename) |
          stdv::transform(
              [](str line) { return aoc::split_to_vec<i32>(line, ' '); }) |
          aoc::collect_vec<Reading>();
@@ -60,8 +60,8 @@ static_assert(5 == predict_value<-1>({10, 13, 16, 21, 30, 45}));
 
 template <int multiplier>
 fn solve_case(Input const& input) -> i32 {
-  return aoc::ranges::accumulate(
-      input | stdv::transform(predict_value<multiplier>), 0);
+  return aocr::accumulate(input | stdv::transform(predict_value<multiplier>),
+                          0);
 }
 
 int main() {

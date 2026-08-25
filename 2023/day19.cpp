@@ -15,7 +15,7 @@ constexpr str start_name = "in";
 struct part_t {
   std::array<i32, 4> xmas;
 
-  fn sum() const -> i32 { return aoc::ranges::accumulate(xmas, i32{0}); }
+  fn sum() const -> i32 { return aocr::accumulate(xmas, i32{0}); }
 };
 
 struct accepted_t {};
@@ -70,7 +70,7 @@ fn check_part(part_t const& part, workflows_t const& workflows, usize start)
 }
 
 fn solve_case1(input_t const& input) -> i32 {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate( //
       input.parts | stdv::filter([&](part_t const& part) {
         return check_part(part, input.workflows, input.start);
       }) | stdv::transform(&part_t::sum),
@@ -152,7 +152,7 @@ fn parse(String const& filename) -> input_t {
   };
 
   bool parsing_parts = false;
-  for (str line : aoc::views::read_lines(filename, aoc::keep_empty{})) {
+  for (str line : aocv::read_lines(filename, aoc::keep_empty{})) {
     if (line.empty()) {
       parsing_parts = true;
       continue;

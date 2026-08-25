@@ -17,7 +17,7 @@ auto parse(String const& filename) -> Vec<Report> {
   return aoc::views::read_lines(filename) |
          stdv::transform(
              [](str line) { return aoc::split<Report>(line, ' '); }) |
-         aoc::ranges::to<Vec<Report>>();
+         aocr::to<Vec<Report>>();
 }
 
 // A report only counts as safe if both of the following are true:
@@ -58,7 +58,7 @@ fn is_dampened_safe(Report const& report) -> bool {
 
 template <bool dampen>
 fn solve_case(Vec<Report> const& reports) -> u32 {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       reports | stdv::transform([](Report const& report) {
         return static_cast<u32>(is_report_safe(report) ||
                                 (dampen && is_dampened_safe(report)));

@@ -35,7 +35,7 @@ struct Input {
 fn parse_directions(str directions) -> directions_storage {
   return directions |
          stdv::transform(&aoc::to_facing) |
-         aoc::ranges::to<directions_storage>();
+         aocr::to<directions_storage>();
 }
 
 auto parse(String const& filename) -> Input {
@@ -188,9 +188,9 @@ fn move_robot(map_t map, point robot_pos,
             let robot_it = map.begin() + map.linear_index(robot_pos);
             let empty_it = map.begin() + map.linear_index(behind_boxes_pos);
             if (diff.x > 0) {
-              aoc::ranges::rotate_right(robot_it, empty_it + 1);
+              aocr::rotate_right(robot_it, empty_it + 1);
             } else {
-              aoc::ranges::rotate_left(empty_it, robot_it + 1);
+              aocr::rotate_left(empty_it, robot_it + 1);
             }
           }
           robot_pos = new_pos;
@@ -240,7 +240,7 @@ fn move_robot(map_t map, point robot_pos,
 
 template <bool wide = false>
 fn sum_coordinates(map_t const& map) -> int {
-  return aoc::ranges::accumulate(
+  return aocr::accumulate(
       aoc::views::indices_of(map) | stdv::filter([&](usize i) {
         return map.at_index(i) == (wide ? box_left : box);
       }) | stdv::transform([&](usize i) {

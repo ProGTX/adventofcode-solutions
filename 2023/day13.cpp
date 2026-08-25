@@ -18,7 +18,7 @@ using Input = Vec<pattern_t>;
 auto parse(String const& filename) -> Input {
   auto result = Input{};
   auto pattern = pattern_t{};
-  for (String& line : aoc::views::read_lines(filename, aoc::keep_empty{})) {
+  for (String& line : aocv::read_lines(filename, aoc::keep_empty{})) {
     if (line.empty()) {
       result.push_back(std::move(pattern));
       pattern.clear();
@@ -259,8 +259,8 @@ fn check_pattern(const pattern_t& pattern) -> i32 {
 
 template <bool unsmudge>
 fn solve_case(Input const& input) -> i32 {
-  return aoc::ranges::accumulate(
-      input | stdv::transform(check_pattern<unsmudge>), i32{});
+  return aocr::accumulate(input | stdv::transform(check_pattern<unsmudge>),
+                          i32{});
 }
 
 int main() {

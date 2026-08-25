@@ -17,7 +17,7 @@ struct hailstone_t {
 using hailstones_t = Vec<hailstone_t>;
 
 fn parse(const String& filename) -> hailstones_t {
-  return aoc::views::read_lines(filename) |
+  return aocv::read_lines(filename) |
          stdv::transform([](str line) {
            let[pos_str, vel_str] = aoc::split_once(line, " @ ");
            return hailstone_t{aoc::split<Vec3>(pos_str, ',', aoc::trimmer{}),

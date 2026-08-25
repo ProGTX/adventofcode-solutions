@@ -64,7 +64,7 @@ fn solve_case1(Forrest const& forrest) -> u32 {
                       check) > 0);
     visibility.modify(static_cast<u32>(visible), tree_row, tree_column);
   }
-  return aoc::ranges::accumulate(visibility, 0);
+  return aocr::accumulate(visibility, 0);
 }
 
 fn solve_case2(Forrest const& forrest) -> u32 {
