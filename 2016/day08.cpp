@@ -44,11 +44,6 @@ auto parse(String const& filename) -> Input {
          aoc::collect_vec<Instruction>();
 }
 
-template <std::permutable It>
-fn rotate_right_by(It first, It last, usize count) {
-  stdr::rotate(first, last - static_cast<isize>(count), last);
-}
-
 template <bool Print>
 fn solve_case(Input const& instructions) -> String {
   constexpr char LIT = '#';
@@ -64,13 +59,15 @@ fn solve_case(Input const& instructions) -> String {
         }
         break;
       case Op::RotateRow:
-        rotate_right_by(screen.begin_row(instruction.row),
-                        screen.end_row(instruction.row), instruction.column);
+        aoc::ranges::rotate_right(screen.begin_row(instruction.row),
+                                  screen.end_row(instruction.row),
+                                  instruction.column);
         break;
       case Op::RotateColumn: {
         auto column = screen.column_view(instruction.column);
         let first = stdr::begin(column);
-        rotate_right_by(first, first + NUM_ROWS, instruction.row);
+        aoc::ranges::rotate_right(first, first + NUM_ROWS,
+                                  instruction.row);
         break;
       }
     }

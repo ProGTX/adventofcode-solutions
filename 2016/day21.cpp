@@ -85,13 +85,6 @@ auto parse(String const& filename) -> Input {
          aoc::collect_vec<Op>();
 }
 
-fn rotate_left(String& password, usize steps) {
-  stdr::rotate(password, password.begin() + static_cast<isize>(steps));
-}
-fn rotate_right(String& password, usize steps) {
-  stdr::rotate(password, password.end() - static_cast<isize>(steps));
-}
-
 /// The half open iterator range covering the closed range of positions
 fn slice(String& password, usize from, usize to) {
   return stdr::subrange(password.begin() + static_cast<isize>(from),
@@ -116,16 +109,16 @@ fn solve_case(Input const& instructions, str password_in) -> String {
         },
         [&](RotateLeft const& rotate) {
           if constexpr (REVERSE) {
-            rotate_right(password, rotate.steps);
+            aoc::ranges::rotate_right(password, rotate.steps);
           } else {
-            rotate_left(password, rotate.steps);
+            aoc::ranges::rotate_left(password, rotate.steps);
           }
         },
         [&](RotateRight const& rotate) {
           if constexpr (REVERSE) {
-            rotate_left(password, rotate.steps);
+            aoc::ranges::rotate_left(password, rotate.steps);
           } else {
-            rotate_right(password, rotate.steps);
+            aoc::ranges::rotate_right(password, rotate.steps);
           }
         },
         [&](RotateBasedOnLetterPos const& rotate) {
@@ -139,11 +132,11 @@ fn solve_case(Input const& instructions, str password_in) -> String {
                       len) == ix;
             });
             let steps = (ix + len - ix_before) % len;
-            rotate_left(password, steps);
+            aoc::ranges::rotate_left(password, steps);
           } else {
             // The rotation can be longer than the password itself
             let steps = (1 + ix + static_cast<usize>(ix >= 4)) % len;
-            rotate_right(password, steps);
+            aoc::ranges::rotate_right(password, steps);
           }
         },
         [&](ReversePositions const& reverse) {

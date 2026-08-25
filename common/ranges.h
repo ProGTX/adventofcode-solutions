@@ -74,24 +74,52 @@ constexpr auto sorted(R&& r, Comp comp = {}, Proj proj = {}) {
   return r_copy;
 }
 
+/// Rotates the range `steps` elements towards its front,
+/// so that the element at `steps` ends up first
 template <std::permutable I, std::sentinel_for<I> S>
-constexpr auto rotate_left(I first, S last) {
-  return std::ranges::rotate(first, first + 1, last);
+constexpr auto rotate_left(I first, S last,
+                           std::iter_difference_t<I> steps = 1) {
+  return std::ranges::rotate(first, std::ranges::next(first, steps), last);
 }
 template <std::ranges::forward_range R>
   requires std::permutable<std::ranges::iterator_t<R>>
-constexpr auto rotate_left(R&& r) {
-  return rotate_left(std::ranges::begin(r), std::ranges::end(r));
+constexpr auto rotate_left(R&& r,
+                           std::ranges::range_difference_t<R> steps = 1) {
+  return rotate_left(std::ranges::begin(r), std::ranges::end(r), steps);
 }
 
-template <std::permutable I, std::sentinel_for<I> S>
+/// Rotates the range one element towards its back,
+/// so that its last element ends up first
+///
+/// A single step back only needs a bidirectional `last`.
+template <std::permutable I, std::bidirectional_iterator S>
+  requires std::sentinel_for<S, I>
 constexpr auto rotate_right(I first, S last) {
-  return std::ranges::rotate(std::move(first), std::move(last) - 1, last);
+  return std::ranges::rotate(first, std::ranges::prev(last), last);
 }
 template <std::ranges::forward_range R>
-  requires std::permutable<std::ranges::iterator_t<R>>
+  requires std::permutable<std::ranges::iterator_t<R>> &&
+           std::bidirectional_iterator<std::ranges::sentinel_t<R>>
 constexpr auto rotate_right(R&& r) {
   return rotate_right(std::ranges::begin(r), std::ranges::end(r));
+}
+
+/// Rotates the range `steps` elements towards its back,
+/// so that its last `steps` elements end up first
+///
+/// Stepping back from the end needs a random access `last`
+/// in order not to quietly degrade performance,
+/// whereas rotate_left only needs a forward `first`.
+template <std::permutable I, std::random_access_iterator S>
+  requires std::sentinel_for<S, I>
+constexpr auto rotate_right(I first, S last, std::iter_difference_t<I> steps) {
+  return std::ranges::rotate(first, last - steps, last);
+}
+template <std::ranges::forward_range R>
+  requires std::permutable<std::ranges::iterator_t<R>> &&
+           std::random_access_iterator<std::ranges::sentinel_t<R>>
+constexpr auto rotate_right(R&& r, std::ranges::range_difference_t<R> steps) {
+  return rotate_right(std::ranges::begin(r), std::ranges::end(r), steps);
 }
 
 template <std::ranges::forward_range... Rs>
