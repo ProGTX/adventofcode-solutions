@@ -7,6 +7,8 @@ struct Node {
     used: usize,
 }
 
+const NODE_PREFIX: &str = "/dev/grid/node-x";
+
 /// The nodes of the storage cluster, by their x and y coordinates
 type Input = Grid<Node>;
 
@@ -14,12 +16,12 @@ fn parse(filename: &str) -> Input {
     // /dev/grid/node-xX-yY    SIZET   USEDT   AVAILT   USE%
     let nodes = aoc::file::read_lines(filename)
         .iter()
-        // The two lines of the df header come first
-        .skip(2)
+        // Skipping however many lines of df header come first
+        .filter(|line| line.starts_with(NODE_PREFIX))
         .map(|line| {
             let words = line.split_whitespace().collect_vec();
             let (x, y) = words[0]
-                .trim_start_matches("/dev/grid/node-x")
+                .trim_start_matches(NODE_PREFIX)
                 .split_once("-y")
                 .unwrap();
             let value = |word: usize| {
@@ -70,6 +72,8 @@ fn solve_case1(cluster: &Input) -> usize {
 
 fn main() {
     println!("Part 1");
+    let example = parse("day22.example");
+    aoc::expect_result!(7, solve_case1(&example));
     let input = parse("day22.input");
     aoc::expect_result!(993, solve_case1(&input));
 
