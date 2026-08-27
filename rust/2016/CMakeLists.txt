@@ -27,4 +27,9 @@ add_rust_test(day23 ${year})
 add_rust_test(day24 ${year})
 add_rust_test(day25 ${year})
 
+# Shared between multiple days, not a test of its own
+set_property(GLOBAL APPEND PROPERTY RUST_SOURCES
+    "${RUST_DIR}/${year}/src/assembunny.rs"
+)
+
 generate_cargo_toml(${year} "${rust_local_sources}")
