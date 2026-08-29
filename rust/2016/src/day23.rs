@@ -19,9 +19,9 @@ fn toggle(op: Op) -> Op {
 }
 
 /// The value in register a once the program halts
-fn solve_case1(ops: &Input) -> i64 {
+fn solve_case<const NUM_EGGS: i64>(ops: &Input) -> i64 {
     let mut ops = ops.clone();
-    let mut registers: Registers = [7, 0, 0, 0];
+    let mut registers: Registers = [NUM_EGGS, 0, 0, 0];
     let mut counter = 0_i64;
     while ((counter >= 0) && ((counter as usize) < ops.len())) {
         let op = ops[counter as usize];
@@ -46,10 +46,11 @@ fn solve_case1(ops: &Input) -> i64 {
 fn main() {
     println!("Part 1");
     let example = parse("day23.example");
-    aoc::expect_result!(3, solve_case1(&example));
+    aoc::expect_result!(3, solve_case::<7>(&example));
     let input = parse("day23.input");
-    aoc::expect_result!(11739, solve_case1(&input));
+    aoc::expect_result!(11739, solve_case::<7>(&input));
 
     println!("Part 2");
-    aoc::return_incomplete();
+    aoc::expect_result!(3, solve_case::<12>(&example));
+    aoc::expect_result!(479008299, solve_case::<12>(&input));
 }
