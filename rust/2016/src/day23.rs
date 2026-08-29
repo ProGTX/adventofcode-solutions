@@ -213,9 +213,9 @@ fn solve_case<const NUM_EGGS: i64>(ops: &Input) -> i64 {
 
 fn main() {
     println!("Part 1");
-    let example = parse("day23.example");
+    let example = aoc::time!(parse, "day23.example");
     aoc::expect_result!(3, solve_case::<7>(&example));
-    let input = parse("day23.input");
+    let input = aoc::time!(parse, "day23.input");
     aoc::expect_result!(11739, solve_case::<7>(&input));
 
     println!("Part 2");

@@ -274,9 +274,9 @@ fn solve_case(Input const& input) -> i64 {
 
 int main() {
   std::println("Part 1");
-  let example = parse("day23.example");
+  let example = AOC_TIME(parse, "day23.example");
   AOC_EXPECT_RESULT(3, solve_case<7>(example));
-  let input = parse("day23.input");
+  let input = AOC_TIME(parse, "day23.input");
   AOC_EXPECT_RESULT(11739, solve_case<7>(input));
 
   std::println("Part 2");
