@@ -1,5 +1,5 @@
 mod assembunny;
-use assembunny::{Op, Registers};
+use assembunny::{Op, Registers, Value};
 
 type Input = Vec<Op>;
 
@@ -11,7 +11,23 @@ fn solve_case<const REG_C_INIT: i64>(ops: &Input) -> i64 {
     let mut registers: Registers = [0, 0, REG_C_INIT, 0];
     let mut counter = 0_i64;
     while ((counter >= 0) && ((counter as usize) < ops.len())) {
-        assembunny::execute(ops[counter as usize], &mut registers, &mut counter);
+        match ops[counter as usize] {
+            Op::Copy(from, Value::Register(to)) => {
+                registers[to] = assembunny::read(&registers, from)
+            }
+            Op::Increase(id) => registers[id] += 1,
+            Op::Decrease(id) => registers[id] -= 1,
+            Op::JumpNotZero(condition, offset) => {
+                if (assembunny::read(&registers, condition) != 0) {
+                    // The jump is relative to this instruction
+                    counter += assembunny::read(&registers, offset) - 1;
+                }
+            }
+            _ => {
+                // Invalid instruction, do nothing
+            }
+        }
+        counter += 1;
     }
     // Register a
     return registers[0];
