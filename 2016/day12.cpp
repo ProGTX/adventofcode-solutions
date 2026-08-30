@@ -6,13 +6,13 @@
 #include <print>
 #endif
 
-namespace op = assembunny::op;
 using assembunny::Registers;
+using assembunny::XOp;
 
-using Input = Vec<assembunny::Op>;
+using Input = Vec<XOp>;
 
 auto parse(String const& filename) -> Input {
-  return assembunny::parse(filename);
+  return assembunny::transform(assembunny::parse(filename));
 }
 
 template <i64 RegCInit>
@@ -20,23 +20,7 @@ fn solve_case(Input const& ops) -> i64 {
   auto registers = Registers{0, 0, RegCInit, 0};
   auto counter = i64{};
   while ((counter >= 0) && (static_cast<usize>(counter) < ops.size())) {
-    aoc::match(
-        ops[static_cast<usize>(counter)], //
-        [&](op::Copy const& op) {
-          registers[op.to] = assembunny::read(registers, op.from);
-        },
-        [&](op::Increase const& op) { registers[op.id] += 1; },
-        [&](op::Decrease const& op) { registers[op.id] -= 1; },
-        [&](op::JumpNotZero const& op) {
-          if (assembunny::read(registers, op.condition) != 0) {
-            // The jump is relative to this instruction
-            counter += assembunny::read(registers, op.offset) - 1;
-          }
-        },
-        [](op::Toggle const&) {
-          AOC_UNREACHABLE("Toggling not allowed here");
-        });
-    ++counter;
+    assembunny::exec(ops[static_cast<usize>(counter)], registers, counter);
   }
 
   // Register a
