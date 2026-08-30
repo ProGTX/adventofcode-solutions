@@ -41,7 +41,7 @@ fn solve_case1(ops: &Input) -> i64 {
 
 fn main() {
     println!("Part 1");
-    let input = parse("day25.input");
+    let input = aoc::time!(parse, "day25.input");
     aoc::expect_result!(196, solve_case1(&input));
 
     println!("Part 2");

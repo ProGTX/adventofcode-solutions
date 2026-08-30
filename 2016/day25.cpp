@@ -46,7 +46,7 @@ fn solve_case1(Input const& ops) -> i64 {
 
 int main() {
   std::println("Part 1");
-  let input = parse("day25.input");
+  let input = AOC_TIME(parse, "day25.input");
   AOC_EXPECT_RESULT(196, solve_case1(input));
 
   std::println("Part 2");

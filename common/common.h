@@ -94,6 +94,17 @@ static bool g_success = true;
     aoc::flush();                                                              \
   }
 
+#define AOC_TIME(func, ...)                                                    \
+  [&] {                                                                        \
+    aoc::timer timer_;                                                         \
+    timer_.start();                                                            \
+    auto result_ = func(__VA_ARGS__);                                          \
+    timer_.stop();                                                             \
+    std::println("  " #func " {} ms", timer_.milliseconds());                  \
+    aoc::flush();                                                              \
+    return result_;                                                            \
+  }()
+
 #define AOC_RETURN_CHECK_RESULT()                                              \
   if (g_success) {                                                             \
     return 0;                                                                  \
