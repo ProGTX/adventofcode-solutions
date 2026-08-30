@@ -49,8 +49,9 @@ fn location_distances((maze, locations): &Input) -> Grid<u32> {
 }
 
 /// The fewest steps needed to visit every numbered location,
-/// starting from location 0.
-fn solve_case1(input: &Input) -> u32 {
+/// starting from location 0,
+/// optionally returning back to it at the end.
+fn solve_case<const ROUND_TRIP: bool>(input: &Input) -> u32 {
     // Only the longest route is searched for directly.
     // Every complete route visits every location,
     // so it always has exactly `num_locations - 1` legs -
@@ -62,28 +63,51 @@ fn solve_case1(input: &Input) -> u32 {
     let num_locations = distances.num_rows;
     let max_steps = *distances.data.iter().max().unwrap();
     let distances = &distances;
-    let longest = longest_simple_path(
-        num_locations,
-        0,
-        |_location, num_visited| num_visited == num_locations,
-        |location| {
-            (0..num_locations).map(move |to_id| DijkstraState {
-                data: to_id,
-                distance: max_steps - *distances.get(location, to_id),
+    // The way back home depends on where the route ends,
+    // so every location is tried as the last one,
+    // which keeps each search a simple path of `num_locations - 1` legs.
+    // A one-way route doesn't care where it ends, so one search is enough.
+    let last_locations = if ROUND_TRIP { num_locations } else { 1 };
+    return (0..last_locations)
+        .filter_map(|last| {
+            longest_simple_path(
+                num_locations,
+                0,
+                |location, num_visited| {
+                    (num_visited == num_locations) && (!ROUND_TRIP || (location == last))
+                },
+                |location| {
+                    (0..num_locations).map(move |to_id| DijkstraState {
+                        data: to_id,
+                        distance: max_steps - *distances.get(location, to_id),
+                    })
+                },
+            )
+            .map(|longest| {
+                let route = (num_locations as u32 - 1) * max_steps - longest;
+                let way_back = if ROUND_TRIP {
+                    *distances.get(last, 0)
+                } else {
+                    0
+                };
+                return route + way_back;
             })
-        },
-    )
-    .unwrap();
-    return (num_locations as u32 - 1) * max_steps - longest;
+        })
+        .min()
+        .unwrap();
 }
+
+const ONE_WAY: bool = false;
+const ROUND_TRIP: bool = true;
 
 fn main() {
     println!("Part 1");
     let example = parse("day24.example");
-    aoc::expect_result!(14, solve_case1(&example));
+    aoc::expect_result!(14, solve_case::<ONE_WAY>(&example));
     let input = parse("day24.input");
-    aoc::expect_result!(500, solve_case1(&input));
+    aoc::expect_result!(500, solve_case::<ONE_WAY>(&input));
 
     println!("Part 2");
-    aoc::return_incomplete();
+    aoc::expect_result!(20, solve_case::<ROUND_TRIP>(&example));
+    aoc::expect_result!(748, solve_case::<ROUND_TRIP>(&input));
 }
