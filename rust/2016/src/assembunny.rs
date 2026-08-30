@@ -1,4 +1,4 @@
-//! The assembunny language, shared between days 12 and 23
+//! The assembunny language, shared between days 12, 23, and 25
 
 use itertools::Itertools;
 
@@ -21,6 +21,7 @@ pub enum Op {
     JumpNotZero(Value, Value),
     // Days that don't toggle never read the target
     Toggle(#[allow(dead_code)] usize),
+    Out(#[allow(dead_code)] Value),
 }
 /// Transformed instructions
 #[derive(Clone, Copy, Debug)]
@@ -34,6 +35,7 @@ pub enum XOp {
     Copy(Value, Value),
     JumpNotZero(Value, Value),
     Toggle(#[allow(dead_code)] usize),
+    Out(#[allow(dead_code)] Value),
 }
 
 /// Registers a to d, as ids 0 to 3
@@ -60,6 +62,7 @@ pub fn parse(filename: &str) -> Vec<Op> {
                 "dec" => Op::Decrease(parse_register(words[1])),
                 "jnz" => Op::JumpNotZero(parse_value(words[1]), parse_value(words[2])),
                 "tgl" => Op::Toggle(parse_register(words[1])),
+                "out" => Op::Out(parse_value(words[1])),
                 _ => panic!("Invalid instruction: {line}"),
             }
         })
@@ -84,6 +87,7 @@ pub fn transform(ops: &Vec<Op>) -> Vec<XOp> {
             Op::Decrease(id) => XOp::Add(id, -1),
             Op::JumpNotZero(condition, offset) => XOp::JumpNotZero(condition, offset),
             Op::Toggle(x) => XOp::Toggle(x),
+            Op::Out(x) => XOp::Out(x),
         })
         .collect_vec();
 
@@ -202,7 +206,7 @@ pub fn transform(ops: &Vec<Op>) -> Vec<XOp> {
     return ops;
 }
 
-pub fn exec(op: &XOp, registers: &mut [i64], counter: &mut i64) {
+pub fn exec(op: &XOp, registers: &mut [i64], counter: &mut i64) -> Option<i64> {
     match *op {
         XOp::Zero(id) => registers[id] = 0,
         XOp::Add(id, value) => registers[id] += value as i64,
@@ -219,9 +223,14 @@ pub fn exec(op: &XOp, registers: &mut [i64], counter: &mut i64) {
                 *counter += read(&registers, offset) - 1;
             }
         }
+        XOp::Out(x) => {
+            *counter += 1;
+            return Some(read(&registers, x));
+        }
         _ => {
             // Invalid instruction, do nothing
         }
     }
     *counter += 1;
+    return None;
 }
