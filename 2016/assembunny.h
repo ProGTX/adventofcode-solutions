@@ -1,4 +1,4 @@
-// The assembunny language, shared between days 12 and 23
+// The assembunny language, shared between days 12, 23, and 25
 
 #ifndef AOC_2016_ASSEMBUNNY_H
 #define AOC_2016_ASSEMBUNNY_H
@@ -45,10 +45,13 @@ struct JumpNotZero {
 struct Toggle {
   usize id;
 };
+struct Out {
+  Value value;
+};
 } // namespace op
 
 using Op = std::variant<op::Copy, op::Increase, op::Decrease, op::JumpNotZero,
-                        op::Toggle>;
+                        op::Toggle, op::Out>;
 
 /// Transformed instructions
 namespace xop {
@@ -79,10 +82,13 @@ struct JumpNotZero {
 struct Toggle {
   usize id;
 };
+struct Out {
+  Value value;
+};
 } // namespace xop
 using XOp =
     std::variant<xop::NoOp, xop::Zero, xop::ZeroToggled, xop::Add, xop::LoopAdd,
-                 xop::Copy, xop::JumpNotZero, xop::Toggle>;
+                 xop::Copy, xop::JumpNotZero, xop::Toggle, xop::Out>;
 
 fn parse_register(str word) -> usize {
   AOC_ASSERT((word.size() == 1), "Invalid register");
@@ -113,8 +119,11 @@ fn parse(String const& filename) -> Vec<Op> {
              return op::JumpNotZero{parse_value(words[1]),
                                     parse_value(words[2])};
            }
-           AOC_ASSERT((words[0] == "tgl"), "Invalid instruction");
-           return op::Toggle{parse_register(words[1])};
+           if (words[0] == "tgl") {
+             return op::Toggle{parse_register(words[1])};
+           }
+           AOC_ASSERT((words[0] == "out"), "Invalid instruction");
+           return op::Out{parse_value(words[1])};
          }) |
          aoc::collect_vec<Op>();
 }
@@ -171,7 +180,8 @@ fn transform(Vec<Op> const& ops_in) -> Vec<XOp> {
             },
             [](op::Toggle const& toggle) -> XOp {
               return xop::Toggle{toggle.id};
-            });
+            },
+            [](op::Out const& out) -> XOp { return xop::Out{out.value}; });
       }) |
       aoc::collect_vec<XOp>();
 
@@ -277,8 +287,10 @@ fn transform(Vec<Op> const& ops_in) -> Vec<XOp> {
   return ops;
 }
 
-/// Runs a single instruction, moving the counter along with it
-fn exec(XOp const& op, Registers& registers, i64& counter) {
+/// Runs a single instruction, moving the counter along with it,
+/// and hands back the value it transmits, for the days that transmit
+fn exec(XOp const& op, Registers& registers, i64& counter) -> Option<i64> {
+  auto out = Option<i64>{};
   aoc::match(
       op, //
       [&](xop::Zero const& zero) { registers[zero.id] = 0; },
@@ -301,10 +313,12 @@ fn exec(XOp const& op, Registers& registers, i64& counter) {
           counter += read(registers, jump.offset) - 1;
         }
       },
+      [&](xop::Out const& transmit) { out = read(registers, transmit.value); },
       [](auto const&) {
         // Invalid instruction, do nothing
       });
   counter += 1;
+  return out;
 }
 
 } // namespace assembunny

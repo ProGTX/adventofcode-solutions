@@ -20,7 +20,8 @@ fn solve_case(Input const& ops) -> i64 {
   auto registers = Registers{0, 0, RegCInit, 0};
   auto counter = i64{};
   while ((counter >= 0) && (static_cast<usize>(counter) < ops.size())) {
-    assembunny::exec(ops[static_cast<usize>(counter)], registers, counter);
+    let op = ops[static_cast<usize>(counter)];
+    (void)assembunny::exec(op, registers, counter);
   }
 
   // Register a

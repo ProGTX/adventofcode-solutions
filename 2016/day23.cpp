@@ -35,7 +35,7 @@ fn toggle(XOp const& op) -> XOp {
       [](xop::Copy const& copy) -> XOp {
         return xop::JumpNotZero{copy.from, copy.to};
       },
-      [](xop::LoopAdd const&) -> XOp { AOC_UNREACHABLE("Invalid op"); });
+      [](auto const&) -> XOp { AOC_UNREACHABLE("Invalid op"); });
 }
 
 /// The value in register a once the program halts
@@ -57,7 +57,7 @@ fn solve_case(Input const& input) -> i64 {
       counter += 1;
       continue;
     }
-    assembunny::exec(op, registers, counter);
+    (void)assembunny::exec(op, registers, counter);
   }
   // Register a
   return registers[0];
