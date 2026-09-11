@@ -238,7 +238,12 @@ target_compile_definitions(aoc_md5 PRIVATE AOC_DISABLE_MODULES)
 target_compile_options(aoc_md5 PRIVATE
   $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-U_GLIBCXX_ASSERTIONS>
   ${aoc_md5_options})
-set_target_properties(aoc_md5 PROPERTIES FOLDER common)
+# Cargo links this into a position-independent executable,
+# so a static constant here would otherwise need a relocation it cannot use
+set_target_properties(aoc_md5 PROPERTIES
+  FOLDER common
+  POSITION_INDEPENDENT_CODE ON
+)
 
 # Everything including md5.h has to agree on which of the two it calls
 set(AOC_MD5_LIBRARY_EXPR $<NOT:${AOC_RELEASE_CHECK_EXPR}>)

@@ -27,6 +27,7 @@ unsafe extern "C" {
         count: usize,
         digests: *mut Digest,
     );
+    fn aoc_md5_stretch(digests: *mut Digest, count: usize, stretches: usize);
 }
 
 pub fn md5(input: &[u8]) -> Digest {
@@ -70,6 +71,14 @@ pub fn md5_many(inputs: &[&[u8]], digests: &mut [Digest]) {
             );
         }
     }
+}
+
+/// Rehashes every digest as the 32 hex digits it is written out as,
+/// `stretches` times over, in place.
+/// The whole run stays in the library, so the lanes are only written out once:
+/// this is the one for a hash that is stretched many times over
+pub fn md5_stretch(digests: &mut [Digest], stretches: usize) {
+    unsafe { aoc_md5_stretch(digests.as_mut_ptr(), digests.len(), stretches) };
 }
 
 pub const fn digest_to_hex(digest: Digest) -> [char; 32] {

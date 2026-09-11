@@ -1,5 +1,5 @@
 use aoc::{
-    md5::{self, md5_fixed, md5_many},
+    md5::{self, md5_many, md5_stretch},
     string,
 };
 use std::thread;
@@ -21,18 +21,6 @@ fn parse(filename: &str) -> String {
     return aoc::file::read_string(filename).trim().to_string();
 }
 
-/// The hash written out as the hex digits the next stretch hashes
-fn write_hex(hash: &Hash, buffer: &mut [u8]) {
-    const HEX_DIGITS: &[u8; NUM_VALUES] = b"0123456789abcdef";
-    // A byte at a time, so each nibble costs a shift and a mask
-    // rather than the division `digit` would do
-    for index in 0..hash.len() {
-        let byte = hash[index];
-        buffer[2 * index] = HEX_DIGITS[(byte >> 4) as usize];
-        buffer[2 * index + 1] = HEX_DIGITS[(byte & 0xf) as usize];
-    }
-}
-
 /// The hashes of `count` consecutive indices starting at `first`.
 /// One index never depends on another,
 /// so a whole batch of them goes through the SIMD lanes at once
@@ -50,15 +38,8 @@ fn hashes<const NUM_STRETCHES: u32>(salt: &str, first: u32, count: usize) -> [Ha
     md5_many(&inputs[..count], &mut hashes);
 
     // Every stretch hashes the 32 hex digits of the hash before it,
-    // so from here on the lanes are all the same size
-    // and their blocks only need the digits rewritten
-    let mut blocks = [[0; md5::BLOCK_SIZE]; LANES];
-    for _ in 0..NUM_STRETCHES {
-        for (lane, block) in blocks.iter_mut().enumerate().take(count) {
-            write_hex(&hashes[lane], &mut block[..NUM_DIGITS]);
-        }
-        md5_fixed(&mut blocks, NUM_DIGITS, &mut hashes);
-    }
+    // which the whole run does without the lanes coming back out
+    md5_stretch(&mut hashes[..count], NUM_STRETCHES as usize);
     return hashes;
 }
 

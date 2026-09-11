@@ -82,6 +82,8 @@ void aoc_md5_fixed(Block* blocks, std::size_t size, std::size_t count,
                    Digest* digests);
 void aoc_md5_many(const void* const* messages, const std::size_t* sizes,
                   std::size_t count, Digest* digests);
+void aoc_md5_stretch(Digest* digests, std::size_t count,
+                     std::size_t stretches);
 }
 #endif
 
@@ -355,6 +357,36 @@ constexpr void md5_many(std::span<const std::string_view> messages,
   }
 }
 
+/// Rehashes every digest as the 32 hex digits it is written out as,
+/// `stretches` times over
+constexpr void md5_stretch(std::span<Digest> digests, std::size_t stretches) {
+  constexpr auto hex = std::string_view{"0123456789abcdef"};
+  constexpr auto size = 2 * constant::md5_digest_size;
+  for (auto first = 0uz; first < digests.size();
+       first += constant::md5_lanes) {
+    const auto count = std::min(constant::md5_lanes, digests.size() - first);
+    // Every stretch rewrites the same 32 bytes,
+    // so the padding behind them is written once and stays valid
+    auto blocks = std::array<Block, constant::md5_lanes>{};
+    for (auto step = 0uz; step < stretches; ++step) {
+      for (auto lane = 0uz; lane < count; ++lane) {
+        const auto& digest = digests[first + lane];
+        // A byte at a time, so each nibble costs a shift and a mask
+        for (auto index = 0uz; index < constant::md5_digest_size; ++index) {
+          const auto byte = digest[index];
+          blocks[lane][2 * index] = static_cast<unsigned char>(hex[byte >> 4]);
+          blocks[lane][(2 * index) + 1] =
+              static_cast<unsigned char>(hex[byte & 0xf]);
+        }
+      }
+      const auto hashed = md5_fixed<constant::md5_lanes>(blocks, size);
+      for (auto lane = 0uz; lane < count; ++lane) {
+        digests[first + lane] = hashed[lane];
+      }
+    }
+  }
+}
+
 } // namespace detail
 
 /// Hashes one message of any length
@@ -413,9 +445,30 @@ constexpr void md5_many(std::span<const std::string_view> messages,
   detail::md5_many(messages, digests);
 }
 
+/// Rehashes every digest as the 32 hex digits it is written out as,
+/// `stretches` times over, in place.
+/// The whole run stays in here, so the lanes are only written out once:
+/// this is the one to reach for when a hash is stretched many times over
+constexpr void md5_stretch(std::span<Digest> digests, std::size_t stretches) {
+#ifdef AOC_MD5_LIBRARY
+  if !consteval {
+    aoc_md5_stretch(digests.data(), digests.size(), stretches);
+    return;
+  }
+#endif
+  detail::md5_stretch(digests, stretches);
+}
+
 static_assert(md5("abc") == Digest{0x90, 0x01, 0x50, 0x98, 0x3c, 0xd2, 0x4f,
                                    0xb0, 0xd6, 0x96, 0x3f, 0x7d, 0x28, 0xe1,
                                    0x7f, 0x72});
+
+static_assert([] {
+  auto digests = std::array<Digest, 1>{md5("abc")};
+  detail::md5_stretch(digests, 1);
+  return digests[0];
+}() == Digest{0xec, 0x04, 0x05, 0xc5, 0xae, 0xf9, 0x3e, 0x77, 0x1c, 0xd8, 0x0e,
+              0x0d, 0xb1, 0x80, 0xb8, 0x8b});
 
 } // AOC_EXPORT_NAMESPACE(aoc)
 

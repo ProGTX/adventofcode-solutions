@@ -27,22 +27,8 @@ constexpr usize NUM_DIGITS = 2 * sizeof(Hash);
 /// How many distinct values a hex digit can take
 constexpr usize NUM_VALUES = 16;
 
-constexpr str HEX_DIGITS = "0123456789abcdef";
-
 fn parse(String const& filename) -> Input {
   return aoc::read_single_line(filename);
-}
-
-/// The hash written out as the hex digits the next stretch hashes
-fn write_hex(Hash const& hash, std::span<unsigned char, NUM_DIGITS> buffer) {
-  // A byte at a time, so each nibble costs a shift and a mask
-  // rather than the division `digit` would do
-  for (let index : Range{0uz, hash.size()}) {
-    let byte = hash[index];
-    buffer[2 * index] = static_cast<unsigned char>(HEX_DIGITS[byte >> 4]);
-    buffer[(2 * index) + 1] =
-        static_cast<unsigned char>(HEX_DIGITS[byte & 0xf]);
-  }
 }
 
 /// The hashes of `count` consecutive indices starting at `first`.
@@ -65,15 +51,8 @@ fn compute_hashes(str salt, u32 first, usize count) -> std::array<Hash, LANES> {
   aoc::md5_many(std::span{messages}.first(count), hashes);
 
   // Every stretch hashes the 32 hex digits of the hash before it,
-  // so from here on the lanes are all the same size
-  // and their blocks only need the digits rewritten
-  auto blocks = std::array<aoc::Block, LANES>{};
-  for (let _ : Range{0u, NumStretches}) {
-    for (let lane : Range{0uz, count}) {
-      write_hex(hashes[lane], std::span{blocks[lane]}.first<NUM_DIGITS>());
-    }
-    hashes = aoc::md5_fixed(blocks, NUM_DIGITS);
-  }
+  // which the whole run does without the lanes coming back out
+  aoc::md5_stretch(std::span{hashes}.first(count), NumStretches);
   return hashes;
 }
 

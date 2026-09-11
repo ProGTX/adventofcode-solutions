@@ -80,4 +80,9 @@ void aoc_md5_many(const void* const* messages, const std::size_t* sizes,
   }
 }
 
+void aoc_md5_stretch(aoc::Digest* digests, std::size_t count,
+                     std::size_t stretches) {
+  aoc::detail::md5_stretch(std::span{digests, count}, stretches);
+}
+
 } // extern "C"
