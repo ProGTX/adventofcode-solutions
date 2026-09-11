@@ -8,6 +8,7 @@
 #include <array>
 #include <charconv>
 #include <print>
+#include <span>
 #include <thread>
 #include <utility>
 #endif
@@ -20,6 +21,9 @@ auto parse(String const& filename) -> Input {
 
 /// Num indices each thread scans before the results are merged back in order
 constexpr u32 CHUNK = 1u << 16;
+
+/// How many indices are hashed side by side
+constexpr let LANES = aoc::constant::md5_lanes;
 
 /// The 6th and 7th digit of a hash that starts with five zeroes
 using Digits = std::pair<u8, u8>;
@@ -34,16 +38,30 @@ auto scan(str door_id, u32 base, u32 num_threads) -> Vec<Digits> {
     threads.reserve(num_threads);
     for (let t : Range{0u, num_threads}) {
       threads.emplace_back([&found, door_id, base, t] {
-        auto buffer = std::array<char, 32>{};
-        stdr::copy(door_id, std::begin(buffer));
+        auto buffers = std::array<std::array<char, 32>, LANES>{};
+        for (auto& buffer : buffers) {
+          stdr::copy(door_id, std::begin(buffer));
+        }
+        auto messages = std::array<str, LANES>{};
+        auto hashes = std::array<aoc::Digest, LANES>{};
         auto& results = found[t];
         let start = base + (t * CHUNK);
-        for (let index : Range{start, start + CHUNK}) {
-          let[end, _] = std::to_chars(std::begin(buffer) + door_id.size(),
-                                      std::end(buffer), index);
-          let hash = aoc::md5(str{std::begin(buffer), end});
-          if ((hash[0] == 0) && (hash[1] == 0) && ((hash[2] & 0xF0u) == 0)) {
-            results.emplace_back(hash[2] & 0x0Fu, hash[3] >> 4);
+        // A batch of indices next to each other, one per SIMD lane
+        for (auto index = start; index < start + CHUNK;
+             index += static_cast<u32>(LANES)) {
+          for (let lane : Range{0uz, LANES}) {
+            auto& buffer = buffers[lane];
+            let[end, _] =
+                std::to_chars(std::begin(buffer) + door_id.size(),
+                              std::end(buffer), index + static_cast<u32>(lane));
+            messages[lane] = str{std::begin(buffer), end};
+          }
+          aoc::md5_many(messages, hashes);
+          // The lanes are in index order, which is the order the results keep
+          for (let& hash : hashes) {
+            if ((hash[0] == 0) && (hash[1] == 0) && ((hash[2] & 0xF0u) == 0)) {
+              results.emplace_back(hash[2] & 0x0Fu, hash[3] >> 4);
+            }
           }
         }
       });

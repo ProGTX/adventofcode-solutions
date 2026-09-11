@@ -9,6 +9,10 @@ const MAX_BATCH: usize = 64;
 /// The block a message is padded into, which `md5_fixed` works on
 pub const BLOCK_SIZE: usize = 64;
 
+/// How many messages a batch hashes side by side.
+/// Eight 32-bit lanes is one AVX2 register and SSE2 splits it into two.
+pub const LANES: usize = 8;
+
 unsafe extern "C" {
     fn aoc_md5(message: *const u8, size: usize, digest: *mut Digest);
     fn aoc_md5_fixed(
@@ -49,6 +53,7 @@ pub fn md5_fixed(blocks: &mut [[u8; BLOCK_SIZE]], size: usize, digests: &mut [Di
 /// Hashes messages that do not depend on each other, all at once:
 /// same-size single-block ones go into parallel SIMD lanes
 pub fn md5_many(inputs: &[&[u8]], digests: &mut [Digest]) {
+    debug_assert!(digests.len() >= inputs.len());
     let mut pointers = [std::ptr::null(); MAX_BATCH];
     let mut sizes = [0; MAX_BATCH];
     for (first, batch) in inputs.chunks(MAX_BATCH).enumerate() {
@@ -61,7 +66,7 @@ pub fn md5_many(inputs: &[&[u8]], digests: &mut [Digest]) {
                 pointers.as_ptr(),
                 sizes.as_ptr(),
                 batch.len(),
-                &mut digests[first * MAX_BATCH],
+                digests[first * MAX_BATCH..].as_mut_ptr(),
             );
         }
     }

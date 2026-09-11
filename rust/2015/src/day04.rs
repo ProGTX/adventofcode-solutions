@@ -1,4 +1,4 @@
-use aoc::md5::md5;
+use aoc::md5::{self, Digest, md5_many};
 use aoc::string;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::thread;
@@ -7,31 +7,54 @@ fn parse(filename: &str) -> String {
     aoc::file::read_string(filename).trim().to_string()
 }
 
+/// Whether the hash starts with the five or six zeroes the part asks for
+fn is_answer<const PART2: bool>(hash: &Digest) -> bool {
+    if (hash[0] != 0) || (hash[1] != 0) {
+        return false;
+    }
+    return if PART2 {
+        hash[2] == 0
+    } else {
+        (hash[2] & 0xF0) == 0
+    };
+}
+
 fn solve_case<const PART2: bool>(key: &str) -> u32 {
     let num_threads = thread::available_parallelism().map_or(1, |n| n.get()) as u32;
     let result = AtomicU32::new(u32::MAX);
 
+    // A thread takes a whole batch at a time,
+    // so the numbers it hashes side by side are the ones next to each other
+    let step = num_threads * md5::LANES as u32;
     thread::scope(|s| {
-        for start in 0..num_threads {
+        for thread in 0..num_threads {
             let result = &result;
             s.spawn(move || {
                 let key_bytes = key.as_bytes();
-                let mut buf = [0u8; 64];
-                buf[..key_bytes.len()].copy_from_slice(key_bytes);
-                let mut n = start;
+                let mut buffers = [[0u8; 64]; md5::LANES];
+                let mut sizes = [0; md5::LANES];
+                for buffer in &mut buffers {
+                    buffer[..key_bytes.len()].copy_from_slice(key_bytes);
+                }
+                let mut hashes = [Digest::default(); md5::LANES];
+                let mut n = thread * md5::LANES as u32;
                 while n < result.load(Ordering::Relaxed) {
-                    let len = key_bytes.len() + string::write_u32(&mut buf[key_bytes.len()..], n);
-                    let hash = md5(&buf[..len]);
-                    if hash[0] == 0 && hash[1] == 0 && hash[2] & 0xF0 == 0 {
-                        if PART2 && (hash[2] & 0x0F > 0) {
-                            n += num_threads;
-                            continue;
-                        }
+                    for (lane, buffer) in buffers.iter_mut().enumerate() {
+                        sizes[lane] = key_bytes.len()
+                            + string::write_u32(&mut buffer[key_bytes.len()..], n + lane as u32);
+                    }
+                    let inputs: [&[u8]; md5::LANES] =
+                        std::array::from_fn(|lane| &buffers[lane][..sizes[lane]]);
+                    md5_many(&inputs, &mut hashes);
+
+                    // The batch runs upwards, so its first answer is its smallest
+                    if let Some(lane) = hashes.iter().position(is_answer::<PART2>) {
+                        let answer = n + lane as u32;
                         let mut current = result.load(Ordering::Relaxed);
-                        while n < current {
+                        while answer < current {
                             match result.compare_exchange_weak(
                                 current,
-                                n,
+                                answer,
                                 Ordering::Relaxed,
                                 Ordering::Relaxed,
                             ) {
@@ -41,7 +64,7 @@ fn solve_case<const PART2: bool>(key: &str) -> u32 {
                         }
                         return;
                     }
-                    n += num_threads;
+                    n += step;
                 }
             });
         }

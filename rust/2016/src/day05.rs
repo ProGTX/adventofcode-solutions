@@ -1,4 +1,7 @@
-use aoc::{md5::md5, string};
+use aoc::{
+    md5::{self, Digest, md5_many},
+    string,
+};
 use std::thread;
 
 type Input = String;
@@ -19,16 +22,31 @@ fn scan(door_id: &str, base: u32, num_threads: u32) -> Vec<(u8, u8)> {
             .map(|t| {
                 s.spawn(move || {
                     let door_id_size = door_id.len();
-                    let mut buffer = [0; 16];
-                    buffer[..door_id_size].copy_from_slice(door_id.as_bytes());
+                    let mut buffers = [[0; 16]; md5::LANES];
+                    let mut sizes = [0; md5::LANES];
+                    for buffer in &mut buffers {
+                        buffer[..door_id_size].copy_from_slice(door_id.as_bytes());
+                    }
+                    let mut hashes = [Digest::default(); md5::LANES];
                     let start = base + t * CHUNK;
                     let mut found = Vec::new();
-                    for index in start..start + CHUNK {
-                        let size =
-                            door_id_size + string::write_u32(&mut buffer[door_id_size..], index);
-                        let hash = md5(&buffer[..size]);
-                        if (hash[0] == 0) && (hash[1] == 0) && (hash[2] & 0xf0 == 0) {
-                            found.push((hash[2] & 0x0f, hash[3] >> 4));
+                    // A batch of indices next to each other, one per SIMD lane
+                    for index in (start..start + CHUNK).step_by(md5::LANES) {
+                        for (lane, buffer) in buffers.iter_mut().enumerate() {
+                            sizes[lane] = door_id_size
+                                + string::write_u32(
+                                    &mut buffer[door_id_size..],
+                                    index + lane as u32,
+                                );
+                        }
+                        let inputs: [&[u8]; md5::LANES] =
+                            std::array::from_fn(|lane| &buffers[lane][..sizes[lane]]);
+                        md5_many(&inputs, &mut hashes);
+                        // The lanes are in index order, which is the order the results keep
+                        for hash in &hashes {
+                            if (hash[0] == 0) && (hash[1] == 0) && (hash[2] & 0xf0 == 0) {
+                                found.push((hash[2] & 0x0f, hash[3] >> 4));
+                            }
                         }
                     }
                     found

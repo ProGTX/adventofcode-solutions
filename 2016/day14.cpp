@@ -14,7 +14,10 @@
 
 using Input = String;
 
-using Hash = std::array<unsigned char, 16>;
+using Hash = aoc::Digest;
+
+/// How many indices are hashed side by side
+constexpr let LANES = aoc::constant::md5_lanes;
 
 /// How far ahead a candidate's confirming run of five is looked for
 constexpr u32 LOOKAHEAD = 1000;
@@ -30,29 +33,48 @@ fn parse(String const& filename) -> Input {
   return aoc::read_single_line(filename);
 }
 
-fn stretch(Hash const& hash) -> Hash {
-  auto buffer = std::array<char, NUM_DIGITS>{};
+/// The hash written out as the hex digits the next stretch hashes
+fn write_hex(Hash const& hash, std::span<unsigned char, NUM_DIGITS> buffer) {
   // A byte at a time, so each nibble costs a shift and a mask
   // rather than the division `digit` would do
   for (let index : Range{0uz, hash.size()}) {
     let byte = hash[index];
-    buffer[2 * index] = HEX_DIGITS[byte >> 4];
-    buffer[(2 * index) + 1] = HEX_DIGITS[byte & 0xf];
+    buffer[2 * index] = static_cast<unsigned char>(HEX_DIGITS[byte >> 4]);
+    buffer[(2 * index) + 1] =
+        static_cast<unsigned char>(HEX_DIGITS[byte & 0xf]);
   }
-  return aoc::md5(str{buffer.data(), buffer.size()});
 }
 
+/// The hashes of `count` consecutive indices starting at `first`.
+/// One index never depends on another,
+/// so a whole batch of them goes through the SIMD lanes at once
 template <u32 NumStretches>
-fn compute_hash(str salt, u32 index) -> Hash {
-  auto buffer = std::array<char, 32>{};
-  stdr::copy(salt, std::begin(buffer));
-  let[end, _] =
-      std::to_chars(std::begin(buffer) + salt.size(), std::end(buffer), index);
-  auto hash = aoc::md5(str{std::begin(buffer), end});
-  for (let _ : Range{0u, NumStretches}) {
-    hash = stretch(hash);
+fn compute_hashes(str salt, u32 first, usize count) -> std::array<Hash, LANES> {
+  // The salt and the index, which is as long as the index is wide
+  auto buffers = std::array<std::array<char, 32>, LANES>{};
+  auto messages = std::array<str, LANES>{};
+  for (let lane : Range{0uz, count}) {
+    auto& buffer = buffers[lane];
+    stdr::copy(salt, std::begin(buffer));
+    let[end, _] =
+        std::to_chars(std::begin(buffer) + salt.size(), std::end(buffer),
+                      first + static_cast<u32>(lane));
+    messages[lane] = str{std::begin(buffer), end};
   }
-  return hash;
+  auto hashes = std::array<Hash, LANES>{};
+  aoc::md5_many(std::span{messages}.first(count), hashes);
+
+  // Every stretch hashes the 32 hex digits of the hash before it,
+  // so from here on the lanes are all the same size
+  // and their blocks only need the digits rewritten
+  auto blocks = std::array<aoc::Block, LANES>{};
+  for (let _ : Range{0u, NumStretches}) {
+    for (let lane : Range{0uz, count}) {
+      write_hex(hashes[lane], std::span{blocks[lane]}.first<NUM_DIGITS>());
+    }
+    hashes = aoc::md5_fixed(blocks, NUM_DIGITS);
+  }
+  return hashes;
 }
 
 /// The hash as it is written out: one hex digit per nibble
@@ -114,9 +136,13 @@ fn find_runs_range(str salt, u32 first, std::span<Runs> runs) {
       let slots = runs.subspan(offset, std::min(chunk, runs.size() - offset));
       let start = first + static_cast<u32>(offset);
       threads.emplace_back([salt, start, slots] {
-        for (let index : Range{0uz, slots.size()}) {
-          slots[index] = find_runs(compute_hash<NumStretches>(
-              salt, start + static_cast<u32>(index)));
+        for (auto index = 0uz; index < slots.size(); index += LANES) {
+          let count = std::min(LANES, slots.size() - index);
+          let hashes = compute_hashes<NumStretches>(
+              salt, start + static_cast<u32>(index), count);
+          for (let lane : Range{0uz, count}) {
+            slots[index + lane] = find_runs(hashes[lane]);
+          }
         }
       });
     }

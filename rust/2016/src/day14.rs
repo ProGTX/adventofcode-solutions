@@ -1,10 +1,13 @@
 use aoc::{
-    md5::{self, md5},
+    md5::{self, md5_fixed, md5_many},
     string,
 };
 use std::thread;
 
 type Hash = md5::Digest;
+
+/// How many indices are hashed side by side
+const LANES: usize = md5::LANES;
 
 /// How far ahead a candidate's confirming run of five is looked for
 const LOOKAHEAD: u32 = 1000;
@@ -18,9 +21,9 @@ fn parse(filename: &str) -> String {
     return aoc::file::read_string(filename).trim().to_string();
 }
 
-fn stretch(hash: &Hash) -> Hash {
+/// The hash written out as the hex digits the next stretch hashes
+fn write_hex(hash: &Hash, buffer: &mut [u8]) {
     const HEX_DIGITS: &[u8; NUM_VALUES] = b"0123456789abcdef";
-    let mut buffer = [0; NUM_DIGITS];
     // A byte at a time, so each nibble costs a shift and a mask
     // rather than the division `digit` would do
     for index in 0..hash.len() {
@@ -28,19 +31,35 @@ fn stretch(hash: &Hash) -> Hash {
         buffer[2 * index] = HEX_DIGITS[(byte >> 4) as usize];
         buffer[2 * index + 1] = HEX_DIGITS[(byte & 0xf) as usize];
     }
-    return md5(&buffer);
 }
 
-fn hash<const NUM_STRETCHES: u32>(salt: &str, index: u32) -> Hash {
+/// The hashes of `count` consecutive indices starting at `first`.
+/// One index never depends on another,
+/// so a whole batch of them goes through the SIMD lanes at once
+fn hashes<const NUM_STRETCHES: u32>(salt: &str, first: u32, count: usize) -> [Hash; LANES] {
+    // The salt and the index, which is as long as the index is wide
     let salt_size = salt.len();
-    let mut buffer = [0; 16];
-    buffer[..salt_size].copy_from_slice(salt.as_bytes());
-    let size = salt_size + string::write_u32(&mut buffer[salt_size..], index);
-    let mut hash = md5(&buffer[..size]);
-    for _ in 0..NUM_STRETCHES {
-        hash = stretch(&hash);
+    let mut buffers = [[0; 16]; LANES];
+    let mut sizes = [0; LANES];
+    for (lane, buffer) in buffers.iter_mut().enumerate().take(count) {
+        buffer[..salt_size].copy_from_slice(salt.as_bytes());
+        sizes[lane] = salt_size + string::write_u32(&mut buffer[salt_size..], first + lane as u32);
     }
-    return hash;
+    let mut hashes = [Hash::default(); LANES];
+    let inputs: [&[u8]; LANES] = std::array::from_fn(|lane| &buffers[lane][..sizes[lane]]);
+    md5_many(&inputs[..count], &mut hashes);
+
+    // Every stretch hashes the 32 hex digits of the hash before it,
+    // so from here on the lanes are all the same size
+    // and their blocks only need the digits rewritten
+    let mut blocks = [[0; md5::BLOCK_SIZE]; LANES];
+    for _ in 0..NUM_STRETCHES {
+        for (lane, block) in blocks.iter_mut().enumerate().take(count) {
+            write_hex(&hashes[lane], &mut block[..NUM_DIGITS]);
+        }
+        md5_fixed(&mut blocks, NUM_DIGITS, &mut hashes);
+    }
+    return hashes;
 }
 
 /// The hash as it is written out: one hex digit per nibble
@@ -97,8 +116,12 @@ fn find_runs_range<const NUM_STRETCHES: u32>(salt: &str, first: u32, runs: &mut 
         .min(num_hashes.div_ceil(MIN_HASHES_PER_THREAD))
         .max(1);
     let fill = |first: u32, runs: &mut [Runs]| {
-        for (offset, slot) in runs.iter_mut().enumerate() {
-            *slot = find_runs(&hash::<NUM_STRETCHES>(salt, first + offset as u32));
+        for (batch, slots) in runs.chunks_mut(LANES).enumerate() {
+            let start = first + (batch * LANES) as u32;
+            let hashes = hashes::<NUM_STRETCHES>(salt, start, slots.len());
+            for (slot, hash) in slots.iter_mut().zip(&hashes) {
+                *slot = find_runs(hash);
+            }
         }
     };
     let chunk = runs.len().div_ceil(num_threads);

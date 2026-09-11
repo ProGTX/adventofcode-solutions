@@ -231,7 +231,13 @@ endif()
 add_library(aoc_md5 STATIC common/md5.cpp)
 # A plain translation unit, whatever the rest of the build is doing
 target_compile_definitions(aoc_md5 PRIVATE AOC_DISABLE_MODULES)
-target_compile_options(aoc_md5 PRIVATE ${aoc_md5_options})
+# The standard library assertions a Debug build turns on
+# keep the lane loops from vectorizing,
+# which costs this one more than three times its speed.
+# The user options come last, so they still win
+target_compile_options(aoc_md5 PRIVATE
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-U_GLIBCXX_ASSERTIONS>
+  ${aoc_md5_options})
 set_target_properties(aoc_md5 PROPERTIES FOLDER common)
 
 # Everything including md5.h has to agree on which of the two it calls
