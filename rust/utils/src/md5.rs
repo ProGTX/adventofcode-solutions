@@ -11,7 +11,9 @@ unsafe extern "C" {
     fn MD5Final(digest: *mut u8, ctx: *mut MD5_CTX);
 }
 
-pub fn md5(input: &[u8]) -> [u8; 16] {
+pub type Digest = [u8; 16];
+
+pub fn md5(input: &[u8]) -> Digest {
     unsafe {
         let mut ctx = MD5_CTX {
             state: [0; 4],
@@ -26,8 +28,8 @@ pub fn md5(input: &[u8]) -> [u8; 16] {
     }
 }
 
-pub const fn md5_digest_to_hex(digest: [u8; 16]) -> [char; 32] {
-    const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
+pub const fn digest_to_hex(digest: Digest) -> [char; 32] {
+    const HEX_CHARS: &Digest = b"0123456789abcdef";
     let mut s = ['0'; 32];
     // A `while` rather than a `for`, so this stays usable in a const context
     let mut i = 0;
