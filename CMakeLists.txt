@@ -56,6 +56,18 @@ option(AOC_DISABLE_IMPORT_STD "Explicitly disables `import std`" OFF)
 option(AOC_ENABLE_IMPORT_STD
   "Opts in to `import std` on compilers where it is not on by default" OFF)
 
+# MD5 is a constexpr header,
+# built into a static library out of that same header as well.
+# The Rust solutions cannot include it
+# and outside Release the C++ ones would otherwise inline it
+# unoptimized into every solution.
+# Its lane loops vectorize to one hash per SIMD lane,
+# which is what makes AOC_MD5_COMPILE_OPTIONS worth setting.
+set(AOC_MD5_COMPILE_OPTIONS "" CACHE STRING "Compile options for the MD5 library")
+# A cache STRING is one argument,
+# however many options it spells out
+separate_arguments(aoc_md5_options NATIVE_COMMAND "${AOC_MD5_COMPILE_OPTIONS}")
+
 add_compile_definitions(AOC_CXX_STANDARD=${CMAKE_CXX_STANDARD})
 set(AOC_RELEASE_CHECK_EXPR
   $<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>
@@ -201,21 +213,6 @@ if ((NOT AOC_IMPORT_STD) AND aoc_want_import_std AND
     "aoc: no import std - ${CMAKE_CXX_COMPILER_IMPORT_STD_ERROR_MESSAGE}")
 endif()
 
-# MD5 comes from OpenSSL, for the C++ and the Rust solutions alike.
-# It is optional: without it `aoc::md5` skips the solution that called it,
-# so a build without OpenSSL still runs everything else.
-# The definition is global rather than carried by the interface target below,
-# so that the aoc module and the solutions importing it agree on what `md5` is.
-find_package(OpenSSL COMPONENTS Crypto)
-add_library(md5 INTERFACE)
-if (TARGET OpenSSL::Crypto)
-  add_compile_definitions(AOC_HAVE_MD5)
-  target_link_libraries(md5 INTERFACE OpenSSL::Crypto)
-  message(STATUS "aoc: MD5 from OpenSSL ${OPENSSL_VERSION}")
-else()
-  message(STATUS "aoc: no OpenSSL - the solutions needing MD5 will skip")
-endif()
-
 # Before the aoc module below, which imports unordered_dense's module
 add_subdirectory(external)
 
@@ -228,6 +225,20 @@ if (AOC_MODULE_SUPPORT)
         common/module-aoc.cpp
   )
   target_link_libraries(aoc PUBLIC unordered_dense::unordered_dense_module)
+endif()
+
+
+add_library(aoc_md5 STATIC common/md5.cpp)
+# A plain translation unit, whatever the rest of the build is doing
+target_compile_definitions(aoc_md5 PRIVATE AOC_DISABLE_MODULES)
+target_compile_options(aoc_md5 PRIVATE ${aoc_md5_options})
+set_target_properties(aoc_md5 PROPERTIES FOLDER common)
+
+# Everything including md5.h has to agree on which of the two it calls
+set(AOC_MD5_LIBRARY_EXPR $<NOT:${AOC_RELEASE_CHECK_EXPR}>)
+if (AOC_MODULE_SUPPORT)
+  target_link_libraries(aoc PUBLIC aoc_md5)
+  target_compile_definitions(aoc PUBLIC $<${AOC_MD5_LIBRARY_EXPR}:AOC_MD5_LIBRARY>)
 endif()
 
 # We use this to mark incomplete tests as skipped
@@ -279,6 +290,12 @@ function(add_sample sample_name year)
   # Inside one the module target carries the BMI
   # and the include directory comes along with it either way.
   target_link_libraries(${target} PRIVATE unordered_dense::unordered_dense)
+
+  # Outside Release the hashing comes from the library, not from this file
+  target_link_libraries(${target} PRIVATE aoc_md5)
+  target_compile_definitions(${target} PRIVATE
+    $<${AOC_MD5_LIBRARY_EXPR}:AOC_MD5_LIBRARY>)
+
   if (AOC_MODULE_SUPPORT)
     target_link_libraries(${target} PRIVATE aoc)
   endif()

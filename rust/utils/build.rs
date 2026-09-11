@@ -1,18 +1,29 @@
 fn main() {
-    println!("cargo::rerun-if-env-changed=OPENSSL_CRYPTO_LIB");
-    println!("cargo::rustc-check-cfg=cfg(have_md5)");
+    println!("cargo::rerun-if-env-changed=AOC_MD5_LIB");
 
-    // OpenSSL is optional, and CMake only passes this on once it has found it.
-    // Without it `aoc::md5` skips the solution instead of hashing,
-    // which is also what a plain `cargo build` outside CMake gets
-    let Ok(crypto_lib) = std::env::var("OPENSSL_CRYPTO_LIB") else {
+    // CMake builds the MD5 library and passes its path.
+    // Outside CMake there is nothing to point at,
+    // and a build that needs it fails at link time
+    let Ok(md5_lib) = std::env::var("AOC_MD5_LIB") else {
         return;
     };
-    let crypto_lib_path = std::path::Path::new(&crypto_lib);
-    if let Some(directory) = crypto_lib_path.parent() {
-        println!("cargo::rustc-link-search=native={}", directory.display());
+    let md5_lib_path = std::path::Path::new(&md5_lib);
+    let Some(directory) = md5_lib_path.parent() else {
+        return;
+    };
+    // libaoc_md5.a and aoc_md5.lib are both linked as aoc_md5
+    let name = md5_lib_path
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .map_or("aoc_md5", |stem| stem.strip_prefix("lib").unwrap_or(stem));
+
+    println!("cargo::rustc-link-search=native={}", directory.display());
+    println!("cargo::rustc-link-lib=static={name}");
+    // The library is C++, so its standard library comes along
+    if cfg!(target_env = "msvc") {
+        // The MSVC runtime comes in through the static library itself
+    } else {
+        println!("cargo::rustc-link-lib=stdc++");
     }
-    println!("cargo::rustc-link-lib=crypto");
-    println!("cargo::rustc-cfg=have_md5");
-    println!("cargo::rerun-if-changed={crypto_lib}");
+    println!("cargo::rerun-if-changed={md5_lib}");
 }

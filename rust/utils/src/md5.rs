@@ -1,24 +1,70 @@
+//! MD5, calling the same implementation the C++ solutions use.
+//! See `common/md5.h` for the code and the licence it came under
+
 pub type Digest = [u8; 16];
 
-#[cfg(have_md5)]
+/// How many messages one `aoc_md5_many` call takes at most
+const MAX_BATCH: usize = 64;
+
+/// The block a message is padded into, which `md5_fixed` works on
+pub const BLOCK_SIZE: usize = 64;
+
 unsafe extern "C" {
-    /// OpenSSL's one-shot MD5, which is all these solutions ever need
-    fn MD5(data: *const u8, size: usize, digest: *mut u8) -> *mut u8;
+    fn aoc_md5(message: *const u8, size: usize, digest: *mut Digest);
+    fn aoc_md5_fixed(
+        blocks: *mut [u8; BLOCK_SIZE],
+        size: usize,
+        count: usize,
+        digests: *mut Digest,
+    );
+    fn aoc_md5_many(
+        messages: *const *const u8,
+        sizes: *const usize,
+        count: usize,
+        digests: *mut Digest,
+    );
 }
 
-#[cfg(have_md5)]
 pub fn md5(input: &[u8]) -> Digest {
-    let mut digest = [0; 16];
-    unsafe { MD5(input.as_ptr(), input.len(), digest.as_mut_ptr()) };
+    let mut digest = Digest::default();
+    unsafe { aoc_md5(input.as_ptr(), input.len(), &mut digest) };
     return digest;
 }
 
-/// Built without OpenSSL, so there is nothing to hash with:
-/// whichever solution asked for a hash skips right here
-#[cfg(not(have_md5))]
-pub fn md5(_input: &[u8]) -> Digest {
-    crate::return_incomplete();
-    return [0; 16];
+/// Hashes one block per lane, in place:
+/// every block holds a message of `size` bytes and zeroes after it.
+/// Nothing is copied, so this is the one for a hot loop
+pub fn md5_fixed(blocks: &mut [[u8; BLOCK_SIZE]], size: usize, digests: &mut [Digest]) {
+    debug_assert!(digests.len() >= blocks.len());
+    unsafe {
+        aoc_md5_fixed(
+            blocks.as_mut_ptr(),
+            size,
+            blocks.len(),
+            digests.as_mut_ptr(),
+        );
+    }
+}
+
+/// Hashes messages that do not depend on each other, all at once:
+/// same-size single-block ones go into parallel SIMD lanes
+pub fn md5_many(inputs: &[&[u8]], digests: &mut [Digest]) {
+    let mut pointers = [std::ptr::null(); MAX_BATCH];
+    let mut sizes = [0; MAX_BATCH];
+    for (first, batch) in inputs.chunks(MAX_BATCH).enumerate() {
+        for (index, input) in batch.iter().enumerate() {
+            pointers[index] = input.as_ptr();
+            sizes[index] = input.len();
+        }
+        unsafe {
+            aoc_md5_many(
+                pointers.as_ptr(),
+                sizes.as_ptr(),
+                batch.len(),
+                &mut digests[first * MAX_BATCH],
+            );
+        }
+    }
 }
 
 pub const fn digest_to_hex(digest: Digest) -> [char; 32] {
