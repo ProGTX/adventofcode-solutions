@@ -66,14 +66,21 @@ add_subdirectory(2025)
 # Cargo takes care of building everything,
 # CMake just needs to know about dependencies
 get_property(rust_sources GLOBAL PROPERTY RUST_SOURCES)
+# Only passed on when OpenSSL was found, since its absence is what tells
+# the build script that `aoc::md5` has to skip instead of hash
+set(rust_build_env "")
+if (TARGET OpenSSL::Crypto)
+    list(APPEND rust_build_env "OPENSSL_CRYPTO_LIB=${OPENSSL_CRYPTO_LIBRARY}")
+endif()
+
 add_custom_command(
     OUTPUT ${RUST_BUILD_STAMP}
     COMMAND ${CMAKE_COMMAND} -E env
-        "MD5_LIB=$<TARGET_FILE:md5>"
+        ${rust_build_env}
         "${CARGO_EXECUTABLE}" build
         $<${AOC_RELEASE_CHECK_EXPR}:--release>
     COMMAND ${CMAKE_COMMAND} -E touch ${RUST_BUILD_STAMP}
     WORKING_DIRECTORY "${RUST_DIR}"
-    DEPENDS "${RUST_DIR}/Cargo.toml" "${RUST_DIR}/utils/Cargo.toml" "${rust_sources}" md5
+    DEPENDS "${RUST_DIR}/Cargo.toml" "${RUST_DIR}/utils/Cargo.toml" "${rust_sources}"
     COMMENT "Building all Rust workspaces"
 )

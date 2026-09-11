@@ -2,33 +2,34 @@
 #define AOC_MD5_H
 
 #include "compiler.h"
+#include "utility.h"
 
 #ifndef AOC_IMPORT_STD
 #include <array>
+#include <cstddef>
 #include <string_view>
 #endif
 
-struct MD5_CTX {
-  unsigned int state[4];
-  unsigned int count[2];
-  unsigned char buffer[64];
-};
-extern "C" {
-void MD5Init(MD5_CTX*);
-void MD5Update(MD5_CTX*, unsigned char*, unsigned int);
-void MD5Final(unsigned char*, MD5_CTX*);
-}
+#ifdef AOC_HAVE_MD5
+// OpenSSL's one-shot MD5, declared here rather than included,
+// so that nothing else has to know where the OpenSSL headers are
+extern "C" unsigned char* MD5(const unsigned char* data, std::size_t size,
+                              unsigned char* digest);
+#endif
 
 AOC_EXPORT_NAMESPACE(aoc) {
 
 inline std::array<unsigned char, 16> md5(std::string_view input) {
-  MD5_CTX ctx{};
-  MD5Init(&ctx);
-  MD5Update(&ctx,
-            reinterpret_cast<unsigned char*>(const_cast<char*>(input.data())),
-            static_cast<unsigned int>(input.size()));
   auto digest = std::array<unsigned char, 16>{};
-  MD5Final(digest.data(), &ctx);
+#ifdef AOC_HAVE_MD5
+  MD5(reinterpret_cast<const unsigned char*>(input.data()), input.size(),
+      digest.data());
+#else
+  // Built without OpenSSL, so there is nothing to hash with:
+  // whichever solution asked for a hash skips right here
+  static_cast<void>(input);
+  return_incomplete();
+#endif
   return digest;
 }
 

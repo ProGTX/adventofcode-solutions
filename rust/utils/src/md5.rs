@@ -1,31 +1,24 @@
-#[repr(C)]
-struct MD5_CTX {
-    state: [u32; 4],
-    count: [u32; 2],
-    buffer: [u8; 64],
-}
-
-unsafe extern "C" {
-    fn MD5Init(ctx: *mut MD5_CTX);
-    fn MD5Update(ctx: *mut MD5_CTX, input: *const u8, input_len: u32);
-    fn MD5Final(digest: *mut u8, ctx: *mut MD5_CTX);
-}
-
 pub type Digest = [u8; 16];
 
+#[cfg(have_md5)]
+unsafe extern "C" {
+    /// OpenSSL's one-shot MD5, which is all these solutions ever need
+    fn MD5(data: *const u8, size: usize, digest: *mut u8) -> *mut u8;
+}
+
+#[cfg(have_md5)]
 pub fn md5(input: &[u8]) -> Digest {
-    unsafe {
-        let mut ctx = MD5_CTX {
-            state: [0; 4],
-            count: [0; 2],
-            buffer: [0; 64],
-        };
-        MD5Init(&mut ctx);
-        MD5Update(&mut ctx, input.as_ptr(), input.len() as u32);
-        let mut digest = [0u8; 16];
-        MD5Final(digest.as_mut_ptr(), &mut ctx);
-        digest
-    }
+    let mut digest = [0; 16];
+    unsafe { MD5(input.as_ptr(), input.len(), digest.as_mut_ptr()) };
+    return digest;
+}
+
+/// Built without OpenSSL, so there is nothing to hash with:
+/// whichever solution asked for a hash skips right here
+#[cfg(not(have_md5))]
+pub fn md5(_input: &[u8]) -> Digest {
+    crate::return_incomplete();
+    return [0; 16];
 }
 
 pub const fn digest_to_hex(digest: Digest) -> [char; 32] {

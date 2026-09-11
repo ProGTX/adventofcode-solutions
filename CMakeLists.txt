@@ -201,6 +201,21 @@ if ((NOT AOC_IMPORT_STD) AND aoc_want_import_std AND
     "aoc: no import std - ${CMAKE_CXX_COMPILER_IMPORT_STD_ERROR_MESSAGE}")
 endif()
 
+# MD5 comes from OpenSSL, for the C++ and the Rust solutions alike.
+# It is optional: without it `aoc::md5` skips the solution that called it,
+# so a build without OpenSSL still runs everything else.
+# The definition is global rather than carried by the interface target below,
+# so that the aoc module and the solutions importing it agree on what `md5` is.
+find_package(OpenSSL COMPONENTS Crypto)
+add_library(md5 INTERFACE)
+if (TARGET OpenSSL::Crypto)
+  add_compile_definitions(AOC_HAVE_MD5)
+  target_link_libraries(md5 INTERFACE OpenSSL::Crypto)
+  message(STATUS "aoc: MD5 from OpenSSL ${OPENSSL_VERSION}")
+else()
+  message(STATUS "aoc: no OpenSSL - the solutions needing MD5 will skip")
+endif()
+
 # Before the aoc module below, which imports unordered_dense's module
 add_subdirectory(external)
 

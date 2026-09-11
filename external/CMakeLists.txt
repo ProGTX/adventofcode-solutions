@@ -1,11 +1,3 @@
-enable_language(C)
-
-add_library(md5 STATIC md5/md5c.c)
-target_include_directories(md5 PUBLIC md5)
-# TODO: The code breaks with C23, which is what GCC 15 defaults to
-set_property(TARGET md5 PROPERTY C_STANDARD 17)
-target_compile_definitions(md5 PRIVATE PROTOTYPES=1)
-
 # https://github.com/martinus/unordered_dense - a submodule pinned to v4.8.1
 if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/unordered_dense/CMakeLists.txt")
   message(FATAL_ERROR

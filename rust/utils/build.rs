@@ -1,10 +1,18 @@
 fn main() {
-    let md5_lib = std::env::var("MD5_LIB").unwrap();
-    let md5_lib_path = std::path::Path::new(&md5_lib);
-    println!(
-        "cargo:rustc-link-search=native={}",
-        md5_lib_path.parent().unwrap().display()
-    );
-    println!("cargo:rustc-link-lib=static=md5");
-    println!("cargo:rerun-if-changed={md5_lib}");
+    println!("cargo::rerun-if-env-changed=OPENSSL_CRYPTO_LIB");
+    println!("cargo::rustc-check-cfg=cfg(have_md5)");
+
+    // OpenSSL is optional, and CMake only passes this on once it has found it.
+    // Without it `aoc::md5` skips the solution instead of hashing,
+    // which is also what a plain `cargo build` outside CMake gets
+    let Ok(crypto_lib) = std::env::var("OPENSSL_CRYPTO_LIB") else {
+        return;
+    };
+    let crypto_lib_path = std::path::Path::new(&crypto_lib);
+    if let Some(directory) = crypto_lib_path.parent() {
+        println!("cargo::rustc-link-search=native={}", directory.display());
+    }
+    println!("cargo::rustc-link-lib=crypto");
+    println!("cargo::rustc-cfg=have_md5");
+    println!("cargo::rerun-if-changed={crypto_lib}");
 }
