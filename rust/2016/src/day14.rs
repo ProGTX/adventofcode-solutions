@@ -2,7 +2,7 @@ use aoc::{
     md5::{self, md5},
     string,
 };
-use itertools::Itertools;
+use std::thread;
 
 type Hash = md5::Digest;
 
@@ -18,12 +18,29 @@ fn parse(filename: &str) -> String {
     return aoc::file::read_string(filename).trim().to_string();
 }
 
-fn hash(salt: &str, index: u32) -> Hash {
+fn stretch(hash: &Hash) -> Hash {
+    const HEX_DIGITS: &[u8; NUM_VALUES] = b"0123456789abcdef";
+    let mut buffer = [0; NUM_DIGITS];
+    // A byte at a time, so each nibble costs a shift and a mask
+    // rather than the division `digit` would do
+    for index in 0..hash.len() {
+        let byte = hash[index];
+        buffer[2 * index] = HEX_DIGITS[(byte >> 4) as usize];
+        buffer[2 * index + 1] = HEX_DIGITS[(byte & 0xf) as usize];
+    }
+    return md5(&buffer);
+}
+
+fn hash<const NUM_STRETCHES: u32>(salt: &str, index: u32) -> Hash {
     let salt_size = salt.len();
     let mut buffer = [0; 16];
     buffer[..salt_size].copy_from_slice(salt.as_bytes());
     let size = salt_size + string::write_u32(&mut buffer[salt_size..], index);
-    return md5(&buffer[..size]);
+    let mut hash = md5(&buffer[..size]);
+    for _ in 0..NUM_STRETCHES {
+        hash = stretch(&hash);
+    }
+    return hash;
 }
 
 /// The hash as it is written out: one hex digit per nibble
@@ -37,7 +54,7 @@ fn digit(hash: &Hash, index: usize) -> u8 {
 }
 
 /// What a single hash contributes
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 struct Runs {
     /// The digit of its first run of three
     candidate_digit: Option<u8>,
@@ -69,15 +86,39 @@ fn find_runs(hash: &Hash) -> Runs {
     return runs;
 }
 
+/// Fills in the runs of the hashes starting at index `first`, one per slot.
+/// The indices are independent, so the slots are split across the available threads
+fn find_runs_range<const NUM_STRETCHES: u32>(salt: &str, first: u32, runs: &mut [Runs]) {
+    /// Below this a thread does not earn what it costs to start
+    const MIN_HASHES_PER_THREAD: usize = 1 << 12;
+    let num_hashes = runs.len() * (1 + NUM_STRETCHES as usize);
+    let num_threads = thread::available_parallelism()
+        .map_or(1, |n| n.get())
+        .min(num_hashes.div_ceil(MIN_HASHES_PER_THREAD))
+        .max(1);
+    let fill = |first: u32, runs: &mut [Runs]| {
+        for (offset, slot) in runs.iter_mut().enumerate() {
+            *slot = find_runs(&hash::<NUM_STRETCHES>(salt, first + offset as u32));
+        }
+    };
+    let chunk = runs.len().div_ceil(num_threads);
+    thread::scope(|scope| {
+        for (index, slots) in runs.chunks_mut(chunk).enumerate() {
+            let start = first + (index * chunk) as u32;
+            scope.spawn(move || fill(start, slots));
+        }
+    });
+}
+
 /// How many keys are needed to fill out the one-time pad
 const NUM_KEYS: u32 = 64;
 
-fn solve_case1(salt: &str) -> u32 {
+fn solve_case<const NUM_STRETCHES: u32>(salt: &str) -> u32 {
     // A candidate needs the LOOKAHEAD hashes after it, so a block of that many
-    // can only be checked once a second block is there to confirm against
-    let mut runs = (0..(2 * LOOKAHEAD))
-        .map(|index| find_runs(&hash(salt, index)))
-        .collect_vec();
+    // can only be checked once a second block is there to confirm against.
+    // Both blocks live in this one buffer, which every refill overwrites in place
+    let mut runs = vec![Runs::default(); 2 * LOOKAHEAD as usize];
+    find_runs_range::<NUM_STRETCHES>(salt, 0, &mut runs);
     // The candidate is the first hash of the window, the rest is what confirms it
     let is_key = |window: &[Runs]| -> bool {
         let Some(wanted) = window[0].candidate_digit else {
@@ -102,20 +143,19 @@ fn solve_case1(salt: &str) -> u32 {
 
         // Drop the block just checked, and read another one in ahead of the search
         first += LOOKAHEAD;
-        runs.drain(..LOOKAHEAD as usize);
-        runs.extend(
-            (first + LOOKAHEAD..first + 2 * LOOKAHEAD).map(|index| find_runs(&hash(salt, index))),
-        );
+        runs.copy_within(LOOKAHEAD as usize.., 0);
+        find_runs_range::<NUM_STRETCHES>(salt, first + LOOKAHEAD, &mut runs[LOOKAHEAD as usize..]);
     }
 }
 
 fn main() {
     println!("Part 1");
     let example = parse("day14.example");
-    aoc::expect_result!(22728, solve_case1(&example));
+    aoc::expect_result!(22728, solve_case::<0>(&example));
     let input = parse("day14.input");
-    aoc::expect_result!(18626, solve_case1(&input));
+    aoc::expect_result!(18626, solve_case::<0>(&input));
 
     println!("Part 2");
-    aoc::return_incomplete();
+    aoc::expect_result!(22551, solve_case::<2016>(&example));
+    aoc::expect_result!(20092, solve_case::<2016>(&input));
 }
