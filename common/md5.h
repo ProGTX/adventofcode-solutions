@@ -82,8 +82,7 @@ void aoc_md5_fixed(Block* blocks, std::size_t size, std::size_t count,
                    Digest* digests);
 void aoc_md5_many(const void* const* messages, const std::size_t* sizes,
                   std::size_t count, Digest* digests);
-void aoc_md5_stretch(Digest* digests, std::size_t count,
-                     std::size_t stretches);
+void aoc_md5_stretch(Digest* digests, std::size_t count, std::size_t stretches);
 }
 #endif
 
@@ -95,7 +94,7 @@ using Words = std::array<std::uint32_t, Lanes>;
 
 /// The state each lane starts from
 template <std::size_t Lanes>
-constexpr std::array<Words<Lanes>, 4> md5_initial_state() {
+consteval std::array<Words<Lanes>, 4> md5_initial_state() {
   auto state = std::array<Words<Lanes>, 4>{};
   state[0].fill(0x67452301);
   state[1].fill(0xefcdab89);
@@ -362,8 +361,7 @@ constexpr void md5_many(std::span<const std::string_view> messages,
 constexpr void md5_stretch(std::span<Digest> digests, std::size_t stretches) {
   constexpr auto hex = std::string_view{"0123456789abcdef"};
   constexpr auto size = 2 * constant::md5_digest_size;
-  for (auto first = 0uz; first < digests.size();
-       first += constant::md5_lanes) {
+  for (auto first = 0uz; first < digests.size(); first += constant::md5_lanes) {
     const auto count = std::min(constant::md5_lanes, digests.size() - first);
     // Every stretch rewrites the same 32 bytes,
     // so the padding behind them is written once and stays valid
